@@ -55,7 +55,7 @@ const Login = () => {
         </div>
         <Button
           type="submit"
-          className="w-full bg-primary hover:bg-primary/90"
+          className="w-full"
           disabled={isLoading}
         >
           {isLoading ? "Connexion..." : "Se connecter"}
