@@ -4,26 +4,47 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table";
+import { useEffect, useState } from "react";
 
 const Profile = () => {
-  const { data: session } = await supabase.auth.getSession();
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+  }, []);
   
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', session?.session?.user?.id)
+        .eq('id', session?.user?.id)
         .single();
       
       if (error) throw error;
       return data;
     },
-    enabled: !!session?.session?.user?.id
+    enabled: !!session?.user?.id
   });
 
-  if (isLoading) {
+  const { data: children, isLoading: isLoadingChildren } = useQuery({
+    queryKey: ['children'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('children')
+        .select('*')
+        .eq('profile_id', session?.user?.id);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  if (isLoadingProfile || isLoadingChildren) {
     return <div className="min-h-screen bg-secondary flex items-center justify-center">
       <p>Chargement...</p>
     </div>;
@@ -58,7 +79,7 @@ const Profile = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="text-lg">{session?.session?.user?.email}</p>
+                  <p className="text-lg">{session?.user?.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Commune de scolarisation</p>
@@ -78,11 +99,21 @@ const Profile = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground">
-                          Aucun enfant enregistré
-                        </TableCell>
-                      </TableRow>
+                      {children && children.length > 0 ? (
+                        children.map((child) => (
+                          <TableRow key={child.id}>
+                            <TableCell>{child.last_name}</TableCell>
+                            <TableCell>{child.first_name}</TableCell>
+                            <TableCell>{child.school_class}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center text-muted-foreground">
+                            Aucun enfant enregistré
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </Card>
