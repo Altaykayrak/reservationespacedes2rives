@@ -51,13 +51,13 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
                   <div className="flex gap-2">
                     {reservation.without_meal && (
                       <div className="flex items-center gap-1 text-sm text-red-600" title="Sans repas">
-                        <Utensils className="w-4 h-4" />
+                        <Utensils size={16} />
                         <span className="sr-only">Sans repas</span>
                       </div>
                     )}
                     {reservation.early_dropoff && (
                       <div className="flex items-center gap-1 text-sm text-blue-600" title="Accueil avant 8h30">
-                        <Clock className="w-4 h-4" />
+                        <Clock size={16} />
                         <span className="sr-only">Accueil avant 8h30</span>
                       </div>
                     )}
