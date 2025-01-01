@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { fr } from "date-fns/locale";
+import { Trash2 } from "lucide-react";
 
 const AdminWednesdays = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -54,6 +55,30 @@ const AdminWednesdays = () => {
       setSelectedDate(undefined);
       setMaxParticipantsKindergarten("");
       setMaxParticipantsPrimary("");
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteWednesday = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("available_wednesdays")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Le mercredi a été supprimé avec succès",
+      });
+
+      refetch();
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -137,6 +162,14 @@ const AdminWednesdays = () => {
                     Primaire (CP à CM2): {wednesday.max_participants_primary} participants
                   </p>
                 </div>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => handleDeleteWednesday(wednesday.id)}
+                  title="Supprimer ce mercredi"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             ))}
           </div>
