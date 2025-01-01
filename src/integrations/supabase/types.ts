@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      available_holiday_periods: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          max_participants: number
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          max_participants: number
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          max_participants?: number
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      available_wednesdays: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          max_participants: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          max_participants: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          max_participants?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       children: {
         Row: {
           created_at: string
@@ -70,6 +121,35 @@ export type Database = {
           start_date?: string
         }
         Relationships: []
+      }
+      holiday_allowed_classes: {
+        Row: {
+          created_at: string
+          holiday_period_id: string | null
+          id: string
+          school_class: string
+        }
+        Insert: {
+          created_at?: string
+          holiday_period_id?: string | null
+          id?: string
+          school_class: string
+        }
+        Update: {
+          created_at?: string
+          holiday_period_id?: string | null
+          id?: string
+          school_class?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_allowed_classes_holiday_period_id_fkey"
+            columns: ["holiday_period_id"]
+            isOneToOne: false
+            referencedRelation: "available_holiday_periods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -144,6 +224,35 @@ export type Database = {
             columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wednesday_allowed_classes: {
+        Row: {
+          created_at: string
+          id: string
+          school_class: string
+          wednesday_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          school_class: string
+          wednesday_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          school_class?: string
+          wednesday_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wednesday_allowed_classes_wednesday_id_fkey"
+            columns: ["wednesday_id"]
+            isOneToOne: false
+            referencedRelation: "available_wednesdays"
             referencedColumns: ["id"]
           },
         ]
