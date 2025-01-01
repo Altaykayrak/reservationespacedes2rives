@@ -25,7 +25,7 @@ const Login = () => {
         title: "Connexion réussie",
         description: "Bienvenue sur L'espace des deux rives",
       });
-      navigate("/profile"); // Redirection vers la page de profil après connexion réussie
+      navigate("/profile");
     }, 1000);
   };
 
