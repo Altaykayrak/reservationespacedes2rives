@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Utensils, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -49,14 +50,16 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
                   </span>
                   <div className="flex gap-2">
                     {reservation.without_meal && (
-                      <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                        Sans repas
-                      </span>
+                      <div className="flex items-center gap-1 text-sm text-red-600" title="Sans repas">
+                        <Utensils className="w-4 h-4" />
+                        <span className="sr-only">Sans repas</span>
+                      </div>
                     )}
                     {reservation.early_dropoff && (
-                      <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
-                        Accueil avant 8h30
-                      </span>
+                      <div className="flex items-center gap-1 text-sm text-blue-600" title="Accueil avant 8h30">
+                        <Clock className="w-4 h-4" />
+                        <span className="sr-only">Accueil avant 8h30</span>
+                      </div>
                     )}
                   </div>
                 </li>
