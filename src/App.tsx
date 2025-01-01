@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import Reservations from "./pages/Reservations";
 
 const queryClient = new QueryClient();
 
@@ -22,7 +23,7 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/children" element={<div>Page Enfants (à venir)</div>} />
-          <Route path="/reservations" element={<div>Page Réservations (à venir)</div>} />
+          <Route path="/reservations" element={<Reservations />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
