@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -6,10 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ReservationCalendar } from "@/components/reservations/ReservationCalendar";
 import { ReservationForm } from "@/components/reservations/ReservationForm";
-import { Tables } from "@/integrations/supabase/types";
+
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
 
 const Reservations = () => {
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedDates, setSelectedDates] = useState<DateOption[]>([]);
   const [selectedChild, setSelectedChild] = useState<string>("");
   const { toast } = useToast();
 
@@ -147,11 +152,15 @@ const Reservations = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <ReservationCalendar
-          selectedDates={selectedDates}
-          setSelectedDates={setSelectedDates}
+          selectedDates={selectedDates.map(d => d.date)}
+          setSelectedDates={dates => setSelectedDates(dates.map(date => ({
+            date,
+            withoutMeal: false,
+            earlyDropoff: false,
+          })))}
         />
         <ReservationForm
-          selectedDates={selectedDates}
+          selectedDates={selectedDates.map(d => d.date)}
           children={children}
           selectedChild={selectedChild}
           setSelectedChild={setSelectedChild}
