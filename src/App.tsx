@@ -21,6 +21,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/children" element={<div>Page Enfants (à venir)</div>} />
+          <Route path="/reservations" element={<div>Page Réservations (à venir)</div>} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
