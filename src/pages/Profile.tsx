@@ -25,7 +25,12 @@ const Profile = () => {
         .single();
         
       if (error) throw error;
-      return data as ProfileData;
+
+      // Combine the profile data with the email from auth.user
+      return {
+        ...data,
+        email: user.email,
+      } as ProfileData;
     },
   });
 
