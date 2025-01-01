@@ -43,7 +43,8 @@ const handler = async (req: Request): Promise<Response> => {
       </ul>
     `;
 
-    console.log("Sending email to:", emailRequest.parentEmail);
+    // During testing, always send to altaykayrak@gmail.com
+    console.log("Sending test email to: altaykayrak@gmail.com");
     
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -52,10 +53,11 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Réservations <onboarding@resend.dev>",
-        to: [emailRequest.parentEmail],
-        subject: `Confirmation de réservation - ${emailRequest.childName}`,
+        from: "onboarding@resend.dev",
+        to: ["altaykayrak@gmail.com"], // Force sending to verified email during testing
+        subject: `[TEST] Confirmation de réservation - ${emailRequest.childName}`,
         html: emailHtml,
+        reply_to: emailRequest.parentEmail // Store the intended recipient email
       }),
     });
 
@@ -63,6 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Resend API response:", responseData);
 
     if (!res.ok) {
+      console.error("Resend API error:", responseData);
       throw new Error(`Resend API error: ${JSON.stringify(responseData)}`);
     }
 
