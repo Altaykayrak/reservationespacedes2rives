@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
+import { UserPlus, Edit } from "lucide-react";
 
 const Profile = () => {
   const [session, setSession] = useState<any>(null);
@@ -87,8 +88,21 @@ const Profile = () => {
                 </div>
               </div>
 
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm">
+                  <Edit className="mr-2 h-4 w-4" />
+                  Modifier
+                </Button>
+              </div>
+
               <div className="mt-8">
-                <h3 className="text-lg font-semibold mb-4">Liste des enfants</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Liste des enfants</h3>
+                  <Button variant="outline" size="sm">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Ajouter un enfant
+                  </Button>
+                </div>
                 <Card>
                   <Table>
                     <TableHeader>
