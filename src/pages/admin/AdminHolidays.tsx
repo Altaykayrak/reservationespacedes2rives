@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { fr } from "date-fns/locale";
+import SchoolClassCategories from "@/components/admin/SchoolClassCategories";
 
 const AdminHolidays = () => {
   const [startDate, setStartDate] = useState<Date>();
@@ -67,7 +68,7 @@ const AdminHolidays = () => {
     <div className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-8">Gestion des vacances</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Ajouter une période de vacances</h2>
           
@@ -108,7 +109,9 @@ const AdminHolidays = () => {
           </div>
         </Card>
 
-        <Card className="p-6">
+        <SchoolClassCategories />
+
+        <Card className="p-6 lg:col-span-2">
           <h2 className="text-xl font-semibold mb-4">Périodes de vacances disponibles</h2>
           
           <div className="space-y-4">
