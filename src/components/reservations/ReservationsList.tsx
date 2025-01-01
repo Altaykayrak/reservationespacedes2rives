@@ -44,22 +44,30 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
             </h3>
             <ul className="space-y-2">
               {data.reservations.map((reservation) => (
-                <li key={reservation.id} className="flex items-center gap-4">
-                  <span>
-                    {format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}
-                  </span>
-                  <div className="flex gap-2">
-                    {reservation.without_meal && (
-                      <div className="flex items-center gap-1 text-sm text-red-600" title="Sans repas">
-                        <Utensils size={16} />
-                        <span className="sr-only">Sans repas</span>
-                      </div>
-                    )}
+                <li key={reservation.id} className="space-y-1">
+                  <div className="flex items-center gap-4">
+                    <span>
+                      {format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}
+                    </span>
+                    <div className="flex gap-2">
+                      {reservation.without_meal && (
+                        <div className="flex items-center gap-1 text-sm text-red-600" title="Sans repas">
+                          <Utensils size={16} />
+                          <span className="sr-only">Sans repas</span>
+                        </div>
+                      )}
+                      {reservation.early_dropoff && (
+                        <div className="flex items-center gap-1 text-sm text-blue-600" title="Accueil avant 8h30">
+                          <Clock size={16} />
+                          <span className="sr-only">Accueil avant 8h30</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 pl-4">
+                    {reservation.without_meal && <span>• Sans repas</span>}
                     {reservation.early_dropoff && (
-                      <div className="flex items-center gap-1 text-sm text-blue-600" title="Accueil avant 8h30">
-                        <Clock size={16} />
-                        <span className="sr-only">Accueil avant 8h30</span>
-                      </div>
+                      <span className="ml-4">• Accueil avant 8h30</span>
                     )}
                   </div>
                 </li>
