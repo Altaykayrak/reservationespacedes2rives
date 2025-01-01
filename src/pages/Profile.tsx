@@ -6,9 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import { UserPlus, Edit } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { EditProfileForm } from "@/components/EditProfileForm";
 
 const Profile = () => {
   const [session, setSession] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -89,7 +97,11 @@ const Profile = () => {
               </div>
 
               <div className="flex justify-end">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setIsEditDialogOpen(true)}
+                >
                   <Edit className="mr-2 h-4 w-4" />
                   Modifier
                 </Button>
@@ -142,6 +154,20 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier mon profil</DialogTitle>
+          </DialogHeader>
+          {profile && (
+            <EditProfileForm 
+              initialData={profile} 
+              onSuccess={() => setIsEditDialogOpen(false)} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
