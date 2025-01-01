@@ -38,8 +38,15 @@ const AdminWednesdays = () => {
     }
 
     try {
+      // Create a new date object and set it to midnight UTC
+      const dateToInsert = new Date(Date.UTC(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate()
+      ));
+
       const { error } = await supabase.from("available_wednesdays").insert({
-        date: selectedDate.toISOString().split("T")[0],
+        date: dateToInsert.toISOString().split("T")[0],
         max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
         max_participants_primary: parseInt(maxParticipantsPrimary),
       });
