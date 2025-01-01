@@ -23,6 +23,16 @@ interface ReservationFormProps {
   isSubmitting: boolean;
 }
 
+const ALLOWED_CLASSES = [
+  "CP",
+  "CE1",
+  "CE2",
+  "CM1",
+  "CM2",
+  "Moyenne section",
+  "Grande section"
+];
+
 export const ReservationForm = ({
   selectedDates,
   children,
@@ -37,6 +47,11 @@ export const ReservationForm = ({
       withoutMeal: false,
       earlyDropoff: false,
     }))
+  );
+
+  // Filter children to only show primary and kindergarten classes
+  const filteredChildren = children?.filter(child => 
+    ALLOWED_CLASSES.includes(child.school_class)
   );
 
   // Update dateOptions when selectedDates changes
@@ -79,9 +94,9 @@ export const ReservationForm = ({
               className="w-full mt-1 rounded-md border border-gray-300 p-2"
             >
               <option value="">Choisir un enfant</option>
-              {children?.map((child) => (
+              {filteredChildren?.map((child) => (
                 <option key={child.id} value={child.id}>
-                  {child.first_name} {child.last_name}
+                  {child.first_name} {child.last_name} ({child.school_class})
                 </option>
               ))}
             </select>
