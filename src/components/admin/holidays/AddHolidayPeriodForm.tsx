@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { fr } from "date-fns/locale";
+import { format } from "date-fns";
 
 const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [startDate, setStartDate] = useState<Date>();
@@ -27,9 +28,13 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
 
     try {
+      // Format dates to YYYY-MM-DD to avoid timezone issues
+      const formattedStartDate = format(startDate, 'yyyy-MM-dd');
+      const formattedEndDate = format(endDate, 'yyyy-MM-dd');
+
       const { error } = await supabase.from("available_holiday_periods").insert({
-        start_date: startDate.toISOString().split("T")[0],
-        end_date: endDate.toISOString().split("T")[0],
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
         max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
         max_participants_primary: parseInt(maxParticipantsPrimary),
         max_participants_teen: parseInt(maxParticipantsTeen),
