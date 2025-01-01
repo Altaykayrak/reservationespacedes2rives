@@ -9,6 +9,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { fr } from "date-fns/locale";
 import SchoolClassCategories from "@/components/admin/SchoolClassCategories";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 
 const AdminHolidays = () => {
   const [startDate, setStartDate] = useState<Date>();
@@ -61,6 +73,30 @@ const AdminHolidays = () => {
       setMaxParticipantsKindergarten("");
       setMaxParticipantsPrimary("");
       setMaxParticipantsTeen("");
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteHolidayPeriod = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("available_holiday_periods")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "La période de vacances a été supprimée avec succès",
+      });
+
+      refetch();
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -157,6 +193,27 @@ const AdminHolidays = () => {
                     <p>Adolescent: {holiday.max_participants_teen} participants</p>
                   </div>
                 </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="icon">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette action est irréversible. Cela supprimera définitivement la période de vacances.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteHolidayPeriod(holiday.id)}>
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ))}
           </div>
