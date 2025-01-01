@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 type Child = Tables<"children">;
 
