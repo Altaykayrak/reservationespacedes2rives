@@ -64,16 +64,27 @@ export function AddChildForm({ onSuccess }: AddChildFormProps) {
 
   const onSubmit = async (values: FormData) => {
     try {
-      const { error } = await supabase
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        toast.error("Erreur d'authentification")
+        return
+      }
+
+      const { error: insertError } = await supabase
         .from("children")
         .insert({
           first_name: values.first_name,
           last_name: values.last_name,
           school_class: values.school_class,
-          profile_id: (await supabase.auth.getUser()).data.user?.id,
+          profile_id: user.id,
         })
 
-      if (error) throw error
+      if (insertError) {
+        console.error("Error adding child:", insertError)
+        toast.error("Une erreur est survenue lors de l'ajout de l'enfant")
+        return
+      }
 
       toast.success("Enfant ajouté avec succès")
       queryClient.invalidateQueries({ queryKey: ["children"] })
