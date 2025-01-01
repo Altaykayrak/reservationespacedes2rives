@@ -13,12 +13,17 @@ type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
 };
 
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
+
 const Reservations = () => {
   const [selectedDates, setSelectedDates] = useState<DateOption[]>([]);
   const [selectedChild, setSelectedChild] = useState<string>("");
   const { toast } = useToast();
 
-  // Fetch user's children
   const { data: children } = useQuery({
     queryKey: ["children"],
     queryFn: async () => {
@@ -52,7 +57,6 @@ const Reservations = () => {
     },
   });
 
-  // Fetch user's email
   const { data: userProfile } = useQuery({
     queryKey: ["userProfile"],
     queryFn: async () => {
@@ -62,12 +66,10 @@ const Reservations = () => {
     },
   });
 
-  // Helper function to generate a reservation number
   const generateReservationNumber = () => {
     return `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  // Send confirmation email
   const sendConfirmationEmail = async (childName: string, date: Date, reservationNumber: string) => {
     try {
       const { data, error } = await supabase.functions.invoke("send-reservation-email", {
@@ -87,7 +89,6 @@ const Reservations = () => {
     }
   };
 
-  // Mutation for creating reservations
   const createReservationMutation = useMutation({
     mutationFn: async (reservationData: {
       childId: string;
