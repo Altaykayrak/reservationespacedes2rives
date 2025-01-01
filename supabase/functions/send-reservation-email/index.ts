@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "altaykayrak@gmail.com", // Temporairement, utilisez votre email vérifié
+        from: "Réservations <onboarding@resend.dev>",
         to: [emailRequest.parentEmail],
         subject: `Confirmation de réservation - ${emailRequest.childName}`,
         html: emailHtml,
