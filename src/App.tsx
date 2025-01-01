@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Reservations from "./pages/Reservations";
+import HolidayReservations from "./pages/HolidayReservations";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminWednesdays from "./pages/admin/AdminWednesdays";
 import AdminHolidays from "./pages/admin/AdminHolidays";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/children" element={<div>Page Enfants (à venir)</div>} />
           <Route path="/reservations" element={<Reservations />} />
+          <Route path="/holiday-reservations" element={<HolidayReservations />} />
           
           {/* Routes d'administration */}
           <Route path="/admin" element={<AdminDashboard />} />
