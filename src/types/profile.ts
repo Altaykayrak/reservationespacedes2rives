@@ -4,6 +4,7 @@ export interface ProfileData {
   last_name: string | null
   email: string
   school_city: string
+  secret_question: string
 }
 
 export interface Child {

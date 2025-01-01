@@ -40,16 +40,20 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
       setShowSecretQuestion(true)
       return
     }
-    updateProfile(values, initialData.email, onSuccess)
+    await updateProfile(values, initialData.email, () => {
+      onSuccess()
+      window.location.reload()
+    })
   }
 
   const handleSecretAnswer = async () => {
     const isValid = await verifySecretAnswer(secretAnswer)
     if (isValid) {
       const values = form.getValues()
-      updateProfile(values, initialData.email, () => {
+      await updateProfile(values, initialData.email, () => {
         setShowSecretQuestion(false)
         onSuccess()
+        window.location.reload()
       })
     }
   }
