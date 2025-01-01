@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import * as z from "zod"
 
@@ -13,8 +13,27 @@ export const profileFormSchema = z.object({
 export type ProfileFormData = z.infer<typeof profileFormSchema>
 
 export function useProfileUpdate() {
-  const { toast } = useToast()
   const queryClient = useQueryClient()
+
+  const verifySecretAnswer = async (answer: string) => {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("secret_answer")
+      .eq("id", (await supabase.auth.getUser()).data.user?.id)
+      .single()
+
+    if (error) {
+      toast.error("Une erreur est survenue lors de la vérification")
+      return false
+    }
+
+    if (profile.secret_answer.toLowerCase() !== answer.toLowerCase()) {
+      toast.error("Réponse incorrecte")
+      return false
+    }
+
+    return true
+  }
 
   const updateProfile = async (values: ProfileFormData, initialEmail: string, onSuccess?: () => void) => {
     try {
@@ -24,11 +43,6 @@ export function useProfileUpdate() {
           email: values.email,
         })
         if (emailError) throw emailError
-        
-        toast({
-          title: "Email mis à jour",
-          description: "Un email de confirmation vous a été envoyé.",
-        })
       }
 
       // Update profile data
@@ -43,22 +57,15 @@ export function useProfileUpdate() {
 
       if (profileError) throw profileError
 
-      toast({
-        title: "Profil mis à jour",
-        description: "Vos informations ont été mises à jour avec succès.",
-      })
+      toast.success("Profil mis à jour avec succès")
       
       queryClient.invalidateQueries({ queryKey: ["profile"] })
       onSuccess?.()
     } catch (error) {
       console.error("Error updating profile:", error)
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la mise à jour du profil.",
-      })
+      toast.error("Une erreur est survenue lors de la mise à jour du profil")
     }
   }
 
-  return { updateProfile }
+  return { updateProfile, verifySecretAnswer }
 }

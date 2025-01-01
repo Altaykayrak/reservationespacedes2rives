@@ -12,6 +12,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { ProfileData } from "@/types/profile"
 import { useProfileUpdate, profileFormSchema, ProfileFormData } from "@/hooks/useProfileUpdate"
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface EditProfileFormProps {
   initialData: ProfileData
@@ -19,7 +21,9 @@ interface EditProfileFormProps {
 }
 
 export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps) {
-  const { updateProfile } = useProfileUpdate()
+  const { updateProfile, verifySecretAnswer } = useProfileUpdate()
+  const [showSecretQuestion, setShowSecretQuestion] = useState(false)
+  const [secretAnswer, setSecretAnswer] = useState("")
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -31,69 +35,112 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
     },
   })
 
-  const onSubmit = (values: ProfileFormData) => {
+  const onSubmit = async (values: ProfileFormData) => {
+    if (values.email !== initialData.email) {
+      setShowSecretQuestion(true)
+      return
+    }
     updateProfile(values, initialData.email, onSuccess)
   }
 
+  const handleSecretAnswer = async () => {
+    const isValid = await verifySecretAnswer(secretAnswer)
+    if (isValid) {
+      const values = form.getValues()
+      updateProfile(values, initialData.email, () => {
+        setShowSecretQuestion(false)
+        onSuccess()
+      })
+    }
+  }
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="first_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Prénom</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="last_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nom</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="school_city"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Commune de scolarisation</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end gap-4">
-          <Button type="submit">Enregistrer</Button>
-        </div>
-      </form>
-    </Form>
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="first_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prénom</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="last_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="school_city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Commune de scolarisation</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex justify-end gap-4">
+            <Button type="submit">Enregistrer</Button>
+          </div>
+        </form>
+      </Form>
+
+      <Dialog open={showSecretQuestion} onOpenChange={setShowSecretQuestion}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Vérification de sécurité</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Pour changer votre email, veuillez répondre à votre question secrète :
+            </p>
+            <p className="font-medium">{initialData.secret_question}</p>
+            <Input
+              type="text"
+              placeholder="Votre réponse"
+              value={secretAnswer}
+              onChange={(e) => setSecretAnswer(e.target.value)}
+            />
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => setShowSecretQuestion(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleSecretAnswer}>Valider</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
