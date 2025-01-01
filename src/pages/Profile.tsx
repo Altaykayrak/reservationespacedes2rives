@@ -34,7 +34,10 @@ const Profile = () => {
         .single();
       
       if (error) throw error;
-      return data;
+      return {
+        ...data,
+        email: session?.user?.email,
+      };
     },
     enabled: !!session?.user?.id
   });
@@ -88,7 +91,7 @@ const Profile = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="text-lg">{session?.user?.email}</p>
+                  <p className="text-lg">{profile?.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Commune de scolarisation</p>

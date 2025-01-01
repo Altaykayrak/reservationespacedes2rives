@@ -18,6 +18,7 @@ import { useQueryClient } from "@tanstack/react-query"
 const formSchema = z.object({
   first_name: z.string().min(1, "Le prénom est requis"),
   last_name: z.string().min(1, "Le nom est requis"),
+  email: z.string().email("Email invalide"),
   school_city: z.string().min(1, "La commune est requise"),
 })
 
@@ -25,6 +26,7 @@ interface EditProfileFormProps {
   initialData: {
     first_name: string | null
     last_name: string | null
+    email: string
     school_city: string
   }
   onSuccess: () => void
@@ -39,13 +41,28 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
     defaultValues: {
       first_name: initialData.first_name || "",
       last_name: initialData.last_name || "",
+      email: initialData.email,
       school_city: initialData.school_city,
     },
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { error } = await supabase
+      // Update email in auth
+      if (values.email !== initialData.email) {
+        const { error: emailError } = await supabase.auth.updateUser({
+          email: values.email,
+        })
+        if (emailError) throw emailError
+        
+        toast({
+          title: "Email mis à jour",
+          description: "Un email de confirmation vous a été envoyé.",
+        })
+      }
+
+      // Update profile data
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: values.first_name,
@@ -54,7 +71,7 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
         })
         .eq("id", (await supabase.auth.getUser()).data.user?.id)
 
-      if (error) throw error
+      if (profileError) throw profileError
 
       toast({
         title: "Profil mis à jour",
@@ -97,6 +114,19 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
               <FormLabel>Nom</FormLabel>
               <FormControl>
                 <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type="email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
