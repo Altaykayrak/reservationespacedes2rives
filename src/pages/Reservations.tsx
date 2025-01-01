@@ -36,7 +36,6 @@ const Reservations = () => {
     },
   });
 
-  // Fetch existing reservations
   const { data: reservations, refetch: refetchReservations } = useQuery({
     queryKey: ["reservations"],
     queryFn: async () => {
@@ -96,6 +95,17 @@ const Reservations = () => {
       withoutMeal: boolean;
       earlyDropoff: boolean;
     }) => {
+      // Vérifier si une réservation existe déjà pour cet enfant à cette date
+      const { data: existingReservations } = await supabase
+        .from("reservations")
+        .select("*")
+        .eq("child_id", reservationData.childId)
+        .eq("reservation_date", format(reservationData.date, "yyyy-MM-dd"));
+
+      if (existingReservations && existingReservations.length > 0) {
+        throw new Error("Une réservation existe déjà pour cet enfant à cette date");
+      }
+
       const reservationNumber = generateReservationNumber();
       const { data, error } = await supabase
         .from("reservations")
@@ -109,7 +119,6 @@ const Reservations = () => {
 
       if (error) throw error;
 
-      // Get child name for email
       const selectedChildData = children?.find(child => child.id === reservationData.childId);
       if (selectedChildData) {
         await sendConfirmationEmail(
@@ -126,14 +135,13 @@ const Reservations = () => {
         title: "Réservation confirmée",
         description: "Votre réservation a été enregistrée avec succès. Un email de confirmation vous a été envoyé.",
       });
-      // Reset form and refetch reservations
       setSelectedDates([]);
       refetchReservations();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la réservation.",
+        description: error.message || "Une erreur est survenue lors de la réservation.",
         variant: "destructive",
       });
     },
