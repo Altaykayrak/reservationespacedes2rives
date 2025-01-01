@@ -29,8 +29,7 @@ const ALLOWED_CLASSES = [
   "CE2",
   "CM1",
   "CM2",
-  "Petite section",
-  "Moyenne section",
+  "Moyenne Section",
   "Grande section"
 ];
 
