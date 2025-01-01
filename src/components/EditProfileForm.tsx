@@ -10,34 +10,19 @@ import {
 import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/components/ui/use-toast"
-import { useQueryClient } from "@tanstack/react-query"
-
-const formSchema = z.object({
-  first_name: z.string().min(1, "Le prénom est requis"),
-  last_name: z.string().min(1, "Le nom est requis"),
-  email: z.string().email("Email invalide"),
-  school_city: z.string().min(1, "La commune est requise"),
-})
+import { ProfileData } from "@/types/profile"
+import { useProfileUpdate, profileFormSchema, ProfileFormData } from "@/hooks/useProfileUpdate"
 
 interface EditProfileFormProps {
-  initialData: {
-    first_name: string | null
-    last_name: string | null
-    email: string
-    school_city: string
-  }
+  initialData: ProfileData
   onSuccess: () => void
 }
 
 export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps) {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
+  const { updateProfile } = useProfileUpdate()
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
       first_name: initialData.first_name || "",
       last_name: initialData.last_name || "",
@@ -46,48 +31,8 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
     },
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      // Update email in auth
-      if (values.email !== initialData.email) {
-        const { error: emailError } = await supabase.auth.updateUser({
-          email: values.email,
-        })
-        if (emailError) throw emailError
-        
-        toast({
-          title: "Email mis à jour",
-          description: "Un email de confirmation vous a été envoyé.",
-        })
-      }
-
-      // Update profile data
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          first_name: values.first_name,
-          last_name: values.last_name,
-          school_city: values.school_city,
-        })
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-
-      if (profileError) throw profileError
-
-      toast({
-        title: "Profil mis à jour",
-        description: "Vos informations ont été mises à jour avec succès.",
-      })
-      
-      queryClient.invalidateQueries({ queryKey: ["profile"] })
-      onSuccess()
-    } catch (error) {
-      console.error("Error updating profile:", error)
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la mise à jour du profil.",
-      })
-    }
+  const onSubmit = (values: ProfileFormData) => {
+    updateProfile(values, initialData.email, onSuccess)
   }
 
   return (
