@@ -3,6 +3,9 @@ import { fr } from "date-fns/locale";
 import { Utensils, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "react-router-dom";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -19,8 +22,38 @@ interface ReservationsListProps {
 }
 
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
+  const location = useLocation();
+  const isHolidayPage = location.pathname === "/holiday-reservations";
+
+  // Fetch holiday periods to filter reservations
+  const { data: holidayPeriods } = useQuery({
+    queryKey: ["available_holiday_periods"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Filter reservations based on the page
+  const filteredReservations = reservations?.filter(reservation => {
+    if (!isHolidayPage) {
+      return true; // Show all reservations on the regular reservations page
+    }
+
+    // Check if the reservation date falls within any holiday period
+    return holidayPeriods?.some(period => {
+      const reservationDate = new Date(reservation.reservation_date);
+      const startDate = new Date(period.start_date);
+      const endDate = new Date(period.end_date);
+      return reservationDate >= startDate && reservationDate <= endDate;
+    });
+  });
+
   // Group reservations by child
-  const reservationsByChild = reservations?.reduce((acc, reservation) => {
+  const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {
