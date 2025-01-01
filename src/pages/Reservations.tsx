@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -6,12 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ReservationCalendar } from "@/components/reservations/ReservationCalendar";
 import { ReservationForm } from "@/components/reservations/ReservationForm";
-import { useAvailableDates } from "@/hooks/useAvailableDates";
+import { Tables } from "@/integrations/supabase/types";
 
 const Reservations = () => {
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
-  const [withoutMeal, setWithoutMeal] = useState(false);
-  const [earlyDropoff, setEarlyDropoff] = useState(false);
   const [selectedChild, setSelectedChild] = useState<string>("");
   const { toast } = useToast();
 
@@ -27,12 +25,6 @@ const Reservations = () => {
       return data;
     },
   });
-
-  // Get selected child's class
-  const selectedChildClass = children?.find(child => child.id === selectedChild)?.school_class;
-
-  // Use the hook to get available dates
-  const { isDateAvailable } = useAvailableDates(selectedChildClass);
 
   // Fetch user's email
   const { data: userProfile } = useQuery({
@@ -56,8 +48,6 @@ const Reservations = () => {
         body: {
           childName,
           reservationDate: format(date, "dd/MM/yyyy", { locale: fr }),
-          withoutMeal,
-          earlyDropoff,
           reservationNumber,
           parentEmail: userProfile?.email,
         },
@@ -111,8 +101,6 @@ const Reservations = () => {
       });
       // Reset form
       setSelectedDates([]);
-      setWithoutMeal(false);
-      setEarlyDropoff(false);
     },
     onError: (error) => {
       toast({
@@ -142,24 +130,13 @@ const Reservations = () => {
       return;
     }
 
-    // Check if all selected dates are available
-    const unavailableDates = selectedDates.filter(date => !isDateAvailable(date, selectedChildClass));
-    if (unavailableDates.length > 0) {
-      toast({
-        title: "Erreur",
-        description: `Les dates suivantes ne sont pas disponibles pour la classe de votre enfant : ${unavailableDates.map(d => format(d, "dd/MM/yyyy")).join(", ")}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Create a reservation for each selected date
-    for (const date of selectedDates) {
+    for (const dateOption of selectedDates) {
       await createReservationMutation.mutateAsync({
         childId: selectedChild,
-        date,
-        withoutMeal,
-        earlyDropoff,
+        date: dateOption.date,
+        withoutMeal: dateOption.withoutMeal,
+        earlyDropoff: dateOption.earlyDropoff,
       });
     }
   };
@@ -178,10 +155,6 @@ const Reservations = () => {
           children={children}
           selectedChild={selectedChild}
           setSelectedChild={setSelectedChild}
-          withoutMeal={withoutMeal}
-          setWithoutMeal={setWithoutMeal}
-          earlyDropoff={earlyDropoff}
-          setEarlyDropoff={setEarlyDropoff}
           onSubmit={handleSubmit}
           isSubmitting={createReservationMutation.isPending}
         />
