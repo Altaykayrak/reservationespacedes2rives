@@ -52,6 +52,38 @@ const Reservations = () => {
     return `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   };
 
+  // Fetch user's email
+  const { data: userProfile } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not found");
+      return user;
+    },
+  });
+
+  // Send confirmation email
+  const sendConfirmationEmail = async (childName: string, date: Date, reservationNumber: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("send-reservation-email", {
+        body: {
+          childName,
+          reservationDate: format(date, "dd/MM/yyyy", { locale: fr }),
+          withoutMeal,
+          earlyDropoff,
+          reservationNumber,
+          parentEmail: userProfile?.email,
+        },
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error sending confirmation email:", error);
+      throw error;
+    }
+  };
+
   // Mutation for creating reservations
   const createReservationMutation = useMutation({
     mutationFn: async (reservationData: {
@@ -60,6 +92,7 @@ const Reservations = () => {
       withoutMeal: boolean;
       earlyDropoff: boolean;
     }) => {
+      const reservationNumber = generateReservationNumber();
       const { data, error } = await supabase
         .from("reservations")
         .insert({
@@ -67,16 +100,27 @@ const Reservations = () => {
           reservation_date: format(reservationData.date, "yyyy-MM-dd"),
           without_meal: reservationData.withoutMeal,
           early_dropoff: reservationData.earlyDropoff,
-          reservation_number: generateReservationNumber(),
+          reservation_number: reservationNumber,
         });
 
       if (error) throw error;
+
+      // Get child name for email
+      const selectedChildData = children?.find(child => child.id === reservationData.childId);
+      if (selectedChildData) {
+        await sendConfirmationEmail(
+          `${selectedChildData.first_name} ${selectedChildData.last_name}`,
+          reservationData.date,
+          reservationNumber
+        );
+      }
+
       return data;
     },
     onSuccess: () => {
       toast({
         title: "Réservation confirmée",
-        description: "Votre réservation a été enregistrée avec succès.",
+        description: "Votre réservation a été enregistrée avec succès. Un email de confirmation vous a été envoyé.",
       });
       // Reset form
       setSelectedDates([]);
