@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
@@ -64,7 +64,6 @@ const schoolCities = [
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -83,19 +82,19 @@ const Register = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      // 1. Create the user account first
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        options: {
-          data: {
-            first_name: values.firstName,
-            last_name: values.lastName,
-          },
-        },
       });
 
       if (signUpError) throw signUpError;
+      if (!authData.user) throw new Error("No user data returned");
 
+      // 2. Wait a moment for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 3. Then update the profile with additional information
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
@@ -105,25 +104,22 @@ const Register = () => {
           secret_answer: values.secretAnswer,
           school_city: values.schoolCity,
         })
-        .eq("id", (await supabase.auth.getUser()).data.user?.id);
+        .eq("id", authData.user.id);
 
       if (updateError) throw updateError;
 
-      toast({
-        title: "Inscription réussie",
-        description:
-          "Votre compte a été créé avec succès. Vous allez être redirigé vers la page de connexion.",
-      });
+      toast.success(
+        "Inscription réussie ! Vous allez être redirigé vers la page de connexion."
+      );
 
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur lors de l'inscription",
-        description: error.message,
-      });
+      console.error("Registration error:", error);
+      toast.error(
+        error.message || "Une erreur est survenue lors de l'inscription"
+      );
     } finally {
       setIsLoading(false);
     }
