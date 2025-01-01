@@ -41,21 +41,24 @@ export type Database = {
           created_at: string
           date: string
           id: string
-          max_participants: number
+          max_participants_kindergarten: number
+          max_participants_primary: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           date: string
           id?: string
-          max_participants: number
+          max_participants_kindergarten?: number
+          max_participants_primary?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
           date?: string
           id?: string
-          max_participants?: number
+          max_participants_kindergarten?: number
+          max_participants_primary?: number
           updated_at?: string
         }
         Relationships: []

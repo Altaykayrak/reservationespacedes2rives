@@ -11,7 +11,8 @@ import { fr } from "date-fns/locale";
 
 const AdminWednesdays = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
-  const [maxParticipants, setMaxParticipants] = useState("");
+  const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
+  const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
   const { toast } = useToast();
 
   const { data: wednesdays, refetch } = useQuery({
@@ -26,7 +27,7 @@ const AdminWednesdays = () => {
   });
 
   const handleAddWednesday = async () => {
-    if (!selectedDate || !maxParticipants) {
+    if (!selectedDate || !maxParticipantsKindergarten || !maxParticipantsPrimary) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs",
@@ -38,7 +39,8 @@ const AdminWednesdays = () => {
     try {
       const { error } = await supabase.from("available_wednesdays").insert({
         date: selectedDate.toISOString().split("T")[0],
-        max_participants: parseInt(maxParticipants),
+        max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
+        max_participants_primary: parseInt(maxParticipantsPrimary),
       });
 
       if (error) throw error;
@@ -50,7 +52,8 @@ const AdminWednesdays = () => {
 
       refetch();
       setSelectedDate(undefined);
-      setMaxParticipants("");
+      setMaxParticipantsKindergarten("");
+      setMaxParticipantsPrimary("");
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -80,12 +83,26 @@ const AdminWednesdays = () => {
             </div>
 
             <div>
-              <Label htmlFor="maxParticipants">Nombre maximum de participants</Label>
+              <Label htmlFor="maxParticipantsKindergarten">
+                Nombre maximum de participants (Maternelle - MS/GS)
+              </Label>
               <Input
-                id="maxParticipants"
+                id="maxParticipantsKindergarten"
                 type="number"
-                value={maxParticipants}
-                onChange={(e) => setMaxParticipants(e.target.value)}
+                value={maxParticipantsKindergarten}
+                onChange={(e) => setMaxParticipantsKindergarten(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="maxParticipantsPrimary">
+                Nombre maximum de participants (Primaire - CP à CM2)
+              </Label>
+              <Input
+                id="maxParticipantsPrimary"
+                type="number"
+                value={maxParticipantsPrimary}
+                onChange={(e) => setMaxParticipantsPrimary(e.target.value)}
               />
             </div>
 
@@ -114,7 +131,10 @@ const AdminWednesdays = () => {
                     })}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Max participants: {wednesday.max_participants}
+                    Maternelle (MS/GS): {wednesday.max_participants_kindergarten} participants
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Primaire (CP à CM2): {wednesday.max_participants_primary} participants
                   </p>
                 </div>
               </div>
