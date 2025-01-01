@@ -49,11 +49,14 @@ export const HolidayReservationCalendar = ({
                 id={holiday.id}
                 checked={isSelected}
                 onCheckedChange={() => {
-                  // Generate array of dates between start and end date
+                  // Generate array of dates between start and end date, excluding weekends
                   const dates = [];
                   const currentDate = new Date(startDate);
                   while (currentDate <= endDate) {
-                    dates.push(new Date(currentDate));
+                    // Only add weekdays (0 = Sunday, 6 = Saturday)
+                    if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+                      dates.push(new Date(currentDate));
+                    }
                     currentDate.setDate(currentDate.getDate() + 1);
                   }
                   if (isSelected) {
