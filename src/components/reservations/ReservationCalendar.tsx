@@ -23,11 +23,20 @@ export const ReservationCalendar = ({
     }
   };
 
+  if (!availableWednesdays || availableWednesdays.length === 0) {
+    return (
+      <div className="bg-white p-4 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-4">Mercredis disponibles</h2>
+        <p className="text-gray-500">Aucun mercredi n'est disponible pour le moment.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-4 rounded-lg shadow">
       <h2 className="text-xl font-semibold mb-4">Mercredis disponibles</h2>
       <div className="space-y-4">
-        {availableWednesdays?.map((wednesday) => {
+        {availableWednesdays.map((wednesday) => {
           const date = new Date(wednesday.date);
           const isSelected = selectedDates.some(
             (d) => d.getTime() === date.getTime()
