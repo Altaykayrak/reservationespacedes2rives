@@ -14,7 +14,9 @@ export type Database = {
           created_at: string
           end_date: string
           id: string
-          max_participants: number
+          max_participants_kindergarten: number
+          max_participants_primary: number
+          max_participants_teen: number
           start_date: string
           updated_at: string
         }
@@ -22,7 +24,9 @@ export type Database = {
           created_at?: string
           end_date: string
           id?: string
-          max_participants: number
+          max_participants_kindergarten?: number
+          max_participants_primary?: number
+          max_participants_teen?: number
           start_date: string
           updated_at?: string
         }
@@ -30,7 +34,9 @@ export type Database = {
           created_at?: string
           end_date?: string
           id?: string
-          max_participants?: number
+          max_participants_kindergarten?: number
+          max_participants_primary?: number
+          max_participants_teen?: number
           start_date?: string
           updated_at?: string
         }

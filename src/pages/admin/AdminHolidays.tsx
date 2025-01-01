@@ -13,7 +13,9 @@ import SchoolClassCategories from "@/components/admin/SchoolClassCategories";
 const AdminHolidays = () => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  const [maxParticipants, setMaxParticipants] = useState("");
+  const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
+  const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
+  const [maxParticipantsTeen, setMaxParticipantsTeen] = useState("");
   const { toast } = useToast();
 
   const { data: holidays, refetch } = useQuery({
@@ -28,7 +30,7 @@ const AdminHolidays = () => {
   });
 
   const handleAddHolidayPeriod = async () => {
-    if (!startDate || !endDate || !maxParticipants) {
+    if (!startDate || !endDate || !maxParticipantsKindergarten || !maxParticipantsPrimary || !maxParticipantsTeen) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs",
@@ -41,7 +43,9 @@ const AdminHolidays = () => {
       const { error } = await supabase.from("available_holiday_periods").insert({
         start_date: startDate.toISOString().split("T")[0],
         end_date: endDate.toISOString().split("T")[0],
-        max_participants: parseInt(maxParticipants),
+        max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
+        max_participants_primary: parseInt(maxParticipantsPrimary),
+        max_participants_teen: parseInt(maxParticipantsTeen),
       });
 
       if (error) throw error;
@@ -54,7 +58,9 @@ const AdminHolidays = () => {
       refetch();
       setStartDate(undefined);
       setEndDate(undefined);
-      setMaxParticipants("");
+      setMaxParticipantsKindergarten("");
+      setMaxParticipantsPrimary("");
+      setMaxParticipantsTeen("");
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -94,12 +100,32 @@ const AdminHolidays = () => {
             </div>
 
             <div>
-              <Label htmlFor="maxParticipants">Nombre maximum de participants</Label>
+              <Label htmlFor="maxParticipantsKindergarten">Nombre maximum de participants (Maternelle)</Label>
               <Input
-                id="maxParticipants"
+                id="maxParticipantsKindergarten"
                 type="number"
-                value={maxParticipants}
-                onChange={(e) => setMaxParticipants(e.target.value)}
+                value={maxParticipantsKindergarten}
+                onChange={(e) => setMaxParticipantsKindergarten(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="maxParticipantsPrimary">Nombre maximum de participants (Primaire)</Label>
+              <Input
+                id="maxParticipantsPrimary"
+                type="number"
+                value={maxParticipantsPrimary}
+                onChange={(e) => setMaxParticipantsPrimary(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="maxParticipantsTeen">Nombre maximum de participants (Adolescent)</Label>
+              <Input
+                id="maxParticipantsTeen"
+                type="number"
+                value={maxParticipantsTeen}
+                onChange={(e) => setMaxParticipantsTeen(e.target.value)}
               />
             </div>
 
@@ -125,9 +151,11 @@ const AdminHolidays = () => {
                     Du {new Date(holiday.start_date).toLocaleDateString("fr-FR")} au{" "}
                     {new Date(holiday.end_date).toLocaleDateString("fr-FR")}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Max participants: {holiday.max_participants}
-                  </p>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p>Maternelle: {holiday.max_participants_kindergarten} participants</p>
+                    <p>Primaire: {holiday.max_participants_primary} participants</p>
+                    <p>Adolescent: {holiday.max_participants_teen} participants</p>
+                  </div>
                 </div>
               </div>
             ))}
