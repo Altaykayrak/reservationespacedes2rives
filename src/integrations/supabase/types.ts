@@ -47,6 +47,30 @@ export type Database = {
           },
         ]
       }
+      closed_periods: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          reason: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          reason: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          reason?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -79,6 +103,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reservations: {
+        Row: {
+          child_id: string
+          created_at: string
+          early_dropoff: boolean | null
+          id: string
+          reservation_date: string
+          reservation_number: string
+          status: string | null
+          updated_at: string
+          without_meal: boolean | null
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          early_dropoff?: boolean | null
+          id?: string
+          reservation_date: string
+          reservation_number: string
+          status?: string | null
+          updated_at?: string
+          without_meal?: boolean | null
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          early_dropoff?: boolean | null
+          id?: string
+          reservation_date?: string
+          reservation_number?: string
+          status?: string | null
+          updated_at?: string
+          without_meal?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
