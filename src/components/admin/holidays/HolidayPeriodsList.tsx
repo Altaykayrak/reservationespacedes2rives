@@ -1,0 +1,109 @@
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+interface HolidayPeriod {
+  id: string;
+  start_date: string;
+  end_date: string;
+  max_participants_kindergarten: number;
+  max_participants_primary: number;
+  max_participants_teen: number;
+}
+
+const HolidayPeriodsList = ({ 
+  holidays,
+  onDelete
+}: { 
+  holidays: HolidayPeriod[];
+  onDelete: () => void;
+}) => {
+  const { toast } = useToast();
+
+  const handleDeleteHolidayPeriod = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("available_holiday_periods")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "La période de vacances a été supprimée avec succès",
+      });
+
+      onDelete();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Card className="p-6 lg:col-span-2">
+      <h2 className="text-xl font-semibold mb-4">Périodes de vacances disponibles</h2>
+      
+      <div className="space-y-4">
+        {holidays?.map((holiday) => (
+          <div
+            key={holiday.id}
+            className="flex items-center justify-between p-4 border rounded"
+          >
+            <div>
+              <p className="font-medium">
+                Du {new Date(holiday.start_date).toLocaleDateString("fr-FR")} au{" "}
+                {new Date(holiday.end_date).toLocaleDateString("fr-FR")}
+              </p>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p>Maternelle: {holiday.max_participants_kindergarten} participants</p>
+                <p>Primaire: {holiday.max_participants_primary} participants</p>
+                <p>Adolescent: {holiday.max_participants_teen} participants</p>
+              </div>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="icon">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. Cela supprimera définitivement la période de vacances.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDeleteHolidayPeriod(holiday.id)}>
+                    Supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+};
+
+export default HolidayPeriodsList;
