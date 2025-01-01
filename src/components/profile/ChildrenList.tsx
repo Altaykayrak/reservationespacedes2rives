@@ -3,17 +3,22 @@ import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { UserPlus } from "lucide-react"
 import { Child } from "@/types/profile"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState } from "react"
+import { AddChildForm } from "./AddChildForm"
 
 interface ChildrenListProps {
   children: Child[]
 }
 
 export function ChildrenList({ children }: ChildrenListProps) {
+  const [showAddDialog, setShowAddDialog] = useState(false)
+
   return (
     <div className="mt-8">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Liste des enfants</h3>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Ajouter un enfant
         </Button>
@@ -46,6 +51,15 @@ export function ChildrenList({ children }: ChildrenListProps) {
           </TableBody>
         </Table>
       </Card>
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajouter un enfant</DialogTitle>
+          </DialogHeader>
+          <AddChildForm onSuccess={() => setShowAddDialog(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
