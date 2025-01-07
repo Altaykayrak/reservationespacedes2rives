@@ -69,16 +69,16 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Réservations actuelles</h2>
-        <div className="mt-2 flex items-center gap-6 text-sm text-muted-foreground">
+        <h2 className="text-2xl font-semibold text-gray-800">Réservations actuelles</h2>
+        <div className="mt-4 flex flex-wrap items-center gap-6 text-sm text-muted-foreground bg-gray-50 p-4 rounded-lg border border-gray-100">
           <div className="flex items-center gap-2">
-            <div className="inline-flex items-center rounded-full bg-red-100 p-2 text-red-700">
+            <div className="inline-flex items-center rounded-full bg-red-100/80 p-2 text-red-700 shadow-sm">
               <UtensilsCrossed className="h-4 w-4" />
             </div>
             <span>Sans repas</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="inline-flex items-center rounded-full bg-blue-100 p-2 text-blue-700">
+            <div className="inline-flex items-center rounded-full bg-blue-100/80 p-2 text-blue-700 shadow-sm">
               <Clock className="h-4 w-4" />
             </div>
             <span>Accueil avant 8h30</span>
@@ -86,7 +86,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
         </div>
       </div>
       <ScrollArea className="h-[500px]">
-        <div className="space-y-4 pr-4">
+        <div className="grid gap-4 pr-4">
           {Object.entries(reservationsByChild).map(([childId, data]) => (
             <ChildReservationCard
               key={childId}
