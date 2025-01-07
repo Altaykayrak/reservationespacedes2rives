@@ -109,22 +109,18 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
                       </Badge>
                     </div>
                     <div className="flex flex-wrap gap-3 mt-2">
-                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
-                        reservation.without_meal ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                      }`}>
-                        <Utensils className="h-4 w-4" />
-                        <span className="text-sm">
-                          {reservation.without_meal ? 'Sans repas' : 'Avec repas'}
-                        </span>
-                      </div>
-                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
-                        reservation.early_dropoff ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-                      }`}>
-                        <Clock className="h-4 w-4" />
-                        <span className="text-sm">
-                          {reservation.early_dropoff ? 'Accueil avant 8h30' : 'Accueil normal'}
-                        </span>
-                      </div>
+                      {reservation.without_meal && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700">
+                          <Utensils className="h-4 w-4" />
+                          <span className="text-sm">Sans repas</span>
+                        </div>
+                      )}
+                      {reservation.early_dropoff && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 text-blue-700">
+                          <Clock className="h-4 w-4" />
+                          <span className="text-sm">Accueil avant 8h30</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
