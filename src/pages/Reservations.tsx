@@ -52,6 +52,7 @@ const Reservations = () => {
               setSelectedChild={setSelectedChild}
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}
+              setSelectedDates={setSelectedDates}
             />
           </div>
         </div>

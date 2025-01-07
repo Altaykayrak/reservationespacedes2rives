@@ -53,6 +53,7 @@ const HolidayReservations = () => {
           setSelectedChild={setSelectedChild}
           onSubmit={handleValidatedSubmit}
           isSubmitting={isSubmitting}
+          setSelectedDates={setSelectedDates}
         />
       </div>
 
