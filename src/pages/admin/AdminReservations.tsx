@@ -19,10 +19,15 @@ const AdminReservations = () => {
             last_name,
             school_class
           )
-        `);
+        `)
+        .order('reservation_date', { ascending: true });
+      
       if (error) throw error;
       return data;
     },
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   return (
