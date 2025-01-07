@@ -1,5 +1,3 @@
-import { Clock, Utensils } from "lucide-react";
-
 interface ReservationBadgesProps {
   withoutMeal: boolean;
   earlyDropoff: boolean;
@@ -9,14 +7,12 @@ export const ReservationBadges = ({ withoutMeal, earlyDropoff }: ReservationBadg
   return (
     <div className="flex flex-wrap gap-3 mt-2">
       {withoutMeal && (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700">
-          <Utensils className="h-4 w-4" />
+        <div className="px-3 py-1.5 rounded-full bg-red-100 text-red-700">
           <span className="text-sm">Sans repas</span>
         </div>
       )}
       {earlyDropoff && (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 text-blue-700">
-          <Clock className="h-4 w-4" />
+        <div className="px-3 py-1.5 rounded-full bg-blue-100 text-blue-700">
           <span className="text-sm">Accueil avant 8h30</span>
         </div>
       )}
