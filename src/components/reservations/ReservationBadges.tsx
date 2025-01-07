@@ -4,16 +4,18 @@ interface ReservationBadgesProps {
 }
 
 export const ReservationBadges = ({ withoutMeal, earlyDropoff }: ReservationBadgesProps) => {
+  console.log('ReservationBadges props:', { withoutMeal, earlyDropoff });
+  
   return (
-    <div className="flex flex-wrap gap-3 mt-2">
+    <div className="flex flex-wrap gap-2">
       {withoutMeal && (
-        <div className="px-3 py-1.5 rounded-full bg-red-100 text-red-700">
-          <span className="text-sm">Sans repas</span>
+        <div className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700">
+          Sans repas
         </div>
       )}
       {earlyDropoff && (
-        <div className="px-3 py-1.5 rounded-full bg-blue-100 text-blue-700">
-          <span className="text-sm">Accueil avant 8h30</span>
+        <div className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+          Accueil avant 8h30
         </div>
       )}
     </div>

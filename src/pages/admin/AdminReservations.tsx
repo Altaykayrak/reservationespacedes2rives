@@ -23,6 +23,7 @@ const AdminReservations = () => {
         .order('reservation_date', { ascending: true });
       
       if (error) throw error;
+      console.log('Fetched reservations:', data);
       return data;
     },
     refetchOnMount: true,
@@ -36,33 +37,39 @@ const AdminReservations = () => {
 
       <Card className="p-6">
         <div className="space-y-4">
-          {reservations?.map((reservation) => (
-            <div
-              key={reservation.id}
-              className="flex flex-col p-4 border rounded bg-white shadow-sm"
-            >
-              <div className="space-y-2">
-                <p className="font-medium text-lg">
-                  {reservation.children?.first_name} {reservation.children?.last_name}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Classe: {reservation.children?.school_class}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Date: {new Date(reservation.reservation_date).toLocaleDateString("fr-FR")}
-                </p>
-                <div className="mt-1">
+          {reservations?.map((reservation) => {
+            console.log('Rendering reservation:', {
+              id: reservation.id,
+              withoutMeal: reservation.without_meal,
+              earlyDropoff: reservation.early_dropoff
+            });
+            
+            return (
+              <div
+                key={reservation.id}
+                className="flex flex-col p-4 border rounded bg-white shadow-sm"
+              >
+                <div className="space-y-2">
+                  <p className="font-medium text-lg">
+                    {reservation.children?.first_name} {reservation.children?.last_name}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Classe: {reservation.children?.school_class}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Date: {new Date(reservation.reservation_date).toLocaleDateString("fr-FR")}
+                  </p>
                   <ReservationBadges 
-                    withoutMeal={reservation.without_meal || false}
-                    earlyDropoff={reservation.early_dropoff || false}
+                    withoutMeal={Boolean(reservation.without_meal)}
+                    earlyDropoff={Boolean(reservation.early_dropoff)}
                   />
+                  <p className="text-xs text-gray-500">
+                    N° de réservation: {reservation.reservation_number}
+                  </p>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  N° de réservation: {reservation.reservation_number}
-                </p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
     </div>
