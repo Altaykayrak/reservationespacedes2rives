@@ -20,19 +20,19 @@ export const ChildReservationCard = ({
   reservations,
 }: ChildReservationCardProps) => {
   return (
-    <Card className="overflow-hidden border-gray-100 shadow-lg shadow-blue-100/50">
-      <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-6">
+    <Card className="overflow-hidden border-gray-100 shadow-sm">
+      <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-              <User className="h-5 w-5 text-primary" />
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+              <User className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-gray-800">{childName}</h3>
-              <p className="text-sm text-muted-foreground">{schoolClass}</p>
+              <h3 className="text-base font-medium text-gray-800">{childName}</h3>
+              <p className="text-xs text-muted-foreground">{schoolClass}</p>
             </div>
           </div>
-          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 text-xs">
             {reservations.length} réservation{reservations.length > 1 ? 's' : ''}
           </Badge>
         </div>
