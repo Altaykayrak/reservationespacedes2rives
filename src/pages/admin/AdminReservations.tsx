@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
+import { ReservationBadges } from "@/components/reservations/ReservationBadges";
 
 const AdminReservations = () => {
   const { toast } = useToast();
@@ -55,14 +55,10 @@ const AdminReservations = () => {
                   <p className="text-sm text-gray-600">
                     N° de réservation: {reservation.reservation_number}
                   </p>
-                </div>
-                <div className="flex gap-2">
-                  {reservation.without_meal && (
-                    <Badge>Sans repas</Badge>
-                  )}
-                  {reservation.early_dropoff && (
-                    <Badge>Accueil avant 8h30</Badge>
-                  )}
+                  <ReservationBadges 
+                    withoutMeal={reservation.without_meal || false}
+                    earlyDropoff={reservation.early_dropoff || false}
+                  />
                 </div>
               </div>
             </div>
