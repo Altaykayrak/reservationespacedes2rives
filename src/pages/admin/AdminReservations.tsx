@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 
 const AdminReservations = () => {
   const { toast } = useToast();
@@ -48,16 +49,12 @@ const AdminReservations = () => {
                 <p className="text-sm text-gray-600">
                   N° de réservation: {reservation.reservation_number}
                 </p>
-                <div className="mt-2 space-x-2 text-sm">
+                <div className="mt-2 space-x-2">
                   {reservation.without_meal && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                      Sans repas
-                    </span>
+                    <Badge variant="secondary">Sans repas</Badge>
                   )}
                   {reservation.early_dropoff && (
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                      Accueil avant 8h30
-                    </span>
+                    <Badge variant="secondary">Accueil avant 8h30</Badge>
                   )}
                 </div>
               </div>
