@@ -86,7 +86,6 @@ export const useReservations = () => {
     }
   };
 
-  // Fonction pour vérifier si une date est déjà réservée pour un enfant
   const isDateReservedForChild = (childId: string, date: Date) => {
     if (!reservations) return false;
     
@@ -104,7 +103,8 @@ export const useReservations = () => {
       withoutMeal: boolean;
       earlyDropoff: boolean;
     }) => {
-      // Vérification côté client avant d'envoyer la requête
+      console.log("Creating reservation with data:", reservationData); // Ajout d'un log pour déboguer
+
       if (isDateReservedForChild(reservationData.childId, reservationData.date)) {
         throw new Error("Une réservation existe déjà pour cet enfant à cette date");
       }
@@ -118,7 +118,9 @@ export const useReservations = () => {
           without_meal: reservationData.withoutMeal,
           early_dropoff: reservationData.earlyDropoff,
           reservation_number: reservationNumber,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
