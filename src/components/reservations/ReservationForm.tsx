@@ -21,6 +21,7 @@ interface ReservationFormProps {
   setSelectedChild: (childId: string) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
+  setSelectedDates: (dates: DateOptions[]) => void;
 }
 
 const ALLOWED_CLASSES = [
@@ -40,6 +41,7 @@ export const ReservationForm = ({
   setSelectedChild,
   onSubmit,
   isSubmitting,
+  setSelectedDates,
 }: ReservationFormProps) => {
   const [dateOptions, setDateOptions] = useState<DateOptions[]>(
     selectedDates.map(date => ({
@@ -56,28 +58,28 @@ export const ReservationForm = ({
 
   // Update dateOptions when selectedDates changes
   useEffect(() => {
-    setDateOptions(
-      selectedDates.map(date => {
-        const existingOptions = dateOptions.find(
-          opt => opt.date.getTime() === date.getTime()
-        );
-        return {
-          date,
-          withoutMeal: existingOptions?.withoutMeal || false,
-          earlyDropoff: existingOptions?.earlyDropoff || false,
-        };
-      })
-    );
+    const newDateOptions = selectedDates.map(date => {
+      const existingOptions = dateOptions.find(
+        opt => opt.date.getTime() === date.getTime()
+      );
+      return {
+        date,
+        withoutMeal: existingOptions?.withoutMeal || false,
+        earlyDropoff: existingOptions?.earlyDropoff || false,
+      };
+    });
+    setDateOptions(newDateOptions);
+    setSelectedDates(newDateOptions);
   }, [selectedDates]);
 
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
-    setDateOptions(prev =>
-      prev.map(opt =>
-        opt.date.getTime() === date.getTime()
-          ? { ...opt, [option]: value }
-          : opt
-      )
+    const newDateOptions = dateOptions.map(opt =>
+      opt.date.getTime() === date.getTime()
+        ? { ...opt, [option]: value }
+        : opt
     );
+    setDateOptions(newDateOptions);
+    setSelectedDates(newDateOptions);
   };
 
   return (

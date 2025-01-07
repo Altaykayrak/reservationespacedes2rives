@@ -64,6 +64,8 @@ export const useReservations = () => {
       return;
     }
 
+    console.log("Selected dates before submission:", selectedDates);
+
     for (const dateOption of selectedDates) {
       await createReservationMutation.mutateAsync({
         childId: selectedChild,

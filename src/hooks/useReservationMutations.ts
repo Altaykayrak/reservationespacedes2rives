@@ -45,6 +45,7 @@ export const useReservationMutations = (onSuccess: () => void) => {
       onSuccess();
     },
     onError: (error: Error) => {
+      console.error("Reservation error:", error);
       toast({
         title: "Erreur",
         description: error.message || "Une erreur est survenue lors de la réservation.",
