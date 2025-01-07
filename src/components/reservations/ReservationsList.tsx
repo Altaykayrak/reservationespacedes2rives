@@ -98,24 +98,33 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
                 {data.reservations.map((reservation) => (
                   <div
                     key={reservation.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                    className="flex flex-col space-y-2 p-4 rounded-lg bg-secondary/50"
                   >
-                    <span className="font-medium">
-                      {format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      {reservation.without_meal && (
-                        <div className="flex items-center gap-1" title="Sans repas">
-                          <Utensils className="h-4 w-4 text-red-500" />
-                          <span className="text-sm text-muted-foreground">Sans repas</span>
-                        </div>
-                      )}
-                      {reservation.early_dropoff && (
-                        <div className="flex items-center gap-1" title="Accueil avant 8h30">
-                          <Clock className="h-4 w-4 text-blue-500" />
-                          <span className="text-sm text-muted-foreground">Avant 8h30</span>
-                        </div>
-                      )}
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">
+                        {format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}
+                      </span>
+                      <Badge variant="outline" className="ml-2">
+                        #{reservation.reservation_number}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-3 mt-2">
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
+                        reservation.without_meal ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                      }`}>
+                        <Utensils className="h-4 w-4" />
+                        <span className="text-sm">
+                          {reservation.without_meal ? 'Sans repas' : 'Avec repas'}
+                        </span>
+                      </div>
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
+                        reservation.early_dropoff ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        <Clock className="h-4 w-4" />
+                        <span className="text-sm">
+                          {reservation.early_dropoff ? 'Accueil avant 8h30' : 'Accueil normal'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
