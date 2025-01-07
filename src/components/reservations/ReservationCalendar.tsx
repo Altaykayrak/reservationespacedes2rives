@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "lucide-react";
+import { useReservations } from "@/hooks/useReservations";
 
 interface ReservationCalendarProps {
   selectedDates: Date[];
@@ -16,6 +17,7 @@ export const ReservationCalendar = ({
   setSelectedDates,
 }: ReservationCalendarProps) => {
   const { availableWednesdays } = useAvailableDates();
+  const { selectedChild, isDateReservedForChild } = useReservations();
 
   const handleDateToggle = (date: Date) => {
     if (selectedDates.some(d => d.getTime() === date.getTime())) {
@@ -47,22 +49,33 @@ export const ReservationCalendar = ({
           const isSelected = selectedDates.some(
             (d) => d.getTime() === date.getTime()
           );
+          const isReserved = selectedChild && isDateReservedForChild(selectedChild, date);
 
           return (
             <div
               key={wednesday.date}
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors"
+              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                isReserved ? 'opacity-50 bg-gray-100' : 'hover:bg-secondary/50'
+              }`}
             >
               <Checkbox
                 id={wednesday.date}
                 checked={isSelected}
-                onCheckedChange={() => handleDateToggle(date)}
+                onCheckedChange={() => !isReserved && handleDateToggle(date)}
+                disabled={isReserved}
               />
               <Label
                 htmlFor={wednesday.date}
-                className="flex-1 cursor-pointer font-medium"
+                className={`flex-1 cursor-pointer font-medium ${
+                  isReserved ? 'text-gray-500' : ''
+                }`}
               >
                 {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+                {isReserved && (
+                  <span className="ml-2 text-sm text-gray-500">
+                    (Déjà réservé)
+                  </span>
+                )}
               </Label>
             </div>
           );

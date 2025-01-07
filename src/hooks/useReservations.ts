@@ -86,6 +86,17 @@ export const useReservations = () => {
     }
   };
 
+  // Fonction pour vérifier si une date est déjà réservée pour un enfant
+  const isDateReservedForChild = (childId: string, date: Date) => {
+    if (!reservations) return false;
+    
+    return reservations.some(
+      (reservation) => 
+        reservation.child_id === childId && 
+        reservation.reservation_date === format(date, "yyyy-MM-dd")
+    );
+  };
+
   const createReservationMutation = useMutation({
     mutationFn: async (reservationData: {
       childId: string;
@@ -93,14 +104,8 @@ export const useReservations = () => {
       withoutMeal: boolean;
       earlyDropoff: boolean;
     }) => {
-      // Vérifier si une réservation existe déjà pour cet enfant à cette date
-      const { data: existingReservations } = await supabase
-        .from("reservations")
-        .select("*")
-        .eq("child_id", reservationData.childId)
-        .eq("reservation_date", format(reservationData.date, "yyyy-MM-dd"));
-
-      if (existingReservations && existingReservations.length > 0) {
+      // Vérification côté client avant d'envoyer la requête
+      if (isDateReservedForChild(reservationData.childId, reservationData.date)) {
         throw new Error("Une réservation existe déjà pour cet enfant à cette date");
       }
 
@@ -164,6 +169,20 @@ export const useReservations = () => {
       return;
     }
 
+    // Vérifier toutes les dates avant de procéder aux réservations
+    const hasConflicts = selectedDates.some(dateOption => 
+      isDateReservedForChild(selectedChild, dateOption.date)
+    );
+
+    if (hasConflicts) {
+      toast({
+        title: "Erreur",
+        description: "Certaines dates sélectionnées sont déjà réservées pour cet enfant.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Create a reservation for each selected date
     for (const dateOption of selectedDates) {
       await createReservationMutation.mutateAsync({
@@ -183,6 +202,7 @@ export const useReservations = () => {
     children,
     reservations,
     handleSubmit,
-    isSubmitting: createReservationMutation.isPending
+    isSubmitting: createReservationMutation.isPending,
+    isDateReservedForChild
   };
 };
