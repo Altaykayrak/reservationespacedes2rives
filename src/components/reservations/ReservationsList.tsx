@@ -104,9 +104,6 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
                       <span className="font-medium">
                         {format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}
                       </span>
-                      <Badge variant="outline" className="ml-2">
-                        #{reservation.reservation_number}
-                      </Badge>
                     </div>
                     <div className="flex flex-wrap gap-3 mt-2">
                       {reservation.without_meal && (
