@@ -1,4 +1,4 @@
-import { X, Clock } from "lucide-react";
+import { UtensilsCrossed, Clock } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import {
   TooltipContent,
@@ -19,7 +19,7 @@ export const ReservationBadges = ({ withoutMeal, earlyDropoff }: ReservationBadg
           <Tooltip>
             <TooltipTrigger>
               <div className="inline-flex items-center rounded-full bg-red-100 p-2 text-red-700">
-                <X className="h-4 w-4" />
+                <UtensilsCrossed className="h-4 w-4" />
               </div>
             </TooltipTrigger>
             <TooltipContent>
