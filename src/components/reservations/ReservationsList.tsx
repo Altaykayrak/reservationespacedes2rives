@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Utensils, Clock } from "lucide-react";
+import { Clock, Utensils } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
@@ -85,13 +85,13 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
                     <div className="flex gap-2">
                       {reservation.without_meal && (
                         <div className="flex items-center gap-1 text-sm text-red-600" title="Sans repas">
-                          <Utensils size={16} />
+                          <Utensils className="h-4 w-4" />
                           <span className="sr-only">Sans repas</span>
                         </div>
                       )}
                       {reservation.early_dropoff && (
                         <div className="flex items-center gap-1 text-sm text-blue-600" title="Accueil avant 8h30">
-                          <Clock size={16} />
+                          <Clock className="h-4 w-4" />
                           <span className="sr-only">Accueil avant 8h30</span>
                         </div>
                       )}
