@@ -39,28 +39,32 @@ const AdminReservations = () => {
           {reservations?.map((reservation) => (
             <div
               key={reservation.id}
-              className="flex items-center justify-between p-4 border rounded"
+              className="flex items-center justify-between p-4 border rounded bg-white shadow-sm"
             >
-              <div>
-                <p className="font-medium">
-                  {reservation.children?.first_name} {reservation.children?.last_name}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Classe: {reservation.children?.school_class}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Date: {new Date(reservation.reservation_date).toLocaleDateString("fr-FR")}
-                </p>
-                <p className="text-sm text-gray-600">
-                  N° de réservation: {reservation.reservation_number}
-                </p>
-                <div className="mt-2 space-x-2">
-                  {reservation.without_meal && (
-                    <Badge variant="secondary">Sans repas</Badge>
-                  )}
-                  {reservation.early_dropoff && (
-                    <Badge variant="secondary">Accueil avant 8h30</Badge>
-                  )}
+              <div className="space-y-2 w-full">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-lg">
+                      {reservation.children?.first_name} {reservation.children?.last_name}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Classe: {reservation.children?.school_class}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Date: {new Date(reservation.reservation_date).toLocaleDateString("fr-FR")}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      N° de réservation: {reservation.reservation_number}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {reservation.without_meal && (
+                      <Badge variant="secondary">Sans repas</Badge>
+                    )}
+                    {reservation.early_dropoff && (
+                      <Badge variant="secondary">Accueil avant 8h30</Badge>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
