@@ -1,13 +1,10 @@
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Clock, Utensils, Calendar } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import { EmptyReservations } from "./EmptyReservations";
+import { ChildReservationCard } from "./ChildReservationCard";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -65,17 +62,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   }, {} as GroupedReservations);
 
   if (!reservationsByChild || Object.keys(reservationsByChild).length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
-        <Calendar className="h-12 w-12 text-muted-foreground" />
-        <div>
-          <h3 className="font-semibold">Aucune réservation</h3>
-          <p className="text-sm text-muted-foreground">
-            Vous n'avez pas encore de réservations.
-          </p>
-        </div>
-      </div>
-    );
+    return <EmptyReservations />;
   }
 
   return (
@@ -84,45 +71,12 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
       <ScrollArea className="h-[500px]">
         <div className="space-y-4 pr-4">
           {Object.entries(reservationsByChild).map(([childId, data]) => (
-            <Card key={childId} className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-medium">{data.childName}</h3>
-                  <p className="text-sm text-muted-foreground">{data.schoolClass}</p>
-                </div>
-                <Badge variant="secondary">
-                  {data.reservations.length} réservation{data.reservations.length > 1 ? 's' : ''}
-                </Badge>
-              </div>
-              <div className="space-y-3">
-                {data.reservations.map((reservation) => (
-                  <div
-                    key={reservation.id}
-                    className="flex flex-col space-y-2 p-4 rounded-lg bg-secondary/50"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">
-                        {format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-3 mt-2">
-                      {reservation.without_meal && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700">
-                          <Utensils className="h-4 w-4" />
-                          <span className="text-sm">Sans repas</span>
-                        </div>
-                      )}
-                      {reservation.early_dropoff && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 text-blue-700">
-                          <Clock className="h-4 w-4" />
-                          <span className="text-sm">Accueil avant 8h30</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+            <ChildReservationCard
+              key={childId}
+              childName={data.childName}
+              schoolClass={data.schoolClass}
+              reservations={data.reservations}
+            />
           ))}
         </div>
       </ScrollArea>
