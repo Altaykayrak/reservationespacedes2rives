@@ -3,6 +3,8 @@ import { fr } from "date-fns/locale";
 import { useAvailableDates } from "@/hooks/useAvailableDates";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar } from "lucide-react";
 
 interface ReservationCalendarProps {
   selectedDates: Date[];
@@ -25,16 +27,20 @@ export const ReservationCalendar = ({
 
   if (!availableWednesdays || availableWednesdays.length === 0) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Mercredis disponibles</h2>
-        <p className="text-gray-500">Aucun mercredi n'est disponible pour le moment.</p>
+      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+        <Calendar className="h-12 w-12 text-muted-foreground" />
+        <div>
+          <h3 className="font-semibold">Aucun mercredi disponible</h3>
+          <p className="text-sm text-muted-foreground">
+            Il n'y a pas de mercredis disponibles pour le moment.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Mercredis disponibles</h2>
+    <ScrollArea className="h-[400px] pr-4">
       <div className="space-y-4">
         {availableWednesdays.map((wednesday) => {
           const date = new Date(wednesday.date);
@@ -43,19 +49,25 @@ export const ReservationCalendar = ({
           );
 
           return (
-            <div key={wednesday.date} className="flex items-start gap-2">
+            <div
+              key={wednesday.date}
+              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors"
+            >
               <Checkbox
                 id={wednesday.date}
                 checked={isSelected}
                 onCheckedChange={() => handleDateToggle(date)}
               />
-              <Label htmlFor={wednesday.date} className="font-medium">
+              <Label
+                htmlFor={wednesday.date}
+                className="flex-1 cursor-pointer font-medium"
+              >
                 {format(date, "EEEE d MMMM yyyy", { locale: fr })}
               </Label>
             </div>
           );
         })}
       </div>
-    </div>
+    </ScrollArea>
   );
 };

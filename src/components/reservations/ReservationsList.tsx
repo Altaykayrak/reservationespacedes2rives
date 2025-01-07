@@ -1,11 +1,13 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Clock, Utensils } from "lucide-react";
+import { Clock, Utensils, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -25,7 +27,6 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   const location = useLocation();
   const isHolidayPage = location.pathname === "/holiday-reservations";
 
-  // Fetch holiday periods to filter reservations
   const { data: holidayPeriods } = useQuery({
     queryKey: ["available_holiday_periods"],
     queryFn: async () => {
@@ -37,13 +38,11 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     },
   });
 
-  // Filter reservations based on the page
   const filteredReservations = reservations?.filter(reservation => {
     if (!isHolidayPage) {
-      return true; // Show all reservations on the regular reservations page
+      return true;
     }
 
-    // Check if the reservation date falls within any holiday period
     return holidayPeriods?.some(period => {
       const reservationDate = new Date(reservation.reservation_date);
       const startDate = new Date(period.start_date);
@@ -52,7 +51,6 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     });
   });
 
-  // Group reservations by child
   const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
@@ -66,49 +64,66 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     return acc;
   }, {} as GroupedReservations);
 
+  if (!reservationsByChild || Object.keys(reservationsByChild).length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+        <Calendar className="h-12 w-12 text-muted-foreground" />
+        <div>
+          <h3 className="font-semibold">Aucune réservation</h3>
+          <p className="text-sm text-muted-foreground">
+            Vous n'avez pas encore de réservations.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Réservations actuelles</h2>
-      <div className="space-y-4">
-        {reservationsByChild && Object.entries(reservationsByChild).map(([childId, data]) => (
-          <Card key={childId} className="p-4">
-            <h3 className="font-medium text-lg mb-2">
-              {data.childName} ({data.schoolClass})
-            </h3>
-            <ul className="space-y-2">
-              {data.reservations.map((reservation) => (
-                <li key={reservation.id} className="space-y-1">
-                  <div className="flex items-center gap-4">
-                    <span>
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold">Réservations actuelles</h2>
+      <ScrollArea className="h-[500px]">
+        <div className="space-y-4 pr-4">
+          {Object.entries(reservationsByChild).map(([childId, data]) => (
+            <Card key={childId} className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-medium">{data.childName}</h3>
+                  <p className="text-sm text-muted-foreground">{data.schoolClass}</p>
+                </div>
+                <Badge variant="secondary">
+                  {data.reservations.length} réservation{data.reservations.length > 1 ? 's' : ''}
+                </Badge>
+              </div>
+              <div className="space-y-3">
+                {data.reservations.map((reservation) => (
+                  <div
+                    key={reservation.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                  >
+                    <span className="font-medium">
                       {format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-3">
                       {reservation.without_meal && (
-                        <div className="flex items-center gap-1 text-sm text-red-600" title="Sans repas">
-                          <Utensils className="h-4 w-4" />
-                          <span className="sr-only">Sans repas</span>
+                        <div className="flex items-center gap-1" title="Sans repas">
+                          <Utensils className="h-4 w-4 text-red-500" />
+                          <span className="text-sm text-muted-foreground">Sans repas</span>
                         </div>
                       )}
                       {reservation.early_dropoff && (
-                        <div className="flex items-center gap-1 text-sm text-blue-600" title="Accueil avant 8h30">
-                          <Clock className="h-4 w-4" />
-                          <span className="sr-only">Accueil avant 8h30</span>
+                        <div className="flex items-center gap-1" title="Accueil avant 8h30">
+                          <Clock className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm text-muted-foreground">Avant 8h30</span>
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="text-sm text-gray-600 pl-4">
-                    {reservation.without_meal && <span>• Sans repas</span>}
-                    {reservation.early_dropoff && (
-                      <span className="ml-4">• Accueil avant 8h30</span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        ))}
-      </div>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   );
 };
