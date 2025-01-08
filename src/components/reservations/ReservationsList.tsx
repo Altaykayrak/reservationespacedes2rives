@@ -27,6 +27,9 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   const isHolidayPage = location.pathname === "/holiday-reservations";
   const today = startOfDay(new Date());
 
+  console.log('Today date:', today);
+  console.log('All reservations:', reservations);
+
   const { data: holidayPeriods } = useQuery({
     queryKey: ["available_holiday_periods"],
     queryFn: async () => {
@@ -39,12 +42,19 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   });
 
   const filteredReservations = reservations?.filter(reservation => {
+    console.log('Processing reservation:', reservation);
+    console.log('Raw reservation date:', reservation.reservation_date);
+    
     // S'assurer que la date de réservation est correctement parsée
     const reservationDate = startOfDay(parseISO(reservation.reservation_date));
+    console.log('Parsed reservation date:', reservationDate);
     
     // Ne pas afficher les réservations passées
-    if (isBefore(reservationDate, today)) {
-      console.log('Filtering out past reservation:', reservationDate, 'today:', today);
+    const isPast = isBefore(reservationDate, today);
+    console.log('Is past date?', isPast);
+    
+    if (isPast) {
+      console.log('Filtering out past reservation:', reservationDate);
       return false;
     }
     
@@ -60,6 +70,8 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     }
   });
 
+  console.log('Filtered reservations:', filteredReservations);
+
   const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
@@ -72,6 +84,8 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     acc[childId].reservations.push(reservation);
     return acc;
   }, {} as GroupedReservations);
+
+  console.log('Grouped reservations:', reservationsByChild);
 
   if (!reservationsByChild || Object.keys(reservationsByChild).length === 0) {
     return <EmptyReservations />;
