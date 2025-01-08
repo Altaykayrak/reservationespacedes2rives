@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
 import { UtensilsCrossed, Clock } from "lucide-react";
+import { isWednesday } from "date-fns";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -37,16 +38,18 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   });
 
   const filteredReservations = reservations?.filter(reservation => {
-    if (!isHolidayPage) {
-      return true;
+    const reservationDate = new Date(reservation.reservation_date);
+    
+    if (isHolidayPage) {
+      return holidayPeriods?.some(period => {
+        const startDate = new Date(period.start_date);
+        const endDate = new Date(period.end_date);
+        return reservationDate >= startDate && reservationDate <= endDate;
+      });
+    } else {
+      // Filter only Wednesdays for the regular reservations page
+      return isWednesday(reservationDate);
     }
-
-    return holidayPeriods?.some(period => {
-      const reservationDate = new Date(reservation.reservation_date);
-      const startDate = new Date(period.start_date);
-      const endDate = new Date(period.end_date);
-      return reservationDate >= startDate && reservationDate <= endDate;
-    });
   });
 
   const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
@@ -69,7 +72,9 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-xl font-semibold text-gray-800">Réservations actuelles</h2>
+        <h2 className="text-xl font-semibold text-gray-800">
+          {isHolidayPage ? "Réservations vacances" : "Réservations mercredis"}
+        </h2>
         <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-muted-foreground bg-gray-50/50 p-2 rounded-lg border border-gray-100">
           <div className="flex items-center gap-1.5">
             <div className="inline-flex items-center rounded-full bg-red-100/80 p-1.5 text-red-700">
