@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 
 type Child = Tables<"children">;
 
@@ -43,13 +41,7 @@ export const ReservationForm = ({
   isSubmitting,
   setSelectedDates,
 }: ReservationFormProps) => {
-  const [dateOptions, setDateOptions] = useState<DateOptions[]>(
-    selectedDates.map(date => ({
-      date,
-      withoutMeal: false,
-      earlyDropoff: false,
-    }))
-  );
+  const [dateOptions, setDateOptions] = useState<DateOptions[]>([]);
 
   // Filter children to only show primary and kindergarten classes
   const filteredChildren = children?.filter(child => 
@@ -70,7 +62,7 @@ export const ReservationForm = ({
     });
     setDateOptions(newDateOptions);
     setSelectedDates(newDateOptions);
-  }, [selectedDates]);
+  }, [selectedDates]); // Only depend on selectedDates
 
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
     const newDateOptions = dateOptions.map(opt =>
