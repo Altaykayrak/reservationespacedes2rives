@@ -15,8 +15,8 @@ interface ReservationItemProps {
 export const ReservationItem = ({ reservation }: ReservationItemProps) => {
   return (
     <div className="flex items-center gap-3 p-3 transition-colors hover:bg-gray-50">
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50">
-        <CalendarDays className="h-4 w-4 text-blue-500" />
+      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50">
+        <CalendarDays className="h-4 w-4 text-blue-500" strokeWidth={2} />
       </div>
       <div className="flex-1 space-y-0.5">
         <span className="text-sm font-medium text-gray-800">
