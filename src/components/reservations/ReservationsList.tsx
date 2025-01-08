@@ -39,11 +39,11 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   });
 
   const filteredReservations = reservations?.filter(reservation => {
-    const reservationDate = startOfDay(parseISO(reservation.reservation_date));
-    const isPast = isBefore(reservationDate, today);
-
-    // Si la réservation est dans le passé, on ne l'affiche pas
-    if (isPast) {
+    // Convertir la date de réservation en objet Date et la normaliser au début de la journée
+    const reservationDate = startOfDay(new Date(reservation.reservation_date));
+    
+    // Si la date de réservation est avant aujourd'hui, ne pas l'afficher
+    if (isBefore(reservationDate, today)) {
       return false;
     }
 
@@ -55,10 +55,12 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
         return reservationDate >= startDate && reservationDate <= endDate;
       });
     } else {
+      // Pour la page des mercredis, vérifier que c'est bien un mercredi
       return isWednesday(reservationDate);
     }
   });
 
+  // Grouper les réservations par enfant
   const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
