@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileData, Child } from "@/types/profile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Navbar } from "@/components/ui/navbar";
 
 const Profile = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -116,36 +117,39 @@ const Profile = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
-        <Button asChild className="flex-1">
-          <Link to="/reservations">Réservations Mercredi</Link>
-        </Button>
-        <Button asChild className="flex-1">
-          <Link to="/holiday-reservations">Réservations Vacances</Link>
-        </Button>
-      </div>
+    <div>
+      <Navbar />
+      <div className="container mx-auto p-4">
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <Button asChild variant="default" className="flex-1">
+            <Link to="/reservations">Réservations Mercredi</Link>
+          </Button>
+          <Button asChild variant="default" className="flex-1">
+            <Link to="/holiday-reservations">Réservations Vacances</Link>
+          </Button>
+        </div>
 
-      <div className="grid gap-8">
-        <ProfileSection 
-          profile={profile} 
-          onEdit={() => setShowEditDialog(true)} 
-        />
-
-        <ChildrenList children={children} />
-      </div>
-
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Modifier mon profil</DialogTitle>
-          </DialogHeader>
-          <EditProfileForm 
-            initialData={profile} 
-            onSuccess={() => setShowEditDialog(false)} 
+        <div className="grid gap-8">
+          <ProfileSection 
+            profile={profile} 
+            onEdit={() => setShowEditDialog(true)} 
           />
-        </DialogContent>
-      </Dialog>
+
+          <ChildrenList children={children} />
+        </div>
+
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Modifier mon profil</DialogTitle>
+            </DialogHeader>
+            <EditProfileForm 
+              initialData={profile} 
+              onSuccess={() => setShowEditDialog(false)} 
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
