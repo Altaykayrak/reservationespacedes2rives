@@ -17,7 +17,7 @@ export function ChildrenList({ children }: ChildrenListProps) {
   return (
     <div className="mt-8 space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold tracking-tight">Liste des enfants</h3>
+        <h3 className="text-lg font-semibold tracking-tight text-left">Liste des enfants</h3>
         <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Ajouter un enfant
@@ -28,9 +28,9 @@ export function ChildrenList({ children }: ChildrenListProps) {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-gray-200 dark:border-gray-800">
-                <TableHead className="text-left font-medium">Nom</TableHead>
-                <TableHead className="text-left font-medium">Prénom</TableHead>
-                <TableHead className="text-left font-medium">Classe</TableHead>
+                <TableHead className="text-left">Nom</TableHead>
+                <TableHead className="text-left">Prénom</TableHead>
+                <TableHead className="text-left">Classe</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -40,9 +40,9 @@ export function ChildrenList({ children }: ChildrenListProps) {
                     key={child.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                   >
-                    <TableCell className="font-medium">{child.last_name}</TableCell>
-                    <TableCell>{child.first_name}</TableCell>
-                    <TableCell>{child.school_class}</TableCell>
+                    <TableCell className="text-left">{child.last_name}</TableCell>
+                    <TableCell className="text-left">{child.first_name}</TableCell>
+                    <TableCell className="text-left">{child.school_class}</TableCell>
                   </TableRow>
                 ))
               ) : (
