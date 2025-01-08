@@ -5,6 +5,7 @@ import { Child } from "@/types/profile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Navbar } from "@/components/ui/navbar";
 
 const Children = () => {
   const navigate = useNavigate();
@@ -30,16 +31,19 @@ const Children = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto p-4">
-        <Alert variant="destructive">
-          <AlertDescription>
-            Une erreur est survenue lors du chargement des données. Veuillez réessayer ou vous reconnecter.
-          </AlertDescription>
-        </Alert>
-        <div className="mt-4 flex justify-center">
-          <Button onClick={() => navigate("/login")}>
-            Se reconnecter
-          </Button>
+      <div>
+        <Navbar />
+        <div className="container mx-auto p-4">
+          <Alert variant="destructive">
+            <AlertDescription>
+              Une erreur est survenue lors du chargement des données. Veuillez réessayer ou vous reconnecter.
+            </AlertDescription>
+          </Alert>
+          <div className="mt-4 flex justify-center">
+            <Button onClick={() => navigate("/login")}>
+              Se reconnecter
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -47,15 +51,21 @@ const Children = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center text-muted-foreground">Chargement...</div>
+      <div>
+        <Navbar />
+        <div className="container mx-auto p-4">
+          <div className="text-center text-muted-foreground">Chargement...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <ChildrenList children={children} />
+    <div>
+      <Navbar />
+      <div className="container mx-auto p-4">
+        <ChildrenList children={children} />
+      </div>
     </div>
   );
 };
