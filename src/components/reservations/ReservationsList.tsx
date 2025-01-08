@@ -25,7 +25,7 @@ interface ReservationsListProps {
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   const location = useLocation();
   const isHolidayPage = location.pathname === "/holiday-reservations";
-  const today = startOfDay(new Date());
+  const today = startOfDay(new Date()); // Utilise la vraie date système
 
   console.log('Today date:', today);
   console.log('All reservations:', reservations);
@@ -45,11 +45,9 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     console.log('Processing reservation:', reservation);
     console.log('Raw reservation date:', reservation.reservation_date);
     
-    // S'assurer que la date de réservation est correctement parsée
     const reservationDate = startOfDay(parseISO(reservation.reservation_date));
     console.log('Parsed reservation date:', reservationDate);
     
-    // Ne pas afficher les réservations passées
     const isPast = isBefore(reservationDate, today);
     console.log('Is past date?', isPast);
     
@@ -65,7 +63,6 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
         return reservationDate >= startDate && reservationDate <= endDate;
       });
     } else {
-      // Filter only Wednesdays for the regular reservations page
       return isWednesday(reservationDate);
     }
   });
