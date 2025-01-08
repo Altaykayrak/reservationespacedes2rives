@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
 import { UtensilsCrossed, Clock } from "lucide-react";
-import { isWednesday, isBefore, startOfDay, parseISO } from "date-fns";
+import { isWednesday, isBefore, startOfDay } from "date-fns";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -39,15 +39,12 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   });
 
   const filteredReservations = reservations?.filter(reservation => {
-    // Convertir la date de réservation en objet Date et la normaliser au début de la journée
     const reservationDate = startOfDay(new Date(reservation.reservation_date));
     
-    // Si la date de réservation est avant aujourd'hui, ne pas l'afficher
     if (isBefore(reservationDate, today)) {
       return false;
     }
 
-    // Filtrage selon le type de page (vacances ou mercredis)
     if (isHolidayPage) {
       return holidayPeriods?.some(period => {
         const startDate = startOfDay(new Date(period.start_date));
@@ -55,12 +52,10 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
         return reservationDate >= startDate && reservationDate <= endDate;
       });
     } else {
-      // Pour la page des mercredis, vérifier que c'est bien un mercredi
       return isWednesday(reservationDate);
     }
   });
 
-  // Grouper les réservations par enfant
   const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
@@ -100,7 +95,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
         </div>
       </div>
       <ScrollArea className="h-[450px]">
-        <div className="grid gap-3 pr-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
           {Object.entries(reservationsByChild || {}).map(([childId, data]) => (
             <ChildReservationCard
               key={childId}
