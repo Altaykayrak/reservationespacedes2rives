@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
 import { UtensilsCrossed, Clock } from "lucide-react";
-import { isWednesday, isBefore, startOfDay } from "date-fns";
+import { isWednesday, isBefore, startOfDay, parseISO } from "date-fns";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -39,10 +39,12 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   });
 
   const filteredReservations = reservations?.filter(reservation => {
-    const reservationDate = new Date(reservation.reservation_date);
+    // S'assurer que la date de réservation est correctement parsée
+    const reservationDate = startOfDay(parseISO(reservation.reservation_date));
     
     // Ne pas afficher les réservations passées
     if (isBefore(reservationDate, today)) {
+      console.log('Filtering out past reservation:', reservationDate, 'today:', today);
       return false;
     }
     
@@ -98,7 +100,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
       </div>
       <ScrollArea className="h-[450px]">
         <div className="grid gap-3 pr-4">
-          {Object.entries(reservationsByChild).map(([childId, data]) => (
+          {Object.entries(reservationsByChild || {}).map(([childId, data]) => (
             <ChildReservationCard
               key={childId}
               childName={data.childName}
