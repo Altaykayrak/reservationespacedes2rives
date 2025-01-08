@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
 import { UtensilsCrossed, Clock } from "lucide-react";
-import { isWednesday } from "date-fns";
+import { isWednesday, isBefore, startOfDay } from "date-fns";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -25,6 +25,7 @@ interface ReservationsListProps {
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   const location = useLocation();
   const isHolidayPage = location.pathname === "/holiday-reservations";
+  const today = startOfDay(new Date());
 
   const { data: holidayPeriods } = useQuery({
     queryKey: ["available_holiday_periods"],
@@ -39,6 +40,11 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
 
   const filteredReservations = reservations?.filter(reservation => {
     const reservationDate = new Date(reservation.reservation_date);
+    
+    // Ne pas afficher les réservations passées
+    if (isBefore(reservationDate, today)) {
+      return false;
+    }
     
     if (isHolidayPage) {
       return holidayPeriods?.some(period => {
