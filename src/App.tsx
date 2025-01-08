@@ -5,7 +5,7 @@ import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import Index from "./pages/Index";
 import { Toaster } from "sonner";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 function App() {
   return (
