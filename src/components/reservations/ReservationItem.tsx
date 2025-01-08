@@ -18,10 +18,12 @@ export const ReservationItem = ({ reservation }: ReservationItemProps) => {
       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50">
         <CalendarDays className="h-4 w-4 text-blue-500" strokeWidth={2} />
       </div>
-      <div className="flex-1 space-y-0.5">
-        <span className="text-sm font-medium text-gray-800">
-          {format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}
-        </span>
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-800">
+            {format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}
+          </span>
+        </div>
         <ReservationBadges
           withoutMeal={reservation.without_meal || false}
           earlyDropoff={reservation.early_dropoff || false}
