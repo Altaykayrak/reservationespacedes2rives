@@ -66,7 +66,6 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
         return reservationDate >= startDate && reservationDate <= endDate;
       });
     } else {
-      // Vérifier si c'est un mercredi ET si ce mercredi est dans la liste des mercredis disponibles
       return isWednesday(reservationDate) && availableWednesdays?.some(wednesday => {
         const wednesdayDate = startOfDay(new Date(wednesday.date));
         return wednesdayDate.getTime() === reservationDate.getTime();
@@ -99,13 +98,13 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
         </h2>
         <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-muted-foreground bg-gray-50/50 p-2 rounded-lg border border-gray-100">
           <div className="flex items-center gap-1.5">
-            <div className="inline-flex items-center rounded-full bg-red-100/80 p-1.5 text-red-700">
+            <div className="inline-flex items-center justify-center rounded-full bg-red-100/80 p-1.5 text-red-700">
               <UtensilsCrossed className="h-3 w-3" />
             </div>
             <span>Sans repas</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="inline-flex items-center rounded-full bg-blue-100/80 p-1.5 text-blue-700">
+            <div className="inline-flex items-center justify-center rounded-full bg-blue-100/80 p-1.5 text-blue-700">
               <Clock className="h-3 w-3" />
             </div>
             <span>Accueil avant 8h30</span>
