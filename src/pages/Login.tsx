@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AuthError } from "@supabase/supabase-js";
+import { AuthError, AuthApiError } from "@supabase/supabase-js";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,15 +18,29 @@ const Login = () => {
   const navigate = useNavigate();
 
   const getErrorMessage = (error: AuthError) => {
-    const message = error.message;
-    if (message.includes("Invalid login credentials")) {
-      return "Email ou mot de passe incorrect";
+    if (error instanceof AuthApiError) {
+      switch (error.status) {
+        case 400:
+          if (error.message.includes("Email not confirmed")) {
+            return "Veuillez confirmer votre email avant de vous connecter";
+          }
+          return "Email ou mot de passe incorrect";
+        case 422:
+          return "Format d'email invalide";
+        default:
+          return "Une erreur est survenue lors de la connexion";
+      }
     }
     return "Une erreur est survenue lors de la connexion";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      setError("Veuillez remplir tous les champs");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
