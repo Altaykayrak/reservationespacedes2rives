@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileData, Child } from "@/types/profile";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Profile = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -36,8 +37,14 @@ const Profile = () => {
         .eq("id", user.id)
         .maybeSingle();
         
-      if (error) throw error;
-      if (!data) throw new Error("Profile not found");
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
+      if (!data) {
+        console.error("Profile not found");
+        throw new Error("Profile not found");
+      }
 
       return {
         ...data,
@@ -46,7 +53,7 @@ const Profile = () => {
     },
   });
 
-  const { data: children = [], isLoading: childrenLoading } = useQuery({
+  const { data: children = [], isLoading: childrenLoading, error: childrenError } = useQuery({
     queryKey: ["children"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -57,17 +64,27 @@ const Profile = () => {
         .select("*")
         .eq("profile_id", user.id);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching children:", error);
+        throw error;
+      }
       return data as Child[];
     },
     enabled: !!profile, // Only fetch children if profile exists
   });
 
-  if (profileError) {
+  if (profileError || childrenError) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center text-red-500">
-          Une erreur est survenue lors du chargement du profil. Veuillez réessayer.
+        <Alert variant="destructive">
+          <AlertDescription>
+            Une erreur est survenue lors du chargement des données. Veuillez réessayer ou vous reconnecter.
+          </AlertDescription>
+        </Alert>
+        <div className="mt-4 flex justify-center">
+          <Button onClick={() => navigate("/login")}>
+            Se reconnecter
+          </Button>
         </div>
       </div>
     );
@@ -76,7 +93,7 @@ const Profile = () => {
   if (profileLoading || childrenLoading) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center">Chargement...</div>
+        <div className="text-center text-muted-foreground">Chargement...</div>
       </div>
     );
   }
@@ -84,13 +101,15 @@ const Profile = () => {
   if (!profile) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center">
-          Profil non trouvé. Veuillez vous reconnecter.
-          <div className="mt-4">
-            <Button onClick={() => navigate("/login")}>
-              Se connecter
-            </Button>
-          </div>
+        <Alert>
+          <AlertDescription>
+            Profil non trouvé. Veuillez vous reconnecter.
+          </AlertDescription>
+        </Alert>
+        <div className="mt-4 flex justify-center">
+          <Button onClick={() => navigate("/login")}>
+            Se connecter
+          </Button>
         </div>
       </div>
     );
