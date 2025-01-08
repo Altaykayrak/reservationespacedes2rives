@@ -10,6 +10,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminHolidays from "./pages/admin/AdminHolidays";
 import AdminWednesdays from "./pages/admin/AdminWednesdays";
 import AdminReservations from "./pages/admin/AdminReservations";
+import Reservations from "./pages/Reservations";
 
 function App() {
   return (
@@ -28,6 +29,14 @@ function App() {
           }
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route
+          path="/reservations"
+          element={
+            <ProtectedRoute>
+              <Reservations />
+            </ProtectedRoute>
+          }
+        />
         
         {/* Routes administratives */}
         <Route
