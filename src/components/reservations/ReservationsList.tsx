@@ -1,6 +1,9 @@
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyReservations } from "./EmptyReservations";
@@ -38,6 +41,17 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     },
   });
 
+  const { data: availableWednesdays } = useQuery({
+    queryKey: ["availableWednesdays"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("available_wednesdays")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const filteredReservations = reservations?.filter(reservation => {
     const reservationDate = startOfDay(new Date(reservation.reservation_date));
     
@@ -52,7 +66,11 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
         return reservationDate >= startDate && reservationDate <= endDate;
       });
     } else {
-      return isWednesday(reservationDate);
+      // Vérifier si c'est un mercredi ET si ce mercredi est dans la liste des mercredis disponibles
+      return isWednesday(reservationDate) && availableWednesdays?.some(wednesday => {
+        const wednesdayDate = startOfDay(new Date(wednesday.date));
+        return wednesdayDate.getTime() === reservationDate.getTime();
+      });
     }
   });
 
