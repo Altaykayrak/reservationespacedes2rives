@@ -15,41 +15,49 @@ export function ChildrenList({ children }: ChildrenListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false)
 
   return (
-    <div className="mt-8">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Liste des enfants</h3>
+    <div className="mt-8 space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold tracking-tight">Liste des enfants</h3>
         <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Ajouter un enfant
         </Button>
       </div>
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-left">Nom</TableHead>
-              <TableHead className="text-left">Prénom</TableHead>
-              <TableHead className="text-left">Classe</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {children && children.length > 0 ? (
-              children.map((child) => (
-                <TableRow key={child.id}>
-                  <TableCell className="text-left">{child.last_name}</TableCell>
-                  <TableCell className="text-left">{child.first_name}</TableCell>
-                  <TableCell className="text-left">{child.school_class}</TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground">
-                  Aucun enfant enregistré
-                </TableCell>
+      <Card className="overflow-hidden border-0 shadow-sm">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-b border-gray-200 dark:border-gray-800">
+                <TableHead className="text-left font-medium">Nom</TableHead>
+                <TableHead className="text-left font-medium">Prénom</TableHead>
+                <TableHead className="text-left font-medium">Classe</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {children && children.length > 0 ? (
+                children.map((child) => (
+                  <TableRow 
+                    key={child.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  >
+                    <TableCell className="font-medium">{child.last_name}</TableCell>
+                    <TableCell>{child.first_name}</TableCell>
+                    <TableCell>{child.school_class}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell 
+                    colSpan={3} 
+                    className="text-center h-32 text-muted-foreground"
+                  >
+                    Aucun enfant enregistré
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
