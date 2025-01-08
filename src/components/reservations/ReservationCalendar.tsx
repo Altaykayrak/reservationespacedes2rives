@@ -20,7 +20,8 @@ export const ReservationCalendar = ({
   const { selectedChild, isDateReservedForChild } = useReservations();
 
   const handleDateToggle = (date: Date) => {
-    if (selectedDates.some(d => d.getTime() === date.getTime())) {
+    const isSelected = selectedDates.some(d => d.getTime() === date.getTime());
+    if (isSelected) {
       setSelectedDates(selectedDates.filter(d => d.getTime() !== date.getTime()));
     } else {
       setSelectedDates([...selectedDates, date]);
