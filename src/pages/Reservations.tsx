@@ -3,9 +3,13 @@ import { ReservationForm } from "@/components/reservations/ReservationForm";
 import { ReservationsList } from "@/components/reservations/ReservationsList";
 import { useReservations } from "@/hooks/useReservations";
 import { Separator } from "@/components/ui/separator";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Home, User, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Reservations = () => {
+  const navigate = useNavigate();
   const {
     selectedDates,
     setSelectedDates,
@@ -17,8 +21,37 @@ const Reservations = () => {
     isSubmitting
   } = useReservations();
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      {/* Navigation Bar */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="container mx-auto p-4 flex justify-between items-center">
+          <Button variant="ghost" asChild>
+            <Link to="/" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Accueil
+            </Link>
+          </Button>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" asChild>
+              <Link to="/profile" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Profil
+              </Link>
+            </Button>
+            <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2">
+              <LogOut className="h-4 w-4" />
+              Déconnexion
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto p-6 space-y-8 max-w-7xl">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
