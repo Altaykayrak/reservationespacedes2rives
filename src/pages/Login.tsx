@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthError } from "@supabase/supabase-js";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -16,28 +17,37 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const getErrorMessage = (error: AuthError) => {
+    const message = error.message;
+    if (message.includes("Invalid login credentials")) {
+      return "Email ou mot de passe incorrect";
+    }
+    return "Une erreur est survenue lors de la connexion";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
       });
 
-      if (signInError) throw signInError;
+      if (signInError) {
+        setError(getErrorMessage(signInError));
+        return;
+      }
 
-      toast.success("Connexion réussie");
-      navigate("/profile");
+      if (data?.user) {
+        toast.success("Connexion réussie");
+        navigate("/profile");
+      }
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(
-        err.message === "Invalid login credentials"
-          ? "Email ou mot de passe incorrect"
-          : "Une erreur est survenue lors de la connexion"
-      );
+      setError("Une erreur inattendue est survenue");
     } finally {
       setIsLoading(false);
     }
