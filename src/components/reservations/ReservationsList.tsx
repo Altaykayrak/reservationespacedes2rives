@@ -25,10 +25,7 @@ interface ReservationsListProps {
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   const location = useLocation();
   const isHolidayPage = location.pathname === "/holiday-reservations";
-  const today = startOfDay(new Date()); // Utilise la vraie date système
-
-  console.log('Today date:', today);
-  console.log('All reservations:', reservations);
+  const today = startOfDay(new Date());
 
   const { data: holidayPeriods } = useQuery({
     queryKey: ["available_holiday_periods"],
@@ -42,32 +39,25 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   });
 
   const filteredReservations = reservations?.filter(reservation => {
-    console.log('Processing reservation:', reservation);
-    console.log('Raw reservation date:', reservation.reservation_date);
-    
     const reservationDate = startOfDay(parseISO(reservation.reservation_date));
-    console.log('Parsed reservation date:', reservationDate);
-    
     const isPast = isBefore(reservationDate, today);
-    console.log('Is past date?', isPast);
-    
+
+    // Si la réservation est dans le passé, on ne l'affiche pas
     if (isPast) {
-      console.log('Filtering out past reservation:', reservationDate);
       return false;
     }
-    
+
+    // Filtrage selon le type de page (vacances ou mercredis)
     if (isHolidayPage) {
       return holidayPeriods?.some(period => {
-        const startDate = new Date(period.start_date);
-        const endDate = new Date(period.end_date);
+        const startDate = startOfDay(new Date(period.start_date));
+        const endDate = startOfDay(new Date(period.end_date));
         return reservationDate >= startDate && reservationDate <= endDate;
       });
     } else {
       return isWednesday(reservationDate);
     }
   });
-
-  console.log('Filtered reservations:', filteredReservations);
 
   const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
@@ -81,8 +71,6 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     acc[childId].reservations.push(reservation);
     return acc;
   }, {} as GroupedReservations);
-
-  console.log('Grouped reservations:', reservationsByChild);
 
   if (!reservationsByChild || Object.keys(reservationsByChild).length === 0) {
     return <EmptyReservations />;
