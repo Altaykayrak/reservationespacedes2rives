@@ -9,7 +9,12 @@ const Index = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <div className="bg-gray-500 text-white py-24">
+      <div 
+        className="relative bg-cover bg-center text-white py-24"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/AggloSeineEure_Espacedes2Rives_Pitres.jpg')`,
+        }}
+      >
         <div className="container mx-auto px-4 text-center">
           <div className="mb-8">
             <img
