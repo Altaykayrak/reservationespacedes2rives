@@ -17,9 +17,9 @@ export const Navbar = () => {
       <div className="flex justify-between items-center max-w-7xl mx-auto">
         <Link to="/" className="flex items-center">
           <img
-            src="/lovable-uploads/b6dd29e9-3775-4d44-a30f-37b6be91ad65.png"
+            src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png"
             alt="L'espace des deux rives"
-            className="h-8"
+            className="h-12"
           />
         </Link>
         <div className="flex items-center gap-4">

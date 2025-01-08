@@ -12,15 +12,11 @@ const Index = () => {
       <div className="bg-gray-500 text-white py-24">
         <div className="container mx-auto px-4 text-center">
           <div className="mb-8">
-            <svg
-              className="w-24 h-24 mx-auto mb-6"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11m16-11v11M8 21V10m8 11V10" />
-            </svg>
+            <img
+              src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png"
+              alt="L'espace des deux rives"
+              className="h-24 mx-auto"
+            />
           </div>
           <h1 className="text-5xl font-bold mb-6">L'espace des deux rives</h1>
           <p className="text-xl mb-12 max-w-3xl mx-auto">
