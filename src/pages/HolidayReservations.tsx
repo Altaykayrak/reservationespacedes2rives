@@ -4,6 +4,7 @@ import { ReservationsList } from "@/components/reservations/ReservationsList";
 import { useReservations } from "@/hooks/useReservations";
 import { validateHolidayReservations } from "@/utils/dateUtils";
 import { useToast } from "@/hooks/use-toast";
+import { Navbar } from "@/components/ui/navbar";
 
 const HolidayReservations = () => {
   const { toast } = useToast();
@@ -34,30 +35,33 @@ const HolidayReservations = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
-      <h1 className="text-2xl font-bold mb-6">Réservations de vacances</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <HolidayReservationCalendar
-          selectedDates={selectedDates.map(d => d.date)}
-          setSelectedDates={dates => setSelectedDates(dates.map(date => ({
-            date,
-            withoutMeal: false,
-            earlyDropoff: false,
-          })))}
-        />
-        <ReservationForm
-          selectedDates={selectedDates.map(d => d.date)}
-          children={children}
-          selectedChild={selectedChild}
-          setSelectedChild={setSelectedChild}
-          onSubmit={handleValidatedSubmit}
-          isSubmitting={isSubmitting}
-          setSelectedDates={setSelectedDates}
-        />
-      </div>
+    <div>
+      <Navbar />
+      <div className="container mx-auto p-4 space-y-8">
+        <h1 className="text-2xl font-bold mb-6">Réservations de vacances</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <HolidayReservationCalendar
+            selectedDates={selectedDates.map(d => d.date)}
+            setSelectedDates={dates => setSelectedDates(dates.map(date => ({
+              date,
+              withoutMeal: false,
+              earlyDropoff: false,
+            })))}
+          />
+          <ReservationForm
+            selectedDates={selectedDates.map(d => d.date)}
+            children={children}
+            selectedChild={selectedChild}
+            setSelectedChild={setSelectedChild}
+            onSubmit={handleValidatedSubmit}
+            isSubmitting={isSubmitting}
+            setSelectedDates={setSelectedDates}
+          />
+        </div>
 
-      <ReservationsList reservations={reservations} />
+        <ReservationsList reservations={reservations} />
+      </div>
     </div>
   );
 };
