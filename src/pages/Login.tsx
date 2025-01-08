@@ -3,30 +3,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Simulation de connexion
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue sur L'espace des deux rives",
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
+
+      if (signInError) throw signInError;
+
+      toast.success("Connexion réussie");
       navigate("/profile");
-    }, 1000);
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(
+        err.message === "Invalid login credentials"
+          ? "Email ou mot de passe incorrect"
+          : "Une erreur est survenue lors de la connexion"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -34,6 +48,12 @@ const Login = () => {
       title="Connexion"
       description="Bienvenue sur L'espace des deux rives"
     >
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
