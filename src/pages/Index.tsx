@@ -12,7 +12,7 @@ const Index = () => {
       <div 
         className="relative bg-cover text-white py-24"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/AggloSeineEure_Espacedes2Rives_Pitres.jpg')`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/AggloSeineEure_Espacedes2Rives_Pitres.jpg')`,
           backgroundPosition: "0% bottom"
         }}
       >
