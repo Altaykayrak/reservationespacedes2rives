@@ -27,18 +27,18 @@ export function ChildrenList({ children }: ChildrenListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Prénom</TableHead>
-              <TableHead>Classe</TableHead>
+              <TableHead className="text-left">Nom</TableHead>
+              <TableHead className="text-left">Prénom</TableHead>
+              <TableHead className="text-left">Classe</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {children && children.length > 0 ? (
               children.map((child) => (
                 <TableRow key={child.id}>
-                  <TableCell>{child.last_name}</TableCell>
-                  <TableCell>{child.first_name}</TableCell>
-                  <TableCell>{child.school_class}</TableCell>
+                  <TableCell className="text-left">{child.last_name}</TableCell>
+                  <TableCell className="text-left">{child.first_name}</TableCell>
+                  <TableCell className="text-left">{child.school_class}</TableCell>
                 </TableRow>
               ))
             ) : (
