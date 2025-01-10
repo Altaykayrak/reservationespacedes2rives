@@ -19,6 +19,14 @@ export const ReservationCalendar = ({
   const { availableWednesdays } = useAvailableDates();
   const { selectedChild, isDateReservedForChild } = useReservations();
 
+  // Filter out past dates
+  const futureWednesdays = availableWednesdays?.filter(wednesday => {
+    const wednesdayDate = new Date(wednesday.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+    return wednesdayDate >= today;
+  });
+
   const handleDateToggle = (date: Date) => {
     const isSelected = selectedDates.some(d => d.getTime() === date.getTime());
     if (isSelected) {
@@ -28,7 +36,7 @@ export const ReservationCalendar = ({
     }
   };
 
-  if (!availableWednesdays || availableWednesdays.length === 0) {
+  if (!futureWednesdays || futureWednesdays.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
         <Calendar className="h-12 w-12 text-muted-foreground" />
@@ -45,7 +53,7 @@ export const ReservationCalendar = ({
   return (
     <ScrollArea className="h-[400px] pr-4">
       <div className="space-y-4">
-        {availableWednesdays.map((wednesday) => {
+        {futureWednesdays.map((wednesday) => {
           const date = new Date(wednesday.date);
           const isSelected = selectedDates.some(
             (d) => d.getTime() === date.getTime()
