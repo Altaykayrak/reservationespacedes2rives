@@ -13,10 +13,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Search } from "lucide-react";
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 const AdminAuthorizedEmails = () => {
   const [newEmail, setNewEmail] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
 
   // Fetch authorized emails
@@ -86,6 +96,11 @@ const AdminAuthorizedEmails = () => {
     addEmailMutation.mutate(newEmail);
   };
 
+  // Filter emails based on search term
+  const filteredEmails = authorizedEmails?.filter((email) =>
+    email.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div>
       <AdminNavbar />
@@ -108,6 +123,18 @@ const AdminAuthorizedEmails = () => {
           </Button>
         </form>
 
+        <div className="mb-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        </div>
+
         {isLoading ? (
           <div>Chargement...</div>
         ) : (
@@ -120,7 +147,7 @@ const AdminAuthorizedEmails = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {authorizedEmails?.map((email) => (
+              {filteredEmails?.map((email) => (
                 <TableRow key={email.id}>
                   <TableCell>{email.email}</TableCell>
                   <TableCell>
