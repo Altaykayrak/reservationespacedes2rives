@@ -9,10 +9,13 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError, AuthApiError } from "@supabase/supabase-js";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [adminUsername, setAdminUsername] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -34,7 +37,7 @@ const Login = () => {
     return "Une erreur est survenue lors de la connexion";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setError("Veuillez remplir tous les champs");
@@ -67,51 +70,129 @@ const Login = () => {
     }
   };
 
+  const handleAdminSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminUsername || !adminPassword) {
+      setError("Veuillez remplir tous les champs");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('username', adminUsername)
+        .eq('password', adminPassword)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        toast.success("Connexion administrateur réussie");
+        navigate("/admin");
+      } else {
+        setError("Nom d'utilisateur ou mot de passe incorrect");
+      }
+    } catch (err: any) {
+      console.error("Admin login error:", err);
+      setError("Une erreur est survenue lors de la connexion");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthLayout
       title="Connexion"
       description="Bienvenue sur L'espace des deux rives"
     >
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="exemple@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Mot de passe</Label>
-          <PasswordInput
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Connexion..." : "Se connecter"}
-        </Button>
-        <div className="text-center text-sm">
-          <Link to="/register" className="text-primary hover:underline">
-            Créer un compte
-          </Link>
-          {" • "}
-          <Link to="/forgot-password" className="text-primary hover:underline">
-            Mot de passe oublié
-          </Link>
-        </div>
-      </form>
+      <Tabs defaultValue="user" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="user">Utilisateur</TabsTrigger>
+          <TabsTrigger value="admin">Administrateur</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="user">
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <form onSubmit={handleUserSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="exemple@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe</Label>
+              <PasswordInput
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Connexion..." : "Se connecter"}
+            </Button>
+            <div className="text-center text-sm">
+              <Link to="/register" className="text-primary hover:underline">
+                Créer un compte
+              </Link>
+              {" • "}
+              <Link to="/forgot-password" className="text-primary hover:underline">
+                Mot de passe oublié
+              </Link>
+            </div>
+          </form>
+        </TabsContent>
+
+        <TabsContent value="admin">
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <form onSubmit={handleAdminSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="adminUsername">Nom d'utilisateur</Label>
+              <Input
+                id="adminUsername"
+                type="text"
+                value={adminUsername}
+                onChange={(e) => setAdminUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="adminPassword">Mot de passe</Label>
+              <PasswordInput
+                id="adminPassword"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Connexion..." : "Se connecter"}
+            </Button>
+          </form>
+        </TabsContent>
+      </Tabs>
     </AuthLayout>
   );
 };
