@@ -47,14 +47,14 @@ export const WednesdaysList = ({ wednesdays, onDelete }: WednesdaysListProps) =>
     <Card className="p-6">
       <h2 className="text-xl font-semibold mb-4">Mercredis disponibles</h2>
       
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {wednesdays?.map((wednesday) => (
           <div
             key={wednesday.id}
-            className="flex items-center justify-between p-4 border rounded"
+            className="flex flex-col p-4 border rounded bg-white shadow-sm hover:shadow-md transition-shadow"
           >
-            <div>
-              <p className="font-medium">
+            <div className="flex-1">
+              <p className="font-medium text-sm">
                 {new Date(wednesday.date).toLocaleDateString("fr-FR", {
                   weekday: "long",
                   year: "numeric",
@@ -62,21 +62,25 @@ export const WednesdaysList = ({ wednesdays, onDelete }: WednesdaysListProps) =>
                   day: "numeric",
                 })}
               </p>
-              <p className="text-sm text-gray-600">
-                Maternelle (MS/GS): {wednesday.max_participants_kindergarten} participants
-              </p>
-              <p className="text-sm text-gray-600">
-                Primaire (CP à CM2): {wednesday.max_participants_primary} participants
-              </p>
+              <div className="mt-2 space-y-1">
+                <p className="text-xs text-gray-600">
+                  Maternelle: {wednesday.max_participants_kindergarten}
+                </p>
+                <p className="text-xs text-gray-600">
+                  Primaire: {wednesday.max_participants_primary}
+                </p>
+              </div>
             </div>
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => handleDeleteWednesday(wednesday.id)}
-              title="Supprimer ce mercredi"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="mt-3 flex justify-end">
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={() => handleDeleteWednesday(wednesday.id)}
+                title="Supprimer ce mercredi"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ))}
       </div>
