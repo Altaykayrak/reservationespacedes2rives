@@ -44,12 +44,17 @@ export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListP
     }
   };
 
+  // Trier les mercredis par date
+  const sortedWednesdays = wednesdays?.slice().sort((a, b) => {
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+  });
+
   return (
     <Card className="p-6">
       <h2 className="text-xl font-semibold mb-4">Mercredis disponibles</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {wednesdays?.map((wednesday) => (
+        {sortedWednesdays?.map((wednesday) => (
           <div
             key={wednesday.id}
             className="flex flex-col p-4 border rounded bg-white shadow-sm hover:shadow-md transition-shadow relative group"
