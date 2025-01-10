@@ -1,109 +1,78 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
-import Profile from "@/pages/Profile";
-import Children from "@/pages/Children";
-import ForgotPassword from "@/pages/ForgotPassword";
-import Index from "@/pages/Index";
-import Reservations from "@/pages/Reservations";
-import HolidayReservations from "@/pages/HolidayReservations";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminWednesdays from "@/pages/admin/AdminWednesdays";
 import AdminHolidays from "@/pages/admin/AdminHolidays";
 import AdminReservations from "@/pages/admin/AdminReservations";
+import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "sonner";
 
-import "./App.css";
-
-const queryClient = new QueryClient();
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
+  },
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute>
+        <AdminDashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/wednesdays",
+    element: (
+      <ProtectedRoute>
+        <AdminWednesdays />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/holidays",
+    element: (
+      <ProtectedRoute>
+        <AdminHolidays />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/reservations",
+    element: (
+      <ProtectedRoute>
+        <AdminReservations />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/authorized-emails",
+    element: (
+      <ProtectedRoute>
+        <AdminAuthorizedEmails />
+      </ProtectedRoute>
+    ),
+  },
+]);
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/children"
-            element={
-              <ProtectedRoute>
-                <Children />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/reservations"
-            element={
-              <ProtectedRoute>
-                <Reservations />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/holiday-reservations"
-            element={
-              <ProtectedRoute>
-                <HolidayReservations />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/admin/wednesdays"
-            element={
-              <ProtectedRoute>
-                <AdminWednesdays />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/admin/holidays"
-            element={
-              <ProtectedRoute>
-                <AdminHolidays />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/admin/reservations"
-            element={
-              <ProtectedRoute>
-                <AdminReservations />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-        <Toaster />
-      </Router>
-    </QueryClientProvider>
+    <>
+      <RouterProvider router={router} />
+      <Toaster />
+      <SonnerToaster position="top-center" />
+    </>
   );
 }
 
