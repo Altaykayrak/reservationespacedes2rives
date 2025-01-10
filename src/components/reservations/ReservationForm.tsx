@@ -45,12 +45,10 @@ export const ReservationForm = ({
 }: ReservationFormProps) => {
   const [dateOptions, setDateOptions] = useState<DateOptions[]>([]);
 
-  // Filter children to only show primary and kindergarten classes
   const filteredChildren = children?.filter(child => 
     ALLOWED_CLASSES.includes(child.school_class)
   );
 
-  // Update dateOptions when selectedDates changes
   useEffect(() => {
     const newDateOptions = selectedDates.map(date => {
       const existingOptions = dateOptions.find(
@@ -64,7 +62,7 @@ export const ReservationForm = ({
     });
     setDateOptions(newDateOptions);
     setSelectedDates(newDateOptions);
-  }, [selectedDates]); // Only depend on selectedDates
+  }, [selectedDates]);
 
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
     const newDateOptions = dateOptions.map(opt =>
@@ -77,17 +75,16 @@ export const ReservationForm = ({
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Détails de la réservation</h2>
+    <div className="space-y-4">
       {selectedDates.length > 0 ? (
         <div className="space-y-6">
           <div>
-            <Label htmlFor="child-select">Sélectionner un enfant</Label>
+            <Label htmlFor="child-select" className="text-sm md:text-base">Sélectionner un enfant</Label>
             <select
               id="child-select"
               value={selectedChild}
               onChange={(e) => setSelectedChild(e.target.value)}
-              className="w-full mt-1 rounded-md border border-gray-300 p-2"
+              className="w-full mt-2 rounded-md border border-gray-300 p-2 text-sm md:text-base"
             >
               <option value="">Choisir un enfant</option>
               {filteredChildren?.map((child) => (
@@ -100,11 +97,11 @@ export const ReservationForm = ({
 
           <div className="space-y-4">
             {dateOptions.map((dateOpt) => (
-              <div key={dateOpt.date.toISOString()} className="border p-4 rounded-lg">
-                <h3 className="font-medium mb-2">
+              <div key={dateOpt.date.toISOString()} className="border p-3 md:p-4 rounded-lg">
+                <h3 className="font-medium text-sm md:text-base mb-3">
                   {format(dateOpt.date, "EEEE d MMMM yyyy", { locale: fr })}
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`without-meal-${dateOpt.date.toISOString()}`}
@@ -113,7 +110,10 @@ export const ReservationForm = ({
                         handleOptionChange(dateOpt.date, 'withoutMeal', checked as boolean)
                       }
                     />
-                    <Label htmlFor={`without-meal-${dateOpt.date.toISOString()}`}>
+                    <Label 
+                      htmlFor={`without-meal-${dateOpt.date.toISOString()}`}
+                      className="text-sm md:text-base"
+                    >
                       Sans repas
                     </Label>
                   </div>
@@ -126,7 +126,10 @@ export const ReservationForm = ({
                         handleOptionChange(dateOpt.date, 'earlyDropoff', checked as boolean)
                       }
                     />
-                    <Label htmlFor={`early-dropoff-${dateOpt.date.toISOString()}`}>
+                    <Label 
+                      htmlFor={`early-dropoff-${dateOpt.date.toISOString()}`}
+                      className="text-sm md:text-base"
+                    >
                       Accueil avant 8h30
                     </Label>
                   </div>
@@ -138,13 +141,13 @@ export const ReservationForm = ({
           <Button
             onClick={onSubmit}
             disabled={isSubmitting}
-            className="w-full"
+            className="w-full text-sm md:text-base py-2 md:py-3"
           >
             {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
           </Button>
         </div>
       ) : (
-        <p className="text-gray-500">
+        <p className="text-gray-500 text-sm md:text-base">
           Veuillez sélectionner une ou plusieurs dates dans la liste
         </p>
       )}
