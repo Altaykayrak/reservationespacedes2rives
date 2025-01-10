@@ -34,7 +34,7 @@ const AdminLogin = () => {
         .select('*')
         .eq('username', username)
         .eq('password', password)
-        .single();
+        .maybeSingle();
 
       console.log("Query result:", { data, queryError }); // Debug log
 
