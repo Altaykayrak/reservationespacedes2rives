@@ -1,52 +1,72 @@
 import { Link } from "react-router-dom";
 import { Button } from "./button";
-import { Users, Calendar, User, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { Menu } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "./sheet";
 
-export const Navbar = () => {
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
+export function Navbar() {
+  const menuItems = [
+    { label: "Accueil", href: "/" },
+    { label: "Réservations", href: "/reservations" },
+    { label: "Mes enfants", href: "/children" },
+    { label: "Mon profil", href: "/profile" },
+  ];
 
   return (
-    <nav className="bg-white border-b border-gray-200 px-4 py-2.5">
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <Link to="/" className="flex items-center">
-          <img
-            src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png"
-            alt="L'espace des deux rives"
-            className="h-12"
-          />
-        </Link>
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" asChild>
-            <Link to="/children" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Enfants
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link to="/reservations" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Réservations
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link to="/profile" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Profil
-            </Link>
-          </Button>
-          <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2">
-            <LogOut className="w-4 h-4" />
-            Déconnexion
-          </Button>
+    <nav className="border-b">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex justify-between items-center">
+          <Link to="/" className="text-xl font-bold">
+            EDR
+          </Link>
+
+          {/* Menu pour desktop */}
+          <div className="hidden md:flex items-center space-x-4">
+            {menuItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Button asChild variant="outline">
+              <Link to="/login">Connexion</Link>
+            </Button>
+          </div>
+
+          {/* Menu hamburger pour mobile */}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <div className="flex flex-col space-y-4 mt-4">
+                  {menuItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      to={item.href}
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <Button asChild variant="outline">
+                    <Link to="/login">Connexion</Link>
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </nav>
   );
-};
+}
