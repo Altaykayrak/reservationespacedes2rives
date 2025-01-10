@@ -23,15 +23,40 @@ interface ReservationsListProps {
 }
 
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
-  // Filter out past reservations
-  const futureReservations = reservations?.filter(reservation => {
+  // Query available holiday periods
+  const { data: holidayPeriods } = useQuery({
+    queryKey: ["availableHolidays"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("*");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Filter out past reservations and holiday reservations
+  const filteredReservations = reservations?.filter(reservation => {
     const reservationDate = new Date(reservation.reservation_date);
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
-    return reservationDate >= today;
+
+    // Check if the reservation is in the future
+    if (reservationDate < today) return false;
+
+    // Check if the reservation date falls within any holiday period
+    const isHolidayReservation = holidayPeriods?.some(holiday => {
+      const startDate = new Date(holiday.start_date);
+      const endDate = new Date(holiday.end_date);
+      return reservationDate >= startDate && reservationDate <= endDate;
+    });
+
+    // Keep only non-holiday reservations
+    return !isHolidayReservation;
   });
 
-  const reservationsByChild = futureReservations?.reduce((acc, reservation) => {
+  const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {
@@ -52,7 +77,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos réservations
+          Vos réservations des mercredis
         </h2>
       </div>
       <ScrollArea className="h-[450px]">
