@@ -1,8 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Trash2, Pencil } from "lucide-react";
+import { WednesdayCard } from "./WednesdayCard";
 
 interface Wednesday {
   id: string;
@@ -55,50 +54,12 @@ export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListP
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedWednesdays?.map((wednesday) => (
-          <div
+          <WednesdayCard
             key={wednesday.id}
-            className="flex flex-col p-4 border rounded bg-white shadow-sm hover:shadow-md transition-shadow relative group"
-          >
-            <div className="absolute top-2 right-2 flex gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => onEdit(wednesday)}
-                title="Modifier ce mercredi"
-              >
-                <Pencil className="h-3 w-3 text-blue-500" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => handleDeleteWednesday(wednesday.id)}
-                title="Supprimer ce mercredi"
-              >
-                <Trash2 className="h-3 w-3 text-red-500" />
-              </Button>
-            </div>
-            
-            <div className="flex-1">
-              <p className="font-medium text-sm">
-                {new Date(wednesday.date).toLocaleDateString("fr-FR", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-              <div className="mt-2 space-y-1">
-                <p className="text-xs text-gray-600">
-                  Maternelle: {wednesday.max_participants_kindergarten}
-                </p>
-                <p className="text-xs text-gray-600">
-                  Primaire: {wednesday.max_participants_primary}
-                </p>
-              </div>
-            </div>
-          </div>
+            wednesday={wednesday}
+            onDelete={handleDeleteWednesday}
+            onEdit={onEdit}
+          />
         ))}
       </div>
     </Card>
