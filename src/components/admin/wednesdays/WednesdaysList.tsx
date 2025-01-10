@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 
 interface Wednesday {
   id: string;
@@ -14,9 +14,10 @@ interface Wednesday {
 interface WednesdaysListProps {
   wednesdays: Wednesday[] | null;
   onDelete: () => void;
+  onEdit: (wednesday: Wednesday) => void;
 }
 
-export const WednesdaysList = ({ wednesdays, onDelete }: WednesdaysListProps) => {
+export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListProps) => {
   const { toast } = useToast();
 
   const handleDeleteWednesday = async (id: string) => {
@@ -53,15 +54,26 @@ export const WednesdaysList = ({ wednesdays, onDelete }: WednesdaysListProps) =>
             key={wednesday.id}
             className="flex flex-col p-4 border rounded bg-white shadow-sm hover:shadow-md transition-shadow relative group"
           >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => handleDeleteWednesday(wednesday.id)}
-              title="Supprimer ce mercredi"
-            >
-              <Trash2 className="h-3 w-3 text-red-500" />
-            </Button>
+            <div className="absolute top-2 right-2 flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => onEdit(wednesday)}
+                title="Modifier ce mercredi"
+              >
+                <Pencil className="h-3 w-3 text-blue-500" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => handleDeleteWednesday(wednesday.id)}
+                title="Supprimer ce mercredi"
+              >
+                <Trash2 className="h-3 w-3 text-red-500" />
+              </Button>
+            </div>
             
             <div className="flex-1">
               <p className="font-medium text-sm">
