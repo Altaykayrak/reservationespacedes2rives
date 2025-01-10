@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,32 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { fr } from "date-fns/locale";
 
-export const AddWednesdayForm = ({ onSuccess }: { onSuccess: () => void }) => {
+interface Wednesday {
+  id: string;
+  date: string;
+  max_participants_kindergarten: number;
+  max_participants_primary: number;
+}
+
+interface AddWednesdayFormProps {
+  onSuccess: () => void;
+  wednesdayToEdit: Wednesday | null;
+}
+
+export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFormProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
   const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
   const { toast } = useToast();
+
+  // Effect to update form when wednesdayToEdit changes
+  useEffect(() => {
+    if (wednesdayToEdit) {
+      setSelectedDate(new Date(wednesdayToEdit.date));
+      setMaxParticipantsKindergarten(wednesdayToEdit.max_participants_kindergarten.toString());
+      setMaxParticipantsPrimary(wednesdayToEdit.max_participants_primary.toString());
+    }
+  }, [wednesdayToEdit]);
 
   const handleAddWednesday = async () => {
     if (!selectedDate || !maxParticipantsKindergarten || !maxParticipantsPrimary) {
@@ -31,18 +52,38 @@ export const AddWednesdayForm = ({ onSuccess }: { onSuccess: () => void }) => {
         selectedDate.getDate()
       ));
 
-      const { error } = await supabase.from("available_wednesdays").insert({
-        date: dateToInsert.toISOString().split("T")[0],
-        max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
-        max_participants_primary: parseInt(maxParticipantsPrimary),
-      });
+      if (wednesdayToEdit) {
+        // Update existing wednesday
+        const { error } = await supabase
+          .from("available_wednesdays")
+          .update({
+            date: dateToInsert.toISOString().split("T")[0],
+            max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
+            max_participants_primary: parseInt(maxParticipantsPrimary),
+          })
+          .eq("id", wednesdayToEdit.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Succès",
-        description: "Le mercredi a été ajouté avec succès",
-      });
+        toast({
+          title: "Succès",
+          description: "Le mercredi a été modifié avec succès",
+        });
+      } else {
+        // Insert new wednesday
+        const { error } = await supabase.from("available_wednesdays").insert({
+          date: dateToInsert.toISOString().split("T")[0],
+          max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
+          max_participants_primary: parseInt(maxParticipantsPrimary),
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Succès",
+          description: "Le mercredi a été ajouté avec succès",
+        });
+      }
 
       onSuccess();
       setSelectedDate(undefined);
@@ -59,7 +100,9 @@ export const AddWednesdayForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   return (
     <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Ajouter un mercredi</h2>
+      <h2 className="text-xl font-semibold mb-4">
+        {wednesdayToEdit ? "Modifier un mercredi" : "Ajouter un mercredi"}
+      </h2>
       
       <div className="space-y-4">
         <div>
@@ -97,7 +140,7 @@ export const AddWednesdayForm = ({ onSuccess }: { onSuccess: () => void }) => {
         </div>
 
         <Button onClick={handleAddWednesday} className="w-full">
-          Ajouter
+          {wednesdayToEdit ? "Modifier" : "Ajouter"}
         </Button>
       </div>
     </Card>
