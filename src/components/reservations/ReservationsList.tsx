@@ -23,7 +23,15 @@ interface ReservationsListProps {
 }
 
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
-  const reservationsByChild = reservations?.reduce((acc, reservation) => {
+  // Filter out past reservations
+  const futureReservations = reservations?.filter(reservation => {
+    const reservationDate = new Date(reservation.reservation_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+    return reservationDate >= today;
+  });
+
+  const reservationsByChild = futureReservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {
