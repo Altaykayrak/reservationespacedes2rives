@@ -6,7 +6,7 @@ const checkAuthorizedEmail = async (email: string) => {
     .from("authorized_emails")
     .select("id")
     .eq("email", email)
-    .single();
+    .maybeSingle();
 
   if (error && error.code !== "PGRST116") {
     throw error;
