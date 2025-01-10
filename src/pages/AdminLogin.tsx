@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,19 +27,26 @@ const AdminLogin = () => {
     setError(null);
 
     try {
-      const { data, error } = await supabase
+      console.log("Attempting login with:", { username, password }); // Debug log
+      
+      const { data, error: queryError } = await supabase
         .from('admin_users')
-        .select('id')
+        .select('*')
         .eq('username', username)
         .eq('password', password)
-        .maybeSingle();
+        .single();
 
-      if (error) {
-        throw error;
+      console.log("Query result:", { data, queryError }); // Debug log
+
+      if (queryError) {
+        throw queryError;
       }
 
       if (data) {
-        toast.success("Connexion administrateur réussie");
+        toast({
+          title: "Succès",
+          description: "Connexion administrateur réussie"
+        });
         navigate("/admin");
       } else {
         setError("Nom d'utilisateur ou mot de passe incorrect");
