@@ -16,7 +16,15 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // If authenticated, redirect to admin dashboard
+    if (isAuthenticated) {
+      navigate("/admin");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,12 +53,13 @@ const AdminLogin = () => {
       }
 
       if (adminUser) {
+        // Store admin session in localStorage
+        localStorage.setItem('adminSession', 'true');
+        setIsAuthenticated(true);
         toast({
           title: "Succès",
           description: "Connexion administrateur réussie"
         });
-        // Force immediate navigation
-        window.location.href = "/admin";
       } else {
         setError("Nom d'utilisateur ou mot de passe incorrect");
         setShowErrorDialog(true);
