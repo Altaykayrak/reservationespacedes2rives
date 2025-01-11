@@ -42,7 +42,6 @@ export function Navbar() {
 
   const publicMenuItems = [
     { label: "Accueil", href: "/" },
-    { label: "Administration", href: "/admin-login" },
   ];
 
   const menuItems = isAuthenticated ? authenticatedMenuItems : publicMenuItems;
