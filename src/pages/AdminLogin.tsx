@@ -36,7 +36,7 @@ const AdminLogin = () => {
         .select('*')
         .eq('username', username.trim())
         .eq('password', password.trim())
-        .single();
+        .maybeSingle();
 
       console.log("Résultat de la requête admin:", { 
         hasData: !!adminUser,
