@@ -32,37 +32,25 @@ const AdminLogin = () => {
       const trimmedUsername = username.trim();
       const trimmedPassword = password.trim();
       
-      console.log("Tentative de connexion admin avec:", { 
-        username: trimmedUsername,
-        password: trimmedPassword 
-      });
-
       const { data: adminUser, error: queryError } = await supabase
         .from('admin_users')
         .select()
         .eq('username', trimmedUsername)
         .eq('password', trimmedPassword)
-        .maybeSingle();
+        .single();
 
       if (queryError) {
         console.error("Erreur de requête admin:", queryError);
         throw queryError;
       }
 
-      console.log("Résultat de la requête admin:", { 
-        hasData: !!adminUser,
-        error: queryError
-      });
-
       if (adminUser) {
-        console.log("Connexion admin réussie");
         toast({
           title: "Succès",
           description: "Connexion administrateur réussie"
         });
         navigate("/admin");
       } else {
-        console.log("Identifiants administrateur incorrects");
         setError("Nom d'utilisateur ou mot de passe incorrect");
         setShowErrorDialog(true);
       }
