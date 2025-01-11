@@ -29,37 +29,40 @@ const AdminLogin = () => {
     setError(null);
 
     try {
-      console.log("Tentative de connexion avec:", { username, password }); // Debug log
+      console.log("Tentative de connexion admin avec:", { username }); // On ne log pas le mot de passe
       
-      const { data, error: queryError } = await supabase
+      const { data: adminUser, error: queryError } = await supabase
         .from('admin_users')
         .select('*')
-        .eq('username', username)
-        .eq('password', password)
-        .maybeSingle();
+        .eq('username', username.trim())
+        .eq('password', password.trim())
+        .single();
 
-      console.log("Résultat de la requête:", { data, queryError }); // Debug log
+      console.log("Résultat de la requête admin:", { 
+        hasData: !!adminUser,
+        error: queryError
+      });
 
       if (queryError) {
-        console.error("Erreur de requête:", queryError);
+        console.error("Erreur de requête admin:", queryError);
         throw queryError;
       }
 
-      if (data) {
-        console.log("Connexion réussie:", data); // Debug log
+      if (adminUser) {
+        console.log("Connexion admin réussie");
         toast({
           title: "Succès",
           description: "Connexion administrateur réussie"
         });
         navigate("/admin");
       } else {
-        console.log("Aucun utilisateur trouvé"); // Debug log
+        console.log("Aucun administrateur trouvé avec ces identifiants");
         setError("Nom d'utilisateur ou mot de passe incorrect");
         setShowErrorDialog(true);
       }
     } catch (err: any) {
-      console.error("Erreur de connexion admin:", err);
-      setError("Une erreur est survenue lors de la connexion");
+      console.error("Erreur lors de la connexion admin:", err);
+      setError(err.message || "Une erreur est survenue lors de la connexion");
       setShowErrorDialog(true);
     } finally {
       setIsLoading(false);
