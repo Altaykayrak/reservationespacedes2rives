@@ -5,7 +5,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -49,7 +49,8 @@ const AdminLogin = () => {
           title: "Succès",
           description: "Connexion administrateur réussie"
         });
-        navigate("/admin");
+        // Force immediate navigation
+        window.location.href = "/admin";
       } else {
         setError("Nom d'utilisateur ou mot de passe incorrect");
         setShowErrorDialog(true);
