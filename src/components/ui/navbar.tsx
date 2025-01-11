@@ -1,25 +1,20 @@
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "./button";
-import { Menu, LogOut } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "./sheet";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "./nav/Logo";
+import { DesktopNav } from "./nav/DesktopNav";
+import { MobileNav } from "./nav/MobileNav";
+import { NavItem } from "./nav/types";
 
 export function Navbar() {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Vérifier l'état d'authentification initial
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
     });
 
-    // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
     });
@@ -32,7 +27,7 @@ export function Navbar() {
     navigate("/login");
   };
 
-  const authenticatedMenuItems = [
+  const authenticatedMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
     { label: "Réservations mercredis", href: "/reservations" },
     { label: "Réservations vacances", href: "/holiday-reservations" },
@@ -40,7 +35,7 @@ export function Navbar() {
     { label: "Mon profil", href: "/profile" },
   ];
 
-  const publicMenuItems = [
+  const publicMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
   ];
 
@@ -50,70 +45,17 @@ export function Navbar() {
     <nav className="border-b">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          <Link to="/" className="flex items-center">
-            <img
-              src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png"
-              alt="L'espace des deux rives"
-              className="h-12"
-            />
-          </Link>
-
-          {/* Menu pour desktop */}
-          <div className="hidden md:flex items-center space-x-4">
-            {menuItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                {item.label}
-              </Link>
-            ))}
-            {isAuthenticated ? (
-              <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2">
-                <LogOut className="h-4 w-4" />
-                Déconnexion
-              </Button>
-            ) : (
-              <Button asChild variant="outline">
-                <Link to="/login">Connexion</Link>
-              </Button>
-            )}
-          </div>
-
-          {/* Menu hamburger pour mobile */}
-          <div className="md:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right">
-                <div className="flex flex-col space-y-4 mt-4">
-                  {menuItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                  {isAuthenticated ? (
-                    <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2">
-                      <LogOut className="h-4 w-4" />
-                      Déconnexion
-                    </Button>
-                  ) : (
-                    <Button asChild variant="outline">
-                      <Link to="/login">Connexion</Link>
-                    </Button>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+          <Logo />
+          <DesktopNav 
+            menuItems={menuItems}
+            isAuthenticated={isAuthenticated}
+            onLogout={handleLogout}
+          />
+          <MobileNav 
+            menuItems={menuItems}
+            isAuthenticated={isAuthenticated}
+            onLogout={handleLogout}
+          />
         </div>
       </div>
     </nav>
