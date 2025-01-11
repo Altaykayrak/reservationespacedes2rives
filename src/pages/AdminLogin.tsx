@@ -37,15 +37,15 @@ const AdminLogin = () => {
         password: trimmedPassword 
       });
       
-      const { data: adminUsers, error: queryError } = await supabase
+      const { data: adminUser, error: queryError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('username', trimmedUsername)
         .eq('password', trimmedPassword)
-        .single();
+        .maybeSingle();
 
       console.log("Résultat de la requête admin:", { 
-        hasData: !!adminUsers,
+        hasData: !!adminUser,
         error: queryError
       });
 
@@ -54,7 +54,7 @@ const AdminLogin = () => {
         throw queryError;
       }
 
-      if (adminUsers) {
+      if (adminUser) {
         console.log("Connexion admin réussie");
         toast({
           title: "Succès",
