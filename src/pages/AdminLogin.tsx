@@ -36,23 +36,23 @@ const AdminLogin = () => {
         username: trimmedUsername,
         password: trimmedPassword 
       });
-      
+
       const { data: adminUser, error: queryError } = await supabase
         .from('admin_users')
-        .select('*')
+        .select()
         .eq('username', trimmedUsername)
         .eq('password', trimmedPassword)
         .maybeSingle();
-
-      console.log("Résultat de la requête admin:", { 
-        hasData: !!adminUser,
-        error: queryError
-      });
 
       if (queryError) {
         console.error("Erreur de requête admin:", queryError);
         throw queryError;
       }
+
+      console.log("Résultat de la requête admin:", { 
+        hasData: !!adminUser,
+        error: queryError
+      });
 
       if (adminUser) {
         console.log("Connexion admin réussie");
