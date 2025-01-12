@@ -24,6 +24,9 @@ const Login = () => {
           if (error.message.includes("Email not confirmed")) {
             return "Veuillez confirmer votre email avant de vous connecter";
           }
+          if (error.message.includes("Invalid login credentials")) {
+            return 'Votre mot de passe est incorrect. Si vous ne vous en souvenez plus, cliquez sur "mot de passe oublié"';
+          }
           return "Email ou mot de passe incorrect";
         case 422:
           return "Format d'email invalide";
@@ -60,7 +63,7 @@ const Login = () => {
       }
 
       if (!authorizedEmail) {
-        setError("Cet email n'est pas autorisé. Veuillez contacter l'administrateur.");
+        setError("Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription");
         return;
       }
 
