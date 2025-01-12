@@ -14,19 +14,23 @@ import Reservations from "@/pages/Reservations";
 import HolidayReservations from "@/pages/HolidayReservations";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Index />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/login",
     element: <Login />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/register",
     element: <Register />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/profile",
@@ -35,6 +39,7 @@ const router = createBrowserRouter([
         <Profile />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/reservations",
@@ -43,6 +48,7 @@ const router = createBrowserRouter([
         <Reservations />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/holiday-reservations",
@@ -51,10 +57,12 @@ const router = createBrowserRouter([
         <HolidayReservations />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/admin-login",
     element: <AdminLogin />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/admin",
@@ -63,6 +71,7 @@ const router = createBrowserRouter([
         <AdminDashboard />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/admin/wednesdays",
@@ -71,6 +80,7 @@ const router = createBrowserRouter([
         <AdminWednesdays />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/admin/holidays",
@@ -79,6 +89,7 @@ const router = createBrowserRouter([
         <AdminHolidays />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/admin/reservations",
@@ -87,6 +98,7 @@ const router = createBrowserRouter([
         <AdminReservations />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/admin/authorized-emails",
@@ -95,6 +107,7 @@ const router = createBrowserRouter([
         <AdminAuthorizedEmails />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorBoundary />,
   },
 ]);
 
