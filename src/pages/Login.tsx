@@ -17,7 +17,7 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const getErrorMessage = (error: AuthError) => {
+  const getErrorMessage = async (error: AuthError) => {
     if (error instanceof AuthApiError) {
       switch (error.status) {
         case 400:
@@ -30,10 +30,10 @@ const Login = () => {
         case 429:
           return "Trop de tentatives de connexion. Veuillez réessayer plus tard";
         default:
-          return `Erreur de connexion (${error.status}): ${error.message}`;
+          return `Erreur d'authentification (${error.status}): ${error.message}`;
       }
     }
-    return `Erreur inattendue: ${error.message}`;
+    return `Problème technique lors de la connexion: ${error.message}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +55,6 @@ const Login = () => {
         .maybeSingle();
 
       if (authorizedError) {
-        console.error("Error checking authorized email:", authorizedError);
         setError(`Erreur lors de la vérification de l'email: ${authorizedError.message}`);
         return;
       }
@@ -71,7 +70,8 @@ const Login = () => {
       });
 
       if (signInError) {
-        setError(getErrorMessage(signInError));
+        const errorMessage = await getErrorMessage(signInError);
+        setError(errorMessage);
         return;
       }
 
@@ -81,7 +81,7 @@ const Login = () => {
       }
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(`Erreur technique: ${err.message}`);
+      setError("Une erreur inattendue s'est produite. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }
