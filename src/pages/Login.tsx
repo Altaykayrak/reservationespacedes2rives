@@ -45,6 +45,24 @@ const Login = () => {
     setError(null);
 
     try {
+      // Vérifier d'abord si l'email est autorisé
+      const { data: authorizedEmail, error: authorizedError } = await supabase
+        .from("authorized_emails")
+        .select("id")
+        .eq("email", email.trim())
+        .maybeSingle();
+
+      if (authorizedError) {
+        console.error("Error checking authorized email:", authorizedError);
+        setError("Une erreur est survenue lors de la vérification de l'email");
+        return;
+      }
+
+      if (!authorizedEmail) {
+        setError("Cet email n'est pas autorisé. Veuillez contacter l'administrateur.");
+        return;
+      }
+
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
