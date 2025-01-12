@@ -11,6 +11,7 @@ import AdminHolidays from "@/pages/admin/AdminHolidays";
 import AdminReservations from "@/pages/admin/AdminReservations";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import Reservations from "@/pages/Reservations";
+import HolidayReservations from "@/pages/HolidayReservations";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
 
@@ -40,6 +41,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Reservations />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/holiday-reservations",
+    element: (
+      <ProtectedRoute>
+        <HolidayReservations />
       </ProtectedRoute>
     ),
   },
