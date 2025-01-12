@@ -40,19 +40,18 @@ const AdminLogin = () => {
       const trimmedUsername = username.trim();
       const trimmedPassword = password.trim();
       
-      const { data: adminUser, error: queryError } = await supabase
+      const { data: adminUsers, error: queryError } = await supabase
         .from('admin_users')
         .select()
         .eq('username', trimmedUsername)
-        .eq('password', trimmedPassword)
-        .single();
+        .eq('password', trimmedPassword);
 
       if (queryError) {
         console.error("Erreur de requête admin:", queryError);
         throw queryError;
       }
 
-      if (adminUser) {
+      if (adminUsers && adminUsers.length > 0) {
         // Store admin session in localStorage
         localStorage.setItem('adminSession', 'true');
         setIsAuthenticated(true);
