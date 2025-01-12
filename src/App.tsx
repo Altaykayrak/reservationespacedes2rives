@@ -3,6 +3,7 @@ import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AdminLogin from "@/pages/AdminLogin";
+import Profile from "@/pages/Profile";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminWednesdays from "@/pages/admin/AdminWednesdays";
@@ -24,6 +25,14 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: <Register />,
+  },
+  {
+    path: "/profile",
+    element: (
+      <ProtectedRoute>
+        <Profile />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/admin-login",
