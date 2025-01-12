@@ -27,11 +27,13 @@ const Login = () => {
           return "Email ou mot de passe incorrect";
         case 422:
           return "Format d'email invalide";
+        case 429:
+          return "Trop de tentatives de connexion. Veuillez réessayer plus tard";
         default:
-          return "Une erreur est survenue lors de la connexion";
+          return `Erreur de connexion (${error.status}): ${error.message}`;
       }
     }
-    return "Une erreur est survenue lors de la connexion";
+    return `Erreur inattendue: ${error.message}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +56,7 @@ const Login = () => {
 
       if (authorizedError) {
         console.error("Error checking authorized email:", authorizedError);
-        setError("Une erreur est survenue lors de la vérification de l'email");
+        setError(`Erreur lors de la vérification de l'email: ${authorizedError.message}`);
         return;
       }
 
@@ -79,7 +81,7 @@ const Login = () => {
       }
     } catch (err: any) {
       console.error("Login error:", err);
-      setError("Une erreur inattendue est survenue");
+      setError(`Erreur technique: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
