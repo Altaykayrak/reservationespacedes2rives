@@ -38,7 +38,7 @@ const Reservations = () => {
           <div className="space-y-4 md:space-y-8">
             <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
               <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Sélectionnez une date</h2>
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Sélectionnez le(s) mercredi(s) que vous souhaitez réserver :</h2>
                 <ReservationCalendar
                   selectedDates={selectedDates.map(d => d.date)}
                   setSelectedDates={dates => setSelectedDates(dates.map(date => ({
