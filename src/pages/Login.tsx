@@ -38,7 +38,7 @@ const Login = () => {
     setError(null);
 
     try {
-      // Vérifier d'abord si l'email est autorisé
+      // First check if the email is authorized
       const { data: authorizedEmail, error: authorizedError } = await supabase
         .from("authorized_emails")
         .select("id")
@@ -55,6 +55,7 @@ const Login = () => {
         return;
       }
 
+      // Then attempt to sign in
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
