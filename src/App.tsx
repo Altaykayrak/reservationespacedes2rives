@@ -1,123 +1,38 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Children from "@/pages/Children";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
-import AdminLogin from "@/pages/AdminLogin";
 import Profile from "@/pages/Profile";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import AdminWednesdays from "@/pages/admin/AdminWednesdays";
-import AdminHolidays from "@/pages/admin/AdminHolidays";
-import AdminReservations from "@/pages/admin/AdminReservations";
-import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import Reservations from "@/pages/Reservations";
 import HolidayReservations from "@/pages/HolidayReservations";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "sonner";
-import ErrorBoundary from "@/components/ErrorBoundary";
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Index />,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/profile",
-    element: (
-      <ProtectedRoute>
-        <Profile />
-      </ProtectedRoute>
-    ),
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/reservations",
-    element: (
-      <ProtectedRoute>
-        <Reservations />
-      </ProtectedRoute>
-    ),
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/holiday-reservations",
-    element: (
-      <ProtectedRoute>
-        <HolidayReservations />
-      </ProtectedRoute>
-    ),
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/admin-login",
-    element: <AdminLogin />,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/admin",
-    element: (
-      <ProtectedRoute>
-        <AdminDashboard />
-      </ProtectedRoute>
-    ),
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/admin/wednesdays",
-    element: (
-      <ProtectedRoute>
-        <AdminWednesdays />
-      </ProtectedRoute>
-    ),
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/admin/holidays",
-    element: (
-      <ProtectedRoute>
-        <AdminHolidays />
-      </ProtectedRoute>
-    ),
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/admin/reservations",
-    element: (
-      <ProtectedRoute>
-        <AdminReservations />
-      </ProtectedRoute>
-    ),
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/admin/authorized-emails",
-    element: (
-      <ProtectedRoute>
-        <AdminAuthorizedEmails />
-      </ProtectedRoute>
-    ),
-    errorElement: <ErrorBoundary />,
-  },
-]);
+import AdminLogin from "@/pages/admin/Login";
+import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminWednesdays from "@/pages/admin/Wednesdays";
+import AdminHolidays from "@/pages/admin/Holidays";
+import AdminReservations from "@/pages/admin/Reservations";
+import AdminAuthorizedEmails from "@/pages/admin/AuthorizedEmails";
 
 function App() {
   return (
-    <>
-      <RouterProvider router={router} />
-      <Toaster />
-      <SonnerToaster position="top-center" />
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/children" element={<Children />} />
+        <Route path="/reservations" element={<Reservations />} />
+        <Route path="/holiday-reservations" element={<HolidayReservations />} />
+        {/* Admin routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/wednesdays" element={<AdminWednesdays />} />
+        <Route path="/admin/holidays" element={<AdminHolidays />} />
+        <Route path="/admin/reservations" element={<AdminReservations />} />
+        <Route path="/admin/authorized-emails" element={<AdminAuthorizedEmails />} />
+      </Routes>
+    </Router>
   );
 }
 
