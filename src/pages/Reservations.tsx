@@ -54,7 +54,7 @@ const Reservations = () => {
           <div className="space-y-4 md:space-y-8">
             <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
               <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Détails de la réservation</h2>
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Indiquez les détails de la réservation</h2>
                 <ReservationForm
                   selectedDates={selectedDates.map(d => d.date)}
                   children={children}
