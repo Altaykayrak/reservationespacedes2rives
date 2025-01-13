@@ -6,12 +6,12 @@ import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
 import Reservations from "@/pages/Reservations";
 import HolidayReservations from "@/pages/HolidayReservations";
-import AdminLogin from "@/pages/admin/Login";
-import AdminDashboard from "@/pages/admin/Dashboard";
-import AdminWednesdays from "@/pages/admin/Wednesdays";
-import AdminHolidays from "@/pages/admin/Holidays";
-import AdminReservations from "@/pages/admin/Reservations";
-import AdminAuthorizedEmails from "@/pages/admin/AuthorizedEmails";
+import AdminLogin from "@/pages/AdminLogin";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminWednesdays from "@/pages/admin/AdminWednesdays";
+import AdminHolidays from "@/pages/admin/AdminHolidays";
+import AdminReservations from "@/pages/admin/AdminReservations";
+import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 
 function App() {
   return (
