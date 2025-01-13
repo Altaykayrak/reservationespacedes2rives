@@ -20,6 +20,12 @@ const Login = () => {
   const getErrorMessage = async (error: AuthError) => {
     if (error instanceof AuthApiError) {
       if (error.message.includes("Invalid login credentials")) {
+        // First, check if the email exists in auth.users
+        const { data: user, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+        
+        if (userError || !user) {
+          return 'Vous n\'avez pas de compte actif, merci de cliquer sur le bouton "Créer un compte" ci dessous';
+        }
         return 'Votre mot de passe est incorrect. Si vous ne vous en souvenez plus, cliquez sur "mot de passe oublié"';
       }
       return `Erreur d'authentification: ${error.message}`;
