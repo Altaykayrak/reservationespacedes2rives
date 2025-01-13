@@ -2,17 +2,28 @@ import { useRouteError } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 
+interface RouterError {
+  message?: string;
+  statusText?: string;
+  data?: any;
+}
+
 export default function ErrorBoundary() {
-  const error = useRouteError() as Error;
+  const error = useRouteError() as RouterError;
   const navigate = useNavigate();
 
   // Fonction pour obtenir un message d'erreur plus convivial
   const getErrorMessage = () => {
-    if (error.message.includes("JWT expired")) {
+    const errorMessage = error?.message || error?.statusText || "Une erreur est survenue";
+    
+    if (errorMessage.includes("JWT expired")) {
       return "Votre session a expiré. Veuillez vous reconnecter.";
     }
-    if (error.message.includes("No user found")) {
+    if (errorMessage.includes("No user found")) {
       return "Veuillez vous connecter pour accéder à cette page.";
+    }
+    if (errorMessage.includes("No routes matched location")) {
+      return "Cette page n'existe pas.";
     }
     return "Désolé, une erreur est survenue. Veuillez réessayer.";
   };
