@@ -77,7 +77,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos réservations des mercredis
+          Vos mercredis réservés (sous réserve de règlement)
         </h2>
       </div>
       <ScrollArea className="h-[450px]">
