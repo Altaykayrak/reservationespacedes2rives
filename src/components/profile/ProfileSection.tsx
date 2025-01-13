@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Edit, User, Mail, MapPin, CheckSquare } from "lucide-react"
+import { Edit, User, Mail, MapPin, CheckSquare, Square } from "lucide-react"
 import { ProfileData } from "@/types/profile"
 
 interface ProfileSectionProps {
@@ -58,12 +58,13 @@ export function ProfileSection({ profile, onEdit }: ProfileSectionProps) {
         </div>
 
         <div className="flex items-start space-x-4 pt-4 border-t">
-          <CheckSquare className="h-5 w-5 text-muted-foreground mt-1" />
+          {profile?.automatic_payment ? (
+            <CheckSquare className="h-5 w-5 text-primary mt-1" />
+          ) : (
+            <Square className="h-5 w-5 text-muted-foreground mt-1" />
+          )}
           <div className="text-left">
             <p className="text-sm text-muted-foreground">Prélèvement automatique</p>
-            <p className="text-lg font-medium">
-              {profile?.automatic_payment ? 'Activé' : 'Désactivé'}
-            </p>
           </div>
         </div>
       </CardContent>
