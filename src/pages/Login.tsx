@@ -19,22 +19,10 @@ const Login = () => {
 
   const getErrorMessage = async (error: AuthError) => {
     if (error instanceof AuthApiError) {
-      switch (error.status) {
-        case 400:
-          if (error.message.includes("Email not confirmed")) {
-            return "Veuillez confirmer votre email avant de vous connecter";
-          }
-          if (error.message.includes("Invalid login credentials")) {
-            return 'Votre mot de passe est incorrect. Si vous ne vous en souvenez plus, cliquez sur "mot de passe oublié"';
-          }
-          return "Email ou mot de passe incorrect";
-        case 422:
-          return "Format d'email invalide";
-        case 429:
-          return "Trop de tentatives de connexion. Veuillez réessayer plus tard";
-        default:
-          return `Erreur d'authentification (${error.status}): ${error.message}`;
+      if (error.message.includes("Invalid login credentials")) {
+        return 'Votre mot de passe est incorrect. Si vous ne vous en souvenez plus, cliquez sur "mot de passe oublié"';
       }
+      return `Erreur d'authentification: ${error.message}`;
     }
     return `Problème technique lors de la connexion: ${error.message}`;
   };
