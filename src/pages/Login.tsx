@@ -32,9 +32,9 @@ const Login = () => {
         }
         return 'Votre mot de passe est incorrect. Si vous ne vous en souvenez plus, cliquez sur "mot de passe oublié"';
       }
-      return `Erreur d'authentification: ${error.message}`;
+      return 'Vous n\'avez pas de compte actif, merci de cliquer sur le bouton "Créer un compte" ci dessous';
     }
-    return `Problème technique lors de la connexion: ${error.message}`;
+    return 'Vous n\'avez pas de compte actif, merci de cliquer sur le bouton "Créer un compte" ci dessous';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +56,7 @@ const Login = () => {
         .maybeSingle();
 
       if (authorizedError) {
-        setError(`Erreur lors de la vérification de l'email: ${authorizedError.message}`);
+        setError("Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription");
         return;
       }
 
@@ -82,8 +82,7 @@ const Login = () => {
         navigate("/profile");
       }
     } catch (err: any) {
-      console.error("Login error:", err);
-      setError("Une erreur inattendue s'est produite. Veuillez réessayer.");
+      setError('Vous n\'avez pas de compte actif, merci de cliquer sur le bouton "Créer un compte" ci dessous');
     } finally {
       setIsLoading(false);
     }
