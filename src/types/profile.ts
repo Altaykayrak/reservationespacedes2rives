@@ -5,6 +5,7 @@ export interface ProfileData {
   email: string
   school_city: string
   secret_question: string
+  automatic_payment: boolean
 }
 
 export interface Child {

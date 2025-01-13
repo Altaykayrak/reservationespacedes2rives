@@ -204,6 +204,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          automatic_payment: boolean
           created_at: string
           first_name: string | null
           id: string
@@ -214,6 +215,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          automatic_payment?: boolean
           created_at?: string
           first_name?: string | null
           id: string
@@ -224,6 +226,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          automatic_payment?: boolean
           created_at?: string
           first_name?: string | null
           id?: string

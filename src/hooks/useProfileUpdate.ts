@@ -8,6 +8,7 @@ export const profileFormSchema = z.object({
   last_name: z.string().min(1, "Le nom est requis"),
   email: z.string().email("Email invalide"),
   school_city: z.string().min(1, "La commune est requise"),
+  automatic_payment: z.boolean().default(false),
 })
 
 export type ProfileFormData = z.infer<typeof profileFormSchema>
@@ -52,6 +53,7 @@ export function useProfileUpdate() {
           first_name: values.first_name,
           last_name: values.last_name,
           school_city: values.school_city,
+          automatic_payment: values.automatic_payment,
         })
         .eq("id", (await supabase.auth.getUser()).data.user?.id)
 
