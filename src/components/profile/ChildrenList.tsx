@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { UserPlus } from "lucide-react"
+import { UserPlus, Pencil, Trash2 } from "lucide-react"
 import { Child } from "@/types/profile"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useState } from "react"
@@ -13,6 +13,16 @@ interface ChildrenListProps {
 
 export function ChildrenList({ children }: ChildrenListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false)
+
+  const handleEdit = (child: Child) => {
+    // TODO: Implement edit functionality
+    console.log('Edit child:', child)
+  }
+
+  const handleDelete = (child: Child) => {
+    // TODO: Implement delete functionality
+    console.log('Delete child:', child)
+  }
 
   return (
     <div className="mt-8 space-y-4">
@@ -31,6 +41,7 @@ export function ChildrenList({ children }: ChildrenListProps) {
                 <TableHead className="text-left">Nom</TableHead>
                 <TableHead className="text-left">Prénom</TableHead>
                 <TableHead className="text-left">Classe</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -43,12 +54,32 @@ export function ChildrenList({ children }: ChildrenListProps) {
                     <TableCell className="text-left">{child.last_name}</TableCell>
                     <TableCell className="text-left">{child.first_name}</TableCell>
                     <TableCell className="text-left">{child.school_class}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(child)}
+                        className="h-8 w-8"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Modifier</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(child)}
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Supprimer</span>
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
                   <TableCell 
-                    colSpan={3} 
+                    colSpan={4} 
                     className="text-center h-32 text-muted-foreground"
                   >
                     Aucun enfant enregistré
