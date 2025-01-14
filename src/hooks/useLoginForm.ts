@@ -21,9 +21,9 @@ export const useLoginForm = () => {
           .maybeSingle();
 
         if (!authorizedEmail) {
-          return "Vous n'avez pas de compte actif, ou vous avez commis une erreur dans la saisie de votre identifiant ou mot de passe, merci de cliquer sur le bouton \"Créer un compte\" ou \"mot de passe oublié\" ci-dessous";
+          return "Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription";
         }
-        return "Votre mot de passe est incorrect. Si vous ne vous en souvenez plus, cliquez sur \"mot de passe oublié\"";
+        return "Mot de passe incorrect, cliquez sur le bouton mot de passe oublié ci dessous";
       }
     }
     return "Une erreur est survenue lors de la connexion. Veuillez réessayer.";
