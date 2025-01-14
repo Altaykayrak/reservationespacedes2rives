@@ -3,9 +3,12 @@ import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { UserPlus, Pencil, Trash2 } from "lucide-react"
 import { Child } from "@/types/profile"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { useState } from "react"
 import { AddChildForm } from "./AddChildForm"
+import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface ChildrenListProps {
   children: Child[]
@@ -13,15 +16,63 @@ interface ChildrenListProps {
 
 export function ChildrenList({ children }: ChildrenListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null)
+  const queryClient = useQueryClient()
 
   const handleEdit = (child: Child) => {
-    // TODO: Implement edit functionality
-    console.log('Edit child:', child)
+    setSelectedChild(child)
+    setShowEditDialog(true)
   }
 
   const handleDelete = (child: Child) => {
-    // TODO: Implement delete functionality
-    console.log('Delete child:', child)
+    setSelectedChild(child)
+    setShowDeleteDialog(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!selectedChild) return
+
+    try {
+      const { error } = await supabase
+        .from('children')
+        .delete()
+        .eq('id', selectedChild.id)
+
+      if (error) throw error
+
+      toast.success("Enfant supprimé avec succès")
+      queryClient.invalidateQueries({ queryKey: ['children'] })
+      setShowDeleteDialog(false)
+    } catch (error) {
+      console.error('Error deleting child:', error)
+      toast.error("Erreur lors de la suppression de l'enfant")
+    }
+  }
+
+  const handleEditSubmit = async (values: Omit<Child, 'id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
+    if (!selectedChild) return
+
+    try {
+      const { error } = await supabase
+        .from('children')
+        .update({
+          first_name: values.first_name,
+          last_name: values.last_name,
+          school_class: values.school_class,
+        })
+        .eq('id', selectedChild.id)
+
+      if (error) throw error
+
+      toast.success("Enfant modifié avec succès")
+      queryClient.invalidateQueries({ queryKey: ['children'] })
+      setShowEditDialog(false)
+    } catch (error) {
+      console.error('Error updating child:', error)
+      toast.error("Erreur lors de la modification de l'enfant")
+    }
   }
 
   return (
@@ -97,6 +148,45 @@ export function ChildrenList({ children }: ChildrenListProps) {
             <DialogTitle>Ajouter un enfant</DialogTitle>
           </DialogHeader>
           <AddChildForm onSuccess={() => setShowAddDialog(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier un enfant</DialogTitle>
+          </DialogHeader>
+          {selectedChild && (
+            <AddChildForm 
+              onSuccess={() => setShowEditDialog(false)}
+              initialData={selectedChild}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer un enfant</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet enfant ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Supprimer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

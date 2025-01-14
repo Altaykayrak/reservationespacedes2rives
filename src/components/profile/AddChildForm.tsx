@@ -1,167 +1,108 @@
-import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import * as z from "zod"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
-
-const formSchema = z.object({
-  first_name: z.string().min(1, "Le prénom est requis"),
-  last_name: z.string().min(1, "Le nom est requis"),
-  school_class: z.enum([
-    "Petite Section",
-    "Moyenne Section",
-    "Grande Section",
-    "CP",
-    "CE1",
-    "CE2",
-    "CM1",
-    "CM2",
-    "6ème",
-    "5ème",
-    "4ème",
-    "3ème",
-    "Seconde",
-    "Première",
-    "Terminale",
-  ], {
-    required_error: "La classe est requise",
-  }),
-})
-
-type FormData = z.infer<typeof formSchema>
+import { Child } from "@/types/profile"
 
 interface AddChildFormProps {
   onSuccess: () => void
+  initialData?: Child
 }
 
-export function AddChildForm({ onSuccess }: AddChildFormProps) {
-  const queryClient = useQueryClient()
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     defaultValues: {
-      first_name: "",
-      last_name: "",
-    },
+      first_name: initialData?.first_name || "",
+      last_name: initialData?.last_name || "",
+      school_class: initialData?.school_class || "",
+    }
   })
+  const queryClient = useQueryClient()
 
-  const onSubmit = async (values: FormData) => {
+  const onSubmit = async (values: { first_name: string; last_name: string; school_class: string }) => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
-      if (userError || !user) {
-        toast.error("Erreur d'authentification")
-        return
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("No user found")
+
+      if (initialData) {
+        // Update existing child
+        const { error } = await supabase
+          .from('children')
+          .update({
+            first_name: values.first_name,
+            last_name: values.last_name,
+            school_class: values.school_class,
+          })
+          .eq('id', initialData.id)
+
+        if (error) throw error
+        toast.success("Enfant modifié avec succès")
+      } else {
+        // Create new child
+        const { error } = await supabase
+          .from('children')
+          .insert([
+            {
+              profile_id: user.id,
+              first_name: values.first_name,
+              last_name: values.last_name,
+              school_class: values.school_class,
+            }
+          ])
+
+        if (error) throw error
+        toast.success("Enfant ajouté avec succès")
       }
 
-      const { error: insertError } = await supabase
-        .from("children")
-        .insert({
-          first_name: values.first_name,
-          last_name: values.last_name,
-          school_class: values.school_class,
-          profile_id: user.id,
-        })
-
-      if (insertError) {
-        console.error("Error adding child:", insertError)
-        toast.error("Une erreur est survenue lors de l'ajout de l'enfant")
-        return
-      }
-
-      toast.success("Enfant ajouté avec succès")
-      queryClient.invalidateQueries({ queryKey: ["children"] })
+      queryClient.invalidateQueries({ queryKey: ['children'] })
       onSuccess()
     } catch (error) {
-      console.error("Error adding child:", error)
-      toast.error("Une erreur est survenue lors de l'ajout de l'enfant")
+      console.error('Error saving child:', error)
+      toast.error(initialData ? "Erreur lors de la modification de l'enfant" : "Erreur lors de l'ajout de l'enfant")
     }
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="first_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Prénom</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="first_name">Prénom</Label>
+        <Input
+          id="first_name"
+          {...register("first_name", { required: "Le prénom est requis" })}
         />
-        <FormField
-          control={form.control}
-          name="last_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nom</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        {errors.first_name && (
+          <p className="text-sm text-destructive">{errors.first_name.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="last_name">Nom</Label>
+        <Input
+          id="last_name"
+          {...register("last_name", { required: "Le nom est requis" })}
         />
-        <FormField
-          control={form.control}
-          name="school_class"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Classe</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une classe" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Petite Section">Petite Section</SelectItem>
-                  <SelectItem value="Moyenne Section">Moyenne Section</SelectItem>
-                  <SelectItem value="Grande Section">Grande Section</SelectItem>
-                  <SelectItem value="CP">CP</SelectItem>
-                  <SelectItem value="CE1">CE1</SelectItem>
-                  <SelectItem value="CE2">CE2</SelectItem>
-                  <SelectItem value="CM1">CM1</SelectItem>
-                  <SelectItem value="CM2">CM2</SelectItem>
-                  <SelectItem value="6ème">6ème</SelectItem>
-                  <SelectItem value="5ème">5ème</SelectItem>
-                  <SelectItem value="4ème">4ème</SelectItem>
-                  <SelectItem value="3ème">3ème</SelectItem>
-                  <SelectItem value="Seconde">Seconde</SelectItem>
-                  <SelectItem value="Première">Première</SelectItem>
-                  <SelectItem value="Terminale">Terminale</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+        {errors.last_name && (
+          <p className="text-sm text-destructive">{errors.last_name.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="school_class">Classe</Label>
+        <Input
+          id="school_class"
+          {...register("school_class", { required: "La classe est requise" })}
         />
-        <div className="flex justify-end gap-4">
-          <Button type="submit">Ajouter</Button>
-        </div>
-      </form>
-    </Form>
+        {errors.school_class && (
+          <p className="text-sm text-destructive">{errors.school_class.message}</p>
+        )}
+      </div>
+
+      <Button type="submit" disabled={isSubmitting}>
+        {initialData ? "Modifier" : "Ajouter"}
+      </Button>
+    </form>
   )
 }
