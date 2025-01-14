@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { fr } from "date-fns/locale";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 
 const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [startDate, setStartDate] = useState<Date>();
@@ -16,6 +17,19 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
   const [maxParticipantsTeen, setMaxParticipantsTeen] = useState("");
   const { toast } = useToast();
+
+  // Fetch all school class categories
+  const { data: schoolClasses } = useQuery({
+    queryKey: ["school_class_categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleAddHolidayPeriod = async () => {
     if (!startDate || !endDate || !maxParticipantsKindergarten || !maxParticipantsPrimary || !maxParticipantsTeen) {
@@ -32,27 +46,46 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
       const formattedStartDate = format(startDate, 'yyyy-MM-dd');
       const formattedEndDate = format(endDate, 'yyyy-MM-dd');
 
-      const { error } = await supabase.from("available_holiday_periods").insert({
-        start_date: formattedStartDate,
-        end_date: formattedEndDate,
-        max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
-        max_participants_primary: parseInt(maxParticipantsPrimary),
-        max_participants_teen: parseInt(maxParticipantsTeen),
-      });
+      // 1. Insert the holiday period
+      const { data: holidayPeriod, error: holidayError } = await supabase
+        .from("available_holiday_periods")
+        .insert({
+          start_date: formattedStartDate,
+          end_date: formattedEndDate,
+          max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
+          max_participants_primary: parseInt(maxParticipantsPrimary),
+          max_participants_teen: parseInt(maxParticipantsTeen),
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (holidayError) throw holidayError;
+
+      // 2. Add allowed classes based on categories
+      if (schoolClasses && holidayPeriod) {
+        const allowedClassesData = schoolClasses.map(schoolClass => ({
+          holiday_period_id: holidayPeriod.id,
+          school_class: schoolClass.name,
+        }));
+
+        const { error: allowedClassesError } = await supabase
+          .from("holiday_allowed_classes")
+          .insert(allowedClassesData);
+
+        if (allowedClassesError) throw allowedClassesError;
+      }
 
       toast({
         title: "Succès",
         description: "La période de vacances a été ajoutée avec succès",
       });
 
-      onSuccess();
       setStartDate(undefined);
       setEndDate(undefined);
       setMaxParticipantsKindergarten("");
       setMaxParticipantsPrimary("");
       setMaxParticipantsTeen("");
+      onSuccess();
     } catch (error: any) {
       toast({
         title: "Erreur",
