@@ -30,6 +30,11 @@ const ALLOWED_CLASSES = [
   "CE2",
   "CM1",
   "CM2",
+  "6ème",
+  "5ème",
+  "4ème",
+  "3ème",
+  "Petite Section",
   "Moyenne Section",
   "Grande section"
 ];
