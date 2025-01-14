@@ -282,6 +282,33 @@ export type Database = {
           },
         ]
       }
+      school_class: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          level: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          level: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          level?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       school_class_categories: {
         Row: {
           category: string

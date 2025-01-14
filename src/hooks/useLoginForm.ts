@@ -21,13 +21,13 @@ export const useLoginForm = () => {
           .maybeSingle();
 
         if (!authorizedEmail) {
-          return 'Vous n\'avez pas de compte actif, merci de cliquer sur le bouton "Créer un compte" ci dessous';
+          return "Vous n'avez pas de compte actif, ou vous avez commis une erreur dans la saisie de votre identifiant ou mot de passe, merci de cliquer sur le bouton \"Créer un compte\" ou \"mot de passe oublié\" ci-dessous";
         }
-        return 'Votre mot de passe est incorrect. Si vous ne vous en souvenez plus, cliquez sur "mot de passe oublié"';
+        return "Votre mot de passe est incorrect. Si vous ne vous en souvenez plus, cliquez sur \"mot de passe oublié\"";
       }
-      return 'Vous n\'avez pas de compte actif, merci de cliquer sur le bouton "Créer un compte" ci dessous';
+      return "Vous n'avez pas de compte actif, ou vous avez commis une erreur dans la saisie de votre identifiant ou mot de passe, merci de cliquer sur le bouton \"Créer un compte\" ou \"mot de passe oublié\" ci-dessous";
     }
-    return 'Vous n\'avez pas de compte actif, merci de cliquer sur le bouton "Créer un compte" ci dessous';
+    return "Vous n'avez pas de compte actif, ou vous avez commis une erreur dans la saisie de votre identifiant ou mot de passe, merci de cliquer sur le bouton \"Créer un compte\" ou \"mot de passe oublié\" ci-dessous";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,7 +73,7 @@ export const useLoginForm = () => {
         navigate("/profile");
       }
     } catch (err: any) {
-      setError('Vous n\'avez pas de compte actif, merci de cliquer sur le bouton "Créer un compte" ci dessous');
+      setError("Vous n'avez pas de compte actif, ou vous avez commis une erreur dans la saisie de votre identifiant ou mot de passe, merci de cliquer sur le bouton \"Créer un compte\" ou \"mot de passe oublié\" ci-dessous");
     } finally {
       setIsLoading(false);
     }
