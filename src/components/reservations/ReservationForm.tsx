@@ -36,7 +36,7 @@ const ALLOWED_CLASSES = [
   "3ème",
   "Petite Section",
   "Moyenne Section",
-  "Grande Section"  // Correction de l'orthographe
+  "GS"
 ];
 
 export const ReservationForm = ({
