@@ -25,9 +25,8 @@ export const useLoginForm = () => {
         }
         return "Votre mot de passe est incorrect. Si vous ne vous en souvenez plus, cliquez sur \"mot de passe oublié\"";
       }
-      return "Vous n'avez pas de compte actif, ou vous avez commis une erreur dans la saisie de votre identifiant ou mot de passe, merci de cliquer sur le bouton \"Créer un compte\" ou \"mot de passe oublié\" ci-dessous";
     }
-    return "Vous n'avez pas de compte actif, ou vous avez commis une erreur dans la saisie de votre identifiant ou mot de passe, merci de cliquer sur le bouton \"Créer un compte\" ou \"mot de passe oublié\" ci-dessous";
+    return "Une erreur est survenue lors de la connexion. Veuillez réessayer.";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,19 +40,15 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
-      const { data: authorizedEmail, error: authorizedError } = await supabase
+      const { data: authorizedEmail } = await supabase
         .from("authorized_emails")
         .select("id")
         .eq("email", email.trim())
         .maybeSingle();
 
-      if (authorizedError) {
-        setError("Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription");
-        return;
-      }
-
       if (!authorizedEmail) {
         setError("Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription");
+        setIsLoading(false);
         return;
       }
 
@@ -73,7 +68,7 @@ export const useLoginForm = () => {
         navigate("/profile");
       }
     } catch (err: any) {
-      setError("Vous n'avez pas de compte actif, ou vous avez commis une erreur dans la saisie de votre identifiant ou mot de passe, merci de cliquer sur le bouton \"Créer un compte\" ou \"mot de passe oublié\" ci-dessous");
+      setError("Une erreur est survenue lors de la connexion. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }
