@@ -42,10 +42,10 @@ export const useLoginForm = () => {
 
       if (signInError) {
         if (signInError instanceof AuthApiError && signInError.status === 400) {
-          setError("Mot de passe invalide, si vous ne souvenez plus de votre mot de passe, cliquez sur le bouton \"mot de passe oublié\" ci dessous");
+          setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
           return;
         }
-        setError("Une erreur est survenue lors de la connexion. Veuillez réessayer.");
+        setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
         return;
       }
 
@@ -55,7 +55,7 @@ export const useLoginForm = () => {
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Une erreur est survenue lors de la connexion. Veuillez réessayer.");
+      setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
     } finally {
       setIsLoading(false);
     }
