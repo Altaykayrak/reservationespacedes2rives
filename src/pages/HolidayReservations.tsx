@@ -15,10 +15,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { getWeeksFromDates } from "@/utils/dateUtils";
 
 const HolidayReservations = () => {
   const { toast } = useToast();
   const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [showMinDaysDialog, setShowMinDaysDialog] = useState(false);
   const {
     selectedDates,
     setSelectedDates,
@@ -32,6 +34,15 @@ const HolidayReservations = () => {
   } = useReservations();
 
   const handleValidatedSubmit = () => {
+    // Vérifier si toutes les semaines ont au moins 3 jours sélectionnés
+    const weeks = getWeeksFromDates(selectedDates.map(d => d.date));
+    const hasInvalidWeek = weeks.some(weekDates => weekDates.length < 3);
+
+    if (hasInvalidWeek) {
+      setShowMinDaysDialog(true);
+      return;
+    }
+
     // Récupérer les dates déjà réservées pour cet enfant
     const existingReservations = reservations
       ?.filter(res => res.child_id === selectedChild)
@@ -103,6 +114,22 @@ const HolidayReservations = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogAction onClick={() => setShowWarningDialog(false)}>
+                D'accord
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showMinDaysDialog} onOpenChange={setShowMinDaysDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Nombre de jours insuffisant</AlertDialogTitle>
+              <AlertDialogDescription>
+                Merci de sélectionner au minimum 3 jours par semaine
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setShowMinDaysDialog(false)}>
                 D'accord
               </AlertDialogAction>
             </AlertDialogFooter>
