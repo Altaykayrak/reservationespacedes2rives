@@ -41,10 +41,6 @@ export const useLoginForm = () => {
       });
 
       if (signInError) {
-        if (signInError instanceof AuthApiError && signInError.status === 400) {
-          setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
-          return;
-        }
         setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
         return;
       }
