@@ -11,24 +11,6 @@ export const useLoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const getErrorMessage = async (error: AuthError) => {
-    if (error instanceof AuthApiError) {
-      if (error.message.includes("Invalid login credentials")) {
-        const { data: authorizedEmail } = await supabase
-          .from("authorized_emails")
-          .select("email")
-          .eq("email", email.trim())
-          .maybeSingle();
-
-        if (!authorizedEmail) {
-          return "Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription";
-        }
-        return "Mot de passe incorrect, cliquez sur le bouton mot de passe oublié ci dessous";
-      }
-    }
-    return "Une erreur est survenue lors de la connexion. Veuillez réessayer.";
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -40,6 +22,7 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
+      // Vérifier d'abord si l'email est autorisé
       const { data: authorizedEmail } = await supabase
         .from("authorized_emails")
         .select("id")
@@ -48,7 +31,6 @@ export const useLoginForm = () => {
 
       if (!authorizedEmail) {
         setError("Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription");
-        setIsLoading(false);
         return;
       }
 
@@ -58,8 +40,13 @@ export const useLoginForm = () => {
       });
 
       if (signInError) {
-        const errorMessage = await getErrorMessage(signInError);
-        setError(errorMessage);
+        if (signInError instanceof AuthApiError) {
+          if (signInError.message.includes("Invalid login credentials")) {
+            setError("Mot de passe incorrect, cliquez sur le bouton mot de passe oublié ci dessous");
+            return;
+          }
+        }
+        setError("Une erreur est survenue lors de la connexion. Veuillez réessayer.");
         return;
       }
 
@@ -67,7 +54,8 @@ export const useLoginForm = () => {
         toast.success("Connexion réussie");
         navigate("/profile");
       }
-    } catch (err: any) {
+    } catch (err) {
+      console.error("Login error:", err);
       setError("Une erreur est survenue lors de la connexion. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
