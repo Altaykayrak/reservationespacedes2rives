@@ -42,7 +42,7 @@ export const useLoginForm = () => {
       if (signInError) {
         if (signInError instanceof AuthApiError) {
           if (signInError.message.includes("Invalid login credentials")) {
-            setError("Mot de passe incorrect, cliquez sur le bouton mot de passe oublié ci dessous");
+            setError("Mot de passe invalide, si vous ne souvenez plus de votre mot de passe, cliquez sur le bouton \"mot de passe oublié\" ci dessous");
             return;
           }
         }
