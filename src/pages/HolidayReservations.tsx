@@ -8,7 +8,6 @@ import { Navbar } from "@/components/ui/navbar";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -33,7 +32,15 @@ const HolidayReservations = () => {
   } = useReservations();
 
   const handleValidatedSubmit = () => {
-    const validation = validateHolidayReservations(selectedDates.map(d => d.date));
+    // Récupérer les dates déjà réservées pour cet enfant
+    const existingReservations = reservations
+      ?.filter(res => res.child_id === selectedChild)
+      .map(res => new Date(res.reservation_date)) || [];
+
+    const validation = validateHolidayReservations(
+      selectedDates.map(d => d.date),
+      existingReservations
+    );
     
     if (!validation.isValid) {
       toast({
