@@ -86,8 +86,8 @@ export const HolidayReservationCalendar = ({
                   <p key={index} className="text-sm text-gray-600 mt-2">
                     Semaine {index + 1}: {weekDates.length} jour{weekDates.length > 1 ? 's' : ''} sélectionné{weekDates.length > 1 ? 's' : ''}
                     {weekDates.length < 3 && (
-                      <span className="text-red-500 ml-2 font-bold uppercase">
-                        (MINIMUM 3 JOURS REQUIS !)
+                      <span className="text-red-500 ml-2">
+                        (minimum 3 jours requis)
                       </span>
                     )}
                   </p>
