@@ -31,6 +31,7 @@ export const useLoginForm = () => {
 
       if (!authorizedEmail) {
         setError("Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription");
+        setIsLoading(false);
         return;
       }
 
@@ -40,11 +41,9 @@ export const useLoginForm = () => {
       });
 
       if (signInError) {
-        if (signInError instanceof AuthApiError) {
-          if (signInError.message.includes("Invalid login credentials")) {
-            setError("Mot de passe invalide, si vous ne souvenez plus de votre mot de passe, cliquez sur le bouton \"mot de passe oublié\" ci dessous");
-            return;
-          }
+        if (signInError instanceof AuthApiError && signInError.status === 400) {
+          setError("Mot de passe invalide, si vous ne souvenez plus de votre mot de passe, cliquez sur le bouton \"mot de passe oublié\" ci dessous");
+          return;
         }
         setError("Une erreur est survenue lors de la connexion. Veuillez réessayer.");
         return;
