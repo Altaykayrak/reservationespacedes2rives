@@ -23,7 +23,7 @@ export const MinimumDaysDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Nombre de jours insuffisant</AlertDialogTitle>
           <AlertDialogDescription>
-            Merci de sélectionner au minimum 3 jours par semaine
+            Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances pour pouvoir effectuer une réservation.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
