@@ -57,11 +57,38 @@ const HolidayPeriodsList = ({
     }
   };
 
-  const handleEditHolidayPeriod = (id: string) => {
-    toast({
-      title: "Modification",
-      description: "La fonctionnalité de modification sera bientôt disponible",
-    });
+  const handleEditHolidayPeriod = async (id: string) => {
+    try {
+      // Vérifier s'il existe des réservations pour cette période
+      const { data: reservations, error: reservationsError } = await supabase
+        .from("reservations")
+        .select("id")
+        .gte("reservation_date", holidays.find(h => h.id === id)?.start_date || "")
+        .lte("reservation_date", holidays.find(h => h.id === id)?.end_date || "");
+
+      if (reservationsError) throw reservationsError;
+
+      if (reservations && reservations.length > 0) {
+        toast({
+          title: "Modification impossible",
+          description: "Il existe déjà des réservations pour cette période. La modification n'est pas possible.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Si pas de réservations, on peut procéder à la modification
+      toast({
+        title: "Modification",
+        description: "La fonctionnalité de modification sera bientôt disponible",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
