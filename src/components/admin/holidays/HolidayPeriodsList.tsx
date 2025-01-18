@@ -14,6 +14,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 interface HolidayPeriod {
   id: string;
@@ -32,6 +42,11 @@ const HolidayPeriodsList = ({
   onDelete: () => void;
 }) => {
   const { toast } = useToast();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedHoliday, setSelectedHoliday] = useState<HolidayPeriod | null>(null);
+  const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
+  const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
+  const [maxParticipantsTeen, setMaxParticipantsTeen] = useState("");
 
   const handleDeleteHolidayPeriod = async (id: string) => {
     try {
@@ -57,14 +72,14 @@ const HolidayPeriodsList = ({
     }
   };
 
-  const handleEditHolidayPeriod = async (id: string) => {
+  const handleEditHolidayPeriod = async (holiday: HolidayPeriod) => {
     try {
       // Vérifier s'il existe des réservations pour cette période
       const { data: reservations, error: reservationsError } = await supabase
         .from("reservations")
         .select("id")
-        .gte("reservation_date", holidays.find(h => h.id === id)?.start_date || "")
-        .lte("reservation_date", holidays.find(h => h.id === id)?.end_date || "");
+        .gte("reservation_date", holiday.start_date)
+        .lte("reservation_date", holiday.end_date);
 
       if (reservationsError) throw reservationsError;
 
@@ -78,10 +93,42 @@ const HolidayPeriodsList = ({
       }
 
       // Si pas de réservations, on peut procéder à la modification
+      setSelectedHoliday(holiday);
+      setMaxParticipantsKindergarten(holiday.max_participants_kindergarten.toString());
+      setMaxParticipantsPrimary(holiday.max_participants_primary.toString());
+      setMaxParticipantsTeen(holiday.max_participants_teen.toString());
+      setIsEditDialogOpen(true);
+    } catch (error: any) {
       toast({
-        title: "Modification",
-        description: "La fonctionnalité de modification sera bientôt disponible",
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
       });
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedHoliday) return;
+
+    try {
+      const { error } = await supabase
+        .from("available_holiday_periods")
+        .update({
+          max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
+          max_participants_primary: parseInt(maxParticipantsPrimary),
+          max_participants_teen: parseInt(maxParticipantsTeen),
+        })
+        .eq("id", selectedHoliday.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "La période de vacances a été modifiée avec succès",
+      });
+
+      setIsEditDialogOpen(false);
+      onDelete(); // Rafraîchir la liste
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -116,7 +163,7 @@ const HolidayPeriodsList = ({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => handleEditHolidayPeriod(holiday.id)}
+                onClick={() => handleEditHolidayPeriod(holiday)}
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -145,6 +192,51 @@ const HolidayPeriodsList = ({
           </div>
         ))}
       </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le nombre de places</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="maxParticipantsKindergarten">Nombre maximum de participants (Maternelle)</Label>
+              <Input
+                id="maxParticipantsKindergarten"
+                type="number"
+                value={maxParticipantsKindergarten}
+                onChange={(e) => setMaxParticipantsKindergarten(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="maxParticipantsPrimary">Nombre maximum de participants (Primaire)</Label>
+              <Input
+                id="maxParticipantsPrimary"
+                type="number"
+                value={maxParticipantsPrimary}
+                onChange={(e) => setMaxParticipantsPrimary(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="maxParticipantsTeen">Nombre maximum de participants (Adolescent)</Label>
+              <Input
+                id="maxParticipantsTeen"
+                type="number"
+                value={maxParticipantsTeen}
+                onChange={(e) => setMaxParticipantsTeen(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
