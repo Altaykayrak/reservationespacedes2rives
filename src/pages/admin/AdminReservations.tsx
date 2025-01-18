@@ -41,28 +41,30 @@ const AdminReservations = () => {
       console.log('Fetched reservations:', data);
       return data;
     },
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
   });
 
   const handleDelete = async () => {
     if (!reservationToDelete) return;
 
     try {
+      console.log('Deleting reservation:', reservationToDelete);
       const { error } = await supabase
         .from('reservations')
         .delete()
         .eq('id', reservationToDelete);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting reservation:', error);
+        throw error;
+      }
 
       toast({
         title: "Réservation supprimée",
         description: "La réservation a été supprimée avec succès.",
       });
 
-      refetchReservations();
+      // Refresh the reservations list
+      await refetchReservations();
     } catch (error) {
       console.error('Error deleting reservation:', error);
       toast({
@@ -76,7 +78,6 @@ const AdminReservations = () => {
   };
 
   const handleEdit = async (reservationId: string) => {
-    // Pour l'instant, on affiche juste un message indiquant que la fonctionnalité est en cours de développement
     toast({
       title: "Modification",
       description: "La fonctionnalité de modification sera bientôt disponible.",
