@@ -32,14 +32,14 @@ export const validateHolidayReservations = (selectedDates: Date[], existingReser
     // Si on n'a pas déjà 3 jours réservés pour cette semaine
     if (existingDatesForWeek.length < 3) {
       // On doit s'assurer qu'avec les nouvelles sélections, on atteint au moins 3 jours
-      const allDatesForWeek = selectedDates.filter(d => 
+      const allSelectedDatesForWeek = selectedDates.filter(d => 
         startOfWeek(d, { weekStartsOn: 1 }).toISOString() === weekStart
       );
       
-      if (allDatesForWeek.length + existingDatesForWeek.length < 3) {
+      if (allSelectedDatesForWeek.length < 3) {
         return {
           isValid: false,
-          message: "Vous devez réserver au moins 3 jours par semaine pendant les vacances.",
+          message: "Vous devez sélectionner au moins 3 jours pour chaque nouvelle semaine de réservation.",
         };
       }
     }
