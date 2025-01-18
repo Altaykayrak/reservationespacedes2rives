@@ -42,8 +42,14 @@ const HolidayReservations = () => {
                   Sélectionnez les jours de vacances que vous souhaitez réserver :
                 </h2>
                 <HolidayReservationCalendar
-                  selectedDates={selectedDates}
-                  setSelectedDates={setSelectedDates}
+                  selectedDates={selectedDates.map(d => d.date)}
+                  setSelectedDates={(dates) => 
+                    setSelectedDates(dates.map(date => ({
+                      date,
+                      withoutMeal: false,
+                      earlyDropoff: false,
+                    })))
+                  }
                 />
               </div>
             </div>
@@ -56,7 +62,7 @@ const HolidayReservations = () => {
                   Indiquez les détails de la réservation :
                 </h2>
                 <ReservationForm
-                  selectedDates={selectedDates}
+                  selectedDates={selectedDates.map(d => d.date)}
                   children={children}
                   selectedChild={selectedChild}
                   setSelectedChild={setSelectedChild}
