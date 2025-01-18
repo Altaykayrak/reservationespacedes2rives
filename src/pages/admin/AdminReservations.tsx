@@ -5,11 +5,24 @@ import { useQuery } from "@tanstack/react-query";
 import { ReservationBadges } from "@/components/reservations/ReservationBadges";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
+import { format } from "date-fns";
 
 const AdminReservations = () => {
   const { toast } = useToast();
+  const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
 
-  const { data: reservations } = useQuery({
+  const { data: reservations, refetch: refetchReservations } = useQuery({
     queryKey: ["admin_reservations"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -33,6 +46,43 @@ const AdminReservations = () => {
     staleTime: 0,
   });
 
+  const handleDelete = async () => {
+    if (!reservationToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .delete()
+        .eq('id', reservationToDelete);
+
+      if (error) throw error;
+
+      toast({
+        title: "Réservation supprimée",
+        description: "La réservation a été supprimée avec succès.",
+      });
+
+      refetchReservations();
+    } catch (error) {
+      console.error('Error deleting reservation:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la suppression de la réservation.",
+        variant: "destructive",
+      });
+    } finally {
+      setReservationToDelete(null);
+    }
+  };
+
+  const handleEdit = async (reservationId: string) => {
+    // Pour l'instant, on affiche juste un message indiquant que la fonctionnalité est en cours de développement
+    toast({
+      title: "Modification",
+      description: "La fonctionnalité de modification sera bientôt disponible.",
+    });
+  };
+
   return (
     <div>
       <AdminNavbar />
@@ -41,58 +91,67 @@ const AdminReservations = () => {
 
         <Card className="p-6">
           <div className="space-y-4">
-            {reservations?.map((reservation) => {
-              console.log('Rendering reservation:', {
-                id: reservation.id,
-                withoutMeal: reservation.without_meal,
-                earlyDropoff: reservation.early_dropoff
-              });
-              
-              return (
-                <div
-                  key={reservation.id}
-                  className="flex flex-col p-4 border rounded bg-white shadow-sm"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-2">
-                      <p className="font-medium text-lg">
-                        {reservation.children?.first_name} {reservation.children?.last_name}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Classe: {reservation.children?.school_class}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Date: {new Date(reservation.reservation_date).toLocaleDateString("fr-FR")}
-                      </p>
-                      <ReservationBadges 
-                        withoutMeal={Boolean(reservation.without_meal)}
-                        earlyDropoff={Boolean(reservation.early_dropoff)}
-                      />
-                      <p className="text-xs text-gray-500">
-                        N° de réservation: {reservation.reservation_number}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                        aria-label="Modifier la réservation"
-                      >
-                        <Pencil className="h-4 w-4 text-blue-500" />
-                      </button>
-                      <button 
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                        aria-label="Supprimer la réservation"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </button>
-                    </div>
+            {reservations?.map((reservation) => (
+              <div
+                key={reservation.id}
+                className="flex flex-col p-4 border rounded bg-white shadow-sm"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2">
+                    <p className="font-medium text-lg">
+                      {reservation.children?.first_name} {reservation.children?.last_name}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Classe: {reservation.children?.school_class}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Date: {format(new Date(reservation.reservation_date), "dd/MM/yyyy")}
+                    </p>
+                    <ReservationBadges 
+                      withoutMeal={Boolean(reservation.without_meal)}
+                      earlyDropoff={Boolean(reservation.early_dropoff)}
+                    />
+                    <p className="text-xs text-gray-500">
+                      N° de réservation: {reservation.reservation_number}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                      aria-label="Modifier la réservation"
+                      onClick={() => handleEdit(reservation.id)}
+                    >
+                      <Pencil className="h-4 w-4 text-blue-500" />
+                    </button>
+                    <button 
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                      aria-label="Supprimer la réservation"
+                      onClick={() => setReservationToDelete(reservation.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </button>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </Card>
       </div>
+
+      <AlertDialog open={!!reservationToDelete} onOpenChange={() => setReservationToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. La réservation sera définitivement supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Supprimer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
