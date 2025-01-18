@@ -1,4 +1,4 @@
-import { startOfWeek, endOfWeek, eachDayOfInterval, isWeekend } from "date-fns";
+import { startOfWeek, endOfWeek, eachDayOfInterval, isWeekend, addDays, isSameDay } from "date-fns";
 
 export const getWeeksFromDates = (dates: Date[]) => {
   // Group dates by week
@@ -13,6 +13,19 @@ export const getWeeksFromDates = (dates: Date[]) => {
   return Array.from(weekMap.values());
 };
 
+const getWorkdaysInWeek = (startDate: Date): Date[] => {
+  const workdays: Date[] = [];
+  let currentDate = startDate;
+
+  // Add 5 workdays (Monday to Friday)
+  for (let i = 0; i < 5; i++) {
+    workdays.push(currentDate);
+    currentDate = addDays(currentDate, 1);
+  }
+
+  return workdays;
+};
+
 export const validateHolidayReservations = (selectedDates: Date[], existingReservations: Date[] = []) => {
   // Regrouper toutes les dates par semaine
   const weekMap = new Map<string, Date[]>();
@@ -24,28 +37,33 @@ export const validateHolidayReservations = (selectedDates: Date[], existingReser
     weekMap.set(weekStart, [...existingDates, date]);
   });
 
-  // Ensuite, vérifier chaque date sélectionnée
+  // Pour chaque date sélectionnée
   for (const date of selectedDates) {
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 }).toISOString();
-    const existingDatesForWeek = weekMap.get(weekStart) || [];
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    const weekStartKey = weekStart.toISOString();
+    const existingDatesForWeek = weekMap.get(weekStartKey) || [];
     
     // Si on n'a pas déjà 3 jours réservés pour cette semaine
     if (existingDatesForWeek.length < 3) {
-      // On doit s'assurer qu'avec les nouvelles sélections, on atteint au moins 3 jours
-      const allSelectedDatesForWeek = selectedDates.filter(d => 
-        startOfWeek(d, { weekStartsOn: 1 }).toISOString() === weekStart
-      );
+      // Obtenir tous les jours ouvrés de la semaine (lundi au vendredi)
+      const workdays = getWorkdaysInWeek(weekStart);
       
-      if (allSelectedDatesForWeek.length < 3) {
+      // Filtrer les dates sélectionnées qui font partie de cette semaine
+      const selectedDatesInWeek = selectedDates.filter(selectedDate => 
+        workdays.some(workday => isSameDay(selectedDate, workday))
+      );
+
+      // Vérifier si on a au moins 3 jours sélectionnés dans la semaine
+      if (selectedDatesInWeek.length < 3) {
         return {
           isValid: false,
-          message: "Vous devez sélectionner au moins 3 jours pour chaque nouvelle semaine de réservation.",
+          message: "Vous devez sélectionner au moins 3 jours du lundi au vendredi pour chaque nouvelle semaine de réservation.",
         };
       }
     }
     
     // Mettre à jour le weekMap avec la nouvelle date
-    weekMap.set(weekStart, [...existingDatesForWeek, date]);
+    weekMap.set(weekStartKey, [...existingDatesForWeek, date]);
   }
 
   return {
