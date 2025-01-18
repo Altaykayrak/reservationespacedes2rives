@@ -18,11 +18,11 @@ type GroupedReservations = Record<string, {
   reservations: ReservationWithChild[];
 }>;
 
-interface ReservationsListProps {
+interface HolidayReservationsListProps {
   reservations: ReservationWithChild[] | null;
 }
 
-export const ReservationsList = ({ reservations }: ReservationsListProps) => {
+export const HolidayReservationsList = ({ reservations }: HolidayReservationsListProps) => {
   // Query available holiday periods
   const { data: holidayPeriods } = useQuery({
     queryKey: ["availableHolidays"],
@@ -36,7 +36,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     },
   });
 
-  // Filter out past reservations and keep only NON-holiday reservations
+  // Filter out past reservations and keep only holiday reservations
   const filteredReservations = reservations?.filter(reservation => {
     const reservationDate = new Date(reservation.reservation_date);
     const today = new Date();
@@ -52,8 +52,8 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
       return reservationDate >= startDate && reservationDate <= endDate;
     });
 
-    // Keep only NON-holiday reservations (mercredis hors vacances)
-    return !isHolidayReservation;
+    // Keep only holiday reservations
+    return isHolidayReservation;
   });
 
   const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
@@ -77,7 +77,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos mercredis réservés (hors vacances scolaires)
+          Vos vacances réservées (sous réserve de règlement)
         </h2>
       </div>
       <ScrollArea className="h-[450px]">
