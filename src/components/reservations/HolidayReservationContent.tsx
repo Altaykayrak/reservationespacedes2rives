@@ -100,8 +100,47 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    // Si tout est valide, procéder à la réservation
-    handleSubmit();
+    // Si tout est valide, procéder à la réservation avec period_id
+    try {
+      for (const dateOption of selectedDates) {
+        const { error } = await supabase
+          .from('reservations')
+          .insert({
+            child_id: selectedChild,
+            reservation_date: dateOption.date.toISOString().split('T')[0],
+            without_meal: dateOption.withoutMeal,
+            early_dropoff: dateOption.earlyDropoff,
+            period_id: holidayPeriod.id,
+            reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          });
+
+        if (error) {
+          console.error('Error creating reservation:', error);
+          toast({
+            title: "Erreur",
+            description: "Une erreur est survenue lors de la création de la réservation.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      toast({
+        title: "Succès",
+        description: "Les réservations ont été créées avec succès.",
+      });
+
+      // Réinitialiser le formulaire
+      setSelectedDates([]);
+      handleSubmit();
+    } catch (error) {
+      console.error('Error in reservation process:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création des réservations.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

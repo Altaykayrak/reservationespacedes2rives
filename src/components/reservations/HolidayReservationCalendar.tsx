@@ -10,16 +10,9 @@ interface HolidayReservationCalendarProps {
   setSelectedDates: (dates: Date[]) => void;
 }
 
-const formatHolidayName = (name: string) => {
-  // Expected format: "2025-vacances-printemps" or similar
-  const parts = name.split('-');
-  if (parts.length < 2) return name;
-
-  const year = parts[0];
-  const season = parts[parts.length - 1];
-  const weekNumber = "01"; // For now hardcoded as 01, could be dynamic based on data
-
-  return `Semaine ${weekNumber} ${season.charAt(0).toUpperCase() + season.slice(1)} ${year}`;
+const isWeekend = (date: Date) => {
+  const day = date.getDay();
+  return day === 0 || day === 6;
 };
 
 export const HolidayReservationCalendar = ({
@@ -49,7 +42,7 @@ export const HolidayReservationCalendar = ({
     <div className="bg-white p-4 rounded-lg shadow">
       <h2 className="text-xl font-semibold mb-4">Périodes de vacances disponibles</h2>
       <p className="text-sm text-gray-600 mb-4">
-        Vous devez réserver au moins 3 jours par semaine pendant les vacances.
+        Vous devez réserver au moins 3 jours ouvrables par semaine pendant les vacances.
       </p>
       <div className="space-y-6">
         {availableHolidays.map((holiday) => {
@@ -60,8 +53,7 @@ export const HolidayReservationCalendar = ({
           const dates = [];
           const currentDate = new Date(startDate);
           while (currentDate <= endDate) {
-            // Only add weekdays (0 = Sunday, 6 = Saturday)
-            if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+            if (!isWeekend(currentDate)) {
               dates.push(new Date(currentDate));
             }
             currentDate.setDate(currentDate.getDate() + 1);

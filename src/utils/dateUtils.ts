@@ -1,4 +1,5 @@
 import { startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 export const getWorkdaysInWeek = (weekStart: Date) => {
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
@@ -23,6 +24,7 @@ export const getWeeksFromDates = (dates: Date[]) => {
 };
 
 interface HolidayPeriod {
+  id: string;
   start_date: string;
   end_date: string;
   max_participants_kindergarten: number;
@@ -35,13 +37,27 @@ interface ValidationResult {
   message: string;
 }
 
+const isWorkingDay = (date: Date): boolean => {
+  const day = date.getDay();
+  return day >= 1 && day <= 5; // Monday = 1, Friday = 5
+};
+
 export const validateHolidayReservations = async (
   selectedDates: Date[],
   holidayPeriod: HolidayPeriod,
   childSchoolClass: string,
   supabase: any
 ): Promise<ValidationResult> => {
-  // 1. Vérifier que toutes les dates sont dans la période
+  // 1. Vérifier que toutes les dates sont des jours ouvrables
+  const nonWorkingDays = selectedDates.filter(date => !isWorkingDay(date));
+  if (nonWorkingDays.length > 0) {
+    return {
+      isValid: false,
+      message: "Les réservations ne sont possibles que les jours ouvrables (lundi à vendredi)."
+    };
+  }
+
+  // 2. Vérifier que toutes les dates sont dans la période
   const periodStart = new Date(holidayPeriod.start_date);
   const periodEnd = new Date(holidayPeriod.end_date);
 
@@ -56,15 +72,16 @@ export const validateHolidayReservations = async (
     };
   }
 
-  // 2. Vérifier le minimum de 3 jours
-  if (selectedDates.length < 3) {
+  // 3. Vérifier le minimum de 3 jours ouvrables
+  const workingDaysCount = selectedDates.filter(date => isWorkingDay(date)).length;
+  if (workingDaysCount < 3) {
     return {
       isValid: false,
-      message: "Vous devez sélectionner au minimum 3 jours sur cette période de vacances."
+      message: "Vous devez sélectionner au minimum 3 jours ouvrables sur cette période de vacances."
     };
   }
 
-  // 3. Vérifier le nombre maximum de participants par niveau
+  // 4. Vérifier le nombre maximum de participants par niveau
   let maxParticipants: number;
   if (["Petite Section", "Moyenne Section", "Grande Section"].includes(childSchoolClass)) {
     maxParticipants = holidayPeriod.max_participants_kindergarten;
@@ -80,6 +97,7 @@ export const validateHolidayReservations = async (
       .from('reservations')
       .select('id, children!inner(school_class)')
       .eq('reservation_date', date.toISOString().split('T')[0])
+      .eq('period_id', holidayPeriod.id)
       .neq('status', 'cancelled');
 
     if (error) {

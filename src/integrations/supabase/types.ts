@@ -247,6 +247,7 @@ export type Database = {
           created_at: string
           early_dropoff: boolean | null
           id: string
+          period_id: string | null
           reservation_date: string
           reservation_number: string
           status: string | null
@@ -258,6 +259,7 @@ export type Database = {
           created_at?: string
           early_dropoff?: boolean | null
           id?: string
+          period_id?: string | null
           reservation_date: string
           reservation_number: string
           status?: string | null
@@ -269,6 +271,7 @@ export type Database = {
           created_at?: string
           early_dropoff?: boolean | null
           id?: string
+          period_id?: string | null
           reservation_date?: string
           reservation_number?: string
           status?: string | null
@@ -277,10 +280,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_period"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "available_holiday_periods"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reservations_child_id_fkey"
             columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "available_holiday_periods"
             referencedColumns: ["id"]
           },
         ]
