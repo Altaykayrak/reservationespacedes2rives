@@ -7,12 +7,13 @@ import { useReservations } from "@/hooks/useReservations";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { validateHolidayReservations } from "@/utils/dateUtils";
-import { getWeeksFromDates } from "@/utils/dateUtils";
+import { useAvailableDates } from "@/hooks/useAvailableDates";
 
 export const HolidayReservationContent = () => {
   const { toast } = useToast();
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [showMinDaysDialog, setShowMinDaysDialog] = useState(false);
+  const { availableHolidays } = useAvailableDates();
   
   const {
     selectedDates,
@@ -27,11 +28,40 @@ export const HolidayReservationContent = () => {
   } = useReservations();
 
   const handleValidatedSubmit = () => {
-    // Vérifier si toutes les semaines ont au moins 3 jours sélectionnés
-    const weeks = getWeeksFromDates(selectedDates.map(d => d.date));
-    const hasInvalidWeek = weeks.some(weekDates => weekDates.length < 3);
+    if (!selectedChild) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un enfant.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    if (hasInvalidWeek) {
+    // Vérifier si les dates sélectionnées appartiennent à une seule période de vacances
+    if (!availableHolidays || availableHolidays.length === 0) {
+      return;
+    }
+
+    const selectedDatesArray = selectedDates.map(d => d.date);
+    const holidayPeriod = availableHolidays.find(holiday => {
+      const startDate = new Date(holiday.start_date);
+      const endDate = new Date(holiday.end_date);
+      return selectedDatesArray.every(date => 
+        date >= startDate && date <= endDate
+      );
+    });
+
+    if (!holidayPeriod) {
+      toast({
+        title: "Erreur",
+        description: "Les dates sélectionnées doivent appartenir à une même période de vacances.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Vérifier si au moins 3 jours sont sélectionnés pour la période
+    if (selectedDatesArray.length < 3) {
       setShowMinDaysDialog(true);
       return;
     }
@@ -42,7 +72,7 @@ export const HolidayReservationContent = () => {
       .map(res => new Date(res.reservation_date)) || [];
 
     const validation = validateHolidayReservations(
-      selectedDates.map(d => d.date),
+      selectedDatesArray,
       existingReservations
     );
     
