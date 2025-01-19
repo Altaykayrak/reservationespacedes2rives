@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { validateHolidayReservations } from "@/utils/dateUtils";
 import { useAvailableDates } from "@/hooks/useAvailableDates";
+import { supabase } from "@/integrations/supabase/client";
 
 export const HolidayReservationContent = () => {
   const { toast } = useToast();
@@ -27,7 +28,7 @@ export const HolidayReservationContent = () => {
     isDateReservedForChild
   } = useReservations();
 
-  const validateAndSubmit = () => {
+  const validateAndSubmit = async () => {
     if (!selectedChild) {
       toast({
         title: "Erreur",
@@ -39,7 +40,7 @@ export const HolidayReservationContent = () => {
 
     const selectedDatesArray = selectedDates.map(d => d.date);
 
-    // Vérifier si les dates sélectionnées appartiennent à une seule période de vacances
+    // Vérifier si les dates sélectionnées appartiennent à une période de vacances
     if (!availableHolidays || availableHolidays.length === 0) {
       return;
     }
@@ -61,38 +62,35 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    // Vérifier le nombre minimum de jours sélectionnés
-    if (selectedDatesArray.length < 3) {
-      setShowMinDaysDialog(true);
+    // Récupérer la classe de l'enfant
+    const selectedChildData = children?.find(child => child.id === selectedChild);
+    if (!selectedChildData) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de trouver les informations de l'enfant.",
+        variant: "destructive",
+      });
       return;
     }
 
-    // Récupérer les dates déjà réservées pour cet enfant dans la même période de vacances
-    const existingReservations = reservations
-      ?.filter(res => {
-        const resDate = new Date(res.reservation_date);
-        const startDate = new Date(holidayPeriod.start_date);
-        const endDate = new Date(holidayPeriod.end_date);
-        return (
-          res.child_id === selectedChild &&
-          resDate >= startDate &&
-          resDate <= endDate
-        );
-      })
-      .map(res => new Date(res.reservation_date)) || [];
-
-    const validation = validateHolidayReservations(
+    // Valider la réservation
+    const validationResult = await validateHolidayReservations(
       selectedDatesArray,
-      existingReservations,
-      holidayPeriod
+      holidayPeriod,
+      selectedChildData.school_class,
+      supabase
     );
-    
-    if (!validation.isValid) {
-      setShowMinDaysDialog(true);
+
+    if (!validationResult.isValid) {
+      toast({
+        title: "Erreur de validation",
+        description: validationResult.message,
+        variant: "destructive",
+      });
       return;
     }
 
-    // Vérifier si des dates sont déjà réservées pour cet enfant
+    // Vérifier les conflits de réservation
     const hasConflicts = selectedDates.some(dateOption => 
       isDateReservedForChild(selectedChild, dateOption.date)
     );
@@ -102,6 +100,7 @@ export const HolidayReservationContent = () => {
       return;
     }
 
+    // Si tout est valide, procéder à la réservation
     handleSubmit();
   };
 

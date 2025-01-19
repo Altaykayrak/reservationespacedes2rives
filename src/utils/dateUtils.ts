@@ -5,7 +5,7 @@ export const getWorkdaysInWeek = (weekStart: Date) => {
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
   return days.filter(day => {
     const dayOfWeek = day.getDay();
-    return dayOfWeek !== 0 && dayOfWeek !== 6; // Exclude Saturday (6) and Sunday (0)
+    return dayOfWeek !== 0 && dayOfWeek !== 6;
   });
 };
 
@@ -22,12 +22,26 @@ export const getWeeksFromDates = (dates: Date[]) => {
   return Array.from(weekMap.values());
 };
 
-export const validateHolidayReservations = (
-  selectedDates: Date[], 
-  existingReservations: Date[] = [],
-  holidayPeriod: { start_date: string; end_date: string }
-) => {
-  // Vérifier que toutes les dates sélectionnées sont dans la période de vacances
+interface HolidayPeriod {
+  start_date: string;
+  end_date: string;
+  max_participants_kindergarten: number;
+  max_participants_primary: number;
+  max_participants_teen: number;
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  message: string;
+}
+
+export const validateHolidayReservations = async (
+  selectedDates: Date[],
+  holidayPeriod: HolidayPeriod,
+  childSchoolClass: string,
+  supabase: any
+): Promise<ValidationResult> => {
+  // 1. Vérifier que toutes les dates sont dans la période
   const periodStart = new Date(holidayPeriod.start_date);
   const periodEnd = new Date(holidayPeriod.end_date);
 
@@ -42,12 +56,48 @@ export const validateHolidayReservations = (
     };
   }
 
-  // Vérifier le nombre minimum de jours sélectionnés (3 jours)
+  // 2. Vérifier le minimum de 3 jours
   if (selectedDates.length < 3) {
     return {
       isValid: false,
       message: "Vous devez sélectionner au minimum 3 jours sur cette période de vacances."
     };
+  }
+
+  // 3. Vérifier le nombre maximum de participants par niveau
+  let maxParticipants: number;
+  if (["Petite Section", "Moyenne Section", "Grande Section"].includes(childSchoolClass)) {
+    maxParticipants = holidayPeriod.max_participants_kindergarten;
+  } else if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(childSchoolClass)) {
+    maxParticipants = holidayPeriod.max_participants_primary;
+  } else {
+    maxParticipants = holidayPeriod.max_participants_teen;
+  }
+
+  // Vérifier chaque date individuellement
+  for (const date of selectedDates) {
+    const { data: existingReservations, error } = await supabase
+      .from('reservations')
+      .select('id, children!inner(school_class)')
+      .eq('reservation_date', date.toISOString().split('T')[0])
+      .neq('status', 'cancelled');
+
+    if (error) {
+      console.error('Error checking reservations:', error);
+      return {
+        isValid: false,
+        message: "Une erreur est survenue lors de la vérification des réservations."
+      };
+    }
+
+    const currentCount = existingReservations.length;
+
+    if (currentCount >= maxParticipants) {
+      return {
+        isValid: false,
+        message: `Le nombre maximum de participants est atteint pour le ${date.toLocaleDateString('fr-FR')}. Veuillez choisir une autre date.`
+      };
+    }
   }
 
   return {
