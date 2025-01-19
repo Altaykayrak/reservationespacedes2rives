@@ -1,4 +1,4 @@
-import { startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isWithinInterval } from "date-fns";
+import { startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
 
 export const getWorkdaysInWeek = (weekStart: Date) => {
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
@@ -27,11 +27,10 @@ export const validateHolidayReservations = (
   existingReservations: Date[] = [],
   holidayPeriod: { start_date: string; end_date: string }
 ) => {
-  // Convert holiday period dates to Date objects
+  // Vérifier que toutes les dates sélectionnées sont dans la période de vacances
   const periodStart = new Date(holidayPeriod.start_date);
   const periodEnd = new Date(holidayPeriod.end_date);
 
-  // Verify all selected dates are within the holiday period
   const allDatesInPeriod = selectedDates.every(date =>
     isWithinInterval(date, { start: periodStart, end: periodEnd })
   );
@@ -39,30 +38,20 @@ export const validateHolidayReservations = (
   if (!allDatesInPeriod) {
     return {
       isValid: false,
-      message: "Toutes les dates sélectionnées doivent appartenir à la même période de vacances.",
+      message: "Toutes les dates sélectionnées doivent appartenir à la même période de vacances."
     };
   }
 
-  // Get existing reservations within this period
-  const existingReservationsInPeriod = existingReservations.filter(date =>
-    isWithinInterval(date, { start: periodStart, end: periodEnd })
-  );
-
-  // Count total unique dates (selected + existing) within the period
-  const uniqueDatesInPeriod = new Set([
-    ...selectedDates.map(d => d.toISOString()),
-    ...existingReservationsInPeriod.map(d => d.toISOString())
-  ]);
-
-  if (uniqueDatesInPeriod.size < 3) {
+  // Vérifier le nombre minimum de jours sélectionnés (3 jours)
+  if (selectedDates.length < 3) {
     return {
       isValid: false,
-      message: "Vous devez sélectionner au minimum 3 jours sur cette période de vacances.",
+      message: "Vous devez sélectionner au minimum 3 jours sur cette période de vacances."
     };
   }
 
   return {
     isValid: true,
-    message: "",
+    message: ""
   };
 };

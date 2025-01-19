@@ -27,7 +27,7 @@ export const HolidayReservationContent = () => {
     isDateReservedForChild
   } = useReservations();
 
-  const handleValidatedSubmit = () => {
+  const validateAndSubmit = () => {
     if (!selectedChild) {
       toast({
         title: "Erreur",
@@ -47,7 +47,7 @@ export const HolidayReservationContent = () => {
     const holidayPeriod = availableHolidays.find(holiday => {
       const startDate = new Date(holiday.start_date);
       const endDate = new Date(holiday.end_date);
-      return selectedDatesArray.every(date => 
+      return selectedDatesArray.some(date => 
         date >= startDate && date <= endDate
       );
     });
@@ -58,6 +58,12 @@ export const HolidayReservationContent = () => {
         description: "Les dates sélectionnées doivent appartenir à une même période de vacances.",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Vérifier le nombre minimum de jours sélectionnés
+    if (selectedDatesArray.length < 3) {
+      setShowMinDaysDialog(true);
       return;
     }
 
@@ -114,7 +120,7 @@ export const HolidayReservationContent = () => {
         children={children}
         selectedChild={selectedChild}
         setSelectedChild={setSelectedChild}
-        onSubmit={handleValidatedSubmit}
+        onSubmit={validateAndSubmit}
         isSubmitting={isSubmitting}
         setSelectedDates={setSelectedDates}
       />
