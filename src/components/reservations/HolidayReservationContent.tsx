@@ -37,12 +37,13 @@ export const HolidayReservationContent = () => {
       return;
     }
 
+    const selectedDatesArray = selectedDates.map(d => d.date);
+
     // Vérifier si les dates sélectionnées appartiennent à une seule période de vacances
     if (!availableHolidays || availableHolidays.length === 0) {
       return;
     }
 
-    const selectedDatesArray = selectedDates.map(d => d.date);
     const holidayPeriod = availableHolidays.find(holiday => {
       const startDate = new Date(holiday.start_date);
       const endDate = new Date(holiday.end_date);
@@ -60,15 +61,24 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    // Vérifier si au moins 3 jours sont sélectionnés pour la période
+    // Vérifier si au moins 3 jours sont sélectionnés
     if (selectedDatesArray.length < 3) {
       setShowMinDaysDialog(true);
       return;
     }
 
-    // Récupérer les dates déjà réservées pour cet enfant
+    // Récupérer les dates déjà réservées pour cet enfant dans la même période de vacances
     const existingReservations = reservations
-      ?.filter(res => res.child_id === selectedChild)
+      ?.filter(res => {
+        const resDate = new Date(res.reservation_date);
+        const startDate = new Date(holidayPeriod.start_date);
+        const endDate = new Date(holidayPeriod.end_date);
+        return (
+          res.child_id === selectedChild &&
+          resDate >= startDate &&
+          resDate <= endDate
+        );
+      })
       .map(res => new Date(res.reservation_date)) || [];
 
     const validation = validateHolidayReservations(

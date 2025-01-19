@@ -53,40 +53,39 @@ const getWorkdaysInWeek = (startDate: Date): Date[] => {
 };
 
 export const validateHolidayReservations = (selectedDates: Date[], existingReservations: Date[] = []) => {
-  // Regrouper toutes les dates par semaine
-  const weekMap = new Map<string, Date[]>();
-  
-  // Pour chaque date sélectionnée
-  for (const date of selectedDates) {
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-    const weekStartKey = weekStart.toISOString();
-    
-    // Obtenir tous les jours ouvrés de la semaine (lundi au vendredi)
-    const workdays = getWorkdaysInWeek(weekStart);
-    
-    // Trouver les réservations existantes pour cette semaine
-    const existingDatesForWeek = existingReservations.filter(existingDate => 
-      workdays.some(workday => isSameDay(existingDate, workday))
-    );
+  if (selectedDates.length < 3) {
+    return {
+      isValid: false,
+      message: "Vous devez sélectionner au moins 3 jours pour la période de vacances.",
+    };
+  }
 
-    // Trouver les nouvelles dates sélectionnées pour cette semaine
-    const selectedDatesInWeek = selectedDates.filter(selectedDate => 
-      workdays.some(workday => isSameDay(selectedDate, workday))
-    );
+  // Vérifier que toutes les dates sont dans la même période de vacances
+  const firstDate = selectedDates[0];
+  const weekStart = startOfWeek(firstDate, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(firstDate, { weekStartsOn: 1 });
 
-    // Calculer le nombre total de jours réservés pour cette semaine
-    const totalDaysForWeek = new Set([
-      ...existingDatesForWeek.map(d => d.toISOString()),
-      ...selectedDatesInWeek.map(d => d.toISOString())
-    ]).size;
+  // Vérifier que toutes les dates sélectionnées sont dans la même période
+  const allDatesInSamePeriod = selectedDates.every(date => {
+    return date >= weekStart && date <= weekEnd;
+  });
 
-    // Vérifier si on a au moins 3 jours au total pour cette semaine
-    if (totalDaysForWeek < 3) {
-      return {
-        isValid: false,
-        message: "Vous devez avoir au moins 3 jours réservés du lundi au vendredi pour chaque semaine.",
-      };
-    }
+  if (!allDatesInSamePeriod) {
+    return {
+      isValid: false,
+      message: "Toutes les dates sélectionnées doivent appartenir à la même période de vacances.",
+    };
+  }
+
+  // Vérifier les réservations existantes
+  const allDates = [...selectedDates, ...existingReservations];
+  const uniqueDates = new Set(allDates.map(d => d.toISOString()));
+
+  if (uniqueDates.size < 3) {
+    return {
+      isValid: false,
+      message: "Vous devez avoir au moins 3 jours réservés pour cette période de vacances.",
+    };
   }
 
   return {
