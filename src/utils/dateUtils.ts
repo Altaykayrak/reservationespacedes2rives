@@ -1,16 +1,42 @@
 import { startOfWeek, endOfWeek, eachDayOfInterval, isWeekend, addDays, isSameDay } from "date-fns";
 
-export const getWeeksFromDates = (dates: Date[]) => {
-  // Group dates by week
-  const weekMap = new Map<string, Date[]>();
+export const getWeeksFromDates = (dates: Date[]): Date[][] => {
+  if (!dates.length) return [];
+
+  // Trier les dates
+  const sortedDates = [...dates].sort((a, b) => a.getTime() - b.getTime());
   
-  dates.forEach(date => {
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 }).toISOString(); // Start week on Monday
-    const existingDates = weekMap.get(weekStart) || [];
-    weekMap.set(weekStart, [...existingDates, date]);
+  const weeks: Date[][] = [];
+  let currentWeek: Date[] = [];
+  let currentWeekNumber = -1;
+
+  sortedDates.forEach(date => {
+    const weekNumber = getWeekNumber(date);
+    
+    if (weekNumber !== currentWeekNumber) {
+      if (currentWeek.length > 0) {
+        weeks.push(currentWeek);
+      }
+      currentWeek = [date];
+      currentWeekNumber = weekNumber;
+    } else {
+      currentWeek.push(date);
+    }
   });
 
-  return Array.from(weekMap.values());
+  if (currentWeek.length > 0) {
+    weeks.push(currentWeek);
+  }
+
+  return weeks;
+};
+
+const getWeekNumber = (date: Date): number => {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 };
 
 const getWorkdaysInWeek = (startDate: Date): Date[] => {
