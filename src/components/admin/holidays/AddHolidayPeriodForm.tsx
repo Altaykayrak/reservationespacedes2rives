@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 
 const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
-  const currentYear = new Date().getFullYear() + 1; // 2025
+  const currentYear = new Date().getFullYear(); // 2025
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
