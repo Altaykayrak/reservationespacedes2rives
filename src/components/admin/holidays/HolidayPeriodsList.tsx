@@ -7,6 +7,7 @@ import HolidayPeriodItem from "./HolidayPeriodItem";
 
 interface HolidayPeriod {
   id: string;
+  name: string;
   start_date: string;
   end_date: string;
   max_participants_kindergarten: number;

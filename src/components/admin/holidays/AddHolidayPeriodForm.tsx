@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 
 const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
+  const currentYear = new Date().getFullYear() + 1; // 2025
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
@@ -46,7 +47,6 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
       // Format dates to YYYY-MM-DD to avoid timezone issues
       const formattedStartDate = format(startDate, 'yyyy-MM-dd');
       const formattedEndDate = format(endDate, 'yyyy-MM-dd');
-      const currentYear = startDate.getFullYear();
       const fullName = `${currentYear}-${name}`;
 
       // 1. Insert the holiday period
@@ -114,11 +114,9 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
             onChange={(e) => setName(e.target.value)}
             placeholder="Exemple: vacances-hiver"
           />
-          {startDate && (
-            <p className="text-sm text-gray-500 mt-1">
-              Le nom final sera: {startDate.getFullYear()}-{name}
-            </p>
-          )}
+          <p className="text-sm text-gray-500 mt-1">
+            Le nom final sera: {currentYear}-{name}
+          </p>
         </div>
 
         <div>
