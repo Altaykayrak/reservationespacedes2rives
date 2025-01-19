@@ -39,7 +39,7 @@ export const HolidayReservationCalendar = ({
       <p className="text-sm text-gray-600 mb-4">
         Vous devez réserver au moins 3 jours par semaine pendant les vacances.
       </p>
-      <div className="space-y-4">
+      <div className="space-y-6">
         {availableHolidays.map((holiday) => {
           const startDate = new Date(holiday.start_date);
           const endDate = new Date(holiday.end_date);
@@ -62,13 +62,19 @@ export const HolidayReservationCalendar = ({
           const weekGroups = getWeeksFromDates(selectedDatesInPeriod);
 
           return (
-            <div key={holiday.id} className="space-y-2">
+            <div 
+              key={holiday.id} 
+              className="border-2 border-blue-100 rounded-lg p-4 bg-blue-50/30 shadow-sm"
+            >
               <div>
-                <Label className="font-medium block mb-2">
+                <Label className="font-medium block mb-4 text-lg text-blue-800">
+                  {holiday.name}
+                </Label>
+                <Label className="font-medium block mb-4 text-sm text-gray-600">
                   Du {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
                   {format(endDate, "d MMMM yyyy", { locale: fr })}
                 </Label>
-                <div className="pl-4 space-y-2">
+                <div className="pl-4 space-y-2 bg-white rounded-lg p-4">
                   {dates.map((date) => (
                     <div key={date.toISOString()} className="flex items-center space-x-2">
                       <Checkbox
