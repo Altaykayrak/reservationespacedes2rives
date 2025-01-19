@@ -79,9 +79,6 @@ export const HolidayReservationCalendar = ({
               className="border-2 border-blue-100 rounded-lg p-4 bg-blue-50/30 shadow-sm"
             >
               <div>
-                <Label className="font-medium block mb-4 text-lg text-blue-800">
-                  {formatHolidayName(holiday.name)}
-                </Label>
                 <Label className="font-medium block mb-4 text-sm text-gray-600">
                   Du {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
                   {format(endDate, "d MMMM yyyy", { locale: fr })}
