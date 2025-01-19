@@ -1,90 +1,63 @@
-import { startOfWeek, endOfWeek, eachDayOfInterval, isWeekend, addDays, isSameDay } from "date-fns";
+import { startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isWithinInterval } from "date-fns";
 
-export const getWeeksFromDates = (dates: Date[]): Date[][] => {
-  if (!dates.length) return [];
+export const getWorkdaysInWeek = (weekStart: Date) => {
+  const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+  const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  return days.filter(day => {
+    const dayOfWeek = day.getDay();
+    return dayOfWeek !== 0 && dayOfWeek !== 6; // Exclude Saturday (6) and Sunday (0)
+  });
+};
 
-  // Trier les dates
-  const sortedDates = [...dates].sort((a, b) => a.getTime() - b.getTime());
-  
-  const weeks: Date[][] = [];
-  let currentWeek: Date[] = [];
-  let currentWeekNumber = -1;
+export const getWeeksFromDates = (dates: Date[]) => {
+  const weekMap = new Map<string, Date[]>();
 
-  sortedDates.forEach(date => {
-    const weekNumber = getWeekNumber(date);
-    
-    if (weekNumber !== currentWeekNumber) {
-      if (currentWeek.length > 0) {
-        weeks.push(currentWeek);
-      }
-      currentWeek = [date];
-      currentWeekNumber = weekNumber;
-    } else {
-      currentWeek.push(date);
-    }
+  dates.forEach(date => {
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    const weekKey = weekStart.toISOString();
+    const existingDates = weekMap.get(weekKey) || [];
+    weekMap.set(weekKey, [...existingDates, date]);
   });
 
-  if (currentWeek.length > 0) {
-    weeks.push(currentWeek);
-  }
-
-  return weeks;
+  return Array.from(weekMap.values());
 };
 
-const getWeekNumber = (date: Date): number => {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-};
+export const validateHolidayReservations = (
+  selectedDates: Date[], 
+  existingReservations: Date[] = [],
+  holidayPeriod: { start_date: string; end_date: string }
+) => {
+  // Convert holiday period dates to Date objects
+  const periodStart = new Date(holidayPeriod.start_date);
+  const periodEnd = new Date(holidayPeriod.end_date);
 
-const getWorkdaysInWeek = (startDate: Date): Date[] => {
-  const workdays: Date[] = [];
-  let currentDate = startDate;
+  // Verify all selected dates are within the holiday period
+  const allDatesInPeriod = selectedDates.every(date =>
+    isWithinInterval(date, { start: periodStart, end: periodEnd })
+  );
 
-  // Add 5 workdays (Monday to Friday)
-  for (let i = 0; i < 5; i++) {
-    workdays.push(currentDate);
-    currentDate = addDays(currentDate, 1);
-  }
-
-  return workdays;
-};
-
-export const validateHolidayReservations = (selectedDates: Date[], existingReservations: Date[] = []) => {
-  if (selectedDates.length < 3) {
-    return {
-      isValid: false,
-      message: "Vous devez sélectionner au moins 3 jours pour la période de vacances.",
-    };
-  }
-
-  // Vérifier que toutes les dates sont dans la même période de vacances
-  const firstDate = selectedDates[0];
-  const weekStart = startOfWeek(firstDate, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(firstDate, { weekStartsOn: 1 });
-
-  // Vérifier que toutes les dates sélectionnées sont dans la même période
-  const allDatesInSamePeriod = selectedDates.every(date => {
-    return date >= weekStart && date <= weekEnd;
-  });
-
-  if (!allDatesInSamePeriod) {
+  if (!allDatesInPeriod) {
     return {
       isValid: false,
       message: "Toutes les dates sélectionnées doivent appartenir à la même période de vacances.",
     };
   }
 
-  // Vérifier les réservations existantes
-  const allDates = [...selectedDates, ...existingReservations];
-  const uniqueDates = new Set(allDates.map(d => d.toISOString()));
+  // Get existing reservations within this period
+  const existingReservationsInPeriod = existingReservations.filter(date =>
+    isWithinInterval(date, { start: periodStart, end: periodEnd })
+  );
 
-  if (uniqueDates.size < 3) {
+  // Count total unique dates (selected + existing) within the period
+  const uniqueDatesInPeriod = new Set([
+    ...selectedDates.map(d => d.toISOString()),
+    ...existingReservationsInPeriod.map(d => d.toISOString())
+  ]);
+
+  if (uniqueDatesInPeriod.size < 3) {
     return {
       isValid: false,
-      message: "Vous devez avoir au moins 3 jours réservés pour cette période de vacances.",
+      message: "Vous devez sélectionner au minimum 3 jours sur cette période de vacances.",
     };
   }
 

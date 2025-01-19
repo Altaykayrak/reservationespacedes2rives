@@ -61,12 +61,6 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    // Vérifier si au moins 3 jours sont sélectionnés
-    if (selectedDatesArray.length < 3) {
-      setShowMinDaysDialog(true);
-      return;
-    }
-
     // Récupérer les dates déjà réservées pour cet enfant dans la même période de vacances
     const existingReservations = reservations
       ?.filter(res => {
@@ -83,15 +77,12 @@ export const HolidayReservationContent = () => {
 
     const validation = validateHolidayReservations(
       selectedDatesArray,
-      existingReservations
+      existingReservations,
+      holidayPeriod
     );
     
     if (!validation.isValid) {
-      toast({
-        title: "Erreur de validation",
-        description: validation.message,
-        variant: "destructive",
-      });
+      setShowMinDaysDialog(true);
       return;
     }
 
