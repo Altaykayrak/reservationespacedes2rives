@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { fr } from "date-fns/locale";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
+import HolidayDatePicker from "./form/HolidayDatePicker";
+import HolidayNameInput from "./form/HolidayNameInput";
+import ParticipantsInputs from "./form/ParticipantsInputs";
 
 const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const currentYear = new Date().getFullYear(); // 2025
@@ -105,69 +104,27 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
       <h2 className="text-xl font-semibold mb-4">Ajouter une période de vacances</h2>
       
       <div className="space-y-4">
-        <div>
-          <Label htmlFor="name">Nom de la période</Label>
-          <Input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Exemple: vacances-hiver"
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            Le nom final sera: {currentYear}-{name}
-          </p>
-        </div>
+        <HolidayNameInput
+          name={name}
+          currentYear={currentYear}
+          setName={setName}
+        />
 
-        <div>
-          <Label>Date de début</Label>
-          <Calendar
-            mode="single"
-            selected={startDate}
-            onSelect={setStartDate}
-            locale={fr}
-          />
-        </div>
+        <HolidayDatePicker
+          startDate={startDate}
+          endDate={endDate}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
+        />
 
-        <div>
-          <Label>Date de fin</Label>
-          <Calendar
-            mode="single"
-            selected={endDate}
-            onSelect={setEndDate}
-            locale={fr}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="maxParticipantsKindergarten">Nombre maximum de participants (Maternelle)</Label>
-          <Input
-            id="maxParticipantsKindergarten"
-            type="number"
-            value={maxParticipantsKindergarten}
-            onChange={(e) => setMaxParticipantsKindergarten(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="maxParticipantsPrimary">Nombre maximum de participants (Primaire)</Label>
-          <Input
-            id="maxParticipantsPrimary"
-            type="number"
-            value={maxParticipantsPrimary}
-            onChange={(e) => setMaxParticipantsPrimary(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="maxParticipantsTeen">Nombre maximum de participants (Adolescent)</Label>
-          <Input
-            id="maxParticipantsTeen"
-            type="number"
-            value={maxParticipantsTeen}
-            onChange={(e) => setMaxParticipantsTeen(e.target.value)}
-          />
-        </div>
+        <ParticipantsInputs
+          maxParticipantsKindergarten={maxParticipantsKindergarten}
+          maxParticipantsPrimary={maxParticipantsPrimary}
+          maxParticipantsTeen={maxParticipantsTeen}
+          setMaxParticipantsKindergarten={setMaxParticipantsKindergarten}
+          setMaxParticipantsPrimary={setMaxParticipantsPrimary}
+          setMaxParticipantsTeen={setMaxParticipantsTeen}
+        />
 
         <Button onClick={handleAddHolidayPeriod} className="w-full">
           Ajouter
