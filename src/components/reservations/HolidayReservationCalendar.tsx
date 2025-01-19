@@ -10,6 +10,18 @@ interface HolidayReservationCalendarProps {
   setSelectedDates: (dates: Date[]) => void;
 }
 
+const formatHolidayName = (name: string) => {
+  // Expected format: "2025-vacances-printemps" or similar
+  const parts = name.split('-');
+  if (parts.length < 2) return name;
+
+  const year = parts[0];
+  const season = parts[parts.length - 1];
+  const weekNumber = "01"; // For now hardcoded as 01, could be dynamic based on data
+
+  return `Semaine ${weekNumber} ${season.charAt(0).toUpperCase() + season.slice(1)} ${year}`;
+};
+
 export const HolidayReservationCalendar = ({
   selectedDates,
   setSelectedDates,
@@ -68,7 +80,7 @@ export const HolidayReservationCalendar = ({
             >
               <div>
                 <Label className="font-medium block mb-4 text-lg text-blue-800">
-                  {holiday.name}
+                  {formatHolidayName(holiday.name)}
                 </Label>
                 <Label className="font-medium block mb-4 text-sm text-gray-600">
                   Du {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
