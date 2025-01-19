@@ -16,6 +16,7 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
   const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
   const [maxParticipantsTeen, setMaxParticipantsTeen] = useState("");
+  const [name, setName] = useState("");
   const { toast } = useToast();
 
   // Fetch all school class categories
@@ -32,7 +33,7 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   });
 
   const handleAddHolidayPeriod = async () => {
-    if (!startDate || !endDate || !maxParticipantsKindergarten || !maxParticipantsPrimary || !maxParticipantsTeen) {
+    if (!startDate || !endDate || !maxParticipantsKindergarten || !maxParticipantsPrimary || !maxParticipantsTeen || !name) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs",
@@ -45,6 +46,8 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
       // Format dates to YYYY-MM-DD to avoid timezone issues
       const formattedStartDate = format(startDate, 'yyyy-MM-dd');
       const formattedEndDate = format(endDate, 'yyyy-MM-dd');
+      const currentYear = startDate.getFullYear();
+      const fullName = `${currentYear}-${name}`;
 
       // 1. Insert the holiday period
       const { data: holidayPeriod, error: holidayError } = await supabase
@@ -52,6 +55,7 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
         .insert({
           start_date: formattedStartDate,
           end_date: formattedEndDate,
+          name: fullName,
           max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
           max_participants_primary: parseInt(maxParticipantsPrimary),
           max_participants_teen: parseInt(maxParticipantsTeen),
@@ -85,6 +89,7 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
       setMaxParticipantsKindergarten("");
       setMaxParticipantsPrimary("");
       setMaxParticipantsTeen("");
+      setName("");
       onSuccess();
     } catch (error: any) {
       toast({
@@ -100,6 +105,22 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
       <h2 className="text-xl font-semibold mb-4">Ajouter une période de vacances</h2>
       
       <div className="space-y-4">
+        <div>
+          <Label htmlFor="name">Nom de la période</Label>
+          <Input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Exemple: vacances-hiver"
+          />
+          {startDate && (
+            <p className="text-sm text-gray-500 mt-1">
+              Le nom final sera: {startDate.getFullYear()}-{name}
+            </p>
+          )}
+        </div>
+
         <div>
           <Label>Date de début</Label>
           <Calendar

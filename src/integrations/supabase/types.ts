@@ -59,6 +59,7 @@ export type Database = {
           max_participants_kindergarten: number
           max_participants_primary: number
           max_participants_teen: number
+          name: string
           start_date: string
           updated_at: string
         }
@@ -69,6 +70,7 @@ export type Database = {
           max_participants_kindergarten?: number
           max_participants_primary?: number
           max_participants_teen?: number
+          name: string
           start_date: string
           updated_at?: string
         }
@@ -79,6 +81,7 @@ export type Database = {
           max_participants_kindergarten?: number
           max_participants_primary?: number
           max_participants_teen?: number
+          name?: string
           start_date?: string
           updated_at?: string
         }

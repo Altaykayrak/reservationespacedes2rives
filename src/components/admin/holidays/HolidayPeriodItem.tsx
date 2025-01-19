@@ -4,6 +4,7 @@ import DeleteHolidayDialog from "./DeleteHolidayDialog";
 
 interface HolidayPeriod {
   id: string;
+  name: string;
   start_date: string;
   end_date: string;
   max_participants_kindergarten: number;
@@ -21,11 +22,12 @@ const HolidayPeriodItem = ({ holiday, onEdit, onDelete }: HolidayPeriodItemProps
   return (
     <div className="flex items-center justify-between p-4 border rounded">
       <div>
-        <p className="font-medium">
+        <p className="font-medium mb-1">{holiday.name}</p>
+        <p className="text-gray-600">
           Du {new Date(holiday.start_date).toLocaleDateString("fr-FR")} au{" "}
           {new Date(holiday.end_date).toLocaleDateString("fr-FR")}
         </p>
-        <div className="text-sm text-gray-600 space-y-1">
+        <div className="text-sm text-gray-600 space-y-1 mt-2">
           <p>Maternelle: {holiday.max_participants_kindergarten} participants</p>
           <p>Primaire: {holiday.max_participants_primary} participants</p>
           <p>Adolescent: {holiday.max_participants_teen} participants</p>
