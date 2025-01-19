@@ -29,6 +29,8 @@ export const HolidayReservationContent = () => {
   } = useReservations();
 
   const validateAndSubmit = async () => {
+    console.log("validateAndSubmit called with:", { selectedChild, selectedDates });
+
     if (!selectedChild) {
       toast({
         title: "Erreur",
@@ -39,9 +41,10 @@ export const HolidayReservationContent = () => {
     }
 
     const selectedDatesArray = selectedDates.map(d => d.date);
+    console.log("Selected dates array:", selectedDatesArray);
 
-    // Vérifier si les dates sélectionnées appartiennent à une période de vacances
     if (!availableHolidays || availableHolidays.length === 0) {
+      console.log("No available holidays found");
       return;
     }
 
@@ -53,6 +56,8 @@ export const HolidayReservationContent = () => {
       );
     });
 
+    console.log("Found holiday period:", holidayPeriod);
+
     if (!holidayPeriod) {
       toast({
         title: "Erreur",
@@ -62,7 +67,6 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    // Récupérer la classe de l'enfant
     const selectedChildData = children?.find(child => child.id === selectedChild);
     if (!selectedChildData) {
       toast({
@@ -73,13 +77,20 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    // Valider la réservation
+    console.log("Validating holiday reservations with:", {
+      selectedDatesArray,
+      holidayPeriod,
+      schoolClass: selectedChildData.school_class
+    });
+
     const validationResult = await validateHolidayReservations(
       selectedDatesArray,
       holidayPeriod,
       selectedChildData.school_class,
       supabase
     );
+
+    console.log("Validation result:", validationResult);
 
     if (!validationResult.isValid) {
       toast({
@@ -90,7 +101,6 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    // Vérifier les conflits de réservation
     const hasConflicts = selectedDates.some(dateOption => 
       isDateReservedForChild(selectedChild, dateOption.date)
     );
@@ -100,8 +110,8 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    // Si tout est valide, procéder à la réservation avec period_id
     try {
+      console.log("Creating reservations...");
       for (const dateOption of selectedDates) {
         const { error } = await supabase
           .from('reservations')
@@ -130,7 +140,6 @@ export const HolidayReservationContent = () => {
         description: "Les réservations ont été créées avec succès.",
       });
 
-      // Réinitialiser le formulaire
       setSelectedDates([]);
       handleSubmit();
     } catch (error) {

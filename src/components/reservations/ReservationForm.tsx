@@ -54,15 +54,16 @@ export const ReservationForm = ({
     ALLOWED_CLASSES.includes(child.school_class)
   );
 
+  // Mise à jour des options de date uniquement lorsque selectedDates change
   useEffect(() => {
     const newDateOptions = selectedDates.map(date => {
-      const existingOptions = dateOptions.find(
+      const existingOption = dateOptions.find(
         opt => opt.date.getTime() === date.getTime()
       );
-      return {
+      return existingOption || {
         date,
-        withoutMeal: existingOptions?.withoutMeal || false,
-        earlyDropoff: existingOptions?.earlyDropoff || false,
+        withoutMeal: false,
+        earlyDropoff: false,
       };
     });
     setDateOptions(newDateOptions);
