@@ -1,29 +1,9 @@
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Edit, Trash2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import EditHolidayDialog from "./EditHolidayDialog";
+import HolidayPeriodItem from "./HolidayPeriodItem";
 
 interface HolidayPeriod {
   id: string;
@@ -36,7 +16,7 @@ interface HolidayPeriod {
 
 const HolidayPeriodsList = ({ 
   holidays,
-  onDelete
+  onDelete: refreshList
 }: { 
   holidays: HolidayPeriod[];
   onDelete: () => void;
@@ -50,7 +30,6 @@ const HolidayPeriodsList = ({
 
   const handleDeleteHolidayPeriod = async (id: string, startDate: string, endDate: string) => {
     try {
-      // Vérifier s'il existe des réservations pour cette période
       const { data: reservations, error: reservationsError } = await supabase
         .from("reservations")
         .select("id")
@@ -68,7 +47,6 @@ const HolidayPeriodsList = ({
         return;
       }
 
-      // Si pas de réservations, on peut procéder à la suppression
       const { error } = await supabase
         .from("available_holiday_periods")
         .delete()
@@ -81,7 +59,7 @@ const HolidayPeriodsList = ({
         description: "La période de vacances a été supprimée avec succès",
       });
 
-      onDelete();
+      refreshList();
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -93,7 +71,6 @@ const HolidayPeriodsList = ({
 
   const handleEditHolidayPeriod = async (holiday: HolidayPeriod) => {
     try {
-      // Vérifier s'il existe des réservations pour cette période
       const { data: reservations, error: reservationsError } = await supabase
         .from("reservations")
         .select("id")
@@ -111,7 +88,6 @@ const HolidayPeriodsList = ({
         return;
       }
 
-      // Si pas de réservations, on peut procéder à la modification
       setSelectedHoliday(holiday);
       setMaxParticipantsKindergarten(holiday.max_participants_kindergarten.toString());
       setMaxParticipantsPrimary(holiday.max_participants_primary.toString());
@@ -147,7 +123,7 @@ const HolidayPeriodsList = ({
       });
 
       setIsEditDialogOpen(false);
-      onDelete(); // Rafraîchir la liste
+      refreshList();
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -163,99 +139,26 @@ const HolidayPeriodsList = ({
       
       <div className="space-y-4">
         {holidays?.map((holiday) => (
-          <div
+          <HolidayPeriodItem
             key={holiday.id}
-            className="flex items-center justify-between p-4 border rounded"
-          >
-            <div>
-              <p className="font-medium">
-                Du {new Date(holiday.start_date).toLocaleDateString("fr-FR")} au{" "}
-                {new Date(holiday.end_date).toLocaleDateString("fr-FR")}
-              </p>
-              <div className="text-sm text-gray-600 space-y-1">
-                <p>Maternelle: {holiday.max_participants_kindergarten} participants</p>
-                <p>Primaire: {holiday.max_participants_primary} participants</p>
-                <p>Adolescent: {holiday.max_participants_teen} participants</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleEditHolidayPeriod(holiday)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="icon">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Cette action est irréversible. Cela supprimera définitivement la période de vacances.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Annuler</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDeleteHolidayPeriod(holiday.id, holiday.start_date, holiday.end_date)}>
-                      Supprimer
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
+            holiday={holiday}
+            onEdit={handleEditHolidayPeriod}
+            onDelete={handleDeleteHolidayPeriod}
+          />
         ))}
       </div>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Modifier le nombre de places</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="maxParticipantsKindergarten">Nombre maximum de participants (Maternelle)</Label>
-              <Input
-                id="maxParticipantsKindergarten"
-                type="number"
-                value={maxParticipantsKindergarten}
-                onChange={(e) => setMaxParticipantsKindergarten(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="maxParticipantsPrimary">Nombre maximum de participants (Primaire)</Label>
-              <Input
-                id="maxParticipantsPrimary"
-                type="number"
-                value={maxParticipantsPrimary}
-                onChange={(e) => setMaxParticipantsPrimary(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="maxParticipantsTeen">Nombre maximum de participants (Adolescent)</Label>
-              <Input
-                id="maxParticipantsTeen"
-                type="number"
-                value={maxParticipantsTeen}
-                onChange={(e) => setMaxParticipantsTeen(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleSaveEdit}>
-              Enregistrer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditHolidayDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSave={handleSaveEdit}
+        maxParticipantsKindergarten={maxParticipantsKindergarten}
+        maxParticipantsPrimary={maxParticipantsPrimary}
+        maxParticipantsTeen={maxParticipantsTeen}
+        setMaxParticipantsKindergarten={setMaxParticipantsKindergarten}
+        setMaxParticipantsPrimary={setMaxParticipantsPrimary}
+        setMaxParticipantsTeen={setMaxParticipantsTeen}
+      />
     </Card>
   );
 };
