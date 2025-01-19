@@ -48,8 +48,27 @@ const HolidayPeriodsList = ({
   const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
   const [maxParticipantsTeen, setMaxParticipantsTeen] = useState("");
 
-  const handleDeleteHolidayPeriod = async (id: string) => {
+  const handleDeleteHolidayPeriod = async (id: string, startDate: string, endDate: string) => {
     try {
+      // Vérifier s'il existe des réservations pour cette période
+      const { data: reservations, error: reservationsError } = await supabase
+        .from("reservations")
+        .select("id")
+        .gte("reservation_date", startDate)
+        .lte("reservation_date", endDate);
+
+      if (reservationsError) throw reservationsError;
+
+      if (reservations && reservations.length > 0) {
+        toast({
+          title: "Suppression impossible",
+          description: "Il existe déjà des réservations pour cette période. La suppression n'est pas possible.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Si pas de réservations, on peut procéder à la suppression
       const { error } = await supabase
         .from("available_holiday_periods")
         .delete()
@@ -182,7 +201,7 @@ const HolidayPeriodsList = ({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Annuler</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDeleteHolidayPeriod(holiday.id)}>
+                    <AlertDialogAction onClick={() => handleDeleteHolidayPeriod(holiday.id, holiday.start_date, holiday.end_date)}>
                       Supprimer
                     </AlertDialogAction>
                   </AlertDialogFooter>
