@@ -1,36 +1,60 @@
-import { HolidayReservationCalendar } from "./HolidayReservationCalendar";
-import { ReservationForm } from "./ReservationForm";
-import { ReservationsList } from "./ReservationsList";
-import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
-import { ReservationWarningDialog } from "./dialogs/ReservationWarningDialog";
-import { useReservations } from "@/hooks/useReservations";
-import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { validateHolidayReservations } from "@/utils/dateUtils";
-import { useAvailableDates } from "@/hooks/useAvailableDates";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { validateHolidayReservations } from "@/utils/dateUtils";
 
 export const HolidayReservationContent = () => {
   const { toast } = useToast();
-  const [showWarningDialog, setShowWarningDialog] = useState(false);
-  const [showMinDaysDialog, setShowMinDaysDialog] = useState(false);
-  const { availableHolidays } = useAvailableDates();
-  
-  const {
-    selectedDates,
-    setSelectedDates,
-    selectedChild,
-    setSelectedChild,
-    children,
-    reservations,
-    handleSubmit,
-    isSubmitting,
-    isDateReservedForChild
-  } = useReservations();
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedChild, setSelectedChild] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateAndSubmit = async () => {
-    console.log("validateAndSubmit called with:", { selectedChild, selectedDates });
+  // Récupération des périodes de vacances disponibles
+  const { data: holidayPeriods } = useQuery({
+    queryKey: ["holidayPeriods"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("*")
+        .gte("end_date", new Date().toISOString().split("T")[0])
+        .order("start_date");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
+  // Récupération des enfants de l'utilisateur
+  const { data: children } = useQuery({
+    queryKey: ["children"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("*");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const handleDateToggle = (date: Date) => {
+    const isSelected = selectedDates.some(d => d.getTime() === date.getTime());
+    if (isSelected) {
+      setSelectedDates(selectedDates.filter(d => d.getTime() !== date.getTime()));
+    } else {
+      setSelectedDates([...selectedDates, date]);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!selectedChild) {
       toast({
         title: "Erreur",
@@ -40,28 +64,10 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    const selectedDatesArray = selectedDates.map(d => d.date);
-    console.log("Selected dates array:", selectedDatesArray);
-
-    if (!availableHolidays || availableHolidays.length === 0) {
-      console.log("No available holidays found");
-      return;
-    }
-
-    const holidayPeriod = availableHolidays.find(holiday => {
-      const startDate = new Date(holiday.start_date);
-      const endDate = new Date(holiday.end_date);
-      return selectedDatesArray.some(date => 
-        date >= startDate && date <= endDate
-      );
-    });
-
-    console.log("Found holiday period:", holidayPeriod);
-
-    if (!holidayPeriod) {
+    if (selectedDates.length === 0) {
       toast({
         title: "Erreur",
-        description: "Les dates sélectionnées doivent appartenir à une même période de vacances.",
+        description: "Veuillez sélectionner au moins une date.",
         variant: "destructive",
       });
       return;
@@ -77,111 +83,160 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    console.log("Validating holiday reservations with:", {
-      selectedDatesArray,
-      holidayPeriod,
-      schoolClass: selectedChildData.school_class
+    // Trouver la période de vacances correspondante
+    const holidayPeriod = holidayPeriods?.find(period => {
+      const startDate = new Date(period.start_date);
+      const endDate = new Date(period.end_date);
+      return selectedDates.some(date => 
+        date >= startDate && date <= endDate
+      );
     });
 
-    const validationResult = await validateHolidayReservations(
-      selectedDatesArray,
-      holidayPeriod,
-      selectedChildData.school_class,
-      supabase
-    );
-
-    console.log("Validation result:", validationResult);
-
-    if (!validationResult.isValid) {
+    if (!holidayPeriod) {
       toast({
-        title: "Erreur de validation",
-        description: validationResult.message,
+        title: "Erreur",
+        description: "Les dates sélectionnées doivent appartenir à une même période de vacances.",
         variant: "destructive",
       });
-      return;
-    }
-
-    const hasConflicts = selectedDates.some(dateOption => 
-      isDateReservedForChild(selectedChild, dateOption.date)
-    );
-
-    if (hasConflicts) {
-      setShowWarningDialog(true);
       return;
     }
 
     try {
-      console.log("Creating reservations...");
-      for (const dateOption of selectedDates) {
-        const { error } = await supabase
-          .from('reservations')
-          .insert({
-            child_id: selectedChild,
-            reservation_date: dateOption.date.toISOString().split('T')[0],
-            without_meal: dateOption.withoutMeal,
-            early_dropoff: dateOption.earlyDropoff,
-            period_id: holidayPeriod.id,
-            reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          });
+      setIsSubmitting(true);
 
-        if (error) {
-          console.error('Error creating reservation:', error);
-          toast({
-            title: "Erreur",
-            description: "Une erreur est survenue lors de la création de la réservation.",
-            variant: "destructive",
-          });
-          return;
-        }
+      // Validation des dates et du nombre de participants
+      const validationResult = await validateHolidayReservations(
+        selectedDates,
+        holidayPeriod,
+        selectedChildData.school_class,
+        supabase
+      );
+
+      if (!validationResult.isValid) {
+        toast({
+          title: "Erreur de validation",
+          description: validationResult.message,
+          variant: "destructive",
+        });
+        return;
       }
+
+      // Création de la réservation
+      const { error: reservationError } = await supabase
+        .from("reservations")
+        .insert({
+          child_id: selectedChild,
+          period_id: holidayPeriod.id,
+          reservation_dates: selectedDates.map(date => 
+            format(date, "yyyy-MM-dd")
+          ),
+          reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        });
+
+      if (reservationError) throw reservationError;
 
       toast({
         title: "Succès",
-        description: "Les réservations ont été créées avec succès.",
+        description: "La réservation a été créée avec succès.",
       });
 
+      // Réinitialisation du formulaire
       setSelectedDates([]);
-      handleSubmit();
+      setSelectedChild("");
+
     } catch (error) {
-      console.error('Error in reservation process:', error);
+      console.error("Erreur lors de la création de la réservation:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la création des réservations.",
+        description: "Une erreur est survenue lors de la création de la réservation.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="space-y-4 md:space-y-8">
-      <HolidayReservationCalendar
-        selectedDates={selectedDates.map(d => d.date)}
-        setSelectedDates={dates => setSelectedDates(dates.map(date => ({
-          date,
-          withoutMeal: false,
-          earlyDropoff: false,
-        })))}
-      />
-      <ReservationForm
-        selectedDates={selectedDates.map(d => d.date)}
-        children={children}
-        selectedChild={selectedChild}
-        setSelectedChild={setSelectedChild}
-        onSubmit={validateAndSubmit}
-        isSubmitting={isSubmitting}
-        setSelectedDates={setSelectedDates}
-      />
-      <ReservationsList reservations={reservations} />
+  if (!holidayPeriods || holidayPeriods.length === 0) {
+    return (
+      <Card className="p-6">
+        <p className="text-center text-gray-500">
+          Aucune période de vacances n'est disponible pour le moment.
+        </p>
+      </Card>
+    );
+  }
 
-      <ReservationWarningDialog 
-        open={showWarningDialog} 
-        onOpenChange={setShowWarningDialog} 
-      />
-      
-      <MinimumDaysDialog 
-        open={showMinDaysDialog} 
-        onOpenChange={setShowMinDaysDialog} 
-      />
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="child-select">Sélectionner un enfant</Label>
+            <select
+              id="child-select"
+              value={selectedChild}
+              onChange={(e) => setSelectedChild(e.target.value)}
+              className="w-full mt-2 rounded-md border border-gray-300 p-2"
+            >
+              <option value="">Choisir un enfant</option>
+              {children?.map((child) => (
+                <option key={child.id} value={child.id}>
+                  {child.first_name} {child.last_name} ({child.school_class})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-4">
+            {holidayPeriods.map((period) => {
+              const startDate = new Date(period.start_date);
+              const endDate = new Date(period.end_date);
+              const dates = [];
+              const currentDate = new Date(startDate);
+
+              while (currentDate <= endDate) {
+                if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+                  dates.push(new Date(currentDate));
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+              }
+
+              return (
+                <div key={period.id} className="border-2 border-blue-100 rounded-lg p-4 bg-blue-50/30">
+                  <Label className="font-medium block mb-4">
+                    {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
+                    {format(endDate, "d MMMM yyyy", { locale: fr })}
+                  </Label>
+                  <ScrollArea className="h-[200px]">
+                    <div className="space-y-2">
+                      {dates.map((date) => (
+                        <div key={date.toISOString()} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={date.toISOString()}
+                            checked={selectedDates.some(d => d.getTime() === date.getTime())}
+                            onCheckedChange={() => handleDateToggle(date)}
+                          />
+                          <Label htmlFor={date.toISOString()}>
+                            {format(date, "EEEE d MMMM", { locale: fr })}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              );
+            })}
+          </div>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full"
+          >
+            {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 };

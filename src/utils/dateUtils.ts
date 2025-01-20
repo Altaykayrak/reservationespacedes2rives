@@ -1,5 +1,5 @@
 import { startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export const getWorkdaysInWeek = (weekStart: Date) => {
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
@@ -46,7 +46,7 @@ export const validateHolidayReservations = async (
   selectedDates: Date[],
   holidayPeriod: HolidayPeriod,
   childSchoolClass: string,
-  supabase: any
+  supabase: SupabaseClient
 ): Promise<ValidationResult> => {
   // 1. Vérifier que toutes les dates sont des jours ouvrables
   const nonWorkingDays = selectedDates.filter(date => !isWorkingDay(date));
