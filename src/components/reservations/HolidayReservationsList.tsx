@@ -19,7 +19,7 @@ type GroupedReservations = Record<string, {
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
 
-  const { data: reservations, isError, error } = useQuery({
+  const { data: reservations, isError, error, refetch } = useQuery({
     queryKey: ["holiday_reservations"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -98,6 +98,7 @@ export const HolidayReservationsList = () => {
             childName={data.childName}
             schoolClass={data.schoolClass}
             reservations={data.reservations}
+            onUpdate={() => refetch()}
           />
         ))}
       </div>

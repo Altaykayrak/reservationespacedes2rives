@@ -87,7 +87,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
               childName={data.childName}
               schoolClass={data.schoolClass}
               reservations={data.reservations}
-              onUpdate={() => refetchReservations()}
+              onUpdate={() => window.location.reload()}
             />
           ))}
         </div>
