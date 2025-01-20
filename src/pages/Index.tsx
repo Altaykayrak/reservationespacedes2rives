@@ -26,7 +26,7 @@ const Index = () => {
           </div>
           <h1 className="text-5xl font-bold mb-6">L'espace des deux rives</h1>
           <p className="text-xl mb-12 max-w-3xl mx-auto">
-            Bienvenue au centre de loisirs d'Amfreville-sous-les-Monts, votre
+            Bienvenue au centre de loisirs de Pîtres et du Manoir-Sur-Seine, votre
             partenaire de confiance pour l'épanouissement de vos enfants
           </p>
           <div className="space-x-4">
