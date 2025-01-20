@@ -11,9 +11,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { validateHolidayReservations } from "@/utils/dateUtils";
 
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
+
 export const HolidayReservationContent = () => {
   const { toast } = useToast();
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedDates, setSelectedDates] = useState<DateOption[]>([]);
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -46,12 +52,20 @@ export const HolidayReservationContent = () => {
   });
 
   const handleDateToggle = (date: Date) => {
-    const isSelected = selectedDates.some(d => d.getTime() === date.getTime());
-    if (isSelected) {
-      setSelectedDates(selectedDates.filter(d => d.getTime() !== date.getTime()));
+    const existingDate = selectedDates.find(d => d.date.getTime() === date.getTime());
+    if (existingDate) {
+      setSelectedDates(selectedDates.filter(d => d.date.getTime() !== date.getTime()));
     } else {
-      setSelectedDates([...selectedDates, date]);
+      setSelectedDates([...selectedDates, { date, withoutMeal: false, earlyDropoff: false }]);
     }
+  };
+
+  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
+    setSelectedDates(selectedDates.map(d => 
+      d.date.getTime() === date.getTime() 
+        ? { ...d, [option]: value }
+        : d
+    ));
   };
 
   const handleSubmit = async () => {
@@ -87,8 +101,8 @@ export const HolidayReservationContent = () => {
     const holidayPeriod = holidayPeriods?.find(period => {
       const startDate = new Date(period.start_date);
       const endDate = new Date(period.end_date);
-      return selectedDates.some(date => 
-        date >= startDate && date <= endDate
+      return selectedDates.some(dateOption => 
+        dateOption.date >= startDate && dateOption.date <= endDate
       );
     });
 
@@ -106,7 +120,7 @@ export const HolidayReservationContent = () => {
 
       // Validation des dates et du nombre de participants
       const validationResult = await validateHolidayReservations(
-        selectedDates,
+        selectedDates.map(d => d.date),
         holidayPeriod,
         selectedChildData.school_class,
         supabase
@@ -122,13 +136,15 @@ export const HolidayReservationContent = () => {
       }
 
       // Création d'une réservation pour chaque date
-      for (const date of selectedDates) {
+      for (const dateOption of selectedDates) {
         const { error: reservationError } = await supabase
           .from("reservations")
           .insert({
             child_id: selectedChild,
             period_id: holidayPeriod.id,
-            reservation_date: format(date, "yyyy-MM-dd"),
+            reservation_date: format(dateOption.date, "yyyy-MM-dd"),
+            without_meal: dateOption.withoutMeal,
+            early_dropoff: dateOption.earlyDropoff,
             reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
           });
 
@@ -207,20 +223,53 @@ export const HolidayReservationContent = () => {
                     {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
                     {format(endDate, "d MMMM yyyy", { locale: fr })}
                   </Label>
-                  <ScrollArea className="h-[200px]">
-                    <div className="space-y-2">
-                      {dates.map((date) => (
-                        <div key={date.toISOString()} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={date.toISOString()}
-                            checked={selectedDates.some(d => d.getTime() === date.getTime())}
-                            onCheckedChange={() => handleDateToggle(date)}
-                          />
-                          <Label htmlFor={date.toISOString()}>
-                            {format(date, "EEEE d MMMM", { locale: fr })}
-                          </Label>
-                        </div>
-                      ))}
+                  <ScrollArea className="h-[300px]">
+                    <div className="space-y-4">
+                      {dates.map((date) => {
+                        const selectedDate = selectedDates.find(d => d.date.getTime() === date.getTime());
+                        return (
+                          <div key={date.toISOString()} className="space-y-2 border-b pb-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={date.toISOString()}
+                                checked={!!selectedDate}
+                                onCheckedChange={() => handleDateToggle(date)}
+                              />
+                              <Label htmlFor={date.toISOString()}>
+                                {format(date, "EEEE d MMMM", { locale: fr })}
+                              </Label>
+                            </div>
+                            {selectedDate && (
+                              <div className="ml-6 space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`without-meal-${date.toISOString()}`}
+                                    checked={selectedDate.withoutMeal}
+                                    onCheckedChange={(checked) =>
+                                      handleOptionChange(date, 'withoutMeal', checked as boolean)
+                                    }
+                                  />
+                                  <Label htmlFor={`without-meal-${date.toISOString()}`}>
+                                    Sans repas
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`early-dropoff-${date.toISOString()}`}
+                                    checked={selectedDate.earlyDropoff}
+                                    onCheckedChange={(checked) =>
+                                      handleOptionChange(date, 'earlyDropoff', checked as boolean)
+                                    }
+                                  />
+                                  <Label htmlFor={`early-dropoff-${date.toISOString()}`}>
+                                    Accueil avant 8h30
+                                  </Label>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </ScrollArea>
                 </div>
