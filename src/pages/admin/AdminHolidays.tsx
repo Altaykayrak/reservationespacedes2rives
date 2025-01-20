@@ -23,18 +23,18 @@ const AdminHolidays = () => {
   return (
     <div>
       <AdminNavbar />
-      <div className="container mx-auto p-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Button asChild variant="outline">
+      <div className="container mx-auto p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Button asChild variant="outline" size="sm">
             <Link to="/admin">
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="mr-1 h-4 w-4" />
               Retour à l'administration
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold">Gestion des vacances</h1>
+          <h1 className="text-2xl font-bold">Gestion des vacances</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <AddHolidayPeriodForm onSuccess={refetch} />
           <SchoolClassCategories />
           <HolidayPeriodsList holidays={holidays || []} onDelete={refetch} />

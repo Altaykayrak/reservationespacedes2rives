@@ -20,8 +20,8 @@ const DeleteHolidayDialog = ({ onDelete }: DeleteHolidayDialogProps) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="icon">
-          <Trash2 className="h-4 w-4" />
+        <Button variant="destructive" size="sm">
+          <Trash2 className="h-3 w-3" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
