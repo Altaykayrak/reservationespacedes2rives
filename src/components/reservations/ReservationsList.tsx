@@ -23,7 +23,6 @@ interface ReservationsListProps {
 }
 
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
-  // Query available holiday periods
   const { data: holidayPeriods } = useQuery({
     queryKey: ["availableHolidays"],
     queryFn: async () => {
@@ -88,6 +87,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
               childName={data.childName}
               schoolClass={data.schoolClass}
               reservations={data.reservations}
+              onUpdate={() => refetchReservations()}
             />
           ))}
         </div>

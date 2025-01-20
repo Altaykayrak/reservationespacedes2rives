@@ -12,12 +12,14 @@ interface ChildReservationCardProps {
   childName: string;
   schoolClass: string;
   reservations: ReservationWithChild[];
+  onUpdate: () => void;
 }
 
 export const ChildReservationCard = ({
   childName,
   schoolClass,
   reservations,
+  onUpdate,
 }: ChildReservationCardProps) => {
   return (
     <Card className="overflow-hidden border-gray-100 shadow-sm h-full">
@@ -39,7 +41,11 @@ export const ChildReservationCard = ({
       </div>
       <div className="divide-y divide-gray-50 bg-white">
         {reservations.map((reservation) => (
-          <ReservationItem key={reservation.id} reservation={reservation} />
+          <ReservationItem 
+            key={reservation.id} 
+            reservation={reservation}
+            onUpdate={onUpdate}
+          />
         ))}
       </div>
     </Card>
