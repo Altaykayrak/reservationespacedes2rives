@@ -43,8 +43,18 @@ export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListP
     }
   };
 
+  // Filtrer les mercredis pour ne garder que ceux à partir d'aujourd'hui
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day
+
+  const filteredWednesdays = wednesdays?.filter((wednesday) => {
+    const wednesdayDate = new Date(wednesday.date);
+    wednesdayDate.setHours(0, 0, 0, 0); // Reset time to start of day
+    return wednesdayDate >= today;
+  });
+
   // Trier les mercredis par date
-  const sortedWednesdays = wednesdays?.slice().sort((a, b) => {
+  const sortedWednesdays = filteredWednesdays?.slice().sort((a, b) => {
     return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
 
