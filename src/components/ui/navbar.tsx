@@ -29,10 +29,10 @@ export function Navbar() {
 
   const authenticatedMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
+    { label: "Mon profil", href: "/profile" },
+    { label: "Mes enfants", href: "/children" },
     { label: "Réservations mercredis", href: "/reservations" },
     { label: "Réservations vacances", href: "/holiday-reservations" },
-    { label: "Mes enfants", href: "/children" },
-    { label: "Mon profil", href: "/profile" },
   ];
 
   const publicMenuItems: NavItem[] = [
