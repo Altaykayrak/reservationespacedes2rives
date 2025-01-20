@@ -5,11 +5,7 @@ import { ChildReservationCard } from "./ChildReservationCard";
 import { Tables } from "@/integrations/supabase/types";
 
 type ReservationWithChild = Tables<"reservations"> & {
-  children: {
-    first_name: string;
-    last_name: string;
-    school_class: string;
-  };
+  children: Tables<"children">;
 };
 
 type GroupedReservations = Record<string, {
@@ -26,11 +22,7 @@ export const HolidayReservationsList = () => {
         .from("reservations")
         .select(`
           *,
-          children (
-            first_name,
-            last_name,
-            school_class
-          )
+          children (*)
         `)
         .order('reservation_date', { ascending: true });
       
