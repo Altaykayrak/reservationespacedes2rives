@@ -69,8 +69,8 @@ const Index = () => {
               <MapPin className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
               <h2 className="text-2xl font-bold mb-4">Cadre exceptionnel</h2>
               <p className="text-gray-600">
-                Un environnement chaleureux et accueillant au cœur de notre belle
-                commune, propice à l'apprentissage et à la découverte.
+                Un environnement chaleureux et accueillant au cœur de nos belles
+                communes, propice à l'apprentissage et à la découverte.
               </p>
             </div>
           </div>
