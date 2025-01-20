@@ -121,23 +121,23 @@ export const HolidayReservationContent = () => {
         return;
       }
 
-      // Création de la réservation
-      const { error: reservationError } = await supabase
-        .from("reservations")
-        .insert({
-          child_id: selectedChild,
-          period_id: holidayPeriod.id,
-          reservation_dates: selectedDates.map(date => 
-            format(date, "yyyy-MM-dd")
-          ),
-          reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        });
+      // Création d'une réservation pour chaque date
+      for (const date of selectedDates) {
+        const { error: reservationError } = await supabase
+          .from("reservations")
+          .insert({
+            child_id: selectedChild,
+            period_id: holidayPeriod.id,
+            reservation_date: format(date, "yyyy-MM-dd"),
+            reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          });
 
-      if (reservationError) throw reservationError;
+        if (reservationError) throw reservationError;
+      }
 
       toast({
         title: "Succès",
-        description: "La réservation a été créée avec succès.",
+        description: "Les réservations ont été créées avec succès.",
       });
 
       // Réinitialisation du formulaire
@@ -145,10 +145,10 @@ export const HolidayReservationContent = () => {
       setSelectedChild("");
 
     } catch (error) {
-      console.error("Erreur lors de la création de la réservation:", error);
+      console.error("Erreur lors de la création des réservations:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la création de la réservation.",
+        description: "Une erreur est survenue lors de la création des réservations.",
         variant: "destructive",
       });
     } finally {
