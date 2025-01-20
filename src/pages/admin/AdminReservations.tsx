@@ -7,6 +7,8 @@ import { ReservationList } from "@/components/admin/reservations/ReservationList
 import { EditReservationDialog } from "@/components/admin/reservations/EditReservationDialog";
 import { DeleteReservationDialog } from "@/components/admin/reservations/DeleteReservationDialog";
 import { Tables } from "@/integrations/supabase/types";
+import { ReservationFilters } from "@/components/admin/reservations/ReservationFilters";
+import { format } from "date-fns";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: {
@@ -21,6 +23,12 @@ const AdminReservations = () => {
   const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
   const [editingReservation, setEditingReservation] = useState<ReservationWithChild | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
 
   const { data: reservations, refetch: refetchReservations } = useQuery({
     queryKey: ["admin_reservations"],
@@ -40,6 +48,33 @@ const AdminReservations = () => {
       if (error) throw error;
       return data as ReservationWithChild[];
     },
+  });
+
+  const filteredReservations = reservations?.filter((reservation) => {
+    const fullName = `${reservation.children?.first_name} ${reservation.children?.last_name}`.toLowerCase();
+    const searchMatch = searchQuery 
+      ? fullName.includes(searchQuery.toLowerCase())
+      : true;
+
+    const dateMatch = selectedDate
+      ? reservation.reservation_date === selectedDate
+      : true;
+
+    const classMatch = selectedClass
+      ? reservation.children?.school_class === selectedClass
+      : true;
+
+    const getGroup = (schoolClass: string) => {
+      if (["PS", "MS", "GS"].includes(schoolClass)) return "maternelle";
+      if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass)) return "primaire";
+      return "ado";
+    };
+
+    const groupMatch = selectedGroup
+      ? getGroup(reservation.children?.school_class || "") === selectedGroup
+      : true;
+
+    return searchMatch && dateMatch && classMatch && groupMatch;
   });
 
   const handleDelete = async () => {
@@ -112,8 +147,19 @@ const AdminReservations = () => {
       <div className="container mx-auto p-8">
         <h1 className="text-3xl font-bold mb-8">Gestion des réservations</h1>
 
+        <ReservationFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          selectedClass={selectedClass}
+          onClassChange={setSelectedClass}
+          selectedGroup={selectedGroup}
+          onGroupChange={setSelectedGroup}
+        />
+
         <ReservationList
-          reservations={reservations}
+          reservations={filteredReservations}
           onEdit={setEditingReservation}
           onDelete={setReservationToDelete}
         />
