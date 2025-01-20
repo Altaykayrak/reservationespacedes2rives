@@ -5,9 +5,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { getWeeksFromDates } from "@/utils/dateUtils";
 
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
+
 interface HolidayReservationCalendarProps {
-  selectedDates: Date[];
-  setSelectedDates: (dates: Date[]) => void;
+  selectedDates: DateOption[];
+  setSelectedDates: (dates: DateOption[]) => void;
 }
 
 const isWeekend = (date: Date) => {
@@ -22,11 +28,20 @@ export const HolidayReservationCalendar = ({
   const { availableHolidays } = useAvailableDates();
 
   const handleDateToggle = (date: Date) => {
-    if (selectedDates.some(d => d.getTime() === date.getTime())) {
-      setSelectedDates(selectedDates.filter(d => d.getTime() !== date.getTime()));
+    const existingDate = selectedDates.find(d => d.date.getTime() === date.getTime());
+    if (existingDate) {
+      setSelectedDates(selectedDates.filter(d => d.date.getTime() !== date.getTime()));
     } else {
-      setSelectedDates([...selectedDates, date]);
+      setSelectedDates([...selectedDates, { date, withoutMeal: false, earlyDropoff: false }]);
     }
+  };
+
+  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
+    setSelectedDates(selectedDates.map(d => 
+      d.date.getTime() === date.getTime() 
+        ? { ...d, [option]: value }
+        : d
+    ));
   };
 
   if (!availableHolidays || availableHolidays.length === 0) {
@@ -60,7 +75,7 @@ export const HolidayReservationCalendar = ({
           }
 
           // Group selected dates by week for this holiday period
-          const selectedDatesInPeriod = selectedDates.filter(
+          const selectedDatesInPeriod = selectedDates.map(d => d.date).filter(
             d => d.getTime() >= startDate.getTime() && d.getTime() <= endDate.getTime()
           );
           const weekGroups = getWeeksFromDates(selectedDatesInPeriod);
@@ -75,19 +90,58 @@ export const HolidayReservationCalendar = ({
                   Du {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
                   {format(endDate, "d MMMM yyyy", { locale: fr })}
                 </Label>
-                <div className="pl-4 space-y-2 bg-white rounded-lg p-4">
-                  {dates.map((date) => (
-                    <div key={date.toISOString()} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={date.toISOString()}
-                        checked={selectedDates.some(d => d.getTime() === date.getTime())}
-                        onCheckedChange={() => handleDateToggle(date)}
-                      />
-                      <Label htmlFor={date.toISOString()}>
-                        {format(date, "EEEE d MMMM", { locale: fr })}
-                      </Label>
-                    </div>
-                  ))}
+                <div className="pl-4 space-y-4 bg-white rounded-lg p-4">
+                  {dates.map((date) => {
+                    const selectedDate = selectedDates.find(d => d.date.getTime() === date.getTime());
+                    return (
+                      <div key={date.toISOString()} className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={date.toISOString()}
+                            checked={!!selectedDate}
+                            onCheckedChange={() => handleDateToggle(date)}
+                          />
+                          <Label htmlFor={date.toISOString()}>
+                            {format(date, "EEEE d MMMM", { locale: fr })}
+                          </Label>
+                        </div>
+                        {selectedDate && (
+                          <div className="ml-6 space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`without-meal-${date.toISOString()}`}
+                                checked={selectedDate.withoutMeal}
+                                onCheckedChange={(checked) =>
+                                  handleOptionChange(date, 'withoutMeal', checked as boolean)
+                                }
+                              />
+                              <Label 
+                                htmlFor={`without-meal-${date.toISOString()}`}
+                                className="text-sm text-gray-600"
+                              >
+                                Sans repas
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`early-dropoff-${date.toISOString()}`}
+                                checked={selectedDate.earlyDropoff}
+                                onCheckedChange={(checked) =>
+                                  handleOptionChange(date, 'earlyDropoff', checked as boolean)
+                                }
+                              />
+                              <Label 
+                                htmlFor={`early-dropoff-${date.toISOString()}`}
+                                className="text-sm text-gray-600"
+                              >
+                                Accueil avant 8h30
+                              </Label>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
                 {weekGroups.map((weekDates, index) => (
                   <p key={index} className="text-sm text-gray-600 mt-2">
