@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Button } from "../button";
 import { LogOut } from "lucide-react";
 import { NavItem } from "./types";
+import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 
 interface DesktopNavProps {
   menuItems: NavItem[];
@@ -10,24 +12,35 @@ interface DesktopNavProps {
 }
 
 export function DesktopNav({ menuItems, isAuthenticated, onLogout }: DesktopNavProps) {
+  const location = useLocation();
+
   return (
-    <div className="hidden md:flex items-center space-x-4">
+    <div className="hidden md:flex items-center space-x-2">
       {menuItems.map((item) => (
         <Link
           key={item.href}
           to={item.href}
-          className="text-gray-600 hover:text-gray-900"
+          className={cn(
+            "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+            location.pathname === item.href
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+          )}
         >
           {item.label}
         </Link>
       ))}
       {isAuthenticated ? (
-        <Button variant="ghost" onClick={onLogout} className="flex items-center gap-2">
+        <Button 
+          variant="ghost" 
+          onClick={onLogout} 
+          className="flex items-center gap-2 ml-2 text-muted-foreground hover:text-foreground"
+        >
           <LogOut className="h-4 w-4" />
           Déconnexion
         </Button>
       ) : (
-        <Button asChild variant="outline">
+        <Button asChild variant="default" className="ml-2">
           <Link to="/login">Connexion</Link>
         </Button>
       )}
