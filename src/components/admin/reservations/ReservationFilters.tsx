@@ -1,8 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 
 interface ReservationFiltersProps {
   searchQuery: string;
@@ -49,7 +47,7 @@ export const ReservationFilters = ({
               <SelectValue placeholder="Sélectionner une classe" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Toutes les classes</SelectItem>
+              <SelectItem value="all">Toutes les classes</SelectItem>
               <SelectItem value="PS">PS</SelectItem>
               <SelectItem value="MS">MS</SelectItem>
               <SelectItem value="GS">GS</SelectItem>
@@ -72,7 +70,7 @@ export const ReservationFilters = ({
               <SelectValue placeholder="Sélectionner un groupe" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les groupes</SelectItem>
+              <SelectItem value="all">Tous les groupes</SelectItem>
               <SelectItem value="maternelle">Maternelle</SelectItem>
               <SelectItem value="primaire">Primaire</SelectItem>
               <SelectItem value="ado">Ado</SelectItem>

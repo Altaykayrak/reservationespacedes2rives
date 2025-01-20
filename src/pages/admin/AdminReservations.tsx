@@ -8,7 +8,6 @@ import { EditReservationDialog } from "@/components/admin/reservations/EditReser
 import { DeleteReservationDialog } from "@/components/admin/reservations/DeleteReservationDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { ReservationFilters } from "@/components/admin/reservations/ReservationFilters";
-import { format } from "date-fns";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: {
@@ -27,8 +26,8 @@ const AdminReservations = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedClass, setSelectedClass] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedClass, setSelectedClass] = useState("all");
+  const [selectedGroup, setSelectedGroup] = useState("all");
 
   const { data: reservations, refetch: refetchReservations } = useQuery({
     queryKey: ["admin_reservations"],
@@ -60,9 +59,9 @@ const AdminReservations = () => {
       ? reservation.reservation_date === selectedDate
       : true;
 
-    const classMatch = selectedClass
-      ? reservation.children?.school_class === selectedClass
-      : true;
+    const classMatch = selectedClass === "all"
+      ? true
+      : reservation.children?.school_class === selectedClass;
 
     const getGroup = (schoolClass: string) => {
       if (["PS", "MS", "GS"].includes(schoolClass)) return "maternelle";
@@ -70,9 +69,9 @@ const AdminReservations = () => {
       return "ado";
     };
 
-    const groupMatch = selectedGroup
-      ? getGroup(reservation.children?.school_class || "") === selectedGroup
-      : true;
+    const groupMatch = selectedGroup === "all"
+      ? true
+      : getGroup(reservation.children?.school_class || "") === selectedGroup;
 
     return searchMatch && dateMatch && classMatch && groupMatch;
   });
