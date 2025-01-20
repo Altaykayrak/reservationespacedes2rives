@@ -2,13 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
+import { Tables } from "@/integrations/supabase/types";
 
-type ReservationWithChild = {
-  id: string;
-  child_id: string;
-  reservation_date: string;
-  without_meal: boolean;
-  early_dropoff: boolean;
+type ReservationWithChild = Tables<"reservations"> & {
   children: {
     first_name: string;
     last_name: string;
