@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
 import { Tables } from "@/integrations/supabase/types";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -15,9 +17,14 @@ type GroupedReservations = Record<string, {
 }>;
 
 export const HolidayReservationsList = () => {
-  const { data: reservations } = useQuery({
+  const navigate = useNavigate();
+
+  const { data: reservations, isError, error } = useQuery({
     queryKey: ["holiday_reservations"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const { data, error } = await supabase
         .from("reservations")
         .select(`
@@ -26,10 +33,39 @@ export const HolidayReservationsList = () => {
         `)
         .order('reservation_date', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching reservations:", error);
+        throw error;
+      }
       return data as ReservationWithChild[];
     },
   });
+
+  if (isError) {
+    const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
+    if (errorMessage.includes("Not authenticated")) {
+      return (
+        <Alert variant="destructive">
+          <AlertDescription>
+            Vous devez être connecté pour voir vos réservations.{" "}
+            <button 
+              onClick={() => navigate("/login")}
+              className="underline hover:no-underline"
+            >
+              Se connecter
+            </button>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>
+          Une erreur est survenue lors du chargement des réservations. Veuillez réessayer.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   if (!reservations || reservations.length === 0) {
     return <EmptyReservations />;
