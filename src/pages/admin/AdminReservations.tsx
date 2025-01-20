@@ -15,12 +15,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { format } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 const AdminReservations = () => {
   const { toast } = useToast();
   const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
+  const [editingReservation, setEditingReservation] = useState<any | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: reservations, refetch: refetchReservations } = useQuery({
     queryKey: ["admin_reservations"],
@@ -63,7 +69,6 @@ const AdminReservations = () => {
         description: "La réservation a été supprimée avec succès.",
       });
 
-      // Refresh the reservations list
       await refetchReservations();
     } catch (error) {
       console.error('Error deleting reservation:', error);
@@ -77,11 +82,47 @@ const AdminReservations = () => {
     }
   };
 
-  const handleEdit = async (reservationId: string) => {
-    toast({
-      title: "Modification",
-      description: "La fonctionnalité de modification sera bientôt disponible.",
+  const handleEdit = async (reservation: any) => {
+    setEditingReservation({
+      ...reservation,
+      without_meal: Boolean(reservation.without_meal),
+      early_dropoff: Boolean(reservation.early_dropoff),
     });
+  };
+
+  const handleUpdate = async () => {
+    if (!editingReservation) return;
+
+    try {
+      setIsSubmitting(true);
+      const { error } = await supabase
+        .from("reservations")
+        .update({
+          without_meal: editingReservation.without_meal,
+          early_dropoff: editingReservation.early_dropoff,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", editingReservation.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Réservation mise à jour",
+        description: "La réservation a été modifiée avec succès.",
+      });
+
+      await refetchReservations();
+      setEditingReservation(null);
+    } catch (error) {
+      console.error("Error updating reservation:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la modification de la réservation.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -120,7 +161,7 @@ const AdminReservations = () => {
                     <button 
                       className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                       aria-label="Modifier la réservation"
-                      onClick={() => handleEdit(reservation.id)}
+                      onClick={() => handleEdit(reservation)}
                     >
                       <Pencil className="h-4 w-4 text-blue-500" />
                     </button>
@@ -153,6 +194,58 @@ const AdminReservations = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!editingReservation} onOpenChange={() => setEditingReservation(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier la réservation</DialogTitle>
+          </DialogHeader>
+          {editingReservation && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="without-meal"
+                    checked={editingReservation.without_meal}
+                    onCheckedChange={(checked) => 
+                      setEditingReservation({
+                        ...editingReservation,
+                        without_meal: checked,
+                      })
+                    }
+                  />
+                  <Label htmlFor="without-meal">Sans repas</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="early-dropoff"
+                    checked={editingReservation.early_dropoff}
+                    onCheckedChange={(checked) => 
+                      setEditingReservation({
+                        ...editingReservation,
+                        early_dropoff: checked,
+                      })
+                    }
+                  />
+                  <Label htmlFor="early-dropoff">Accueil avant 8h30</Label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingReservation(null)}
+                  disabled={isSubmitting}
+                >
+                  Annuler
+                </Button>
+                <Button onClick={handleUpdate} disabled={isSubmitting}>
+                  {isSubmitting ? "Modification..." : "Enregistrer"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
