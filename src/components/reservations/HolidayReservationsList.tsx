@@ -1,15 +1,19 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
 
-type ReservationWithChild = Tables<"reservations"> & {
-  children: Tables<"children">;
+type ReservationWithChild = {
+  id: string;
+  child_id: string;
+  reservation_date: string;
+  without_meal: boolean;
+  early_dropoff: boolean;
+  children: {
+    first_name: string;
+    last_name: string;
+    school_class: string;
+  };
 };
 
 type GroupedReservations = Record<string, {
@@ -18,45 +22,32 @@ type GroupedReservations = Record<string, {
   reservations: ReservationWithChild[];
 }>;
 
-interface HolidayReservationsListProps {
-  reservations: ReservationWithChild[] | null;
-}
-
-export const HolidayReservationsList = ({ reservations }: HolidayReservationsListProps) => {
-  // Query available holiday periods
-  const { data: holidayPeriods } = useQuery({
-    queryKey: ["availableHolidays"],
+export const HolidayReservationsList = () => {
+  const { data: reservations } = useQuery({
+    queryKey: ["holiday_reservations"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("available_holiday_periods")
-        .select("*");
+        .from("reservations")
+        .select(`
+          *,
+          children (
+            first_name,
+            last_name,
+            school_class
+          )
+        `)
+        .order('reservation_date', { ascending: true });
       
       if (error) throw error;
-      return data;
+      return data as ReservationWithChild[];
     },
   });
 
-  // Filter out past reservations and keep only holiday reservations
-  const filteredReservations = reservations?.filter(reservation => {
-    const reservationDate = new Date(reservation.reservation_date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+  if (!reservations || reservations.length === 0) {
+    return <EmptyReservations />;
+  }
 
-    // Check if the reservation is in the future
-    if (reservationDate < today) return false;
-
-    // Check if the reservation date falls within any holiday period
-    const isHolidayReservation = holidayPeriods?.some(holiday => {
-      const startDate = new Date(holiday.start_date);
-      const endDate = new Date(holiday.end_date);
-      return reservationDate >= startDate && reservationDate <= endDate;
-    });
-
-    // Keep only holiday reservations
-    return isHolidayReservation;
-  });
-
-  const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
+  const reservationsByChild = reservations.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {
@@ -69,10 +60,6 @@ export const HolidayReservationsList = ({ reservations }: HolidayReservationsLis
     return acc;
   }, {} as GroupedReservations);
 
-  if (!reservationsByChild || Object.keys(reservationsByChild).length === 0) {
-    return <EmptyReservations />;
-  }
-
   return (
     <div className="space-y-4">
       <div>
@@ -80,18 +67,16 @@ export const HolidayReservationsList = ({ reservations }: HolidayReservationsLis
           Vos vacances réservées (sous réserve de règlement)
         </h2>
       </div>
-      <ScrollArea className="h-[450px]">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
-          {Object.entries(reservationsByChild || {}).map(([childId, data]) => (
-            <ChildReservationCard
-              key={childId}
-              childName={data.childName}
-              schoolClass={data.schoolClass}
-              reservations={data.reservations}
-            />
-          ))}
-        </div>
-      </ScrollArea>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Object.entries(reservationsByChild).map(([childId, data]) => (
+          <ChildReservationCard
+            key={childId}
+            childName={data.childName}
+            schoolClass={data.schoolClass}
+            reservations={data.reservations}
+          />
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
+import { HolidayReservationsList } from "@/components/reservations/HolidayReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 
@@ -21,6 +22,12 @@ const HolidayReservations = () => {
         </div>
 
         <HolidayReservationContent />
+
+        <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
+          <div className="p-4 md:p-6">
+            <HolidayReservationsList />
+          </div>
+        </div>
       </div>
     </div>
   );
