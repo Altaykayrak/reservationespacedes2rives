@@ -81,20 +81,14 @@ export const validateHolidayReservations = async (
     };
   }
 
-  // 4. Vérifier le nombre minimum de jours selon le nombre de périodes
-  const totalDays = selectedDates.length;
-  const numberOfPeriods = datesByPeriod.size;
-
-  if (numberOfPeriods > 1 && totalDays < 6) {
-    return {
-      isValid: false,
-      message: "Pour réserver sur deux périodes différentes, vous devez sélectionner au minimum 6 jours au total."
-    };
-  } else if (numberOfPeriods === 1 && totalDays < 3) {
-    return {
-      isValid: false,
-      message: "Vous devez sélectionner au minimum 3 jours sur une même période de vacances."
-    };
+  // 4. Vérifier le nombre minimum de jours par période (3 jours)
+  for (const [periodId, dates] of datesByPeriod.entries()) {
+    if (dates.length < 3) {
+      return {
+        isValid: false,
+        message: "Vous devez sélectionner au minimum 3 jours sur une même période de vacances."
+      };
+    }
   }
 
   // 5. Vérifier le nombre maximum de participants par niveau pour chaque période
