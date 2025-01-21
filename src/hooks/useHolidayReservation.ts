@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { getWeeksFromDates } from "@/utils/dateUtils";
 
 interface DateOption {
   date: Date;
@@ -83,6 +84,25 @@ export const useHolidayReservation = () => {
     ));
   };
 
+  const validateMinimumDaysPerWeek = () => {
+    const selectedDateObjects = selectedDates.map(d => d.date);
+    const weekGroups = getWeeksFromDates(selectedDateObjects);
+    
+    // Check if any week has less than 3 days
+    const hasInvalidWeek = weekGroups.some(weekDates => weekDates.length < 3);
+    
+    if (hasInvalidWeek) {
+      toast({
+        title: "Erreur de réservation",
+        description: "Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (!selectedChild) {
       toast({
@@ -102,6 +122,7 @@ export const useHolidayReservation = () => {
       return;
     }
 
+    // Check for already reserved dates
     const alreadyReservedDates = selectedDates.filter(dateOption => 
       isDateAlreadyReserved(dateOption.date)
     );
@@ -116,6 +137,11 @@ export const useHolidayReservation = () => {
         description: `Les dates suivantes sont déjà réservées pour cet enfant : ${datesList}`,
         variant: "destructive",
       });
+      return;
+    }
+
+    // Validate minimum days per week
+    if (!validateMinimumDaysPerWeek()) {
       return;
     }
 
