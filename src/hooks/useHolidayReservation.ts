@@ -18,6 +18,18 @@ export const useHolidayReservation = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const { toast } = useToast();
 
+  const { data: children } = useQuery({
+    queryKey: ["children"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("*");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: holidayPeriods } = useQuery({
     queryKey: ["holidayPeriods"],
     queryFn: async () => {
@@ -32,19 +44,7 @@ export const useHolidayReservation = () => {
     },
   });
 
-  const { data: children } = useQuery({
-    queryKey: ["children"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("children")
-        .select("*");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: existingReservations } = useQuery({
+  const { data: existingReservations, refetch: refetchReservations } = useQuery({
     queryKey: ["reservations", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return [];
@@ -176,6 +176,9 @@ export const useHolidayReservation = () => {
         description: "Les réservations ont été créées avec succès.",
       });
 
+      // Refetch reservations after successful submission
+      await refetchReservations();
+      
       setSelectedDates([]);
       setSelectedPeriod("");
 
