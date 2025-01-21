@@ -53,6 +53,22 @@ export const HolidayReservationContent = () => {
     },
   });
 
+  // Récupération des réservations existantes
+  const { data: existingReservations } = useQuery({
+    queryKey: ["reservations", selectedChild],
+    queryFn: async () => {
+      if (!selectedChild) return [];
+      const { data, error } = await supabase
+        .from("reservations")
+        .select("*")
+        .eq("child_id", selectedChild);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedChild,
+  });
+
   const handleDateToggle = (date: Date) => {
     const existingDate = selectedDates.find(d => d.date.getTime() === date.getTime());
     if (existingDate) {
@@ -70,6 +86,14 @@ export const HolidayReservationContent = () => {
     ));
   };
 
+  const isDateAlreadyReserved = (date: Date) => {
+    if (!existingReservations) return false;
+    return existingReservations.some(reservation => {
+      const reservationDate = new Date(reservation.reservation_date);
+      return reservationDate.getTime() === date.getTime();
+    });
+  };
+
   const handleSubmit = async () => {
     if (!selectedChild) {
       toast({
@@ -84,6 +108,24 @@ export const HolidayReservationContent = () => {
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner au moins une date.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Vérification des dates déjà réservées
+    const alreadyReservedDates = selectedDates.filter(dateOption => 
+      isDateAlreadyReserved(dateOption.date)
+    );
+
+    if (alreadyReservedDates.length > 0) {
+      const datesList = alreadyReservedDates
+        .map(d => format(d.date, "d MMMM yyyy", { locale: fr }))
+        .join(", ");
+      
+      toast({
+        title: "Dates déjà réservées",
+        description: `Les dates suivantes sont déjà réservées pour cet enfant : ${datesList}`,
         variant: "destructive",
       });
       return;
