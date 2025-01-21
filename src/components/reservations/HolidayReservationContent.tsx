@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { validateHolidayReservations } from "@/utils/dateUtils";
 
 interface DateOption {
@@ -22,6 +23,7 @@ export const HolidayReservationContent = () => {
   const [selectedDates, setSelectedDates] = useState<DateOption[]>([]);
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
 
   // Récupération des périodes de vacances disponibles
   const { data: holidayPeriods } = useQuery({
@@ -128,7 +130,6 @@ export const HolidayReservationContent = () => {
 
       // Création d'une réservation pour chaque date
       for (const dateOption of selectedDates) {
-        // Trouver la période correspondante pour cette date
         const period = holidayPeriods.find(period => {
           const startDate = new Date(period.start_date);
           const endDate = new Date(period.end_date);
@@ -160,7 +161,7 @@ export const HolidayReservationContent = () => {
 
       // Réinitialisation du formulaire
       setSelectedDates([]);
-      setSelectedChild("");
+      setSelectedPeriod("");
 
     } catch (error) {
       console.error("Erreur lors de la création des réservations:", error);
@@ -205,26 +206,42 @@ export const HolidayReservationContent = () => {
             </select>
           </div>
 
-          <div className="space-y-4">
-            {holidayPeriods.map((period) => {
-              const startDate = new Date(period.start_date);
-              const endDate = new Date(period.end_date);
-              const dates = [];
-              const currentDate = new Date(startDate);
+          <div>
+            <Label htmlFor="period-select">Sélectionner une période</Label>
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-full mt-2">
+                <SelectValue placeholder="Choisir une période" />
+              </SelectTrigger>
+              <SelectContent>
+                {holidayPeriods.map((period) => (
+                  <SelectItem key={period.id} value={period.id}>
+                    {format(new Date(period.start_date), "d MMMM yyyy", { locale: fr })} au{" "}
+                    {format(new Date(period.end_date), "d MMMM yyyy", { locale: fr })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              while (currentDate <= endDate) {
-                if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-                  dates.push(new Date(currentDate));
+          {selectedPeriod && (
+            <div className="border-2 border-blue-100 rounded-lg p-4 bg-blue-50/30">
+              {(() => {
+                const period = holidayPeriods.find(p => p.id === selectedPeriod);
+                if (!period) return null;
+
+                const startDate = new Date(period.start_date);
+                const endDate = new Date(period.end_date);
+                const dates = [];
+                const currentDate = new Date(startDate);
+
+                while (currentDate <= endDate) {
+                  if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+                    dates.push(new Date(currentDate));
+                  }
+                  currentDate.setDate(currentDate.getDate() + 1);
                 }
-                currentDate.setDate(currentDate.getDate() + 1);
-              }
 
-              return (
-                <div key={period.id} className="border-2 border-blue-100 rounded-lg p-4 bg-blue-50/30">
-                  <Label className="font-medium block mb-4">
-                    {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
-                    {format(endDate, "d MMMM yyyy", { locale: fr })}
-                  </Label>
+                return (
                   <ScrollArea className="h-[300px]">
                     <div className="space-y-4">
                       {dates.map((date) => {
@@ -274,10 +291,10 @@ export const HolidayReservationContent = () => {
                       })}
                     </div>
                   </ScrollArea>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })()}
+            </div>
+          )}
 
           <Button
             onClick={handleSubmit}
