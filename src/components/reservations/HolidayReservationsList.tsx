@@ -5,6 +5,7 @@ import { ChildReservationCard } from "./ChildReservationCard";
 import { Tables } from "@/integrations/supabase/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -40,6 +41,30 @@ export const HolidayReservationsList = () => {
       return data as ReservationWithChild[];
     },
   });
+
+  useEffect(() => {
+    // Souscrire aux changements en temps réel
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Écouter tous les événements (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'reservations'
+        },
+        () => {
+          console.log('Changement détecté dans les réservations, mise à jour...');
+          refetch();
+        }
+      )
+      .subscribe();
+
+    // Nettoyer la souscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
