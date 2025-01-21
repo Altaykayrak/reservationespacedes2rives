@@ -43,24 +43,24 @@ export const HolidayReservationsList = () => {
   });
 
   useEffect(() => {
-    // Souscrire aux changements en temps réel
+    // Subscribe to all changes (INSERT, UPDATE, DELETE) on the reservations table
     const channel = supabase
       .channel('schema-db-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Écouter tous les événements (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'reservations'
         },
-        () => {
-          console.log('Changement détecté dans les réservations, mise à jour...');
+        (payload) => {
+          console.log('Reservation change detected:', payload);
           refetch();
         }
       )
       .subscribe();
 
-    // Nettoyer la souscription
+    // Cleanup subscription on component unmount
     return () => {
       supabase.removeChannel(channel);
     };
