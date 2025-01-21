@@ -44,7 +44,7 @@ const isWorkingDay = (date: Date): boolean => {
 
 export const validateHolidayReservations = async (
   selectedDates: Date[],
-  holidayPeriod: HolidayPeriod,
+  holidayPeriods: HolidayPeriod[],
   childSchoolClass: string,
   supabase: SupabaseClient
 ): Promise<ValidationResult> => {
@@ -57,64 +57,85 @@ export const validateHolidayReservations = async (
     };
   }
 
-  // 2. Vérifier que toutes les dates sont dans la période
-  const periodStart = new Date(holidayPeriod.start_date);
-  const periodEnd = new Date(holidayPeriod.end_date);
+  // 2. Regrouper les dates par période de vacances
+  const datesByPeriod = new Map<string, Date[]>();
+  
+  selectedDates.forEach(date => {
+    const period = holidayPeriods.find(period => {
+      const startDate = new Date(period.start_date);
+      const endDate = new Date(period.end_date);
+      return isWithinInterval(date, { start: startDate, end: endDate });
+    });
 
-  const allDatesInPeriod = selectedDates.every(date =>
-    isWithinInterval(date, { start: periodStart, end: periodEnd })
-  );
+    if (period) {
+      const existingDates = datesByPeriod.get(period.id) || [];
+      datesByPeriod.set(period.id, [...existingDates, date]);
+    }
+  });
 
-  if (!allDatesInPeriod) {
+  // 3. Vérifier que toutes les dates appartiennent à une période
+  if (datesByPeriod.size === 0) {
     return {
       isValid: false,
-      message: "Toutes les dates sélectionnées doivent appartenir à la même période de vacances."
+      message: "Les dates sélectionnées doivent appartenir à une période de vacances."
     };
   }
 
-  // 3. Vérifier le minimum de 3 jours ouvrables
-  const workingDaysCount = selectedDates.filter(date => isWorkingDay(date)).length;
-  if (workingDaysCount < 3) {
+  // 4. Vérifier le nombre minimum de jours selon le nombre de périodes
+  const totalDays = selectedDates.length;
+  const numberOfPeriods = datesByPeriod.size;
+
+  if (numberOfPeriods > 1 && totalDays < 6) {
     return {
       isValid: false,
-      message: "Vous devez sélectionner au minimum 3 jours ouvrables sur cette période de vacances."
+      message: "Pour réserver sur deux périodes différentes, vous devez sélectionner au minimum 6 jours au total."
+    };
+  } else if (numberOfPeriods === 1 && totalDays < 3) {
+    return {
+      isValid: false,
+      message: "Vous devez sélectionner au minimum 3 jours sur une même période de vacances."
     };
   }
 
-  // 4. Vérifier le nombre maximum de participants par niveau
-  let maxParticipants: number;
-  if (["Petite Section", "Moyenne Section", "Grande Section"].includes(childSchoolClass)) {
-    maxParticipants = holidayPeriod.max_participants_kindergarten;
-  } else if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(childSchoolClass)) {
-    maxParticipants = holidayPeriod.max_participants_primary;
-  } else {
-    maxParticipants = holidayPeriod.max_participants_teen;
-  }
+  // 5. Vérifier le nombre maximum de participants par niveau pour chaque période
+  for (const [periodId, dates] of datesByPeriod.entries()) {
+    const period = holidayPeriods.find(p => p.id === periodId);
+    if (!period) continue;
 
-  // Vérifier chaque date individuellement
-  for (const date of selectedDates) {
-    const { data: existingReservations, error } = await supabase
-      .from('reservations')
-      .select('id, children!inner(school_class)')
-      .eq('reservation_date', date.toISOString().split('T')[0])
-      .eq('period_id', holidayPeriod.id)
-      .neq('status', 'cancelled');
-
-    if (error) {
-      console.error('Error checking reservations:', error);
-      return {
-        isValid: false,
-        message: "Une erreur est survenue lors de la vérification des réservations."
-      };
+    let maxParticipants: number;
+    if (["Petite Section", "Moyenne Section", "Grande Section"].includes(childSchoolClass)) {
+      maxParticipants = period.max_participants_kindergarten;
+    } else if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(childSchoolClass)) {
+      maxParticipants = period.max_participants_primary;
+    } else {
+      maxParticipants = period.max_participants_teen;
     }
 
-    const currentCount = existingReservations.length;
+    // Vérifier chaque date individuellement
+    for (const date of dates) {
+      const { data: existingReservations, error } = await supabase
+        .from('reservations')
+        .select('id, children!inner(school_class)')
+        .eq('reservation_date', date.toISOString().split('T')[0])
+        .eq('period_id', periodId)
+        .neq('status', 'cancelled');
 
-    if (currentCount >= maxParticipants) {
-      return {
-        isValid: false,
-        message: `Le nombre maximum de participants est atteint pour le ${date.toLocaleDateString('fr-FR')}. Veuillez choisir une autre date.`
-      };
+      if (error) {
+        console.error('Error checking reservations:', error);
+        return {
+          isValid: false,
+          message: "Une erreur est survenue lors de la vérification des réservations."
+        };
+      }
+
+      const currentCount = existingReservations.length;
+
+      if (currentCount >= maxParticipants) {
+        return {
+          isValid: false,
+          message: `Le nombre maximum de participants est atteint pour le ${date.toLocaleDateString('fr-FR')}. Veuillez choisir une autre date.`
+        };
+      }
     }
   }
 

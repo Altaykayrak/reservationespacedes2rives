@@ -97,19 +97,10 @@ export const HolidayReservationContent = () => {
       return;
     }
 
-    // Trouver la période de vacances correspondante
-    const holidayPeriod = holidayPeriods?.find(period => {
-      const startDate = new Date(period.start_date);
-      const endDate = new Date(period.end_date);
-      return selectedDates.some(dateOption => 
-        dateOption.date >= startDate && dateOption.date <= endDate
-      );
-    });
-
-    if (!holidayPeriod) {
+    if (!holidayPeriods) {
       toast({
         title: "Erreur",
-        description: "Les dates sélectionnées doivent appartenir à une même période de vacances.",
+        description: "Impossible de récupérer les périodes de vacances.",
         variant: "destructive",
       });
       return;
@@ -121,7 +112,7 @@ export const HolidayReservationContent = () => {
       // Validation des dates et du nombre de participants
       const validationResult = await validateHolidayReservations(
         selectedDates.map(d => d.date),
-        holidayPeriod,
+        holidayPeriods,
         selectedChildData.school_class,
         supabase
       );
@@ -137,11 +128,22 @@ export const HolidayReservationContent = () => {
 
       // Création d'une réservation pour chaque date
       for (const dateOption of selectedDates) {
+        // Trouver la période correspondante pour cette date
+        const period = holidayPeriods.find(period => {
+          const startDate = new Date(period.start_date);
+          const endDate = new Date(period.end_date);
+          return dateOption.date >= startDate && dateOption.date <= endDate;
+        });
+
+        if (!period) {
+          throw new Error(`Période non trouvée pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
+        }
+
         const { error: reservationError } = await supabase
           .from("reservations")
           .insert({
             child_id: selectedChild,
-            period_id: holidayPeriod.id,
+            period_id: period.id,
             reservation_date: format(dateOption.date, "yyyy-MM-dd"),
             without_meal: dateOption.withoutMeal,
             early_dropoff: dateOption.earlyDropoff,
