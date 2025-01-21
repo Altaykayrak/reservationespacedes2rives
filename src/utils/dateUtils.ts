@@ -23,6 +23,11 @@ export const getWeeksFromDates = (dates: Date[]) => {
   return Array.from(weekMap.values());
 };
 
+export const validateMinimumDaysPerWeek = (dates: Date[]): boolean => {
+  const weeks = getWeeksFromDates(dates);
+  return weeks.every(weekDates => weekDates.length >= 3);
+};
+
 interface HolidayPeriod {
   id: string;
   start_date: string;
