@@ -6,9 +6,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-type Child = Tables<"children">;
-
-interface DateOptions {
+interface DateOption {
   date: Date;
   withoutMeal: boolean;
   earlyDropoff: boolean;
@@ -16,43 +14,22 @@ interface DateOptions {
 
 interface ReservationFormProps {
   selectedDates: Date[];
-  children?: Child[];
+  children?: Tables<"children">[];
   selectedChild: string;
   setSelectedChild: (childId: string) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
-  setSelectedDates: (dates: DateOptions[]) => void;
+  setSelectedDates: (dates: DateOption[]) => void;
 }
-
-const ALLOWED_CLASSES = [
-  "CP",
-  "CE1",
-  "CE2",
-  "CM1",
-  "CM2",
-  "6ème",
-  "5ème",
-  "4ème",
-  "3ème",
-  "Petite Section",
-  "Moyenne Section",
-  "GS"
-];
 
 export const ReservationForm = ({
   selectedDates,
-  children,
   selectedChild,
-  setSelectedChild,
   onSubmit,
   isSubmitting,
   setSelectedDates,
 }: ReservationFormProps) => {
-  const [dateOptions, setDateOptions] = useState<DateOptions[]>([]);
-
-  const filteredChildren = children?.filter(child => 
-    ALLOWED_CLASSES.includes(child.school_class)
-  );
+  const [dateOptions, setDateOptions] = useState<DateOption[]>([]);
 
   useEffect(() => {
     const newDateOptions = selectedDates.map(date => ({
@@ -64,6 +41,20 @@ export const ReservationForm = ({
     setSelectedDates(newDateOptions);
   }, [selectedDates, setSelectedDates]);
 
+  const handleDateToggle = (date: Date) => {
+    const isSelected = dateOptions.some(d => d.date.getTime() === date.getTime());
+    let newDateOptions;
+    
+    if (isSelected) {
+      newDateOptions = dateOptions.filter(d => d.date.getTime() !== date.getTime());
+    } else {
+      newDateOptions = [...dateOptions, { date, withoutMeal: false, earlyDropoff: false }];
+    }
+    
+    setDateOptions(newDateOptions);
+    setSelectedDates(newDateOptions);
+  };
+
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
     const newDateOptions = dateOptions.map(opt =>
       opt.date.getTime() === date.getTime()
@@ -74,82 +65,87 @@ export const ReservationForm = ({
     setSelectedDates(newDateOptions);
   };
 
+  const availableDates = Array.from({ length: 10 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() + i);
+    return date;
+  }).filter(date => date.getDay() === 3); // Only Wednesdays
+
   return (
-    <div className="space-y-4">
-      {selectedDates.length > 0 ? (
-        <div className="space-y-6">
-          <div>
-            <Label htmlFor="child-select" className="text-sm md:text-base">Sélectionner un enfant</Label>
-            <select
-              id="child-select"
-              value={selectedChild}
-              onChange={(e) => setSelectedChild(e.target.value)}
-              className="w-full mt-2 rounded-md border border-gray-300 p-2 text-sm md:text-base"
-            >
-              <option value="">Choisir un enfant</option>
-              {filteredChildren?.map((child) => (
-                <option key={child.id} value={child.id}>
-                  {child.first_name} {child.last_name} ({child.school_class})
-                </option>
-              ))}
-            </select>
-          </div>
+    <div className="space-y-6">
+      <div className="space-y-4">
+        {availableDates.map((date) => {
+          const selectedDate = dateOptions.find(d => d.date.getTime() === date.getTime());
 
-          <div className="space-y-4">
-            {dateOptions.map((dateOpt) => (
-              <div key={dateOpt.date.toISOString()} className="border p-3 md:p-4 rounded-lg">
-                <h3 className="font-medium text-sm md:text-base mb-3">
-                  {format(dateOpt.date, "EEEE d MMMM yyyy", { locale: fr })}
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`without-meal-${dateOpt.date.toISOString()}`}
-                      checked={dateOpt.withoutMeal}
-                      onCheckedChange={(checked) =>
-                        handleOptionChange(dateOpt.date, 'withoutMeal', checked as boolean)
-                      }
-                    />
-                    <Label 
-                      htmlFor={`without-meal-${dateOpt.date.toISOString()}`}
-                      className="text-sm md:text-base"
-                    >
-                      Sans repas
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`early-dropoff-${dateOpt.date.toISOString()}`}
-                      checked={dateOpt.earlyDropoff}
-                      onCheckedChange={(checked) =>
-                        handleOptionChange(dateOpt.date, 'earlyDropoff', checked as boolean)
-                      }
-                    />
-                    <Label 
-                      htmlFor={`early-dropoff-${dateOpt.date.toISOString()}`}
-                      className="text-sm md:text-base"
-                    >
-                      Accueil avant 8h30
-                    </Label>
-                  </div>
+          return (
+            <div key={date.toISOString()} className="flex items-start space-x-2 p-2 rounded-lg hover:bg-gray-50">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id={date.toISOString()}
+                    checked={!!selectedDate}
+                    onCheckedChange={() => handleDateToggle(date)}
+                    className="h-5 w-5"
+                  />
+                  <Label 
+                    htmlFor={date.toISOString()} 
+                    className="text-base text-gray-900"
+                  >
+                    {format(date, "EEEE d MMMM", { locale: fr })}
+                  </Label>
                 </div>
-              </div>
-            ))}
-          </div>
 
-          <Button
-            onClick={onSubmit}
-            disabled={isSubmitting}
-            className="w-full text-sm md:text-base py-2 md:py-3"
-          >
-            {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
-          </Button>
-        </div>
-      ) : (
-        <p className="text-gray-500 text-sm md:text-base">
-          Veuillez sélectionner une ou plusieurs dates dans la liste
-        </p>
+                {selectedDate && (
+                  <div className="ml-7 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`without-meal-${date.toISOString()}`}
+                        checked={selectedDate.withoutMeal}
+                        onCheckedChange={(checked) =>
+                          handleOptionChange(date, 'withoutMeal', checked as boolean)
+                        }
+                        className="h-4 w-4"
+                      />
+                      <Label 
+                        htmlFor={`without-meal-${date.toISOString()}`}
+                        className="text-sm text-gray-600"
+                      >
+                        Sans repas
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`early-dropoff-${date.toISOString()}`}
+                        checked={selectedDate.earlyDropoff}
+                        onCheckedChange={(checked) =>
+                          handleOptionChange(date, 'earlyDropoff', checked as boolean)
+                        }
+                        className="h-4 w-4"
+                      />
+                      <Label 
+                        htmlFor={`early-dropoff-${date.toISOString()}`}
+                        className="text-sm text-gray-600"
+                      >
+                        Accueil avant 8h30
+                      </Label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedDates.length > 0 && (
+        <Button
+          onClick={onSubmit}
+          disabled={isSubmitting || !selectedChild}
+          className="w-full text-sm md:text-base py-2 md:py-3"
+        >
+          {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
+        </Button>
       )}
     </div>
   );
