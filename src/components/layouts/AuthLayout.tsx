@@ -12,7 +12,8 @@ export const AuthLayout = ({ children, title, description }: AuthLayoutProps) =>
       <div 
         className="w-full h-48 bg-cover bg-top mb-8"
         style={{
-          backgroundImage: `url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Back.jpg')`
+          backgroundImage: `url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Back.jpg')`,
+          objectPosition: '0 -50px'
         }}
       />
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 space-y-6">
