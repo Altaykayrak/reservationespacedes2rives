@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
+import { useEffect } from "react";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -68,6 +69,30 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     return acc;
   }, {} as GroupedReservations);
 
+  useEffect(() => {
+    // Subscribe to all changes (INSERT, UPDATE, DELETE) on the reservations table
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reservations'
+        },
+        (payload) => {
+          console.log('Reservation change detected:', payload);
+          window.location.reload();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on component unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   if (!reservationsByChild || Object.keys(reservationsByChild).length === 0) {
     return <EmptyReservations />;
   }
@@ -76,7 +101,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos mercredis réservés (hors vacances scolaires)
+          Vos mercredis réservés (sous réserve de règlement)
         </h2>
       </div>
       <ScrollArea className="h-[450px]">
