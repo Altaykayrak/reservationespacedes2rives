@@ -57,12 +57,14 @@ export const ReservationForm = ({
     setSelectedDates(newDateOptions);
   };
 
-  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
+  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', checked: boolean) => {
+    console.log("Option change:", { date, option, checked });
     const newDateOptions = dateOptions.map(opt =>
       opt.date.getTime() === date.getTime()
-        ? { ...opt, [option]: value }
+        ? { ...opt, [option]: checked }
         : opt
     );
+    console.log("New date options:", newDateOptions);
     setDateOptions(newDateOptions);
     setSelectedDates(newDateOptions);
   };
@@ -109,9 +111,12 @@ export const ReservationForm = ({
                       <Checkbox
                         id={`without-meal-${date.toISOString()}`}
                         checked={selectedDate.withoutMeal}
-                        onCheckedChange={(checked) =>
-                          handleOptionChange(date, 'withoutMeal', checked === true)
-                        }
+                        onCheckedChange={(checked) => {
+                          console.log("Without meal checked:", checked);
+                          if (typeof checked === 'boolean') {
+                            handleOptionChange(date, 'withoutMeal', checked);
+                          }
+                        }}
                         className="h-4 w-4"
                       />
                       <Label 
@@ -126,9 +131,12 @@ export const ReservationForm = ({
                       <Checkbox
                         id={`early-dropoff-${date.toISOString()}`}
                         checked={selectedDate.earlyDropoff}
-                        onCheckedChange={(checked) =>
-                          handleOptionChange(date, 'earlyDropoff', checked === true)
-                        }
+                        onCheckedChange={(checked) => {
+                          console.log("Early dropoff checked:", checked);
+                          if (typeof checked === 'boolean') {
+                            handleOptionChange(date, 'earlyDropoff', checked);
+                          }
+                        }}
                         className="h-4 w-4"
                       />
                       <Label 
