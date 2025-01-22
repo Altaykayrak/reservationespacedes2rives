@@ -1,6 +1,7 @@
 import { ReservationCalendar } from "@/components/reservations/ReservationCalendar";
 import { ReservationForm } from "@/components/reservations/ReservationForm";
 import { ReservationsList } from "@/components/reservations/ReservationsList";
+import { ChildSelector } from "@/components/reservations/ChildSelector";
 import { useReservations } from "@/hooks/useReservations";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
@@ -38,32 +39,47 @@ const Reservations = () => {
           <div className="p-4 md:p-6 space-y-4 md:space-y-6">
             <div className="space-y-4">
               <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
-                Sélectionnez le(s) mercredi(s) que vous souhaitez réserver :
+                Sélectionnez l'enfant pour lequel vous souhaitez faire une réservation :
               </h2>
-              <ReservationCalendar
-                selectedDates={selectedDates.map(d => d.date)}
-                setSelectedDates={dates => setSelectedDates(dates.map(date => ({
-                  date,
-                  withoutMeal: false,
-                  earlyDropoff: false,
-                })))}
+              <ChildSelector
+                selectedChild={selectedChild}
+                setSelectedChild={setSelectedChild}
+                children={children}
               />
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
-                Indiquez les détails de la réservation :
-              </h2>
-              <ReservationForm
-                selectedDates={selectedDates.map(d => d.date)}
-                children={children}
-                selectedChild={selectedChild}
-                setSelectedChild={setSelectedChild}
-                onSubmit={handleSubmit}
-                isSubmitting={isSubmitting}
-                setSelectedDates={setSelectedDates}
-              />
-            </div>
+            {selectedChild && (
+              <>
+                <div className="space-y-4">
+                  <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+                    Sélectionnez le(s) mercredi(s) que vous souhaitez réserver :
+                  </h2>
+                  <ReservationCalendar
+                    selectedDates={selectedDates.map(d => d.date)}
+                    setSelectedDates={dates => setSelectedDates(dates.map(date => ({
+                      date,
+                      withoutMeal: false,
+                      earlyDropoff: false,
+                    })))}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+                    Indiquez les détails de la réservation :
+                  </h2>
+                  <ReservationForm
+                    selectedDates={selectedDates.map(d => d.date)}
+                    children={children}
+                    selectedChild={selectedChild}
+                    setSelectedChild={setSelectedChild}
+                    onSubmit={handleSubmit}
+                    isSubmitting={isSubmitting}
+                    setSelectedDates={setSelectedDates}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
 
