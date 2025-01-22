@@ -110,7 +110,7 @@ export const ReservationForm = ({
                         id={`without-meal-${date.toISOString()}`}
                         checked={selectedDate.withoutMeal}
                         onCheckedChange={(checked) =>
-                          handleOptionChange(date, 'withoutMeal', checked as boolean)
+                          handleOptionChange(date, 'withoutMeal', checked === true)
                         }
                         className="h-4 w-4"
                       />
@@ -127,7 +127,7 @@ export const ReservationForm = ({
                         id={`early-dropoff-${date.toISOString()}`}
                         checked={selectedDate.earlyDropoff}
                         onCheckedChange={(checked) =>
-                          handleOptionChange(date, 'earlyDropoff', checked as boolean)
+                          handleOptionChange(date, 'earlyDropoff', checked === true)
                         }
                         className="h-4 w-4"
                       />
