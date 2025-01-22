@@ -77,9 +77,11 @@ export const DateSelector = ({
                     <Checkbox
                       id={`without-meal-${date.toISOString()}`}
                       checked={selectedDate.withoutMeal}
-                      onCheckedChange={(checked) =>
-                        handleOptionChange(date, 'withoutMeal', checked as boolean)
-                      }
+                      onCheckedChange={(checked) => {
+                        if (typeof checked === 'boolean') {
+                          handleOptionChange(date, 'withoutMeal', checked);
+                        }
+                      }}
                       className="h-4 w-4"
                     />
                     <Label 
@@ -94,9 +96,11 @@ export const DateSelector = ({
                     <Checkbox
                       id={`early-dropoff-${date.toISOString()}`}
                       checked={selectedDate.earlyDropoff}
-                      onCheckedChange={(checked) =>
-                        handleOptionChange(date, 'earlyDropoff', checked as boolean)
-                      }
+                      onCheckedChange={(checked) => {
+                        if (typeof checked === 'boolean') {
+                          handleOptionChange(date, 'earlyDropoff', checked);
+                        }
+                      }}
                       className="h-4 w-4"
                     />
                     <Label 
