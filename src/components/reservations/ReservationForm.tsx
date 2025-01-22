@@ -76,6 +76,7 @@ export const ReservationForm = ({
       <div className="space-y-4">
         {availableDates.map((date) => {
           const selectedDate = dateOptions.find(d => d.date.getTime() === date.getTime());
+          const isSelected = !!selectedDate;
 
           return (
             <div key={date.toISOString()} className="flex items-start space-x-2 p-2 rounded-lg hover:bg-gray-50">
@@ -83,7 +84,7 @@ export const ReservationForm = ({
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id={date.toISOString()}
-                    checked={!!selectedDate}
+                    checked={isSelected}
                     onCheckedChange={() => handleDateToggle(date)}
                     className="h-5 w-5"
                   />
@@ -95,7 +96,7 @@ export const ReservationForm = ({
                   </Label>
                 </div>
 
-                {selectedDate && (
+                {isSelected && (
                   <div className="ml-7 space-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
