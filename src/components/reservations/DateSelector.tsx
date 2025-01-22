@@ -48,7 +48,9 @@ export const DateSelector = ({
   return (
     <div className="space-y-4">
       {dates.map((date) => {
-        const selectedDate = selectedDates.find(d => d.date.getTime() === date.getTime());
+        const selectedDate = selectedDates.find(d => 
+          format(d.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+        );
         const isReserved = isDateAlreadyReserved(date);
 
         return (
@@ -78,6 +80,7 @@ export const DateSelector = ({
                       id={`without-meal-${date.toISOString()}`}
                       checked={selectedDate.withoutMeal}
                       onCheckedChange={(checked) => {
+                        console.log("Without meal checked:", checked);
                         if (typeof checked === 'boolean') {
                           handleOptionChange(date, 'withoutMeal', checked);
                         }
@@ -97,6 +100,7 @@ export const DateSelector = ({
                       id={`early-dropoff-${date.toISOString()}`}
                       checked={selectedDate.earlyDropoff}
                       onCheckedChange={(checked) => {
+                        console.log("Early dropoff checked:", checked);
                         if (typeof checked === 'boolean') {
                           handleOptionChange(date, 'earlyDropoff', checked);
                         }
