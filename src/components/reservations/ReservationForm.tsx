@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useAvailableDates } from "@/hooks/useAvailableDates";
 
 interface DateOption {
   date: Date;
@@ -30,6 +31,7 @@ export const ReservationForm = ({
   setSelectedDates,
 }: ReservationFormProps) => {
   const [dateOptions, setDateOptions] = useState<DateOption[]>([]);
+  const { availableWednesdays } = useAvailableDates();
 
   useEffect(() => {
     const newDateOptions = selectedDates.map(date => ({
@@ -65,11 +67,16 @@ export const ReservationForm = ({
     setSelectedDates(newDateOptions);
   };
 
-  const availableDates = Array.from({ length: 10 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() + i);
-    return date;
-  }).filter(date => date.getDay() === 3); // Only Wednesdays
+  // Filter out past dates and sort chronologically
+  const availableDates = availableWednesdays
+    ?.filter(wednesday => {
+      const wednesdayDate = new Date(wednesday.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return wednesdayDate >= today;
+    })
+    .map(wednesday => new Date(wednesday.date))
+    .sort((a, b) => a.getTime() - b.getTime()) || [];
 
   return (
     <div className="space-y-6">
