@@ -44,11 +44,11 @@ export const ReservationForm = ({
   }, [selectedDates, setSelectedDates]);
 
   const handleDateToggle = (date: Date) => {
-    const isSelected = dateOptions.some(d => d.date.getTime() === date.getTime());
+    const isSelected = dateOptions.some(d => format(d.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
     let newDateOptions;
     
     if (isSelected) {
-      newDateOptions = dateOptions.filter(d => d.date.getTime() !== date.getTime());
+      newDateOptions = dateOptions.filter(d => format(d.date, 'yyyy-MM-dd') !== format(date, 'yyyy-MM-dd'));
     } else {
       newDateOptions = [...dateOptions, { date, withoutMeal: false, earlyDropoff: false }];
     }
@@ -60,7 +60,7 @@ export const ReservationForm = ({
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', checked: boolean) => {
     console.log("Option change:", { date, option, checked });
     const newDateOptions = dateOptions.map(opt =>
-      opt.date.getTime() === date.getTime()
+      format(opt.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
         ? { ...opt, [option]: checked }
         : opt
     );
@@ -84,7 +84,9 @@ export const ReservationForm = ({
     <div className="space-y-6">
       <div className="space-y-4">
         {availableDates.map((date) => {
-          const selectedDate = dateOptions.find(d => d.date.getTime() === date.getTime());
+          const selectedDate = dateOptions.find(d => 
+            format(d.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+          );
           const isSelected = !!selectedDate;
 
           return (
