@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthError, AuthApiError } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
 export const useLoginForm = () => {
@@ -22,10 +21,14 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
-      // First check if we can connect to Supabase
-      try {
-        await fetch(supabase.supabaseUrl);
-      } catch (err) {
+      // Check if we can connect to Supabase by making a simple query
+      const { error: healthCheckError } = await supabase
+        .from('authorized_emails')
+        .select('count')
+        .limit(1)
+        .single();
+
+      if (healthCheckError && healthCheckError.message.includes('Failed to fetch')) {
         throw new Error("Failed to fetch");
       }
 
