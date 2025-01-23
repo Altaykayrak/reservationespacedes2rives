@@ -22,16 +22,30 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
-      // Vérifier d'abord si l'email est autorisé
-      const { data: authorizedEmail } = await supabase
+      // First check if we can connect to Supabase
+      try {
+        await fetch(supabase.supabaseUrl);
+      } catch (err) {
+        throw new Error("Failed to fetch");
+      }
+
+      // Check if email is authorized
+      const { data: authorizedEmail, error: authEmailError } = await supabase
         .from("authorized_emails")
         .select("id")
         .eq("email", email.trim())
         .maybeSingle();
 
+      if (authEmailError) {
+        if (authEmailError.message === "Failed to fetch") {
+          setError("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer.");
+          return;
+        }
+        throw authEmailError;
+      }
+
       if (!authorizedEmail) {
         setError("Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription");
-        setIsLoading(false);
         return;
       }
 
@@ -41,6 +55,10 @@ export const useLoginForm = () => {
       });
 
       if (signInError) {
+        if (signInError.message === "Failed to fetch") {
+          setError("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer.");
+          return;
+        }
         setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
         return;
       }
@@ -51,7 +69,11 @@ export const useLoginForm = () => {
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
+      if (err instanceof Error && err.message === "Failed to fetch") {
+        setError("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer.");
+      } else {
+        setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
+      }
     } finally {
       setIsLoading(false);
     }
