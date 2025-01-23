@@ -32,11 +32,20 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         
         if (error) {
           console.error("Auth error:", error);
-          if (error.message === "Failed to fetch") {
+          if (error.message.includes("Failed to fetch")) {
             setConnectionError(true);
             toast({
               title: "Erreur de connexion",
               description: "Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer.",
+              variant: "destructive",
+            });
+          } else if (error.message.includes("refresh_token_not_found")) {
+            // Clear any stale session data
+            await supabase.auth.signOut();
+            localStorage.removeItem('sb-' + supabase.supabaseUrl + '-auth-token');
+            toast({
+              title: "Session expirée",
+              description: "Votre session a expiré. Veuillez vous reconnecter.",
               variant: "destructive",
             });
           } else {
