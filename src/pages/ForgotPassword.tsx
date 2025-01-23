@@ -28,14 +28,35 @@ const ForgotPassword = () => {
     setError(null);
 
     try {
+      // First check if the email exists in authorized_emails
+      const { data: authorizedEmail, error: authEmailError } = await supabase
+        .from("authorized_emails")
+        .select("email")
+        .eq("email", email.trim())
+        .maybeSingle();
+
+      if (authEmailError) {
+        throw authEmailError;
+      }
+
+      if (!authorizedEmail) {
+        setError("Cette adresse email n'est pas autorisée");
+        return;
+      }
+
+      // Then get the profile associated with this email
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("secret_question")
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-        .single();
+        .eq("email", email.trim())
+        .maybeSingle();
 
       if (profileError) {
-        setError("Impossible de trouver votre compte");
+        throw profileError;
+      }
+
+      if (!profile) {
+        setError("Aucun compte trouvé avec cette adresse email");
         return;
       }
 
@@ -59,15 +80,15 @@ const ForgotPassword = () => {
     setError(null);
 
     try {
+      // Verify the secret answer
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("secret_answer")
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-        .single();
+        .eq("email", email.trim())
+        .maybeSingle();
 
       if (profileError || !profile) {
-        setError("Impossible de vérifier votre réponse");
-        return;
+        throw profileError || new Error("Profile not found");
       }
 
       if (profile.secret_answer.toLowerCase() !== secretAnswer.toLowerCase()) {
@@ -75,20 +96,23 @@ const ForgotPassword = () => {
         return;
       }
 
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
+      // Reset the password
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: `${window.location.origin}/update-password`,
+        }
+      );
 
-      if (updateError) {
-        setError("Erreur lors de la mise à jour du mot de passe");
-        return;
+      if (resetError) {
+        throw resetError;
       }
 
-      toast.success("Mot de passe mis à jour avec succès");
+      toast.success("Instructions envoyées par email pour réinitialiser votre mot de passe");
       navigate("/login");
     } catch (err) {
       console.error("Password reset error:", err);
-      setError("Une erreur inattendue est survenue");
+      setError("Une erreur est survenue lors de la réinitialisation du mot de passe");
     } finally {
       setIsLoading(false);
     }
@@ -140,17 +164,6 @@ const ForgotPassword = () => {
               value={secretAnswer}
               onChange={(e) => setSecretAnswer(e.target.value)}
               required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-            <Input
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              minLength={6}
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
