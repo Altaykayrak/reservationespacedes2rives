@@ -62,16 +62,18 @@ export const ReservationForm = ({
   };
 
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
-    const newDateOptions = dateOptions.map(d => 
-      format(d.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
-        ? { ...d, [option]: value }
-        : d
-    );
+    console.log('Changing option:', option, 'to:', value, 'for date:', date);
+    const newDateOptions = dateOptions.map(d => {
+      if (format(d.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')) {
+        return { ...d, [option]: value };
+      }
+      return d;
+    });
+    console.log('New date options:', newDateOptions);
     setDateOptions(newDateOptions);
     setSelectedDates(newDateOptions);
   };
 
-  // Filter out past dates and sort chronologically
   const availableDates = availableWednesdays
     ?.filter(wednesday => {
       const wednesdayDate = new Date(wednesday.date);
