@@ -42,7 +42,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           } else if (error.message.includes("refresh_token_not_found")) {
             // Clear any stale session data
             await supabase.auth.signOut();
-            localStorage.removeItem('sb-' + supabase.supabaseUrl + '-auth-token');
+            localStorage.clear(); // Clear all localStorage data
             toast({
               title: "Session expirée",
               description: "Votre session a expiré. Veuillez vous reconnecter.",
