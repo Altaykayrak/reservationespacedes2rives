@@ -3,40 +3,42 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-// Separate the form state interface to prevent type recursion
+// Define the base form state interface
 interface FormState {
   email: string;
   secretAnswer: string;
   newPassword: string;
-  isLoading: boolean;
-  error: string | null;
   secretQuestion: string | null;
 }
 
-// Create a separate type for form field updates to prevent recursion
-type FormField = keyof Omit<FormState, 'error' | 'isLoading'>;
+// Separate interface for the complete state including loading and error
+interface CompleteFormState extends FormState {
+  isLoading: boolean;
+  error: string | null;
+}
 
-const initialState: FormState = {
-  email: "",
-  secretAnswer: "",
-  newPassword: "",
-  isLoading: false,
-  error: null,
-  secretQuestion: null,
-};
+// Define valid form field names as a union type
+type FormFieldName = 'email' | 'secretAnswer' | 'newPassword';
 
 export const usePasswordReset = () => {
-  const [formState, setFormState] = useState<FormState>(initialState);
+  const [formState, setFormState] = useState<CompleteFormState>({
+    email: "",
+    secretAnswer: "",
+    newPassword: "",
+    isLoading: false,
+    error: null,
+    secretQuestion: null,
+  });
   const navigate = useNavigate();
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.email) {
-      setFormState((prev) => ({ ...prev, error: "Veuillez entrer votre adresse email" }));
+      setFormState(prev => ({ ...prev, error: "Veuillez entrer votre adresse email" }));
       return;
     }
 
-    setFormState((prev) => ({ ...prev, isLoading: true, error: null }));
+    setFormState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const { data: authorizedEmail, error: authEmailError } = await supabase
@@ -48,7 +50,7 @@ export const usePasswordReset = () => {
       if (authEmailError) throw authEmailError;
 
       if (!authorizedEmail) {
-        setFormState((prev) => ({ 
+        setFormState(prev => ({ 
           ...prev, 
           error: "Cette adresse email n'est pas autorisée", 
           isLoading: false 
@@ -65,7 +67,7 @@ export const usePasswordReset = () => {
       if (profileError) throw profileError;
 
       if (!profile) {
-        setFormState((prev) => ({ 
+        setFormState(prev => ({ 
           ...prev, 
           error: "Aucun compte trouvé avec cette adresse email", 
           isLoading: false 
@@ -73,14 +75,14 @@ export const usePasswordReset = () => {
         return;
       }
 
-      setFormState((prev) => ({
+      setFormState(prev => ({
         ...prev,
         secretQuestion: profile.secret_question,
         isLoading: false,
       }));
     } catch (err) {
       console.error("Error fetching secret question:", err);
-      setFormState((prev) => ({
+      setFormState(prev => ({
         ...prev,
         error: "Une erreur inattendue est survenue",
         isLoading: false,
@@ -91,11 +93,11 @@ export const usePasswordReset = () => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.secretAnswer) {
-      setFormState((prev) => ({ ...prev, error: "Veuillez remplir tous les champs" }));
+      setFormState(prev => ({ ...prev, error: "Veuillez remplir tous les champs" }));
       return;
     }
 
-    setFormState((prev) => ({ ...prev, isLoading: true, error: null }));
+    setFormState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const { data: profile, error: profileError } = await supabase
@@ -109,7 +111,7 @@ export const usePasswordReset = () => {
       }
 
       if (profile.secret_answer.toLowerCase() !== formState.secretAnswer.toLowerCase()) {
-        setFormState((prev) => ({ 
+        setFormState(prev => ({ 
           ...prev, 
           error: "Réponse incorrecte à la question secrète", 
           isLoading: false 
@@ -130,7 +132,7 @@ export const usePasswordReset = () => {
       navigate("/login");
     } catch (err) {
       console.error("Password reset error:", err);
-      setFormState((prev) => ({
+      setFormState(prev => ({
         ...prev,
         error: "Une erreur est survenue lors de la réinitialisation du mot de passe",
         isLoading: false,
@@ -138,8 +140,8 @@ export const usePasswordReset = () => {
     }
   };
 
-  const updateField = (field: FormField, value: string) => {
-    setFormState((prev) => ({ ...prev, [field]: value }));
+  const updateField = (field: FormFieldName, value: string) => {
+    setFormState(prev => ({ ...prev, [field]: value }));
   };
 
   return {
