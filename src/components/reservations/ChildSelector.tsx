@@ -12,8 +12,10 @@ export const ChildSelector = ({
   setSelectedChild,
   children
 }: ChildSelectorProps) => {
-  // Filter out children in "PS" class
-  const filteredChildren = children?.filter(child => child.school_class !== "PS");
+  // Filter out children in "PS" class (case insensitive)
+  const filteredChildren = children?.filter(child => 
+    !child.school_class.toUpperCase().includes("PS")
+  );
 
   return (
     <div>
