@@ -1,30 +1,21 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { FormState, FormFieldName } from "@/types/passwordReset";
+import { checkAuthorizedEmail, fetchSecretQuestion, verifySecretAnswer } from "@/utils/passwordResetUtils";
 
-// Define a strict union type for form field names
-type FormFieldName = 'email' | 'secretAnswer' | 'newPassword';
-
-// Define the base form state interface
-interface FormState {
-  email: string;
-  secretAnswer: string;
-  newPassword: string;
-  secretQuestion: string | null;
-  isLoading: boolean;
-  error: string | null;
-}
+const initialFormState: FormState = {
+  email: "",
+  secretAnswer: "",
+  newPassword: "",
+  secretQuestion: null,
+  isLoading: false,
+  error: null,
+};
 
 export const usePasswordReset = () => {
-  const [formState, setFormState] = useState<FormState>({
-    email: "",
-    secretAnswer: "",
-    newPassword: "",
-    secretQuestion: null,
-    isLoading: false,
-    error: null,
-  });
+  const [formState, setFormState] = useState<FormState>(initialFormState);
   const navigate = useNavigate();
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -37,14 +28,8 @@ export const usePasswordReset = () => {
     setFormState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const { data: authorizedEmail, error: authEmailError } = await supabase
-        .from("authorized_emails")
-        .select("email")
-        .eq("email", formState.email.trim())
-        .maybeSingle();
-
-      if (authEmailError) throw authEmailError;
-
+      const authorizedEmail = await checkAuthorizedEmail(formState.email);
+      
       if (!authorizedEmail) {
         setFormState(prev => ({ 
           ...prev, 
@@ -54,13 +39,7 @@ export const usePasswordReset = () => {
         return;
       }
 
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("secret_question")
-        .eq("email", formState.email.trim())
-        .maybeSingle();
-
-      if (profileError) throw profileError;
+      const profile = await fetchSecretQuestion(formState.email);
 
       if (!profile) {
         setFormState(prev => ({ 
@@ -96,17 +75,9 @@ export const usePasswordReset = () => {
     setFormState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("secret_answer")
-        .eq("email", formState.email.trim())
-        .maybeSingle();
+      const isAnswerCorrect = await verifySecretAnswer(formState.email, formState.secretAnswer);
 
-      if (profileError || !profile) {
-        throw profileError || new Error("Profile not found");
-      }
-
-      if (profile.secret_answer.toLowerCase() !== formState.secretAnswer.toLowerCase()) {
+      if (!isAnswerCorrect) {
         setFormState(prev => ({ 
           ...prev, 
           error: "Réponse incorrecte à la question secrète", 
