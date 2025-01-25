@@ -52,12 +52,14 @@ export const HolidayReservationContent = () => {
               handleDateToggle={handleDateToggle}
               handleOptionChange={handleOptionChange}
               isDateAlreadyReserved={isDateAlreadyReserved}
+              periodId={selectedPeriod}
             />
           )}
 
           <Button
             onClick={handleSubmit}
             className="w-full"
+            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0}
           >
             Confirmer la réservation
           </Button>
