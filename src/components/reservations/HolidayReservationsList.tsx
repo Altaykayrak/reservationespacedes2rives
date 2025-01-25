@@ -116,7 +116,7 @@ export const HolidayReservationsList = () => {
         <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
           Vos vacances réservées (sous réserve de règlement)
         </h2>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-red-600 font-bold mb-4">
           Pour toute modification de vos réservations (ajout ou suppression de journées), merci de contacter l'accueil.
         </p>
       </div>
