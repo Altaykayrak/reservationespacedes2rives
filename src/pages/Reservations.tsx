@@ -2,8 +2,11 @@ import { ReservationContent } from "@/components/reservations/ReservationContent
 import { ReservationsList } from "@/components/reservations/ReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
+import { useReservationQueries } from "@/hooks/useReservationQueries";
 
 const Reservations = () => {
+  const { reservations } = useReservationQueries();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <Navbar />
@@ -25,7 +28,7 @@ const Reservations = () => {
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
           <div className="p-4 md:p-6">
-            <ReservationsList />
+            <ReservationsList reservations={reservations} />
           </div>
         </div>
       </div>

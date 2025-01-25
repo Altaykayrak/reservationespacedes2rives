@@ -48,9 +48,7 @@ export const HolidayReservationContent = () => {
 
           {selectedPeriod && (
             <DateSelector
-              selectedPeriod={selectedPeriod}
               selectedDates={selectedDates}
-              holidayPeriods={holidayPeriods}
               handleDateToggle={handleDateToggle}
               handleOptionChange={handleOptionChange}
               isDateAlreadyReserved={isDateAlreadyReserved}
