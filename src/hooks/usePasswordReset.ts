@@ -21,9 +21,9 @@ export const usePasswordReset = () => {
     email: "",
     secretAnswer: "",
     newPassword: "",
+    secretQuestion: null,
     isLoading: false,
     error: null,
-    secretQuestion: null,
   });
   const navigate = useNavigate();
 
