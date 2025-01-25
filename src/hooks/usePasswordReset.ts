@@ -3,25 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+// Define a strict union type for form field names
+type FormFieldName = 'email' | 'secretAnswer' | 'newPassword';
+
 // Define the base form state interface
 interface FormState {
   email: string;
   secretAnswer: string;
   newPassword: string;
   secretQuestion: string | null;
-}
-
-// Separate interface for the complete state including loading and error
-interface CompleteFormState extends FormState {
   isLoading: boolean;
   error: string | null;
 }
 
-// Define valid form field names as a union type
-type FormFieldName = 'email' | 'secretAnswer' | 'newPassword';
-
 export const usePasswordReset = () => {
-  const [formState, setFormState] = useState<CompleteFormState>({
+  const [formState, setFormState] = useState<FormState>({
     email: "",
     secretAnswer: "",
     newPassword: "",
