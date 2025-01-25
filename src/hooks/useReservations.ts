@@ -14,6 +14,7 @@ interface DateOption {
 export const useReservations = () => {
   const [selectedDates, setSelectedDates] = useState<DateOption[]>([]);
   const [selectedChild, setSelectedChild] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -61,6 +62,8 @@ export const useReservations = () => {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (!selectedChild) {
       toast({
         title: "Erreur",
@@ -92,23 +95,43 @@ export const useReservations = () => {
       return;
     }
 
-    for (const dateOption of selectedDates) {
-      await createReservationMutation.mutateAsync({
-        childId: selectedChild,
-        date: dateOption.date,
-        withoutMeal: dateOption.withoutMeal,
-        earlyDropoff: dateOption.earlyDropoff,
+    try {
+      setIsSubmitting(true);
+
+      for (const dateOption of selectedDates) {
+        await createReservationMutation.mutateAsync({
+          childId: selectedChild,
+          date: dateOption.date,
+          withoutMeal: dateOption.withoutMeal,
+          earlyDropoff: dateOption.earlyDropoff,
+        });
+
+        const selectedChildData = children?.find(child => child.id === selectedChild);
+        if (selectedChildData) {
+          await sendConfirmationEmail(
+            `${selectedChildData.first_name} ${selectedChildData.last_name}`,
+            dateOption.date,
+            `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            userProfile?.email
+          );
+        }
+      }
+
+      toast({
+        title: "Succès",
+        description: "Les réservations ont été créées avec succès.",
       });
 
-      const selectedChildData = children?.find(child => child.id === selectedChild);
-      if (selectedChildData) {
-        await sendConfirmationEmail(
-          `${selectedChildData.first_name} ${selectedChildData.last_name}`,
-          dateOption.date,
-          `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          userProfile?.email
-        );
-      }
+      setSelectedDates([]);
+    } catch (error: any) {
+      console.error("Error creating reservations:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création des réservations.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -122,7 +145,7 @@ export const useReservations = () => {
     handleSubmit,
     handleDateToggle,
     handleOptionChange,
-    isSubmitting: createReservationMutation.isPending,
+    isSubmitting,
     isDateReservedForChild,
   };
 };

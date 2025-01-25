@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useReservations } from "@/hooks/useReservations";
 import { ChildSelector } from "./ChildSelector";
 import { DateSelector } from "./DateSelector";
+import { Loader2 } from "lucide-react";
 
 export const ReservationContent = () => {
   const {
@@ -14,6 +15,7 @@ export const ReservationContent = () => {
     handleDateToggle,
     handleOptionChange,
     isDateReservedForChild,
+    isSubmitting,
   } = useReservations();
 
   if (!children || children.length === 0) {
@@ -42,16 +44,23 @@ export const ReservationContent = () => {
               handleDateToggle={handleDateToggle}
               handleOptionChange={handleOptionChange}
               isDateAlreadyReserved={(date) => isDateReservedForChild(selectedChild, date)}
-              periodId={null} // Since this is for regular Wednesday reservations, we pass null
+              periodId={null}
             />
           )}
 
           <Button
             onClick={handleSubmit}
             className="w-full"
-            disabled={!selectedChild || selectedDates.length === 0}
+            disabled={!selectedChild || selectedDates.length === 0 || isSubmitting}
           >
-            Confirmer la réservation
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Réservation en cours...
+              </>
+            ) : (
+              "Confirmer la réservation"
+            )}
           </Button>
         </div>
       </Card>
