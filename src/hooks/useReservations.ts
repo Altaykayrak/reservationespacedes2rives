@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useReservationQueries } from "./useReservationQueries";
 import { useReservationMutations } from "./useReservationMutations";
 import { useEmailNotification } from "./useEmailNotification";
+import { format } from "date-fns";
 
 interface DateOption {
   date: Date;
@@ -31,6 +32,33 @@ export const useReservations = () => {
       refetchReservations();
     }
   );
+
+  const handleDateToggle = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const existingIndex = selectedDates.findIndex(
+      d => format(d.date, 'yyyy-MM-dd') === dateStr
+    );
+
+    if (existingIndex >= 0) {
+      setSelectedDates(prev => prev.filter((_, index) => index !== existingIndex));
+    } else {
+      setSelectedDates(prev => [...prev, {
+        date,
+        withoutMeal: false,
+        earlyDropoff: false
+      }]);
+    }
+  };
+
+  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', checked: boolean) => {
+    console.log('Changing option:', option, 'to:', checked, 'for date:', date);
+    setSelectedDates(prev => prev.map(d => {
+      if (format(d.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')) {
+        return { ...d, [option]: checked };
+      }
+      return d;
+    }));
+  };
 
   const handleSubmit = async () => {
     if (!selectedChild) {
@@ -64,8 +92,6 @@ export const useReservations = () => {
       return;
     }
 
-    console.log("Selected dates before submission:", selectedDates);
-
     for (const dateOption of selectedDates) {
       await createReservationMutation.mutateAsync({
         childId: selectedChild,
@@ -94,6 +120,8 @@ export const useReservations = () => {
     children,
     reservations,
     handleSubmit,
+    handleDateToggle,
+    handleOptionChange,
     isSubmitting: createReservationMutation.isPending,
     isDateReservedForChild,
   };
