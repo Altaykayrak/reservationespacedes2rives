@@ -42,6 +42,7 @@ export const ReservationContent = () => {
               handleDateToggle={handleDateToggle}
               handleOptionChange={handleOptionChange}
               isDateAlreadyReserved={(date) => isDateReservedForChild(selectedChild, date)}
+              periodId={null} // Since this is for regular Wednesday reservations, we pass null
             />
           )}
 
