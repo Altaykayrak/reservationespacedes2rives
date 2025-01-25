@@ -61,11 +61,11 @@ export const ReservationForm = ({
     }
   };
 
-  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
-    console.log('Changing option:', option, 'to:', value, 'for date:', date);
+  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', checked: boolean) => {
+    console.log('Changing option:', option, 'to:', checked, 'for date:', date);
     const newDateOptions = dateOptions.map(d => {
       if (format(d.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')) {
-        return { ...d, [option]: value };
+        return { ...d, [option]: checked };
       }
       return d;
     });
@@ -116,7 +116,7 @@ export const ReservationForm = ({
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id={`without-meal-${date.toISOString()}`}
-                        checked={selectedDate?.withoutMeal}
+                        checked={selectedDate?.withoutMeal || false}
                         onCheckedChange={(checked) => {
                           if (typeof checked === 'boolean') {
                             handleOptionChange(date, 'withoutMeal', checked);
@@ -135,7 +135,7 @@ export const ReservationForm = ({
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id={`early-dropoff-${date.toISOString()}`}
-                        checked={selectedDate?.earlyDropoff}
+                        checked={selectedDate?.earlyDropoff || false}
                         onCheckedChange={(checked) => {
                           if (typeof checked === 'boolean') {
                             handleOptionChange(date, 'earlyDropoff', checked);
