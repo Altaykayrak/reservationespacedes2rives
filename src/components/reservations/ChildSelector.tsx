@@ -12,6 +12,9 @@ export const ChildSelector = ({
   setSelectedChild,
   children
 }: ChildSelectorProps) => {
+  // Filter out children in "PS" class
+  const filteredChildren = children?.filter(child => child.school_class !== "PS");
+
   return (
     <div>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
@@ -22,7 +25,7 @@ export const ChildSelector = ({
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
       >
         <option value="">Choisir un enfant</option>
-        {children?.map((child) => (
+        {filteredChildren?.map((child) => (
           <option key={child.id} value={child.id}>
             {child.first_name} {child.last_name} ({child.school_class})
           </option>
