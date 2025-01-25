@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-interface FormState {
+type FormState = {
   email: string;
   secretAnswer: string;
   newPassword: string;
@@ -33,11 +33,11 @@ const ForgotPassword = () => {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.email) {
-      setFormState((prev) => ({ ...prev, error: "Veuillez entrer votre adresse email" }));
+      setFormState(prev => ({ ...prev, error: "Veuillez entrer votre adresse email" }));
       return;
     }
 
-    setFormState((prev) => ({ ...prev, isLoading: true, error: null }));
+    setFormState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const { data: authorizedEmail, error: authEmailError } = await supabase
@@ -49,7 +49,7 @@ const ForgotPassword = () => {
       if (authEmailError) throw authEmailError;
 
       if (!authorizedEmail) {
-        setFormState((prev) => ({ 
+        setFormState(prev => ({ 
           ...prev, 
           error: "Cette adresse email n'est pas autorisée", 
           isLoading: false 
@@ -66,7 +66,7 @@ const ForgotPassword = () => {
       if (profileError) throw profileError;
 
       if (!profile) {
-        setFormState((prev) => ({ 
+        setFormState(prev => ({ 
           ...prev, 
           error: "Aucun compte trouvé avec cette adresse email", 
           isLoading: false 
@@ -74,14 +74,14 @@ const ForgotPassword = () => {
         return;
       }
 
-      setFormState((prev) => ({
+      setFormState(prev => ({
         ...prev,
         secretQuestion: profile.secret_question,
         isLoading: false,
       }));
     } catch (err) {
       console.error("Error fetching secret question:", err);
-      setFormState((prev) => ({
+      setFormState(prev => ({
         ...prev,
         error: "Une erreur inattendue est survenue",
         isLoading: false,
@@ -92,11 +92,11 @@ const ForgotPassword = () => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.secretAnswer || !formState.newPassword) {
-      setFormState((prev) => ({ ...prev, error: "Veuillez remplir tous les champs" }));
+      setFormState(prev => ({ ...prev, error: "Veuillez remplir tous les champs" }));
       return;
     }
 
-    setFormState((prev) => ({ ...prev, isLoading: true, error: null }));
+    setFormState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const { data: profile, error: profileError } = await supabase
@@ -110,7 +110,7 @@ const ForgotPassword = () => {
       }
 
       if (profile.secret_answer.toLowerCase() !== formState.secretAnswer.toLowerCase()) {
-        setFormState((prev) => ({ 
+        setFormState(prev => ({ 
           ...prev, 
           error: "Réponse incorrecte à la question secrète", 
           isLoading: false 
@@ -131,7 +131,7 @@ const ForgotPassword = () => {
       navigate("/login");
     } catch (err) {
       console.error("Password reset error:", err);
-      setFormState((prev) => ({
+      setFormState(prev => ({
         ...prev,
         error: "Une erreur est survenue lors de la réinitialisation du mot de passe",
         isLoading: false,
@@ -163,7 +163,7 @@ const ForgotPassword = () => {
               type="email"
               placeholder="exemple@email.com"
               value={formState.email}
-              onChange={(e) => setFormState((prev) => ({ ...prev, email: e.target.value }))}
+              onChange={(e) => setFormState(prev => ({ ...prev, email: e.target.value }))}
               required
             />
           </div>
@@ -183,7 +183,7 @@ const ForgotPassword = () => {
               id="secretAnswer"
               type="text"
               value={formState.secretAnswer}
-              onChange={(e) => setFormState((prev) => ({ ...prev, secretAnswer: e.target.value }))}
+              onChange={(e) => setFormState(prev => ({ ...prev, secretAnswer: e.target.value }))}
               required
             />
           </div>
