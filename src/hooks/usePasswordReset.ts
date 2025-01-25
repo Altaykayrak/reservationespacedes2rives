@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-interface FormState {
+type FormState = {
   email: string;
   secretAnswer: string;
   newPassword: string;
@@ -28,11 +28,11 @@ export const usePasswordReset = () => {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.email) {
-      setFormState({ ...formState, error: "Veuillez entrer votre adresse email" });
+      setFormState(state => ({ ...state, error: "Veuillez entrer votre adresse email" }));
       return;
     }
 
-    setFormState({ ...formState, isLoading: true, error: null });
+    setFormState(state => ({ ...state, isLoading: true, error: null }));
 
     try {
       const { data: authorizedEmail, error: authEmailError } = await supabase
@@ -44,11 +44,11 @@ export const usePasswordReset = () => {
       if (authEmailError) throw authEmailError;
 
       if (!authorizedEmail) {
-        setFormState({ 
-          ...formState, 
+        setFormState(state => ({ 
+          ...state, 
           error: "Cette adresse email n'est pas autorisée", 
           isLoading: false 
-        });
+        }));
         return;
       }
 
@@ -61,37 +61,37 @@ export const usePasswordReset = () => {
       if (profileError) throw profileError;
 
       if (!profile) {
-        setFormState({ 
-          ...formState, 
+        setFormState(state => ({ 
+          ...state, 
           error: "Aucun compte trouvé avec cette adresse email", 
           isLoading: false 
-        });
+        }));
         return;
       }
 
-      setFormState({
-        ...formState,
+      setFormState(state => ({
+        ...state,
         secretQuestion: profile.secret_question,
         isLoading: false,
-      });
+      }));
     } catch (err) {
       console.error("Error fetching secret question:", err);
-      setFormState({
-        ...formState,
+      setFormState(state => ({
+        ...state,
         error: "Une erreur inattendue est survenue",
         isLoading: false,
-      });
+      }));
     }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.secretAnswer) {
-      setFormState({ ...formState, error: "Veuillez remplir tous les champs" });
+      setFormState(state => ({ ...state, error: "Veuillez remplir tous les champs" }));
       return;
     }
 
-    setFormState({ ...formState, isLoading: true, error: null });
+    setFormState(state => ({ ...state, isLoading: true, error: null }));
 
     try {
       const { data: profile, error: profileError } = await supabase
@@ -105,11 +105,11 @@ export const usePasswordReset = () => {
       }
 
       if (profile.secret_answer.toLowerCase() !== formState.secretAnswer.toLowerCase()) {
-        setFormState({ 
-          ...formState, 
+        setFormState(state => ({ 
+          ...state, 
           error: "Réponse incorrecte à la question secrète", 
           isLoading: false 
-        });
+        }));
         return;
       }
 
@@ -126,16 +126,16 @@ export const usePasswordReset = () => {
       navigate("/login");
     } catch (err) {
       console.error("Password reset error:", err);
-      setFormState({
-        ...formState,
+      setFormState(state => ({
+        ...state,
         error: "Une erreur est survenue lors de la réinitialisation du mot de passe",
         isLoading: false,
-      });
+      }));
     }
   };
 
   const updateField = (field: keyof FormState, value: string) => {
-    setFormState({ ...formState, [field]: value });
+    setFormState(state => ({ ...state, [field]: value }));
   };
 
   return {
