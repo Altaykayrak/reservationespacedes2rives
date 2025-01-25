@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+// Separate the form state interface to prevent type recursion
 interface FormState {
   email: string;
   secretAnswer: string;
@@ -11,6 +12,9 @@ interface FormState {
   error: string | null;
   secretQuestion: string | null;
 }
+
+// Create a separate type for form field updates to prevent recursion
+type FormField = keyof Omit<FormState, 'error' | 'isLoading'>;
 
 const initialState: FormState = {
   email: "",
@@ -134,7 +138,7 @@ export const usePasswordReset = () => {
     }
   };
 
-  const updateField = (field: keyof FormState, value: string) => {
+  const updateField = (field: FormField, value: string) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
   };
 
