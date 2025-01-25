@@ -32,6 +32,7 @@ export const HolidayReservationsList = () => {
           *,
           children (*)
         `)
+        .not('period_id', 'is', null) // Only get holiday reservations (with period_id)
         .order('reservation_date', { ascending: true });
       
       if (error) {
