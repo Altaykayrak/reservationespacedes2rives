@@ -1,5 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChildSelectorProps {
   selectedChild: string;
@@ -12,10 +14,28 @@ export const ChildSelector = ({
   setSelectedChild,
   children
 }: ChildSelectorProps) => {
-  // Filter out children in "PS" class (case insensitive)
-  const filteredChildren = children?.filter(child => 
-    !child.school_class.toUpperCase().includes("PS")
-  );
+  // Fetch school class categories to identify teen classes
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*")
+        .eq("category", "adolescent");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Filter out children in PS class and teen classes
+  const filteredChildren = children?.filter(child => {
+    const isPS = child.school_class.toUpperCase().includes("PS");
+    const isTeen = schoolClassCategories?.some(category => 
+      child.school_class.toUpperCase() === category.name.toUpperCase()
+    );
+    return !isPS && !isTeen;
+  });
 
   return (
     <div>
