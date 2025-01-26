@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, addDays, isBefore, isAfter } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -52,11 +52,28 @@ export const DateSelector = ({
     );
   }
 
+  const today = new Date();
+  const minimumDate = addDays(today, 3); // Date minimum de réservation (aujourd'hui + 3 jours)
+
+  // Filtrer les mercredis qui sont après la date minimum et qui ne sont pas passés
+  const filteredWednesdays = availableWednesdays.filter(wednesday => {
+    const wednesdayDate = new Date(wednesday.date);
+    return isAfter(wednesdayDate, minimumDate) && isAfter(wednesdayDate, today);
+  });
+
+  if (filteredWednesdays.length === 0) {
+    return (
+      <div className="text-center p-4 text-gray-500">
+        Aucun mercredi n'est disponible pour le moment. Les réservations doivent être faites au moins 3 jours à l'avance.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Label className="font-medium block">Sélectionner les dates</Label>
       <div className="space-y-2">
-        {availableWednesdays.map((wednesday) => {
+        {filteredWednesdays.map((wednesday) => {
           const date = new Date(wednesday.date);
           const isSelected = selectedDates.some(
             (d) => d.date.getTime() === date.getTime()
