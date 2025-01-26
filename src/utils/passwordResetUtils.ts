@@ -1,47 +1,39 @@
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
-// Define explicit interfaces to avoid deep type instantiation
-interface AuthorizedEmail {
-  email: string;
-}
+type AuthorizedEmail = Tables<"authorized_emails">;
+type Profile = Tables<"profiles">;
 
-interface Profile {
-  secret_question: string;
-  secret_answer: string;
-}
-
-export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEmail | null> => {
-  const { data: authorizedEmail, error: authEmailError } = await supabase
+export const checkEmailAuthorization = async (email: string) => {
+  const { data: authorizedEmail } = await supabase
     .from("authorized_emails")
-    .select("email")
-    .eq("email", email.trim())
+    .select()
+    .eq("email", email)
     .maybeSingle();
 
-  if (authEmailError) throw authEmailError;
-  return authorizedEmail;
+  return !!authorizedEmail;
 };
 
-export const fetchSecretQuestion = async (email: string): Promise<Profile | null> => {
-  const { data: profile, error: profileError } = await supabase
+export const checkSecretAnswer = async (email: string, answer: string) => {
+  const { data: user } = await supabase.auth.admin.getUserByEmail(email);
+  if (!user) return false;
+
+  const { data: profile } = await supabase
     .from("profiles")
-    .select("secret_question, secret_answer")
-    .eq("email", email.trim())
+    .select()
+    .eq("id", user.id)
     .maybeSingle();
 
-  if (profileError) throw profileError;
-  return profile;
+  if (!profile) return false;
+
+  return profile.secret_answer.toLowerCase() === answer.toLowerCase();
 };
 
-export const verifySecretAnswer = async (email: string, secretAnswer: string): Promise<boolean> => {
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("secret_answer")
-    .eq("email", email.trim())
-    .maybeSingle();
+export const updateUserPassword = async (email: string, newPassword: string) => {
+  const { error } = await supabase.auth.admin.updateUserById(
+    email,
+    { password: newPassword }
+  );
 
-  if (profileError || !profile) {
-    throw profileError || new Error("Profile not found");
-  }
-
-  return profile.secret_answer?.toLowerCase() === secretAnswer.toLowerCase();
+  if (error) throw error;
 };
