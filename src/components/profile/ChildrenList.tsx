@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { UserPlus, Pencil, Trash2 } from "lucide-react"
+import { UserPlus, Trash2 } from "lucide-react"
 import { Child } from "@/types/profile"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { useState } from "react"
@@ -17,14 +17,8 @@ interface ChildrenListProps {
 export function ChildrenList({ children }: ChildrenListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
   const [selectedChild, setSelectedChild] = useState<Child | null>(null)
   const queryClient = useQueryClient()
-
-  const handleEdit = (child: Child) => {
-    setSelectedChild(child)
-    setShowEditDialog(true)
-  }
 
   const handleDelete = (child: Child) => {
     setSelectedChild(child)
@@ -48,30 +42,6 @@ export function ChildrenList({ children }: ChildrenListProps) {
     } catch (error) {
       console.error('Error deleting child:', error)
       toast.error("Erreur lors de la suppression de l'enfant")
-    }
-  }
-
-  const handleEditSubmit = async (values: Omit<Child, 'id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
-    if (!selectedChild) return
-
-    try {
-      const { error } = await supabase
-        .from('children')
-        .update({
-          first_name: values.first_name,
-          last_name: values.last_name,
-          school_class: values.school_class,
-        })
-        .eq('id', selectedChild.id)
-
-      if (error) throw error
-
-      toast.success("Enfant modifié avec succès")
-      queryClient.invalidateQueries({ queryKey: ['children'] })
-      setShowEditDialog(false)
-    } catch (error) {
-      console.error('Error updating child:', error)
-      toast.error("Erreur lors de la modification de l'enfant")
     }
   }
 
@@ -110,16 +80,7 @@ export function ChildrenList({ children }: ChildrenListProps) {
                     <TableCell className="text-left">{child.last_name}</TableCell>
                     <TableCell className="text-left">{child.first_name}</TableCell>
                     <TableCell className="text-left">{child.school_class}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(child)}
-                        className="h-8 w-8"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Modifier</span>
-                      </Button>
+                    <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -153,20 +114,6 @@ export function ChildrenList({ children }: ChildrenListProps) {
             <DialogTitle>Ajouter un enfant</DialogTitle>
           </DialogHeader>
           <AddChildForm onSuccess={() => setShowAddDialog(false)} />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Modifier un enfant</DialogTitle>
-          </DialogHeader>
-          {selectedChild && (
-            <AddChildForm 
-              onSuccess={() => setShowEditDialog(false)}
-              initialData={selectedChild}
-            />
-          )}
         </DialogContent>
       </Dialog>
 
