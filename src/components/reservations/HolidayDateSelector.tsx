@@ -94,18 +94,19 @@ export const HolidayDateSelector = ({
           const isReserved = isDateAlreadyReserved(date);
 
           return (
-            <div key={date.toISOString()} className="space-y-1">
+            <div key={date.toISOString()} className="space-y-1 bg-blue-50/30 p-2 rounded-lg hover:bg-blue-100/30 transition-colors">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id={date.toISOString()}
                   checked={!!selectedDateOption}
                   onCheckedChange={() => !isReserved && handleDateToggle(date)}
                   disabled={isReserved}
+                  className="border-blue-200"
                 />
                 <Label
                   htmlFor={date.toISOString()}
                   className={`flex-1 cursor-pointer font-medium ${
-                    isReserved ? 'text-gray-500' : ''
+                    isReserved ? 'text-gray-500' : 'text-blue-900'
                   }`}
                 >
                   {format(date, "EEEE d MMMM yyyy", { locale: fr })}
@@ -117,7 +118,7 @@ export const HolidayDateSelector = ({
                 </Label>
               </div>
               {selectedDateOption && !isReserved && (
-                <div className="ml-6 space-y-1">
+                <div className="ml-6 space-y-1 bg-white/50 p-2 rounded-md">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`without-meal-${date.toISOString()}`}
@@ -125,10 +126,11 @@ export const HolidayDateSelector = ({
                       onCheckedChange={(checked) =>
                         handleOptionChange(date, 'withoutMeal', checked as boolean)
                       }
+                      className="border-blue-200"
                     />
                     <Label 
                       htmlFor={`without-meal-${date.toISOString()}`}
-                      className="text-sm text-gray-600"
+                      className="text-sm text-blue-900"
                     >
                       Sans repas
                     </Label>
@@ -140,10 +142,11 @@ export const HolidayDateSelector = ({
                       onCheckedChange={(checked) =>
                         handleOptionChange(date, 'earlyDropoff', checked as boolean)
                       }
+                      className="border-blue-200"
                     />
                     <Label 
                       htmlFor={`early-dropoff-${date.toISOString()}`}
-                      className="text-sm text-gray-600"
+                      className="text-sm text-blue-900"
                     >
                       Accueil avant 8h30
                     </Label>

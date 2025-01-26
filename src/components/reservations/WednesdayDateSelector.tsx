@@ -65,8 +65,8 @@ export const WednesdayDateSelector = ({
   }
 
   return (
-    <ScrollArea className="h-[400px] pr-4">
-      <div className="space-y-4">
+    <ScrollArea className="h-[300px] pr-3">
+      <div className="space-y-1">
         {availableWednesdays.map((wednesday) => {
           const date = new Date(wednesday.date);
           const selectedDateOption = selectedDates.find(
@@ -77,29 +77,66 @@ export const WednesdayDateSelector = ({
           return (
             <div
               key={wednesday.date}
-              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                isReserved ? 'opacity-50 bg-gray-100' : 'hover:bg-secondary/50'
-              }`}
+              className="space-y-1 bg-green-50/30 p-2 rounded-lg hover:bg-green-100/30 transition-colors"
             >
-              <Checkbox
-                id={wednesday.date}
-                checked={!!selectedDateOption}
-                onCheckedChange={() => !isReserved && handleDateToggle(date)}
-                disabled={isReserved}
-              />
-              <Label
-                htmlFor={wednesday.date}
-                className={`flex-1 cursor-pointer font-medium ${
-                  isReserved ? 'text-gray-500' : ''
-                }`}
-              >
-                {format(date, "EEEE d MMMM yyyy", { locale: fr })}
-                {isReserved && (
-                  <span className="ml-2 text-sm text-gray-500">
-                    (Déjà réservé)
-                  </span>
-                )}
-              </Label>
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id={wednesday.date}
+                  checked={!!selectedDateOption}
+                  onCheckedChange={() => !isReserved && handleDateToggle(date)}
+                  disabled={isReserved}
+                  className="border-green-200"
+                />
+                <Label
+                  htmlFor={wednesday.date}
+                  className={`flex-1 cursor-pointer font-medium ${
+                    isReserved ? 'text-gray-500' : 'text-green-900'
+                  }`}
+                >
+                  {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+                  {isReserved && (
+                    <span className="ml-2 text-sm text-gray-500">
+                      (Déjà réservé)
+                    </span>
+                  )}
+                </Label>
+              </div>
+              {selectedDateOption && !isReserved && (
+                <div className="ml-6 space-y-1 bg-white/50 p-2 rounded-md">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`without-meal-${wednesday.date}`}
+                      checked={selectedDateOption.withoutMeal}
+                      onCheckedChange={(checked) =>
+                        handleOptionChange(date, 'withoutMeal', checked as boolean)
+                      }
+                      className="border-green-200"
+                    />
+                    <Label 
+                      htmlFor={`without-meal-${wednesday.date}`}
+                      className="text-sm text-green-900"
+                    >
+                      Sans repas
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`early-dropoff-${wednesday.date}`}
+                      checked={selectedDateOption.earlyDropoff}
+                      onCheckedChange={(checked) =>
+                        handleOptionChange(date, 'earlyDropoff', checked as boolean)
+                      }
+                      className="border-green-200"
+                    />
+                    <Label 
+                      htmlFor={`early-dropoff-${wednesday.date}`}
+                      className="text-sm text-green-900"
+                    >
+                      Accueil avant 8h30
+                    </Label>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
