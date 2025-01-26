@@ -4,36 +4,49 @@ import { Tables } from "@/integrations/supabase/types";
 type AuthorizedEmail = Tables<"authorized_emails">;
 type Profile = Tables<"profiles">;
 
-export const checkEmailAuthorization = async (email: string) => {
-  const { data: authorizedEmail } = await supabase
+export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEmail | null> => {
+  const { data: authorizedEmail, error: authEmailError } = await supabase
     .from("authorized_emails")
     .select()
-    .eq("email", email)
+    .eq("email", email.trim())
     .maybeSingle();
 
-  return !!authorizedEmail;
+  if (authEmailError) throw authEmailError;
+  return authorizedEmail;
 };
 
-export const checkSecretAnswer = async (email: string, answer: string) => {
-  const { data: user } = await supabase.auth.admin.getUserByEmail(email);
-  if (!user) return false;
+export const fetchSecretQuestion = async (email: string): Promise<Profile | null> => {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select()
-    .eq("id", user.id)
+    .select("secret_question, secret_answer")
+    .eq("id", user.user?.id)
     .maybeSingle();
 
-  if (!profile) return false;
+  if (profileError) throw profileError;
+  return profile;
+};
 
-  return profile.secret_answer.toLowerCase() === answer.toLowerCase();
+export const verifySecretAnswer = async (email: string, secretAnswer: string): Promise<boolean> => {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("secret_answer")
+    .eq("id", user.user?.id)
+    .maybeSingle();
+
+  if (profileError || !profile) {
+    throw profileError || new Error("Profile not found");
+  }
+
+  return profile.secret_answer?.toLowerCase() === secretAnswer.toLowerCase();
 };
 
 export const updateUserPassword = async (email: string, newPassword: string) => {
-  const { error } = await supabase.auth.admin.updateUserById(
-    email,
-    { password: newPassword }
-  );
-
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
 };
