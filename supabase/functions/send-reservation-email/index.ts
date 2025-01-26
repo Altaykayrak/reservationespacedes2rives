@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "npm:resend@2.0.0";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const resend = new Resend(RESEND_API_KEY);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY is not set");
+      console.error("RESEND_API_KEY is not configured");
       throw new Error("RESEND_API_KEY is not configured");
     }
 
@@ -46,27 +48,14 @@ const handler = async (req: Request): Promise<Response> => {
       </ul>
     `;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "onboarding@resend.dev",
-        to: [emailRequest.parentEmail],
-        subject: `Confirmation de réservation - ${emailRequest.childName}`,
-        html: emailHtml,
-      }),
+    const data = await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: emailRequest.parentEmail,
+      subject: `Confirmation de réservation - ${emailRequest.childName}`,
+      html: emailHtml,
     });
 
-    const data = await res.json();
-    console.log("Resend API response:", data);
-
-    if (!res.ok) {
-      console.error("Resend API error:", data);
-      throw new Error(`Resend API error: ${JSON.stringify(data)}`);
-    }
+    console.log("Email sent successfully:", data);
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
