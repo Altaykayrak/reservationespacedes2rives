@@ -1,14 +1,15 @@
 import { Card } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { UserPlus, Trash2 } from "lucide-react"
+import { UserPlus } from "lucide-react"
 import { Child } from "@/types/profile"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useState } from "react"
 import { AddChildForm } from "./AddChildForm"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
+import { DeleteChildDialog } from "./DeleteChildDialog"
+import { ChildrenTable } from "./ChildrenTable"
 
 interface ChildrenListProps {
   children: Child[]
@@ -61,50 +62,10 @@ export function ChildrenList({ children }: ChildrenListProps) {
       </div>
       <Card className="overflow-hidden border-0 shadow-sm">
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-gray-200 dark:border-gray-800">
-                <TableHead className="text-left">Nom</TableHead>
-                <TableHead className="text-left">Prénom</TableHead>
-                <TableHead className="text-left">Classe</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {children && children.length > 0 ? (
-                children.map((child) => (
-                  <TableRow 
-                    key={child.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                  >
-                    <TableCell className="text-left">{child.last_name}</TableCell>
-                    <TableCell className="text-left">{child.first_name}</TableCell>
-                    <TableCell className="text-left">{child.school_class}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(child)}
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Supprimer</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell 
-                    colSpan={4} 
-                    className="text-center h-32 text-muted-foreground"
-                  >
-                    Aucun enfant enregistré
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <ChildrenTable 
+            children={children} 
+            onDelete={handleDelete}
+          />
         </div>
       </Card>
 
@@ -117,30 +78,12 @@ export function ChildrenList({ children }: ChildrenListProps) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Supprimer un enfant</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer cet enfant ? Cette action est irréversible.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-            >
-              Supprimer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteChildDialog 
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={confirmDelete}
+        child={selectedChild}
+      />
     </div>
   )
 }
