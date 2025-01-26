@@ -6,6 +6,7 @@ interface AuthorizedEmail {
 
 interface Profile {
   secret_question: string;
+  secret_answer?: string;
 }
 
 export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEmail | null> => {
