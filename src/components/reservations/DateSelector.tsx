@@ -1,4 +1,4 @@
-import { format, addDays } from "date-fns";
+import { format, addDays, addHours } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -26,8 +26,7 @@ export const DateSelector = ({
   isDateAlreadyReserved,
 }: DateSelectorProps) => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const minDate = addDays(today, 3); // Minimum date is 3 days from today
+  const minDate = addHours(today, 72); // Minimum date is 72 hours (3 days) from now
 
   const { data: availableWednesdays } = useQuery({
     queryKey: ["available_wednesdays"],
