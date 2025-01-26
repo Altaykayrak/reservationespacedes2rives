@@ -1,0 +1,156 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar } from "lucide-react";
+
+interface HolidayDateSelectorProps {
+  selectedDates: Date[];
+  handleDateToggle: (date: Date) => void;
+  handleOptionChange: (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
+  isDateAlreadyReserved: (date: Date) => boolean;
+  periodId: string;
+}
+
+export const HolidayDateSelector = ({
+  selectedDates,
+  handleDateToggle,
+  handleOptionChange,
+  isDateAlreadyReserved,
+  periodId
+}: HolidayDateSelectorProps) => {
+  const { data: holidayPeriod } = useQuery({
+    queryKey: ["holiday_period", periodId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("*")
+        .eq("id", periodId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!periodId
+  });
+
+  if (!holidayPeriod) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+        <Calendar className="h-12 w-12 text-muted-foreground" />
+        <div>
+          <h3 className="font-semibold">Sélectionnez une période</h3>
+          <p className="text-sm text-muted-foreground">
+            Veuillez d'abord sélectionner une période de vacances.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Générer un tableau de dates entre start_date et end_date
+  const dates: Date[] = [];
+  const startDate = new Date(holidayPeriod.start_date);
+  const endDate = new Date(holidayPeriod.end_date);
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) { // Exclure les weekends
+      dates.push(new Date(currentDate));
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  if (dates.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+        <Calendar className="h-12 w-12 text-muted-foreground" />
+        <div>
+          <h3 className="font-semibold">Aucune date disponible</h3>
+          <p className="text-sm text-muted-foreground">
+            Il n'y a pas de dates disponibles pour cette période.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ScrollArea className="h-[400px] pr-4">
+      <div className="space-y-4">
+        {dates.map((date) => {
+          const isSelected = selectedDates.some(
+            (d) => d.getTime() === date.getTime()
+          );
+          const isReserved = isDateAlreadyReserved(date);
+          const selectedDate = selectedDates.find(
+            (d) => d.getTime() === date.getTime()
+          );
+
+          return (
+            <div key={date.toISOString()} className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={date.toISOString()}
+                  checked={isSelected}
+                  onCheckedChange={() => !isReserved && handleDateToggle(date)}
+                  disabled={isReserved}
+                />
+                <Label
+                  htmlFor={date.toISOString()}
+                  className={`flex-1 cursor-pointer font-medium ${
+                    isReserved ? 'text-gray-500' : ''
+                  }`}
+                >
+                  {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+                  {isReserved && (
+                    <span className="ml-2 text-sm text-gray-500">
+                      (Déjà réservé)
+                    </span>
+                  )}
+                </Label>
+              </div>
+              {isSelected && !isReserved && (
+                <div className="ml-6 space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`without-meal-${date.toISOString()}`}
+                      checked={selectedDate?.withoutMeal}
+                      onCheckedChange={(checked) =>
+                        handleOptionChange(date, 'withoutMeal', checked as boolean)
+                      }
+                    />
+                    <Label 
+                      htmlFor={`without-meal-${date.toISOString()}`}
+                      className="text-sm text-gray-600"
+                    >
+                      Sans repas
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`early-dropoff-${date.toISOString()}`}
+                      checked={selectedDate?.earlyDropoff}
+                      onCheckedChange={(checked) =>
+                        handleOptionChange(date, 'earlyDropoff', checked as boolean)
+                      }
+                    />
+                    <Label 
+                      htmlFor={`early-dropoff-${date.toISOString()}`}
+                      className="text-sm text-gray-600"
+                    >
+                      Accueil avant 8h30
+                    </Label>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </ScrollArea>
+  );
+};

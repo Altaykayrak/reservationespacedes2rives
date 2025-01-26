@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
-import { DateSelector } from "./DateSelector";
+import { HolidayDateSelector } from "./HolidayDateSelector";
 
 export const HolidayReservationContent = () => {
   const {
@@ -47,7 +47,7 @@ export const HolidayReservationContent = () => {
           />
 
           {selectedPeriod && (
-            <DateSelector
+            <HolidayDateSelector
               selectedDates={selectedDates}
               handleDateToggle={handleDateToggle}
               handleOptionChange={handleOptionChange}
