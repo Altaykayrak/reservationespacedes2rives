@@ -6,7 +6,7 @@ import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import { usePasswordReset } from "@/hooks/usePasswordReset";
 
 const ForgotPassword = () => {
-  const { formState, handleEmailSubmit, handleResetPassword, updateField } = usePasswordReset();
+  const { formState, handleEmailSubmit, handleSecretAnswerSubmit, handleInputChange } = usePasswordReset();
 
   return (
     <AuthLayout
@@ -27,7 +27,7 @@ const ForgotPassword = () => {
         <EmailForm
           email={formState.email}
           isLoading={formState.isLoading}
-          onEmailChange={(email) => updateField("email", email)}
+          onEmailChange={(email) => handleInputChange("email", email)}
           onSubmit={handleEmailSubmit}
         />
       ) : (
@@ -35,8 +35,8 @@ const ForgotPassword = () => {
           secretQuestion={formState.secretQuestion}
           secretAnswer={formState.secretAnswer}
           isLoading={formState.isLoading}
-          onSecretAnswerChange={(answer) => updateField("secretAnswer", answer)}
-          onSubmit={handleResetPassword}
+          onSecretAnswerChange={(answer) => handleInputChange("secretAnswer", answer)}
+          onSubmit={handleSecretAnswerSubmit}
         />
       )}
 

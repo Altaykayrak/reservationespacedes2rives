@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const checkAuthorizedEmail = async (email: string) => {
+export const checkAuthorizedEmail = async (email: string): Promise<{ email: string } | null> => {
   const { data: authorizedEmail, error: authEmailError } = await supabase
     .from("authorized_emails")
     .select("email")
