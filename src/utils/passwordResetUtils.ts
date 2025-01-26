@@ -1,6 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const checkAuthorizedEmail = async (email: string): Promise<{ email: string } | null> => {
+interface AuthorizedEmail {
+  email: string;
+}
+
+interface Profile {
+  secret_question: string;
+}
+
+export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEmail | null> => {
   const { data: authorizedEmail, error: authEmailError } = await supabase
     .from("authorized_emails")
     .select("email")
@@ -11,7 +19,7 @@ export const checkAuthorizedEmail = async (email: string): Promise<{ email: stri
   return authorizedEmail;
 };
 
-export const fetchSecretQuestion = async (email: string): Promise<{ secret_question: string } | null> => {
+export const fetchSecretQuestion = async (email: string): Promise<Profile | null> => {
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("secret_question")
