@@ -14,7 +14,7 @@ export const ChildSelector = ({
   setSelectedChild,
   children
 }: ChildSelectorProps) => {
-  // Fetch school class categories to identify teen classes
+  // Fetch school class categories to identify PS classes only
   const { data: schoolClassCategories } = useQuery({
     queryKey: ["schoolClassCategories"],
     queryFn: async () => {
@@ -28,13 +28,10 @@ export const ChildSelector = ({
     },
   });
 
-  // Filter out children in PS class and teen classes
+  // Filter out only children in PS class
   const filteredChildren = children?.filter(child => {
     const isPS = child.school_class.toUpperCase().includes("PS");
-    const isTeen = schoolClassCategories?.some(category => 
-      child.school_class.toUpperCase() === category.name.toUpperCase()
-    );
-    return !isPS && !isTeen;
+    return !isPS;
   });
 
   return (
