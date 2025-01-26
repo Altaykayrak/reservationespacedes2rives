@@ -8,8 +8,14 @@ import { fr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "lucide-react";
 
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
+
 interface WednesdayDateSelectorProps {
-  selectedDates: Date[];
+  selectedDates: DateOption[];
   handleDateToggle: (date: Date) => void;
   handleOptionChange: (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
   isDateAlreadyReserved: (date: Date) => boolean;
@@ -63,8 +69,8 @@ export const WednesdayDateSelector = ({
       <div className="space-y-4">
         {availableWednesdays.map((wednesday) => {
           const date = new Date(wednesday.date);
-          const isSelected = selectedDates.some(
-            (d) => d.getTime() === date.getTime()
+          const selectedDateOption = selectedDates.find(
+            (d) => d.date.getTime() === date.getTime()
           );
           const isReserved = isDateAlreadyReserved(date);
 
@@ -77,7 +83,7 @@ export const WednesdayDateSelector = ({
             >
               <Checkbox
                 id={wednesday.date}
-                checked={isSelected}
+                checked={!!selectedDateOption}
                 onCheckedChange={() => !isReserved && handleDateToggle(date)}
                 disabled={isReserved}
               />
