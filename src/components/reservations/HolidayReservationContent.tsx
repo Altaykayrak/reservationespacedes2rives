@@ -28,7 +28,7 @@ export const HolidayReservationContent = () => {
 
   if (!holidayPeriods || holidayPeriods.length === 0) {
     return (
-      <Card className="p-6">
+      <Card className="p-4">
         <p className="text-center text-gray-500">
           Aucune période de vacances n'est disponible pour le moment.
         </p>
@@ -37,9 +37,9 @@ export const HolidayReservationContent = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <div className="space-y-4">
+    <div className="space-y-4">
+      <Card className="p-4">
+        <div className="space-y-3">
           <ChildSelector
             selectedChild={selectedChild}
             setSelectedChild={setSelectedChild}
@@ -64,7 +64,7 @@ export const HolidayReservationContent = () => {
 
           <Button
             onClick={handleSubmit}
-            className="w-full"
+            className="w-full mt-2"
             disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0}
           >
             Confirmer la réservation
