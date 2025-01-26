@@ -6,7 +6,7 @@ interface AuthorizedEmail {
 
 interface Profile {
   secret_question: string;
-  secret_answer?: string;
+  secret_answer: string | null;
 }
 
 export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEmail | null> => {
@@ -42,5 +42,5 @@ export const verifySecretAnswer = async (email: string, secretAnswer: string): P
     throw profileError || new Error("Profile not found");
   }
 
-  return profile.secret_answer.toLowerCase() === secretAnswer.toLowerCase();
+  return profile.secret_answer?.toLowerCase() === secretAnswer.toLowerCase();
 };
