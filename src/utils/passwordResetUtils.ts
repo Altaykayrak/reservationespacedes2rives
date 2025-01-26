@@ -1,12 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// Define explicit interfaces to avoid deep type instantiation
 interface AuthorizedEmail {
   email: string;
 }
 
 interface Profile {
   secret_question: string;
-  secret_answer: string | null;
+  secret_answer: string;
 }
 
 export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEmail | null> => {
