@@ -34,11 +34,16 @@ export const DateSelector = ({
       const { data, error } = await supabase
         .from("available_wednesdays")
         .select("*")
-        .gte('date', minDate.toISOString().split('T')[0])
+        .gte('date', today.toISOString().split('T')[0])
         .order('date', { ascending: true });
       
       if (error) throw error;
-      return data;
+
+      // Filtrer les dates qui sont dans moins de 72 heures
+      return data?.filter(wednesday => {
+        const wednesdayDate = new Date(wednesday.date);
+        return wednesdayDate >= minDate;
+      });
     },
   });
 
