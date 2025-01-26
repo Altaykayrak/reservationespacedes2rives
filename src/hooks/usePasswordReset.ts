@@ -20,8 +20,9 @@ export const usePasswordReset = () => {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!formState.email) {
-      setFormState(prev => ({ ...prev, error: "Veuillez entrer votre adresse email" }));
+      setFormState(prev => ({ ...prev, error: "Veuillez entrer votre email" }));
       return;
     }
 
@@ -33,7 +34,7 @@ export const usePasswordReset = () => {
       if (!authorizedEmail) {
         setFormState(prev => ({ 
           ...prev, 
-          error: "Cette adresse email n'est pas autorisée", 
+          error: "Cet email n'est pas autorisé",
           isLoading: false 
         }));
         return;
@@ -44,7 +45,7 @@ export const usePasswordReset = () => {
       if (!profile) {
         setFormState(prev => ({ 
           ...prev, 
-          error: "Aucun compte trouvé avec cette adresse email", 
+          error: "Aucun profil trouvé pour cet email",
           isLoading: false 
         }));
         return;
@@ -55,20 +56,21 @@ export const usePasswordReset = () => {
         secretQuestion: profile.secret_question,
         isLoading: false,
       }));
-    } catch (err) {
-      console.error("Error fetching secret question:", err);
+
+    } catch (error: any) {
       setFormState(prev => ({
         ...prev,
-        error: "Une erreur inattendue est survenue",
+        error: error.message,
         isLoading: false,
       }));
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleSecretAnswerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!formState.secretAnswer) {
-      setFormState(prev => ({ ...prev, error: "Veuillez remplir tous les champs" }));
+      setFormState(prev => ({ ...prev, error: "Veuillez répondre à la question secrète" }));
       return;
     }
 
@@ -80,41 +82,65 @@ export const usePasswordReset = () => {
       if (!isAnswerCorrect) {
         setFormState(prev => ({ 
           ...prev, 
-          error: "Réponse incorrecte à la question secrète", 
+          error: "Réponse incorrecte à la question secrète",
           isLoading: false 
         }));
         return;
       }
 
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        formState.email,
-        {
-          redirectTo: `${window.location.origin}/update-password`,
-        }
-      );
-
-      if (resetError) throw resetError;
-
-      toast.success("Instructions envoyées par email pour réinitialiser votre mot de passe");
-      navigate("/login");
-    } catch (err) {
-      console.error("Password reset error:", err);
       setFormState(prev => ({
         ...prev,
-        error: "Une erreur est survenue lors de la réinitialisation du mot de passe",
+        isLoading: false,
+      }));
+
+    } catch (error: any) {
+      setFormState(prev => ({
+        ...prev,
+        error: error.message,
         isLoading: false,
       }));
     }
   };
 
-  const updateField = (field: FormFieldName, value: string) => {
-    setFormState(prev => ({ ...prev, [field]: value }));
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formState.newPassword) {
+      setFormState(prev => ({ ...prev, error: "Veuillez entrer un nouveau mot de passe" }));
+      return;
+    }
+
+    setFormState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formState.email);
+
+      if (error) throw error;
+
+      toast.success("Un email de réinitialisation a été envoyé");
+      navigate("/login");
+    } catch (error: any) {
+      setFormState(prev => ({
+        ...prev,
+        error: error.message,
+        isLoading: false,
+      }));
+    }
+  };
+
+  const handleInputChange = (field: FormFieldName, value: string) => {
+    setFormState(prev => ({
+      ...prev,
+      [field]: value,
+      error: null,
+    }));
   };
 
   return {
     formState,
     handleEmailSubmit,
-    handleResetPassword,
-    updateField,
+    handleSecretAnswerSubmit,
+    handlePasswordReset,
+    handleInputChange,
   };
 };
