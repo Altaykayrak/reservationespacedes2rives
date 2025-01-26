@@ -1,4 +1,4 @@
-import { format, addDays, isBefore, isAfter } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -26,75 +26,55 @@ export const DateSelector = ({
   isDateAlreadyReserved,
   periodId
 }: DateSelectorProps) => {
-  const { data: availableWednesdays } = useQuery({
-    queryKey: ["available_wednesdays"],
+  const { data: holidayPeriods } = useQuery({
+    queryKey: ["holiday_periods"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("available_wednesdays")
-        .select(`
-          *,
-          wednesday_allowed_classes (
-            school_class
-          )
-        `)
-        .order('date', { ascending: true });
+        .from("available_holiday_periods")
+        .select("*")
+        .order('start_date', { ascending: true });
       
       if (error) throw error;
       return data;
     },
   });
 
-  if (!availableWednesdays || availableWednesdays.length === 0) {
+  if (!holidayPeriods || holidayPeriods.length === 0) {
     return (
       <div className="text-center p-4 text-gray-500">
-        Aucun mercredi n'est disponible pour le moment.
-      </div>
-    );
-  }
-
-  const today = new Date();
-  const minimumDate = addDays(today, 3); // Date minimum de réservation (aujourd'hui + 3 jours)
-
-  // Filtrer les mercredis qui sont après la date minimum et qui ne sont pas passés
-  const filteredWednesdays = availableWednesdays.filter(wednesday => {
-    const wednesdayDate = new Date(wednesday.date);
-    return isAfter(wednesdayDate, minimumDate) && isAfter(wednesdayDate, today);
-  });
-
-  if (filteredWednesdays.length === 0) {
-    return (
-      <div className="text-center p-4 text-gray-500">
-        Aucun mercredi n'est disponible pour le moment. Les réservations doivent être faites au moins 3 jours à l'avance.
+        Aucune période de vacances n'est disponible pour le moment.
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <Label className="font-medium block">Sélectionner les dates</Label>
+      <Label className="font-medium block">Sélectionner les périodes</Label>
       <div className="space-y-2">
-        {filteredWednesdays.map((wednesday) => {
-          const date = new Date(wednesday.date);
+        {holidayPeriods.map((period) => {
+          const startDate = new Date(period.start_date);
+          const endDate = new Date(period.end_date);
           const isSelected = selectedDates.some(
-            (d) => d.date.getTime() === date.getTime()
+            (d) => d.date.getTime() === startDate.getTime()
           );
-          const isReserved = isDateAlreadyReserved(date);
+          const isReserved = isDateAlreadyReserved(startDate);
 
           const selectedDate = selectedDates.find(
-            (d) => d.date.getTime() === date.getTime()
+            (d) => d.date.getTime() === startDate.getTime()
           );
 
           return (
-            <div key={wednesday.id} className="space-y-2">
+            <div key={period.id} className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id={wednesday.date}
+                  id={period.id}
                   checked={isSelected}
                   disabled={isReserved}
-                  onCheckedChange={() => handleDateToggle(date)}
+                  onCheckedChange={() => handleDateToggle(startDate)}
                 />
-                <Label htmlFor={wednesday.date}>
-                  {format(date, "EEEE d MMMM", { locale: fr })}
+                <Label htmlFor={period.id}>
+                  Du {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
+                  {format(endDate, "d MMMM yyyy", { locale: fr })}
                   {isReserved && (
                     <span className="ml-2 text-red-500 text-sm">
                       (Déjà réservé)
@@ -106,14 +86,14 @@ export const DateSelector = ({
                 <div className="ml-6 space-y-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id={`without-meal-${wednesday.date}`}
+                      id={`without-meal-${period.id}`}
                       checked={selectedDate.withoutMeal}
                       onCheckedChange={(checked) =>
-                        handleOptionChange(date, "withoutMeal", checked as boolean)
+                        handleOptionChange(startDate, "withoutMeal", checked as boolean)
                       }
                     />
                     <Label
-                      htmlFor={`without-meal-${wednesday.date}`}
+                      htmlFor={`without-meal-${period.id}`}
                       className="text-sm text-gray-600"
                     >
                       Sans repas
@@ -121,14 +101,14 @@ export const DateSelector = ({
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id={`early-dropoff-${wednesday.date}`}
+                      id={`early-dropoff-${period.id}`}
                       checked={selectedDate.earlyDropoff}
                       onCheckedChange={(checked) =>
-                        handleOptionChange(date, "earlyDropoff", checked as boolean)
+                        handleOptionChange(startDate, "earlyDropoff", checked as boolean)
                       }
                     />
                     <Label
-                      htmlFor={`early-dropoff-${wednesday.date}`}
+                      htmlFor={`early-dropoff-${period.id}`}
                       className="text-sm text-gray-600"
                     >
                       Accueil avant 8h30
