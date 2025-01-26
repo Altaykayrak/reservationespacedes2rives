@@ -19,6 +19,11 @@ interface DateSelectorProps {
   periodId: string | null;
 }
 
+const isWeekend = (date: Date) => {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+};
+
 export const DateSelector = ({
   selectedDates,
   handleDateToggle,
@@ -49,73 +54,94 @@ export const DateSelector = ({
 
   return (
     <div className="space-y-4">
-      <Label className="font-medium block">Sélectionner les périodes</Label>
-      <div className="space-y-2">
+      <Label className="font-medium block">Sélectionner les dates</Label>
+      <div className="space-y-6">
         {holidayPeriods.map((period) => {
           const startDate = new Date(period.start_date);
           const endDate = new Date(period.end_date);
-          const isSelected = selectedDates.some(
-            (d) => d.date.getTime() === startDate.getTime()
-          );
-          const isReserved = isDateAlreadyReserved(startDate);
-
-          const selectedDate = selectedDates.find(
-            (d) => d.date.getTime() === startDate.getTime()
-          );
+          
+          // Generate array of dates between start and end date, excluding weekends
+          const dates = [];
+          const currentDate = new Date(startDate);
+          while (currentDate <= endDate) {
+            if (!isWeekend(currentDate)) {
+              dates.push(new Date(currentDate));
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
 
           return (
-            <div key={period.id} className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id={period.id}
-                  checked={isSelected}
-                  disabled={isReserved}
-                  onCheckedChange={() => handleDateToggle(startDate)}
-                />
-                <Label htmlFor={period.id}>
-                  Du {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
-                  {format(endDate, "d MMMM yyyy", { locale: fr })}
-                  {isReserved && (
-                    <span className="ml-2 text-red-500 text-sm">
-                      (Déjà réservé)
-                    </span>
-                  )}
-                </Label>
+            <div key={period.id} className="border rounded-lg p-4 bg-gray-50">
+              <Label className="font-medium block mb-4">
+                Période du {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
+                {format(endDate, "d MMMM yyyy", { locale: fr })}
+              </Label>
+              <div className="space-y-3 pl-4">
+                {dates.map((date) => {
+                  const isSelected = selectedDates.some(
+                    (d) => d.date.getTime() === date.getTime()
+                  );
+                  const isReserved = isDateAlreadyReserved(date);
+                  const selectedDate = selectedDates.find(
+                    (d) => d.date.getTime() === date.getTime()
+                  );
+
+                  return (
+                    <div key={date.toISOString()} className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={date.toISOString()}
+                          checked={isSelected}
+                          disabled={isReserved}
+                          onCheckedChange={() => handleDateToggle(date)}
+                        />
+                        <Label htmlFor={date.toISOString()}>
+                          {format(date, "EEEE d MMMM", { locale: fr })}
+                          {isReserved && (
+                            <span className="ml-2 text-red-500 text-sm">
+                              (Déjà réservé)
+                            </span>
+                          )}
+                        </Label>
+                      </div>
+                      {selectedDate && (
+                        <div className="ml-6 space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`without-meal-${date.toISOString()}`}
+                              checked={selectedDate.withoutMeal}
+                              onCheckedChange={(checked) =>
+                                handleOptionChange(date, "withoutMeal", checked as boolean)
+                              }
+                            />
+                            <Label
+                              htmlFor={`without-meal-${date.toISOString()}`}
+                              className="text-sm text-gray-600"
+                            >
+                              Sans repas
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`early-dropoff-${date.toISOString()}`}
+                              checked={selectedDate.earlyDropoff}
+                              onCheckedChange={(checked) =>
+                                handleOptionChange(date, "earlyDropoff", checked as boolean)
+                              }
+                            />
+                            <Label
+                              htmlFor={`early-dropoff-${date.toISOString()}`}
+                              className="text-sm text-gray-600"
+                            >
+                              Accueil avant 8h30
+                            </Label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              {selectedDate && (
-                <div className="ml-6 space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`without-meal-${period.id}`}
-                      checked={selectedDate.withoutMeal}
-                      onCheckedChange={(checked) =>
-                        handleOptionChange(startDate, "withoutMeal", checked as boolean)
-                      }
-                    />
-                    <Label
-                      htmlFor={`without-meal-${period.id}`}
-                      className="text-sm text-gray-600"
-                    >
-                      Sans repas
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`early-dropoff-${period.id}`}
-                      checked={selectedDate.earlyDropoff}
-                      onCheckedChange={(checked) =>
-                        handleOptionChange(startDate, "earlyDropoff", checked as boolean)
-                      }
-                    />
-                    <Label
-                      htmlFor={`early-dropoff-${period.id}`}
-                      className="text-sm text-gray-600"
-                    >
-                      Accueil avant 8h30
-                    </Label>
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}
