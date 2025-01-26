@@ -45,7 +45,7 @@ export const HolidayDateSelector = ({
 
   if (!holidayPeriod) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+      <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
         <Calendar className="h-12 w-12 text-muted-foreground" />
         <div>
           <h3 className="font-semibold">Sélectionnez une période</h3>
@@ -72,7 +72,7 @@ export const HolidayDateSelector = ({
 
   if (dates.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+      <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
         <Calendar className="h-12 w-12 text-muted-foreground" />
         <div>
           <h3 className="font-semibold">Aucune date disponible</h3>
@@ -85,8 +85,8 @@ export const HolidayDateSelector = ({
   }
 
   return (
-    <ScrollArea className="h-[350px] pr-4">
-      <div className="space-y-2">
+    <ScrollArea className="h-[300px] pr-3">
+      <div className="space-y-1">
         {dates.map((date) => {
           const selectedDateOption = selectedDates.find(
             (d) => d.date.getTime() === date.getTime()
@@ -94,7 +94,7 @@ export const HolidayDateSelector = ({
           const isReserved = isDateAlreadyReserved(date);
 
           return (
-            <div key={date.toISOString()} className="space-y-1.5">
+            <div key={date.toISOString()} className="space-y-1">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id={date.toISOString()}
@@ -117,7 +117,7 @@ export const HolidayDateSelector = ({
                 </Label>
               </div>
               {selectedDateOption && !isReserved && (
-                <div className="ml-6 space-y-1.5">
+                <div className="ml-6 space-y-1">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`without-meal-${date.toISOString()}`}
