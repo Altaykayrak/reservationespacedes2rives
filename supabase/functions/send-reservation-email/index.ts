@@ -19,7 +19,10 @@ interface EmailRequest {
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200
+    });
   }
 
   try {
@@ -43,9 +46,6 @@ const handler = async (req: Request): Promise<Response> => {
       </ul>
     `;
 
-    // During testing, always send to altaykayrak@gmail.com
-    console.log("Sending test email to: altaykayrak@gmail.com");
-    
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -54,22 +54,21 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "onboarding@resend.dev",
-        to: ["altaykayrak@gmail.com"], // Force sending to verified email during testing
-        subject: `[TEST] Confirmation de réservation - ${emailRequest.childName}`,
+        to: [emailRequest.parentEmail],
+        subject: `Confirmation de réservation - ${emailRequest.childName}`,
         html: emailHtml,
-        reply_to: emailRequest.parentEmail // Store the intended recipient email
       }),
     });
 
-    const responseData = await res.json();
-    console.log("Resend API response:", responseData);
+    const data = await res.json();
+    console.log("Resend API response:", data);
 
     if (!res.ok) {
-      console.error("Resend API error:", responseData);
-      throw new Error(`Resend API error: ${JSON.stringify(responseData)}`);
+      console.error("Resend API error:", data);
+      throw new Error(`Resend API error: ${JSON.stringify(data)}`);
     }
 
-    return new Response(JSON.stringify(responseData), {
+    return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
