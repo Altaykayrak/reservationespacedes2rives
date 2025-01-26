@@ -7,8 +7,14 @@ import { fr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "lucide-react";
 
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
+
 interface HolidayDateSelectorProps {
-  selectedDates: Date[];
+  selectedDates: DateOption[];
   handleDateToggle: (date: Date) => void;
   handleOptionChange: (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
   isDateAlreadyReserved: (date: Date) => boolean;
@@ -82,20 +88,17 @@ export const HolidayDateSelector = ({
     <ScrollArea className="h-[400px] pr-4">
       <div className="space-y-4">
         {dates.map((date) => {
-          const isSelected = selectedDates.some(
-            (d) => d.getTime() === date.getTime()
+          const selectedDateOption = selectedDates.find(
+            (d) => d.date.getTime() === date.getTime()
           );
           const isReserved = isDateAlreadyReserved(date);
-          const selectedDate = selectedDates.find(
-            (d) => d.getTime() === date.getTime()
-          );
 
           return (
             <div key={date.toISOString()} className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id={date.toISOString()}
-                  checked={isSelected}
+                  checked={!!selectedDateOption}
                   onCheckedChange={() => !isReserved && handleDateToggle(date)}
                   disabled={isReserved}
                 />
@@ -113,12 +116,12 @@ export const HolidayDateSelector = ({
                   )}
                 </Label>
               </div>
-              {isSelected && !isReserved && (
+              {selectedDateOption && !isReserved && (
                 <div className="ml-6 space-y-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`without-meal-${date.toISOString()}`}
-                      checked={selectedDate?.withoutMeal}
+                      checked={selectedDateOption.withoutMeal}
                       onCheckedChange={(checked) =>
                         handleOptionChange(date, 'withoutMeal', checked as boolean)
                       }
@@ -133,7 +136,7 @@ export const HolidayDateSelector = ({
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`early-dropoff-${date.toISOString()}`}
-                      checked={selectedDate?.earlyDropoff}
+                      checked={selectedDateOption.earlyDropoff}
                       onCheckedChange={(checked) =>
                         handleOptionChange(date, 'earlyDropoff', checked as boolean)
                       }

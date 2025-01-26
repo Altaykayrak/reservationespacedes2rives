@@ -5,6 +5,12 @@ import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./HolidayDateSelector";
 
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
+
 export const HolidayReservationContent = () => {
   const {
     selectedDates,

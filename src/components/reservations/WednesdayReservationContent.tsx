@@ -4,6 +4,12 @@ import { useReservations } from "@/hooks/useReservations";
 import { ChildSelector } from "./ChildSelector";
 import { WednesdayDateSelector } from "./WednesdayDateSelector";
 
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
+
 export const WednesdayReservationContent = () => {
   const {
     selectedDates,
@@ -13,7 +19,7 @@ export const WednesdayReservationContent = () => {
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
-    isDateAlreadyReserved
+    isDateReservedForChild
   } = useReservations();
 
   return (
@@ -30,7 +36,7 @@ export const WednesdayReservationContent = () => {
             selectedDates={selectedDates}
             handleDateToggle={handleDateToggle}
             handleOptionChange={handleOptionChange}
-            isDateAlreadyReserved={isDateAlreadyReserved}
+            isDateAlreadyReserved={(date) => isDateReservedForChild(selectedChild, date)}
           />
 
           <Button
