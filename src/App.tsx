@@ -8,6 +8,7 @@ import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
 import Children from "@/pages/Children";
 import HolidayReservations from "@/pages/HolidayReservations";
+import WednesdayReservations from "@/pages/WednesdayReservations";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminWednesdays from "@/pages/admin/AdminWednesdays";
@@ -50,6 +51,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <HolidayReservations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wednesday-reservations"
+            element={
+              <ProtectedRoute>
+                <WednesdayReservations />
               </ProtectedRoute>
             }
           />
