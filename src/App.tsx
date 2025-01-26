@@ -7,7 +7,6 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
 import Children from "@/pages/Children";
-import Reservations from "@/pages/Reservations";
 import HolidayReservations from "@/pages/HolidayReservations";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -43,14 +42,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <Children />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reservations"
-            element={
-              <ProtectedRoute>
-                <Reservations />
               </ProtectedRoute>
             }
           />
