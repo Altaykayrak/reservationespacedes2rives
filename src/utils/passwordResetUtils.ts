@@ -15,13 +15,13 @@ export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEma
   return authorizedEmail;
 };
 
-export const fetchSecretQuestion = async (email: string): Promise<Profile | null> => {
+export const fetchSecretQuestion = async (email: string): Promise<{ secret_question: string } | null> => {
   const { data: user } = await supabase.auth.getUser();
   if (!user) return null;
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("secret_question, secret_answer")
+    .select("secret_question")
     .eq("id", user.user?.id)
     .maybeSingle();
 
