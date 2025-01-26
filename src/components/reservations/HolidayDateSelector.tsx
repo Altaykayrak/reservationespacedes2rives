@@ -85,8 +85,8 @@ export const HolidayDateSelector = ({
   }
 
   return (
-    <ScrollArea className="h-[400px] pr-4">
-      <div className="space-y-4">
+    <ScrollArea className="h-[350px] pr-4">
+      <div className="space-y-2">
         {dates.map((date) => {
           const selectedDateOption = selectedDates.find(
             (d) => d.date.getTime() === date.getTime()
@@ -94,7 +94,7 @@ export const HolidayDateSelector = ({
           const isReserved = isDateAlreadyReserved(date);
 
           return (
-            <div key={date.toISOString()} className="space-y-2">
+            <div key={date.toISOString()} className="space-y-1.5">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id={date.toISOString()}
@@ -117,7 +117,7 @@ export const HolidayDateSelector = ({
                 </Label>
               </div>
               {selectedDateOption && !isReserved && (
-                <div className="ml-6 space-y-2">
+                <div className="ml-6 space-y-1.5">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`without-meal-${date.toISOString()}`}
