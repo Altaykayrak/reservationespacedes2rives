@@ -23,7 +23,7 @@ export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEma
 export const fetchSecretQuestion = async (email: string): Promise<Profile | null> => {
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("secret_question")
+    .select("secret_question, secret_answer")
     .eq("email", email.trim())
     .maybeSingle();
 
