@@ -77,12 +77,17 @@ export function ChildrenList({ children }: ChildrenListProps) {
 
   return (
     <div className="mt-8 space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold tracking-tight text-left">Liste des enfants</h3>
-        <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Ajouter un enfant
-        </Button>
+      <div className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold tracking-tight text-left">Liste des enfants</h3>
+          <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Ajouter un enfant
+          </Button>
+        </div>
+        <p className="text-[#ea384c] text-sm">
+          Pour vos enfants en petite section, seules les vacances d'été sont réservables en ligne.
+        </p>
       </div>
       <Card className="overflow-hidden border-0 shadow-sm">
         <div className="overflow-x-auto">
