@@ -40,16 +40,17 @@ export const ChildSelector = ({
     );
   };
 
-  // Filter children based on the current page
+  // Filter children based on the current page and class
   const filteredChildren = children?.filter(child => {
     const isTeen = isTeenClass(child.school_class);
+    const isPS = child.school_class.toUpperCase().includes("PS");
     
     if (isHolidayReservation) {
-      // For holiday reservations, show all children including teens
-      return true;
+      // For holiday reservations, show all children except PS
+      return !isPS;
     } else {
-      // For wednesday reservations, exclude teens
-      return !isTeen;
+      // For wednesday reservations, exclude teens and PS
+      return !isTeen && !isPS;
     }
   });
 
