@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Child, User, Users } from "lucide-react";
+import { BookOpen, Baby, User, Users } from "lucide-react";
 
 const HolidayProgram = () => {
   return (
@@ -13,7 +13,7 @@ const HolidayProgram = () => {
         <Card className="p-6">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Child className="h-5 w-5 text-blue-500" />
+              <Baby className="h-5 w-5 text-blue-500" />
               <CardTitle>Programme Maternelles</CardTitle>
             </div>
           </CardHeader>
