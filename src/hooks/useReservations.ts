@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useReservationQueries } from "./useReservationQueries";
 import { useReservationMutations } from "./useReservationMutations";
-import { useEmailNotification } from "./useEmailNotification";
 import { format } from "date-fns";
 
 interface DateOption {
@@ -24,8 +23,6 @@ export const useReservations = () => {
     userProfile,
     isDateReservedForChild,
   } = useReservationQueries();
-
-  const { sendConfirmationEmail } = useEmailNotification();
   
   const { createReservationMutation } = useReservationMutations(
     () => {
@@ -105,16 +102,6 @@ export const useReservations = () => {
           withoutMeal: dateOption.withoutMeal,
           earlyDropoff: dateOption.earlyDropoff,
         });
-
-        const selectedChildData = children?.find(child => child.id === selectedChild);
-        if (selectedChildData) {
-          await sendConfirmationEmail(
-            `${selectedChildData.first_name} ${selectedChildData.last_name}`,
-            dateOption.date,
-            `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            userProfile?.email
-          );
-        }
       }
 
       toast({
