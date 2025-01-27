@@ -85,31 +85,6 @@ export const useHolidayReservation = () => {
     ));
   };
 
-  const handleSubmit = async () => {
-    if (isTeenClass && selectedPeriod) {
-      const selectedHolidayPeriod = holidayPeriods?.find(period => period.id === selectedPeriod);
-      if (selectedHolidayPeriod) {
-        const dates: DateOption[] = [];
-        const startDate = new Date(selectedHolidayPeriod.start_date);
-        const endDate = new Date(selectedHolidayPeriod.end_date);
-        const currentDate = new Date(startDate);
-
-        while (currentDate <= endDate) {
-          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-            dates.push({
-              date: new Date(currentDate),
-              withoutMeal: true,
-              earlyDropoff: false
-            });
-          }
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        setSelectedDates(dates);
-      }
-    }
-    await submitReservation();
-  };
-
   return {
     selectedDates,
     setSelectedDates,
@@ -121,7 +96,7 @@ export const useHolidayReservation = () => {
     holidayPeriods,
     handleDateToggle,
     handleOptionChange,
-    handleSubmit,
+    handleSubmit: submitReservation,
     isDateAlreadyReserved,
     isTeenClass
   };

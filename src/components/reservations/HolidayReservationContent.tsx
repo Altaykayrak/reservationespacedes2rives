@@ -26,7 +26,8 @@ export const HolidayReservationContent = () => {
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
-    isDateAlreadyReserved
+    isDateAlreadyReserved,
+    setSelectedDates
   } = useHolidayReservation();
 
   // Fetch child information to check if they're in a teen class
@@ -63,6 +64,31 @@ export const HolidayReservationContent = () => {
   const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
+
+  const handleConfirmation = async () => {
+    if (isTeenClass && selectedPeriod) {
+      const selectedHolidayPeriod = holidayPeriods?.find(period => period.id === selectedPeriod);
+      if (selectedHolidayPeriod) {
+        const dates: DateOption[] = [];
+        const startDate = new Date(selectedHolidayPeriod.start_date);
+        const endDate = new Date(selectedHolidayPeriod.end_date);
+        const currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+            dates.push({
+              date: new Date(currentDate),
+              withoutMeal: true,
+              earlyDropoff: false
+            });
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        setSelectedDates(dates);
+      }
+    }
+    await handleSubmit();
+  };
 
   if (!holidayPeriods || holidayPeriods.length === 0) {
     return (
@@ -101,7 +127,7 @@ export const HolidayReservationContent = () => {
         )}
 
         <Button
-          onClick={handleSubmit}
+          onClick={handleConfirmation}
           className="w-full"
           disabled={!selectedChild || !selectedPeriod || (!isTeenClass && selectedDates.length === 0)}
         >
