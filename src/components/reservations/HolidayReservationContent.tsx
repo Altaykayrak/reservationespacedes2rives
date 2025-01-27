@@ -6,7 +6,6 @@ import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./HolidayDateSelector";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CalendarDays } from "lucide-react";
 
 interface DateOption {
   date: Date;
@@ -65,31 +64,6 @@ export const HolidayReservationContent = () => {
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
 
-  const handleConfirmation = async () => {
-    if (isTeenClass && selectedPeriod) {
-      const selectedHolidayPeriod = holidayPeriods?.find(period => period.id === selectedPeriod);
-      if (selectedHolidayPeriod) {
-        const dates: DateOption[] = [];
-        const startDate = new Date(selectedHolidayPeriod.start_date);
-        const endDate = new Date(selectedHolidayPeriod.end_date);
-        const currentDate = new Date(startDate);
-
-        while (currentDate <= endDate) {
-          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-            dates.push({
-              date: new Date(currentDate),
-              withoutMeal: true,
-              earlyDropoff: false
-            });
-          }
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        setSelectedDates(dates);
-      }
-    }
-    await handleSubmit();
-  };
-
   if (!holidayPeriods || holidayPeriods.length === 0) {
     return (
       <Card className="p-6">
@@ -123,11 +97,12 @@ export const HolidayReservationContent = () => {
             isDateAlreadyReserved={isDateAlreadyReserved}
             periodId={selectedPeriod}
             selectedChild={selectedChild}
+            setSelectedDates={setSelectedDates}
           />
         )}
 
         <Button
-          onClick={handleConfirmation}
+          onClick={handleSubmit}
           className="w-full"
           disabled={!selectedChild || !selectedPeriod}
         >

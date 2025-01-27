@@ -6,9 +6,16 @@ interface DateOptionsProps {
   withoutMeal: boolean;
   earlyDropoff: boolean;
   onOptionChange: (option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
+  isTeenClass?: boolean;
 }
 
-export const DateOptions = ({ date, withoutMeal, earlyDropoff, onOptionChange }: DateOptionsProps) => {
+export const DateOptions = ({ 
+  date, 
+  withoutMeal, 
+  earlyDropoff, 
+  onOptionChange,
+  isTeenClass = false 
+}: DateOptionsProps) => {
   return (
     <div className="ml-6 space-y-1 bg-white/50 p-2 rounded-md">
       <div className="flex items-center space-x-2">
@@ -16,8 +23,9 @@ export const DateOptions = ({ date, withoutMeal, earlyDropoff, onOptionChange }:
           id={`without-meal-${date.toISOString()}`}
           checked={withoutMeal}
           onCheckedChange={(checked) =>
-            onOptionChange('withoutMeal', checked as boolean)
+            !isTeenClass && onOptionChange('withoutMeal', checked as boolean)
           }
+          disabled={isTeenClass}
           className="border-blue-200"
         />
         <Label 

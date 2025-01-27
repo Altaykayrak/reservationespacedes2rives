@@ -12,6 +12,7 @@ interface DateItemProps {
   earlyDropoff: boolean;
   onDateToggle: () => void;
   onOptionChange: (option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
+  isTeenClass?: boolean;
 }
 
 export const DateItem = ({
@@ -22,6 +23,7 @@ export const DateItem = ({
   earlyDropoff,
   onDateToggle,
   onOptionChange,
+  isTeenClass = false,
 }: DateItemProps) => {
   return (
     <div className="space-y-1 bg-blue-50/30 p-2 rounded-lg hover:bg-blue-100/30 transition-colors">
@@ -29,8 +31,8 @@ export const DateItem = ({
         <Checkbox
           id={date.toISOString()}
           checked={isSelected}
-          onCheckedChange={() => !isReserved && onDateToggle()}
-          disabled={isReserved}
+          onCheckedChange={() => !isReserved && !isTeenClass && onDateToggle()}
+          disabled={isReserved || isTeenClass}
           className="border-blue-200"
         />
         <Label
@@ -53,6 +55,7 @@ export const DateItem = ({
           withoutMeal={withoutMeal}
           earlyDropoff={earlyDropoff}
           onOptionChange={onOptionChange}
+          isTeenClass={isTeenClass}
         />
       )}
     </div>
