@@ -27,12 +27,6 @@ export const ChildSelector = ({
     },
   });
 
-  // Filter out only children in PS class
-  const filteredChildren = children?.filter(child => {
-    const isPS = child.school_class.toUpperCase().includes("PS");
-    return !isPS;
-  });
-
   // Function to check if a child is in the teen category
   const isTeenClass = (schoolClass: string) => {
     return schoolClassCategories?.some(
@@ -41,6 +35,13 @@ export const ChildSelector = ({
         schoolClass.toUpperCase() === category.name.toUpperCase()
     );
   };
+
+  // Filter out PS classes and teen classes
+  const filteredChildren = children?.filter(child => {
+    const isPS = child.school_class.toUpperCase().includes("PS");
+    const isTeen = isTeenClass(child.school_class);
+    return !isPS && !isTeen;
+  });
 
   return (
     <div>
@@ -56,10 +57,8 @@ export const ChildSelector = ({
           <option 
             key={child.id} 
             value={child.id}
-            data-is-teen={isTeenClass(child.school_class)}
           >
             {child.first_name} {child.last_name} ({child.school_class})
-            {isTeenClass(child.school_class) ? " - Semaine complète requise" : ""}
           </option>
         ))}
       </select>
