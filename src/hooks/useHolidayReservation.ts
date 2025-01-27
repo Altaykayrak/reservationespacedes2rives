@@ -54,11 +54,6 @@ export const useHolidayReservation = () => {
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
 
-  const resetForm = () => {
-    setSelectedDates([]);
-    setSelectedPeriod("");
-  };
-
   const { handleSubmit: submitReservation } = useReservationSubmission(
     selectedChild,
     selectedDates,
@@ -67,6 +62,11 @@ export const useHolidayReservation = () => {
     refetchReservations,
     resetForm
   );
+
+  const resetForm = () => {
+    setSelectedDates([]);
+    setSelectedPeriod("");
+  };
 
   const handleDateToggle = (date: Date) => {
     const existingDate = selectedDates.find(d => d.date.getTime() === date.getTime());
