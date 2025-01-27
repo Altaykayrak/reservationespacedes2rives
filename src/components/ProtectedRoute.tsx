@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [connectionError, setConnectionError] = useState(false);
   const location = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -40,9 +42,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
               variant: "destructive",
             });
           } else if (error.message.includes("refresh_token_not_found")) {
-            // Clear any stale session data
-            await supabase.auth.signOut();
-            localStorage.clear(); // Clear all localStorage data
+            // Clear any stale session data and cache
+            await handleLogout();
             toast({
               title: "Session expirée",
               description: "Votre session a expiré. Veuillez vous reconnecter.",
@@ -60,6 +61,9 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         
         if (session) {
           setIsAuthenticated(true);
+        } else {
+          // If no session, clear cache and local data
+          await handleLogout();
         }
       } catch (error) {
         console.error("Auth check error:", error);
@@ -74,8 +78,32 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
     };
 
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session);
+      if (event === 'SIGNED_OUT') {
+        await handleLogout();
+      } else if (event === 'SIGNED_IN') {
+        setIsAuthenticated(true);
+        // Reset query cache on sign in to ensure fresh data
+        queryClient.resetQueries();
+      }
+    });
+
     checkAuth();
-  }, [location.pathname, toast]);
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [location.pathname, toast, queryClient]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.clear();
+    queryClient.clear(); // Clear all queries from cache
+    setIsAuthenticated(false);
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">
