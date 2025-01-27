@@ -35,22 +35,24 @@ export const DateOptions = ({
           Sans repas
         </Label>
       </div>
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id={`early-dropoff-${date.toISOString()}`}
-          checked={earlyDropoff}
-          onCheckedChange={(checked) =>
-            onOptionChange('earlyDropoff', checked as boolean)
-          }
-          className="border-blue-200"
-        />
-        <Label 
-          htmlFor={`early-dropoff-${date.toISOString()}`}
-          className="text-sm text-blue-900"
-        >
-          Accueil avant 8h30
-        </Label>
-      </div>
+      {!isTeenClass && (
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id={`early-dropoff-${date.toISOString()}`}
+            checked={earlyDropoff}
+            onCheckedChange={(checked) =>
+              onOptionChange('earlyDropoff', checked as boolean)
+            }
+            className="border-blue-200"
+          />
+          <Label 
+            htmlFor={`early-dropoff-${date.toISOString()}`}
+            className="text-sm text-blue-900"
+          >
+            Accueil avant 8h30
+          </Label>
+        </div>
+      )}
     </div>
   );
 };
