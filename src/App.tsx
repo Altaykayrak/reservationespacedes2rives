@@ -5,6 +5,21 @@ import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
 import WednesdayReservations from "@/pages/WednesdayReservations";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Profile from "@/pages/Profile";
+import Children from "@/pages/Children";
+import ForgotPassword from "@/pages/ForgotPassword";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminLogin from "@/pages/AdminLogin";
+import AdminReservations from "@/pages/admin/AdminReservations";
+import AdminWednesdays from "@/pages/admin/AdminWednesdays";
+import AdminHolidays from "@/pages/admin/AdminHolidays";
+import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
+import HolidayReservations from "@/pages/HolidayReservations";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -18,12 +33,97 @@ const queryClient = new QueryClient({
 
 const router = createBrowserRouter([
   {
+    path: "/",
+    element: <Index />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/profile",
+    element: (
+      <ProtectedRoute>
+        <Profile />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/children",
+    element: (
+      <ProtectedRoute>
+        <Children />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/holiday-reservations",
-    element: <HolidayReservationContent />,
+    element: (
+      <ProtectedRoute>
+        <HolidayReservations />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/wednesday-reservations",
-    element: <WednesdayReservations />,
+    element: (
+      <ProtectedRoute>
+        <WednesdayReservations />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin-login",
+    element: <AdminLogin />,
+  },
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute>
+        <AdminDashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/reservations",
+    element: (
+      <ProtectedRoute>
+        <AdminReservations />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/wednesdays",
+    element: (
+      <ProtectedRoute>
+        <AdminWednesdays />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/holidays",
+    element: (
+      <ProtectedRoute>
+        <AdminHolidays />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/authorized-emails",
+    element: (
+      <ProtectedRoute>
+        <AdminAuthorizedEmails />
+      </ProtectedRoute>
+    ),
   },
 ]);
 
