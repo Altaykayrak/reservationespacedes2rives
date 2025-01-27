@@ -20,6 +20,7 @@ import AdminWednesdays from "@/pages/admin/AdminWednesdays";
 import AdminHolidays from "@/pages/admin/AdminHolidays";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import HolidayReservations from "@/pages/HolidayReservations";
+import HolidayProgram from "@/pages/HolidayProgram";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -64,6 +65,10 @@ const router = createBrowserRouter([
         <Children />
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/holiday-program",
+    element: <HolidayProgram />,
   },
   {
     path: "/holiday-reservations",
