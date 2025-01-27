@@ -14,14 +14,13 @@ export const ChildSelector = ({
   setSelectedChild,
   children
 }: ChildSelectorProps) => {
-  // Fetch school class categories to identify PS classes only
+  // Fetch school class categories to identify PS classes and teen classes
   const { data: schoolClassCategories } = useQuery({
     queryKey: ["schoolClassCategories"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_class_categories")
-        .select("*")
-        .eq("category", "adolescent");
+        .select("*");
       
       if (error) throw error;
       return data;
@@ -34,6 +33,14 @@ export const ChildSelector = ({
     return !isPS;
   });
 
+  // Function to check if a child is in the teen category
+  const isTeenClass = (schoolClass: string) => {
+    return schoolClassCategories?.some(
+      category => category.category === "adolescent" && 
+      schoolClass.toUpperCase() === category.name.toUpperCase()
+    );
+  };
+
   return (
     <div>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
@@ -45,8 +52,13 @@ export const ChildSelector = ({
       >
         <option value="">Choisir un enfant</option>
         {filteredChildren?.map((child) => (
-          <option key={child.id} value={child.id}>
+          <option 
+            key={child.id} 
+            value={child.id}
+            data-is-teen={isTeenClass(child.school_class)}
+          >
             {child.first_name} {child.last_name} ({child.school_class})
+            {isTeenClass(child.school_class) ? " - Semaine complète requise" : ""}
           </option>
         ))}
       </select>

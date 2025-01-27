@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DateOption {
   date: Date;
@@ -19,6 +20,7 @@ interface HolidayDateSelectorProps {
   handleOptionChange: (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
   isDateAlreadyReserved: (date: Date) => boolean;
   periodId: string;
+  selectedChild: string;
 }
 
 export const HolidayDateSelector = ({
@@ -26,7 +28,8 @@ export const HolidayDateSelector = ({
   handleDateToggle,
   handleOptionChange,
   isDateAlreadyReserved,
-  periodId
+  periodId,
+  selectedChild
 }: HolidayDateSelectorProps) => {
   const { data: holidayPeriod } = useQuery({
     queryKey: ["holiday_period", periodId],
@@ -43,6 +46,26 @@ export const HolidayDateSelector = ({
     enabled: !!periodId
   });
 
+  // Fetch child information to check if they're in a teen class
+  const { data: childInfo } = useQuery({
+    queryKey: ["child", selectedChild],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("*, school_class_categories!inner(*)")
+        .eq("id", selectedChild)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedChild
+  });
+
+  const isTeenClass = childInfo?.school_class_categories?.some(
+    category => category.category === "adolescent"
+  );
+
   if (!holidayPeriod) {
     return (
       <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
@@ -54,6 +77,16 @@ export const HolidayDateSelector = ({
           </p>
         </div>
       </div>
+    );
+  }
+
+  if (isTeenClass) {
+    return (
+      <Alert>
+        <AlertDescription>
+          Les adolescents doivent être inscrits pour la semaine complète. La réservation sera automatiquement faite pour tous les jours de la période.
+        </AlertDescription>
+      </Alert>
     );
   }
 

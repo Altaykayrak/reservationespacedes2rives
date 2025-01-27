@@ -59,6 +59,7 @@ export const HolidayReservationContent = () => {
               handleOptionChange={handleOptionChange}
               isDateAlreadyReserved={isDateAlreadyReserved}
               periodId={selectedPeriod}
+              selectedChild={selectedChild}
             />
           )}
 
