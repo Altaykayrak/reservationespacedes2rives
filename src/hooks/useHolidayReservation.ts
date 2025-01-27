@@ -3,6 +3,8 @@ import { useChildrenData } from "./useChildrenData";
 import { useHolidayPeriods } from "./useHolidayPeriods";
 import { useExistingReservations } from "./useExistingReservations";
 import { useReservationSubmission } from "./useReservationSubmission";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DateOption {
   date: Date;
@@ -19,12 +21,46 @@ export const useHolidayReservation = () => {
   const { holidayPeriods } = useHolidayPeriods();
   const { isDateAlreadyReserved, refetchReservations } = useExistingReservations(selectedChild);
 
+  // Fetch child information to check if they're in a teen class
+  const { data: childInfo } = useQuery({
+    queryKey: ["child", selectedChild],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("school_class")
+        .eq("id", selectedChild)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedChild
+  });
+
+  // Fetch school class categories to identify teen classes
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*")
+        .eq("category", "adolescent");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
+    category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
+  );
+
   const resetForm = () => {
     setSelectedDates([]);
     setSelectedPeriod("");
   };
 
-  const { handleSubmit } = useReservationSubmission(
+  const { handleSubmit: submitReservation } = useReservationSubmission(
     selectedChild,
     selectedDates,
     holidayPeriods,
@@ -48,6 +84,32 @@ export const useHolidayReservation = () => {
         ? { ...d, [option]: value }
         : d
     ));
+  };
+
+  const handleSubmit = async () => {
+    if (isTeenClass && selectedPeriod) {
+      const selectedHolidayPeriod = holidayPeriods?.find(period => period.id === selectedPeriod);
+      if (selectedHolidayPeriod) {
+        // Générer un tableau de dates entre start_date et end_date
+        const dates: DateOption[] = [];
+        const startDate = new Date(selectedHolidayPeriod.start_date);
+        const endDate = new Date(selectedHolidayPeriod.end_date);
+        const currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) { // Exclure les weekends
+            dates.push({
+              date: new Date(currentDate),
+              withoutMeal: true, // Toujours sans repas pour les ados
+              earlyDropoff: false
+            });
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        setSelectedDates(dates);
+      }
+    }
+    await submitReservation();
   };
 
   return {
