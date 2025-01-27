@@ -4,6 +4,7 @@ import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
+import WednesdayReservations from "@/pages/WednesdayReservations";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
   {
     path: "/holiday-reservations",
     element: <HolidayReservationContent />,
+  },
+  {
+    path: "/wednesday-reservations",
+    element: <WednesdayReservations />,
   },
 ]);
 
