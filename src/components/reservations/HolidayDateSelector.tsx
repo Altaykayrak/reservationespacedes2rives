@@ -50,6 +50,7 @@ export const HolidayDateSelector = ({
   const { data: childInfo } = useQuery({
     queryKey: ["child", selectedChild],
     queryFn: async () => {
+      if (!selectedChild) return null;
       const { data, error } = await supabase
         .from("children")
         .select("school_class")
