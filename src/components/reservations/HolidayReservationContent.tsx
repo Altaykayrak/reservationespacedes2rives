@@ -4,6 +4,8 @@ import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./HolidayDateSelector";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DateOption {
   date: Date;
@@ -25,6 +27,40 @@ export const HolidayReservationContent = () => {
     handleSubmit,
     isDateAlreadyReserved
   } = useHolidayReservation();
+
+  // Fetch child information to check if they're in a teen class
+  const { data: childInfo } = useQuery({
+    queryKey: ["child", selectedChild],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("school_class")
+        .eq("id", selectedChild)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedChild
+  });
+
+  // Fetch school class categories to identify teen classes
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*")
+        .eq("category", "adolescent");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
+    category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
+  );
 
   if (!holidayPeriods || holidayPeriods.length === 0) {
     return (
@@ -66,7 +102,7 @@ export const HolidayReservationContent = () => {
           <Button
             onClick={handleSubmit}
             className="w-full mt-2"
-            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0}
+            disabled={!selectedChild || !selectedPeriod || (!isTeenClass && selectedDates.length === 0)}
           >
             Confirmer la réservation
           </Button>
