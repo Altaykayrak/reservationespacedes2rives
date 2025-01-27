@@ -36,8 +36,9 @@ export const ChildSelector = ({
   // Function to check if a child is in the teen category
   const isTeenClass = (schoolClass: string) => {
     return schoolClassCategories?.some(
-      category => category.category === "adolescent" && 
-      schoolClass.toUpperCase() === category.name.toUpperCase()
+      category => 
+        category.category === "adolescent" && 
+        schoolClass.toUpperCase() === category.name.toUpperCase()
     );
   };
 

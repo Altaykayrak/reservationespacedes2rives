@@ -52,7 +52,7 @@ export const HolidayDateSelector = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("children")
-        .select("*, school_class_categories!inner(*)")
+        .select("school_class")
         .eq("id", selectedChild)
         .single();
       
@@ -62,8 +62,22 @@ export const HolidayDateSelector = ({
     enabled: !!selectedChild
   });
 
-  const isTeenClass = childInfo?.school_class_categories?.some(
-    category => category.category === "adolescent"
+  // Fetch school class categories to identify teen classes
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*")
+        .eq("category", "adolescent");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
+    category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
 
   if (!holidayPeriod) {
