@@ -29,11 +29,11 @@ export function Navbar() {
 
   const authenticatedMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
-    { label: "Programme vacances", href: "/holiday-program" },
     { label: "Mon profil", href: "/profile" },
     { label: "Mes enfants", href: "/children" },
     { label: "Réservations mercredis", href: "/wednesday-reservations" },
     { label: "Réservations vacances", href: "/holiday-reservations" },
+    { label: "Programme vacances", href: "/holiday-program" },
   ];
 
   const publicMenuItems: NavItem[] = [
