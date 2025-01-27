@@ -66,65 +66,48 @@ export const HolidayReservationContent = () => {
 
   if (!holidayPeriods || holidayPeriods.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <CalendarDays className="h-6 w-6 text-primary" />
-              <h2 className="text-xl font-semibold">Réservations vacances</h2>
-            </div>
-            <p className="text-center text-gray-500">
-              Aucune période de vacances n'est disponible pour le moment.
-            </p>
-          </Card>
-        </div>
-      </div>
+      <Card className="p-6">
+        <p className="text-center text-gray-500">
+          Aucune période de vacances n'est disponible pour le moment.
+        </p>
+      </Card>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <CalendarDays className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-semibold">Réservations vacances</h2>
-          </div>
-          
-          <div className="space-y-6">
-            <ChildSelector
-              selectedChild={selectedChild}
-              setSelectedChild={setSelectedChild}
-              children={children}
-            />
+    <Card className="p-6">
+      <div className="space-y-6">
+        <ChildSelector
+          selectedChild={selectedChild}
+          setSelectedChild={setSelectedChild}
+          children={children}
+        />
 
-            <PeriodSelector
-              selectedPeriod={selectedPeriod}
-              setSelectedPeriod={setSelectedPeriod}
-              holidayPeriods={holidayPeriods}
-            />
+        <PeriodSelector
+          selectedPeriod={selectedPeriod}
+          setSelectedPeriod={setSelectedPeriod}
+          holidayPeriods={holidayPeriods}
+        />
 
-            {selectedPeriod && (
-              <HolidayDateSelector
-                selectedDates={selectedDates}
-                handleDateToggle={handleDateToggle}
-                handleOptionChange={handleOptionChange}
-                isDateAlreadyReserved={isDateAlreadyReserved}
-                periodId={selectedPeriod}
-                selectedChild={selectedChild}
-              />
-            )}
+        {selectedPeriod && (
+          <HolidayDateSelector
+            selectedDates={selectedDates}
+            handleDateToggle={handleDateToggle}
+            handleOptionChange={handleOptionChange}
+            isDateAlreadyReserved={isDateAlreadyReserved}
+            periodId={selectedPeriod}
+            selectedChild={selectedChild}
+          />
+        )}
 
-            <Button
-              onClick={handleSubmit}
-              className="w-full"
-              disabled={!selectedChild || !selectedPeriod || (!isTeenClass && selectedDates.length === 0)}
-            >
-              Confirmer la réservation
-            </Button>
-          </div>
-        </Card>
+        <Button
+          onClick={handleSubmit}
+          className="w-full"
+          disabled={!selectedChild || !selectedPeriod || (!isTeenClass && selectedDates.length === 0)}
+        >
+          Confirmer la réservation
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 };
