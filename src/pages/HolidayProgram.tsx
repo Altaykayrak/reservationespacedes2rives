@@ -16,7 +16,7 @@ const HolidayProgram = () => {
         <div className="mb-12">
           <div className="flex items-center gap-2 mb-6">
             <Calendar className="h-5 w-5" />
-            <h2 className="text-2xl font-semibold">Semaine 1 : Lundi 7 avril - Vendredi 11 avril</h2>
+            <h2 className="text-2xl font-semibold">Semaine 1 : Lundi 7 avril 2024 - Vendredi 11 avril 2024</h2>
           </div>
 
           {/* Jours de la semaine */}
@@ -151,7 +151,7 @@ const HolidayProgram = () => {
         <div>
           <div className="flex items-center gap-2 mb-6">
             <Calendar className="h-5 w-5" />
-            <h2 className="text-2xl font-semibold">Semaine 2 : Lundi 14 avril - Vendredi 18 avril</h2>
+            <h2 className="text-2xl font-semibold">Semaine 2 : Lundi 14 avril 2024 - Vendredi 18 avril 2024</h2>
           </div>
 
           {/* Jours de la semaine */}
