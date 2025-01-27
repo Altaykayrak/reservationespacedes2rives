@@ -29,6 +29,7 @@ export function Navbar() {
 
   const authenticatedMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
+    { label: "Programme vacances", href: "/holiday-program" },
     { label: "Mon profil", href: "/profile" },
     { label: "Mes enfants", href: "/children" },
     { label: "Réservations mercredis", href: "/wednesday-reservations" },
@@ -37,6 +38,7 @@ export function Navbar() {
 
   const publicMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
+    { label: "Programme vacances", href: "/holiday-program" },
   ];
 
   const menuItems = isAuthenticated ? authenticatedMenuItems : publicMenuItems;
