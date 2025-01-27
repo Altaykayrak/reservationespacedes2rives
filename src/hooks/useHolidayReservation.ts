@@ -34,7 +34,7 @@ export const useHolidayReservation = () => {
       if (error) throw error;
       return data;
     },
-    enabled: Boolean(selectedChild)
+    enabled: Boolean(selectedChild),
   });
 
   const { data: schoolClassCategories } = useQuery({
@@ -47,7 +47,7 @@ export const useHolidayReservation = () => {
       
       if (error) throw error;
       return data;
-    }
+    },
   });
 
   const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
