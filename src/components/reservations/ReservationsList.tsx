@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
@@ -24,6 +24,8 @@ interface ReservationsListProps {
 }
 
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
+  const queryClient = useQueryClient();
+  
   const { data: holidayPeriods } = useQuery({
     queryKey: ["availableHolidays"],
     queryFn: async () => {
@@ -82,7 +84,8 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
         },
         (payload) => {
           console.log('Reservation change detected:', payload);
-          window.location.reload();
+          // Invalider le cache au lieu de recharger la page
+          queryClient.invalidateQueries({ queryKey: ["reservations"] });
         }
       )
       .subscribe();
@@ -91,7 +94,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [queryClient]);
 
   if (!reservationsByChild || Object.keys(reservationsByChild).length === 0) {
     return <EmptyReservations />;
@@ -112,7 +115,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
               childName={data.childName}
               schoolClass={data.schoolClass}
               reservations={data.reservations}
-              onUpdate={() => window.location.reload()}
+              onUpdate={() => queryClient.invalidateQueries({ queryKey: ["reservations"] })}
             />
           ))}
         </div>

@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useReservationQueries } from "./useReservationQueries";
 import { useReservationMutations } from "./useReservationMutations";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface DateOption {
   date: Date;
@@ -15,6 +16,7 @@ export const useReservations = () => {
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const {
     children,
@@ -27,7 +29,7 @@ export const useReservations = () => {
   const { createReservationMutation } = useReservationMutations(
     () => {
       setSelectedDates([]);
-      refetchReservations();
+      queryClient.invalidateQueries({ queryKey: ["reservations"] });
     }
   );
 
@@ -110,6 +112,8 @@ export const useReservations = () => {
       });
 
       setSelectedDates([]);
+      // Invalider le cache pour forcer une mise à jour
+      queryClient.invalidateQueries({ queryKey: ["reservations"] });
     } catch (error: any) {
       console.error("Error creating reservations:", error);
       toast({
