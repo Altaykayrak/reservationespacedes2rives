@@ -2,6 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "react-router-dom";
 
 interface ChildSelectorProps {
   selectedChild: string;
@@ -14,7 +15,10 @@ export const ChildSelector = ({
   setSelectedChild,
   children
 }: ChildSelectorProps) => {
-  // Fetch school class categories to identify PS classes and teen classes
+  const location = useLocation();
+  const isHolidayReservation = location.pathname === "/holiday-reservations";
+
+  // Fetch school class categories to identify teen classes
   const { data: schoolClassCategories } = useQuery({
     queryKey: ["schoolClassCategories"],
     queryFn: async () => {
@@ -36,11 +40,17 @@ export const ChildSelector = ({
     );
   };
 
-  // Filter out PS classes and teen classes
+  // Filter children based on the current page
   const filteredChildren = children?.filter(child => {
-    const isPS = child.school_class.toUpperCase().includes("PS");
     const isTeen = isTeenClass(child.school_class);
-    return !isPS && !isTeen;
+    
+    if (isHolidayReservation) {
+      // For holiday reservations, show all children including teens
+      return true;
+    } else {
+      // For wednesday reservations, exclude teens
+      return !isTeen;
+    }
   });
 
   return (
