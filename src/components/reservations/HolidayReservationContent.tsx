@@ -129,7 +129,7 @@ export const HolidayReservationContent = () => {
         <Button
           onClick={handleConfirmation}
           className="w-full"
-          disabled={!selectedChild || !selectedPeriod || (!isTeenClass && selectedDates.length === 0)}
+          disabled={!selectedChild || !selectedPeriod}
         >
           Confirmer la réservation
         </Button>
