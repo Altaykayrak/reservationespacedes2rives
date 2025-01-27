@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Baby, User, Users } from "lucide-react";
+import { BookOpen, Baby, User, Users, Calendar } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 
 const HolidayProgram = () => {
@@ -12,60 +12,274 @@ const HolidayProgram = () => {
           <h1 className="text-3xl font-bold">Programme Vacances</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="p-6">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Baby className="h-5 w-5 text-blue-500" />
-                <CardTitle>Programme Maternelles</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Activités sensorielles et créatives</li>
-                <li>Jeux de motricité</li>
-                <li>Temps calmes et sieste</li>
-                <li>Activités d'éveil musical</li>
-                <li>Jeux collectifs adaptés</li>
-              </ul>
-            </CardContent>
-          </Card>
+        {/* Semaine 1 */}
+        <div className="mb-12">
+          <div className="flex items-center gap-2 mb-6">
+            <Calendar className="h-5 w-5" />
+            <h2 className="text-2xl font-semibold">Semaine 1 : Lundi 7 avril - Vendredi 11 avril</h2>
+          </div>
 
-          <Card className="p-6">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-green-500" />
-                <CardTitle>Programme Primaires</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Activités sportives</li>
-                <li>Ateliers créatifs</li>
-                <li>Jeux de société</li>
-                <li>Activités nature et découverte</li>
-                <li>Projets collectifs</li>
-              </ul>
-            </CardContent>
-          </Card>
+          {/* Jours de la semaine */}
+          {["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"].map((jour) => (
+            <Card key={jour} className="mb-6">
+              <CardHeader>
+                <CardTitle>{jour}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid md:grid-cols-3 gap-6">
+                {/* Maternelle */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Baby className="h-5 w-5 text-blue-500" />
+                    <h3 className="font-semibold">Maternelle</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {jour === "Lundi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier créatif (peinture printanière)</p>
+                        <p><span className="font-medium">Après-midi :</span> Jeux moteurs en intérieur (parcours de motricité)</p>
+                      </>
+                    )}
+                    {jour === "Mardi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Comptines et danse</p>
+                        <p><span className="font-medium">Après-midi :</span> Sortie au parc animalier</p>
+                      </>
+                    )}
+                    {jour === "Mercredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier pâte à modeler (créations florales)</p>
+                        <p><span className="font-medium">Après-midi :</span> Spectacle de marionnettes (créé par les animateurs)</p>
+                      </>
+                    )}
+                    {jour === "Jeudi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Ateliers sensoriels (exploration des sons et textures)</p>
+                        <p><span className="font-medium">Après-midi :</span> Atelier jardinage (planter des fleurs)</p>
+                      </>
+                    )}
+                    {jour === "Vendredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Histoires interactives avec peluches et accessoires</p>
+                        <p><span className="font-medium">Après-midi :</span> Fête des couleurs (peinture collective)</p>
+                      </>
+                    )}
+                  </div>
+                </div>
 
-          <Card className="p-6">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-500" />
-                <CardTitle>Programme Ados</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Activités sportives</li>
-                <li>Sorties culturelles</li>
-                <li>Ateliers créatifs</li>
-                <li>Projets en groupe</li>
-                <li>Activités multimédia</li>
-              </ul>
-            </CardContent>
-          </Card>
+                {/* Primaire */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <User className="h-5 w-5 text-green-500" />
+                    <h3 className="font-semibold">Primaire</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {jour === "Lundi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier scientifique (fabriquer un volcan)</p>
+                        <p><span className="font-medium">Après-midi :</span> Tournoi de jeux de société</p>
+                      </>
+                    )}
+                    {jour === "Mardi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier robotique (initiation)</p>
+                        <p><span className="font-medium">Après-midi :</span> Sortie au parc animalier</p>
+                      </>
+                    )}
+                    {jour === "Mercredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier d'écriture créative (poèmes sur le printemps)</p>
+                        <p><span className="font-medium">Après-midi :</span> Course d'orientation au centre</p>
+                      </>
+                    )}
+                    {jour === "Jeudi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Construction de cabanes en extérieur</p>
+                        <p><span className="font-medium">Après-midi :</span> Jeux d'eau (selon la météo)</p>
+                      </>
+                    )}
+                    {jour === "Vendredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier cuisine (gâteaux aux fruits de saison)</p>
+                        <p><span className="font-medium">Après-midi :</span> Grand jeu de piste au centre</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Adolescents */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="h-5 w-5 text-purple-500" />
+                    <h3 className="font-semibold">Adolescents</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {jour === "Lundi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Escape game au centre</p>
+                        <p><span className="font-medium">Après-midi :</span> Atelier DIY (customisation de t-shirts)</p>
+                      </>
+                    )}
+                    {jour === "Mardi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Débat et atelier cinéma (écrire un court métrage)</p>
+                        <p><span className="font-medium">Après-midi :</span> Tournoi de sports collectifs (football, basket)</p>
+                      </>
+                    )}
+                    {jour === "Mercredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Tournoi de jeux vidéo en réseau</p>
+                        <p><span className="font-medium">Après-midi :</span> Atelier photo (initiation à la photographie)</p>
+                      </>
+                    )}
+                    {jour === "Jeudi" && (
+                      <p><span className="font-medium">Journée complète :</span> Sortie au parc d'aventure (accrobranche, tyrolienne)</p>
+                    )}
+                    {jour === "Vendredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Concours de talents (chant, danse, humour)</p>
+                        <p><span className="font-medium">Après-midi :</span> Soirée cinéma avec popcorn</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Semaine 2 */}
+        <div>
+          <div className="flex items-center gap-2 mb-6">
+            <Calendar className="h-5 w-5" />
+            <h2 className="text-2xl font-semibold">Semaine 2 : Lundi 14 avril - Vendredi 18 avril</h2>
+          </div>
+
+          {/* Jours de la semaine */}
+          {["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"].map((jour) => (
+            <Card key={`semaine2-${jour}`} className="mb-6">
+              <CardHeader>
+                <CardTitle>{jour}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid md:grid-cols-3 gap-6">
+                {/* Maternelle */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Baby className="h-5 w-5 text-blue-500" />
+                    <h3 className="font-semibold">Maternelle</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {jour === "Lundi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Ateliers coloriage et origami</p>
+                        <p><span className="font-medium">Après-midi :</span> Jeux musicaux et dansants</p>
+                      </>
+                    )}
+                    {jour === "Mardi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Histoires autour des animaux</p>
+                        <p><span className="font-medium">Après-midi :</span> Sortie au cinéma (film d'animation)</p>
+                      </>
+                    )}
+                    {jour === "Mercredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Parcours de psychomotricité</p>
+                        <p><span className="font-medium">Après-midi :</span> Atelier de collage (fleurs et papillons)</p>
+                      </>
+                    )}
+                    {jour === "Jeudi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Jeux d'eau (bassines, arrosoirs, etc.)</p>
+                        <p><span className="font-medium">Après-midi :</span> Création d'animaux en pâte à sel</p>
+                      </>
+                    )}
+                    {jour === "Vendredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier peinture avec les mains</p>
+                        <p><span className="font-medium">Après-midi :</span> Mini-kermesse avec stands ludiques</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Primaire */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <User className="h-5 w-5 text-green-500" />
+                    <h3 className="font-semibold">Primaire</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {jour === "Lundi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Expériences scientifiques (bulles géantes)</p>
+                        <p><span className="font-medium">Après-midi :</span> Concours d'arts plastiques</p>
+                      </>
+                    )}
+                    {jour === "Mardi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier jeux d'échecs</p>
+                        <p><span className="font-medium">Après-midi :</span> Sortie au cinéma (film adapté)</p>
+                      </>
+                    )}
+                    {jour === "Mercredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier BD (création d'une courte histoire)</p>
+                        <p><span className="font-medium">Après-midi :</span> Atelier théâtre (improvisations)</p>
+                      </>
+                    )}
+                    {jour === "Jeudi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Jeux de coopération en extérieur</p>
+                        <p><span className="font-medium">Après-midi :</span> Atelier sciences naturelles (explorer la faune locale)</p>
+                      </>
+                    )}
+                    {jour === "Vendredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Grand quiz de culture générale</p>
+                        <p><span className="font-medium">Après-midi :</span> Kermesse avec remise des prix des activités</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Adolescents */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="h-5 w-5 text-purple-500" />
+                    <h3 className="font-semibold">Adolescents</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {jour === "Lundi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Création de podcast</p>
+                        <p><span className="font-medium">Après-midi :</span> Sports de raquettes (badminton, ping-pong)</p>
+                      </>
+                    )}
+                    {jour === "Mardi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Création d'un jeu de rôle grandeur nature</p>
+                        <p><span className="font-medium">Après-midi :</span> Match sportif contre une autre structure</p>
+                      </>
+                    )}
+                    {jour === "Mercredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Atelier design (initiation au graphisme)</p>
+                        <p><span className="font-medium">Après-midi :</span> Escape game géant au centre</p>
+                      </>
+                    )}
+                    {jour === "Jeudi" && (
+                      <p><span className="font-medium">Journée complète :</span> Sortie à la plage ou au lac (activités nautiques)</p>
+                    )}
+                    {jour === "Vendredi" && (
+                      <>
+                        <p><span className="font-medium">Matin :</span> Réalisation d'un reportage vidéo (souvenirs des vacances)</p>
+                        <p><span className="font-medium">Après-midi :</span> Barbecue festif et soirée dansante</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </>
