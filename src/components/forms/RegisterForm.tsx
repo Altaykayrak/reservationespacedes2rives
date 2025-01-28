@@ -50,7 +50,7 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
             <FormItem>
               <FormLabel>Prénom</FormLabel>
               <FormControl>
-                <Input placeholder="Jean" {...field} />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -64,7 +64,7 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
             <FormItem>
               <FormLabel>Nom</FormLabel>
               <FormControl>
-                <Input placeholder="Dupont" {...field} />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -78,11 +78,7 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder="jean.dupont@example.com"
-                  {...field}
-                />
+                <Input type="email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
