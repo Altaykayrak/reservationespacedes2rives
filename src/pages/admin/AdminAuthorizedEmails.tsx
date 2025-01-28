@@ -24,6 +24,7 @@ const AdminAuthorizedEmails = () => {
   const { data: authorizedEmails, isLoading } = useQuery({
     queryKey: ["authorizedEmails"],
     queryFn: async () => {
+      console.log("Fetching authorized emails...");
       const { data, error } = await supabase
         .from("authorized_emails")
         .select("*")
@@ -35,13 +36,9 @@ const AdminAuthorizedEmails = () => {
         throw error;
       }
 
-      if (!data) {
-        return [];
-      }
-
-      return data;
+      console.log("Fetched emails:", data);
+      return data || [];
     },
-    retry: 1,
   });
 
   // Add new email
