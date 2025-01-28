@@ -14,15 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Trash2, Search } from "lucide-react";
-import {
-  Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 
 const AdminAuthorizedEmails = () => {
   const [newEmail, setNewEmail] = useState("");
@@ -38,7 +29,11 @@ const AdminAuthorizedEmails = () => {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching emails:", error);
+        toast.error("Erreur lors du chargement des emails");
+        throw error;
+      }
       return data;
     },
   });
@@ -57,6 +52,7 @@ const AdminAuthorizedEmails = () => {
       toast.success("Email ajouté avec succès");
     },
     onError: (error: any) => {
+      console.error("Error adding email:", error);
       if (error.code === "23505") {
         toast.error("Cet email est déjà autorisé");
       } else {
@@ -78,7 +74,8 @@ const AdminAuthorizedEmails = () => {
       queryClient.invalidateQueries({ queryKey: ["authorizedEmails"] });
       toast.success("Email supprimé avec succès");
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error deleting email:", error);
       toast.error("Une erreur est survenue lors de la suppression de l'email");
     },
   });
