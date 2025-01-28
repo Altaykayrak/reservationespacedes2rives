@@ -34,8 +34,14 @@ const AdminAuthorizedEmails = () => {
         toast.error("Erreur lors du chargement des emails");
         throw error;
       }
+
+      if (!data) {
+        return [];
+      }
+
       return data;
     },
+    retry: 1,
   });
 
   // Add new email
@@ -98,6 +104,18 @@ const AdminAuthorizedEmails = () => {
     email.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (isLoading) {
+    return (
+      <div>
+        <AdminNavbar />
+        <div className="container mx-auto p-8">
+          <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
+          <div>Chargement...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <AdminNavbar />
@@ -132,19 +150,17 @@ const AdminAuthorizedEmails = () => {
           </div>
         </div>
 
-        {isLoading ? (
-          <div>Chargement...</div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Date d'ajout</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEmails?.map((email) => (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Email</TableHead>
+              <TableHead>Date d'ajout</TableHead>
+              <TableHead className="w-[100px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredEmails && filteredEmails.length > 0 ? (
+              filteredEmails.map((email) => (
                 <TableRow key={email.id}>
                   <TableCell>{email.email}</TableCell>
                   <TableCell>
@@ -161,10 +177,16 @@ const AdminAuthorizedEmails = () => {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center">
+                  Aucun email autorisé trouvé
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
