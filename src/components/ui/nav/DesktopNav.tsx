@@ -23,7 +23,7 @@ export function DesktopNav({ menuItems, isAuthenticated, onLogout }: DesktopNavP
           className={cn(
             "px-3 py-2 rounded-md text-sm font-medium transition-colors",
             location.pathname === item.href
-              ? "bg-primary text-primary-foreground"
+              ? "bg-indigo-600 text-white"
               : "text-muted-foreground hover:text-foreground hover:bg-accent"
           )}
         >
@@ -40,7 +40,7 @@ export function DesktopNav({ menuItems, isAuthenticated, onLogout }: DesktopNavP
           Déconnexion
         </Button>
       ) : (
-        <Button asChild variant="default" className="ml-2">
+        <Button asChild variant="default" className="ml-2 bg-indigo-600 hover:bg-indigo-700">
           <Link to="/login">Connexion</Link>
         </Button>
       )}
