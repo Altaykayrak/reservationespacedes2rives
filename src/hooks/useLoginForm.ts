@@ -25,24 +25,20 @@ export const useLoginForm = () => {
     try {
       // Vérifier d'abord si l'email est autorisé
       console.log("Vérification de l'email autorisé...");
-      const { data: authorizedEmail, error: authEmailError } = await supabase
+      const { data: authorizedEmails, error: authEmailError } = await supabase
         .from("authorized_emails")
         .select("email")
-        .eq("email", email.trim())
-        .single();
+        .eq("email", email.trim());
 
-      console.log("Résultat de la vérification:", { authorizedEmail, authEmailError });
+      console.log("Résultat de la vérification:", { authorizedEmails, authEmailError });
 
       if (authEmailError) {
-        if (authEmailError.message.includes("JWT")) {
-          console.error("Erreur JWT:", authEmailError);
-          setError("Erreur d'authentification. Veuillez réessayer.");
-          return;
-        }
-        throw authEmailError;
+        console.error("Erreur lors de la vérification de l'email:", authEmailError);
+        setError("Erreur lors de la vérification de l'email. Veuillez réessayer.");
+        return;
       }
 
-      if (!authorizedEmail) {
+      if (!authorizedEmails || authorizedEmails.length === 0) {
         setError("Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription");
         return;
       }
