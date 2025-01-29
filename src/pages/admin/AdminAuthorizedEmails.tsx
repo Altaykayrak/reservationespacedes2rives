@@ -21,10 +21,15 @@ const AdminAuthorizedEmails = () => {
   const queryClient = useQueryClient();
 
   // Fetch authorized emails
-  const { data: authorizedEmails, isLoading } = useQuery({
+  const { data: authorizedEmails, isLoading, error: queryError } = useQuery({
     queryKey: ["authorizedEmails"],
     queryFn: async () => {
       console.log("Fetching authorized emails...");
+      
+      // Vérifier d'abord si nous sommes connectés en tant qu'admin
+      const adminSession = localStorage.getItem('adminSession');
+      console.log("Admin session:", adminSession);
+
       const { data, error } = await supabase
         .from("authorized_emails")
         .select("*")
@@ -100,6 +105,20 @@ const AdminAuthorizedEmails = () => {
   const filteredEmails = authorizedEmails?.filter((email) =>
     email.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (queryError) {
+    return (
+      <div>
+        <AdminNavbar />
+        <div className="container mx-auto p-8">
+          <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
+          <div className="text-red-500">
+            Erreur lors du chargement des emails: {queryError.message}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
