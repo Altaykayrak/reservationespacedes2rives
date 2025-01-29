@@ -24,25 +24,25 @@ const AdminAuthorizedEmails = () => {
   const { data: authorizedEmails, isLoading, error: queryError } = useQuery({
     queryKey: ["authorizedEmails"],
     queryFn: async () => {
-      console.log("Fetching authorized emails...");
-      
-      // Vérifier d'abord si nous sommes connectés en tant qu'admin
-      const adminSession = localStorage.getItem('adminSession');
-      console.log("Admin session:", adminSession);
+      try {
+        console.log("Fetching authorized emails...");
+        
+        const { data, error } = await supabase
+          .from("authorized_emails")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      const { data, error } = await supabase
-        .from("authorized_emails")
-        .select("*")
-        .order("created_at", { ascending: false });
+        if (error) {
+          console.error("Error fetching emails:", error);
+          throw error;
+        }
 
-      if (error) {
-        console.error("Error fetching emails:", error);
-        toast.error("Erreur lors du chargement des emails");
+        console.log("Fetched emails:", data);
+        return data || [];
+      } catch (error) {
+        console.error("Error in queryFn:", error);
         throw error;
       }
-
-      console.log("Fetched emails:", data);
-      return data || [];
     },
   });
 
@@ -107,6 +107,7 @@ const AdminAuthorizedEmails = () => {
   );
 
   if (queryError) {
+    console.error("Query error:", queryError);
     return (
       <div>
         <AdminNavbar />
