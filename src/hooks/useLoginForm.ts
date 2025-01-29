@@ -12,6 +12,8 @@ export const useLoginForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Tentative de connexion avec l'email:", email);
+    
     if (!email || !password) {
       setError("Veuillez remplir tous les champs");
       return;
@@ -21,27 +23,20 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
-      // Check if we can connect to Supabase by making a simple query
-      const { error: healthCheckError } = await supabase
-        .from('authorized_emails')
-        .select('count')
-        .limit(1)
-        .single();
-
-      if (healthCheckError && healthCheckError.message.includes('Failed to fetch')) {
-        throw new Error("Failed to fetch");
-      }
-
-      // Check if email is authorized
+      // Vérifier d'abord si l'email est autorisé
+      console.log("Vérification de l'email autorisé...");
       const { data: authorizedEmail, error: authEmailError } = await supabase
         .from("authorized_emails")
-        .select("id")
+        .select("email")
         .eq("email", email.trim())
-        .maybeSingle();
+        .single();
+
+      console.log("Résultat de la vérification:", { authorizedEmail, authEmailError });
 
       if (authEmailError) {
-        if (authEmailError.message === "Failed to fetch") {
-          setError("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer.");
+        if (authEmailError.message.includes("JWT")) {
+          console.error("Erreur JWT:", authEmailError);
+          setError("Erreur d'authentification. Veuillez réessayer.");
           return;
         }
         throw authEmailError;
@@ -52,31 +47,33 @@ export const useLoginForm = () => {
         return;
       }
 
+      // Tentative de connexion
+      console.log("Email autorisé, tentative de connexion...");
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
       });
 
+      console.log("Résultat de la connexion:", { data, signInError });
+
       if (signInError) {
-        if (signInError.message === "Failed to fetch") {
-          setError("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer.");
-          return;
+        console.error("Erreur de connexion:", signInError);
+        if (signInError.message.includes("Invalid login credentials")) {
+          setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
+        } else {
+          setError("Une erreur est survenue lors de la connexion. Veuillez réessayer.");
         }
-        setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
         return;
       }
 
       if (data?.user) {
+        console.log("Connexion réussie, redirection...");
         toast.success("Connexion réussie");
         navigate("/profile");
       }
     } catch (err) {
-      console.error("Login error:", err);
-      if (err instanceof Error && err.message === "Failed to fetch") {
-        setError("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer.");
-      } else {
-        setError("Identifiant ou mot de passe incorrect merci d'essayer de nouveau ou cliquer sur \"mot de passe oublié\"");
-      }
+      console.error("Erreur complète:", err);
+      setError("Une erreur est survenue. Veuillez réessayer plus tard.");
     } finally {
       setIsLoading(false);
     }
