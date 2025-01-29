@@ -23,28 +23,6 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
-      // Vérifier d'abord si l'email est autorisé
-      console.log("Vérification de l'email autorisé...");
-      const { data: authorizedEmails, error: authEmailError } = await supabase
-        .from("authorized_emails")
-        .select("email")
-        .eq("email", email.trim());
-
-      console.log("Résultat de la vérification:", { authorizedEmails, authEmailError });
-
-      if (authEmailError) {
-        console.error("Erreur lors de la vérification de l'email:", authEmailError);
-        setError("Erreur lors de la vérification de l'email. Veuillez réessayer.");
-        return;
-      }
-
-      if (!authorizedEmails || authorizedEmails.length === 0) {
-        setError("Vous n'êtes pas encore inscrit à l'espace des 2 rives, merci de contacter l'accueil pour prendre rendez-vous pour une inscription");
-        return;
-      }
-
-      // Tentative de connexion
-      console.log("Email autorisé, tentative de connexion...");
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
