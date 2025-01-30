@@ -11,15 +11,10 @@ export const AddEmailForm = () => {
 
   const addEmailMutation = useMutation({
     mutationFn: async (email: string) => {
-      // Vérifier d'abord si l'utilisateur est un admin
-      const adminSession = localStorage.getItem('adminSession');
-      if (!adminSession) {
-        throw new Error("Unauthorized - Admin access required");
-      }
-
       const { error } = await supabase
         .from("authorized_emails")
         .insert([{ email }]);
+      
       if (error) throw error;
     },
     onSuccess: () => {
@@ -29,10 +24,10 @@ export const AddEmailForm = () => {
     },
     onError: (error: any) => {
       console.error("Error adding email:", error);
-      if (error.message === "Unauthorized - Admin access required") {
-        toast.error("Accès non autorisé - Connexion administrateur requise");
-      } else if (error.code === "23505") {
+      if (error.code === "23505") {
         toast.error("Cet email est déjà autorisé");
+      } else if (error.code === "42501") {
+        toast.error("Vous n'avez pas les droits pour ajouter des emails");
       } else {
         toast.error("Une erreur est survenue lors de l'ajout de l'email");
       }
