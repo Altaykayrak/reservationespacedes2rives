@@ -20,6 +20,24 @@ const AdminAuthorizedEmails = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
 
+  // Vérifie si l'utilisateur est un admin
+  const { data: isAdmin, isLoading: isCheckingAdmin } = useQuery({
+    queryKey: ["isAdmin"],
+    queryFn: async () => {
+      const jwtClaims = (await supabase.auth.getSession()).data.session?.user.user_metadata.preferred_username;
+      if (!jwtClaims) return false;
+
+      const { data, error } = await supabase
+        .from("admin_users")
+        .select("*")
+        .eq("username", jwtClaims)
+        .single();
+
+      if (error || !data) return false;
+      return true;
+    },
+  });
+
   // Fetch authorized emails
   const { data: authorizedEmails, isLoading, error: queryError } = useQuery({
     queryKey: ["authorizedEmails"],
@@ -49,6 +67,9 @@ const AdminAuthorizedEmails = () => {
   // Add new email
   const addEmailMutation = useMutation({
     mutationFn: async (email: string) => {
+      if (!isAdmin) {
+        throw new Error("Unauthorized: Only admins can add emails");
+      }
       const { error } = await supabase
         .from("authorized_emails")
         .insert([{ email }]);
@@ -61,7 +82,9 @@ const AdminAuthorizedEmails = () => {
     },
     onError: (error: any) => {
       console.error("Error adding email:", error);
-      if (error.code === "23505") {
+      if (error.message === "Unauthorized: Only admins can add emails") {
+        toast.error("Vous devez être administrateur pour ajouter des emails");
+      } else if (error.code === "23505") {
         toast.error("Cet email est déjà autorisé");
       } else {
         toast.error("Une erreur est survenue lors de l'ajout de l'email");
@@ -72,6 +95,9 @@ const AdminAuthorizedEmails = () => {
   // Delete email
   const deleteEmailMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!isAdmin) {
+        throw new Error("Unauthorized: Only admins can delete emails");
+      }
       const { error } = await supabase
         .from("authorized_emails")
         .delete()
@@ -84,7 +110,11 @@ const AdminAuthorizedEmails = () => {
     },
     onError: (error) => {
       console.error("Error deleting email:", error);
-      toast.error("Une erreur est survenue lors de la suppression de l'email");
+      if (error.message === "Unauthorized: Only admins can delete emails") {
+        toast.error("Vous devez être administrateur pour supprimer des emails");
+      } else {
+        toast.error("Une erreur est survenue lors de la suppression de l'email");
+      }
     },
   });
 
@@ -106,8 +136,31 @@ const AdminAuthorizedEmails = () => {
     email.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (isCheckingAdmin) {
+    return (
+      <div>
+        <AdminNavbar />
+        <div className="container mx-auto p-8">
+          <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
+          <div>Vérification des droits d'accès...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div>
+        <AdminNavbar />
+        <div className="container mx-auto p-8">
+          <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
+          <div>Vous devez être administrateur pour accéder à cette page.</div>
+        </div>
+      </div>
+    );
+  }
+
   if (queryError) {
-    console.error("Query error:", queryError);
     return (
       <div>
         <AdminNavbar />
