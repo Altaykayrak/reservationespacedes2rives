@@ -24,17 +24,9 @@ const AdminAuthorizedEmails = () => {
   const { data: isAdmin, isLoading: isCheckingAdmin } = useQuery({
     queryKey: ["isAdmin"],
     queryFn: async () => {
-      const jwtClaims = (await supabase.auth.getSession()).data.session?.user.user_metadata.preferred_username;
-      if (!jwtClaims) return false;
-
-      const { data, error } = await supabase
-        .from("admin_users")
-        .select("*")
-        .eq("username", jwtClaims)
-        .single();
-
-      if (error || !data) return false;
-      return true;
+      // Vérifie si l'utilisateur est connecté en tant qu'admin via le localStorage
+      const adminSession = localStorage.getItem('adminSession');
+      return adminSession === 'true';
     },
   });
 
