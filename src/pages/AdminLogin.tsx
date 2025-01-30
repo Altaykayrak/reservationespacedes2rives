@@ -20,11 +20,29 @@ const AdminLogin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If authenticated, redirect to admin dashboard
-    if (isAuthenticated) {
-      navigate("/admin");
-    }
-  }, [isAuthenticated, navigate]);
+    // Check if admin is already authenticated
+    const checkAdminAuth = async () => {
+      const adminSession = localStorage.getItem('adminSession');
+      if (adminSession === 'true') {
+        // Verify against admin_users table
+        const { data: adminUser, error } = await supabase
+          .from('admin_users')
+          .select()
+          .eq('username', username)
+          .single();
+
+        if (adminUser) {
+          setIsAuthenticated(true);
+          navigate("/admin");
+        } else {
+          // Clear invalid admin session
+          localStorage.removeItem('adminSession');
+        }
+      }
+    };
+
+    checkAdminAuth();
+  }, [navigate, username]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,28 +55,32 @@ const AdminLogin = () => {
     setError(null);
 
     try {
-      const trimmedUsername = username.trim();
-      const trimmedPassword = password.trim();
-      
-      const { data: adminUsers, error: queryError } = await supabase
+      const { data: adminUser, error: queryError } = await supabase
         .from('admin_users')
         .select()
-        .eq('username', trimmedUsername)
-        .eq('password', trimmedPassword);
+        .eq('username', username.trim())
+        .eq('password', password.trim())
+        .single();
 
       if (queryError) {
         console.error("Erreur de requête admin:", queryError);
         throw queryError;
       }
 
-      if (adminUsers && adminUsers.length > 0) {
-        // Store admin session in localStorage
+      if (adminUser) {
+        // Store admin session
         localStorage.setItem('adminSession', 'true');
         setIsAuthenticated(true);
+        
+        // Log successful admin login
+        console.log("Admin authenticated:", adminUser);
+        
         toast({
           title: "Succès",
           description: "Connexion administrateur réussie"
         });
+        
+        navigate("/admin");
       } else {
         setError("Nom d'utilisateur ou mot de passe incorrect");
         setShowErrorDialog(true);
