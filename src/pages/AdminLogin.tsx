@@ -32,11 +32,16 @@ export default function AdminLogin() {
     const checkAdminAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: adminUser } = await supabase
+        const { data: adminUser, error: adminError } = await supabase
           .from('admin_users')
           .select()
           .eq('username', username)
-          .single();
+          .maybeSingle();
+
+        if (adminError) {
+          console.error("Erreur lors de la vérification admin:", adminError);
+          return;
+        }
 
         if (adminUser) {
           setIsAuthenticated(true);
@@ -52,47 +57,60 @@ export default function AdminLogin() {
     e.preventDefault();
     setError(null);
 
+    if (!username.trim() || !password.trim()) {
+      setError("Veuillez remplir tous les champs");
+      setShowErrorDialog(true);
+      return;
+    }
+
     try {
-      // First, sign in with Supabase auth
-      const { data: { session }, error: authError } = await supabase.auth.signInWithPassword({
-        email: `${username.trim()}@admin.com`, // Using a consistent email format for admin users
-        password: password.trim(),
-      });
-
-      if (authError) throw authError;
-
-      if (!session) {
-        throw new Error("No session created");
-      }
-
-      // Then verify against admin_users table
-      const { data: adminUser, error: queryError } = await supabase
+      console.log("Tentative de connexion pour:", username.trim());
+      
+      // Vérifier d'abord si l'admin existe
+      const { data: adminUser, error: adminError } = await supabase
         .from('admin_users')
         .select()
         .eq('username', username.trim())
         .eq('password', password.trim())
-        .single();
+        .maybeSingle();
 
-      if (queryError) {
-        console.error("Erreur de requête admin:", queryError);
-        throw queryError;
+      if (adminError) {
+        console.error("Erreur de requête admin:", adminError);
+        throw adminError;
       }
 
-      if (adminUser) {
-        localStorage.setItem('adminSession', 'true');
-        setIsAuthenticated(true);
-        console.log("Admin authenticated:", adminUser);
-        
-        toast({
-          title: "Succès",
-          description: "Connexion administrateur réussie"
-        });
-        
-        navigate("/admin");
-      } else {
+      if (!adminUser) {
         setError("Nom d'utilisateur ou mot de passe incorrect");
         setShowErrorDialog(true);
+        return;
       }
+
+      // Si l'admin existe, procéder à l'authentification Supabase
+      const { data: { session }, error: authError } = await supabase.auth.signInWithPassword({
+        email: `${username.trim()}@admin.com`,
+        password: password.trim(),
+      });
+
+      if (authError) {
+        console.error("Erreur d'authentification:", authError);
+        throw authError;
+      }
+
+      if (!session) {
+        throw new Error("Aucune session créée");
+      }
+
+      localStorage.setItem('adminSession', 'true');
+      setIsAuthenticated(true);
+      console.log("Admin authentifié:", adminUser);
+      
+      toast({
+        title: "Succès",
+        description: "Connexion administrateur réussie"
+      });
+      
+      navigate("/admin");
+
     } catch (err) {
       console.error("Erreur de connexion:", err);
       setError("Une erreur est survenue lors de la connexion");
