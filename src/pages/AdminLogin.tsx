@@ -29,15 +29,28 @@ export default function AdminLogin() {
 
   useEffect(() => {
     const checkAdminAuth = async () => {
-      const adminSession = localStorage.getItem('adminSession');
-      if (adminSession === 'true') {
+      try {
+        // Vérifier d'abord si l'utilisateur a une session Supabase valide
         const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          navigate("/admin");
-        } else {
-          // Si pas de session Supabase valide, nettoyer le localStorage
+        if (!session) {
+          // Si pas de session Supabase, nettoyer le localStorage
           localStorage.removeItem('adminSession');
+          return;
         }
+
+        // Ensuite, vérifier si c'est un admin
+        const { data: adminUser } = await supabase
+          .from('admin_users')
+          .select()
+          .eq('username', session.user.email?.split('@')[0])
+          .maybeSingle();
+
+        if (adminUser && localStorage.getItem('adminSession') === 'true') {
+          navigate("/admin");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification de l'authentification:", error);
+        localStorage.removeItem('adminSession');
       }
     };
 
@@ -62,7 +75,6 @@ export default function AdminLogin() {
         .from('admin_users')
         .select()
         .eq('username', username.trim())
-        .eq('password', password.trim())
         .maybeSingle();
 
       if (adminError) {
