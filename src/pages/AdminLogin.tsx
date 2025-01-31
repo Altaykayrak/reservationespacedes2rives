@@ -30,19 +30,17 @@ export default function AdminLogin() {
   useEffect(() => {
     const checkAdminAuth = async () => {
       try {
-        // Vérifier d'abord si l'utilisateur a une session Supabase valide
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          // Si pas de session Supabase, nettoyer le localStorage
           localStorage.removeItem('adminSession');
           return;
         }
 
-        // Ensuite, vérifier si c'est un admin
+        // Check if user is an admin
         const { data: adminUser } = await supabase
           .from('admin_users')
           .select()
-          .eq('username', session.user.email?.split('@')[0])
+          .eq('username', username.trim())
           .maybeSingle();
 
         if (adminUser && localStorage.getItem('adminSession') === 'true') {
@@ -55,7 +53,7 @@ export default function AdminLogin() {
     };
 
     checkAdminAuth();
-  }, [navigate]);
+  }, [navigate, username]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +68,7 @@ export default function AdminLogin() {
     try {
       console.log("Tentative de connexion pour:", username.trim());
       
-      // Vérifier d'abord si l'admin existe
+      // First check if admin exists
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_users')
         .select()
@@ -88,7 +86,7 @@ export default function AdminLogin() {
         return;
       }
 
-      // Si l'admin existe, procéder à l'authentification Supabase
+      // Then authenticate with Supabase using the admin's email format
       const { data: { session }, error: authError } = await supabase.auth.signInWithPassword({
         email: `${username.trim()}@admin.com`,
         password: password.trim(),
