@@ -17,41 +17,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAdminAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: adminUser, error: adminError } = await supabase
-          .from('admin_users')
-          .select()
-          .eq('username', username)
-          .maybeSingle();
-
-        if (adminError) {
-          console.error("Erreur lors de la vérification admin:", adminError);
-          return;
-        }
-
-        if (adminUser) {
-          setIsAuthenticated(true);
+      const adminSession = localStorage.getItem('adminSession');
+      if (adminSession === 'true') {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
           navigate("/admin");
+        } else {
+          // Si pas de session Supabase valide, nettoyer le localStorage
+          localStorage.removeItem('adminSession');
         }
       }
     };
 
     checkAdminAuth();
-  }, [navigate, username]);
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +92,6 @@ export default function AdminLogin() {
       }
 
       localStorage.setItem('adminSession', 'true');
-      setIsAuthenticated(true);
       console.log("Admin authentifié:", adminUser);
       
       toast({
