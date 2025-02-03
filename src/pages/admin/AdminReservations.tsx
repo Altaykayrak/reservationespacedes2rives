@@ -35,11 +35,7 @@ const AdminReservations = () => {
       // Set admin username in session
       const adminSession = localStorage.getItem('adminUsername');
       if (!adminSession) {
-        toast({
-          title: "Erreur",
-          description: "Session admin non trouvée",
-          variant: "destructive",
-        });
+        console.error("Admin session not found");
         return null;
       }
 
@@ -47,7 +43,10 @@ const AdminReservations = () => {
         username: adminSession
       });
 
-      if (adminError) throw adminError;
+      if (adminError) {
+        console.error("Error setting admin username:", adminError);
+        throw adminError;
+      }
 
       const { data, error } = await supabase
         .from("reservations")
@@ -61,7 +60,12 @@ const AdminReservations = () => {
         `)
         .order('reservation_date', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching reservations:", error);
+        throw error;
+      }
+
+      console.log("Fetched reservations:", data);
       return data as ReservationWithChild[];
     },
   });
