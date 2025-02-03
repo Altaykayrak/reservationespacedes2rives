@@ -34,8 +34,8 @@ const AdminReservations = () => {
     queryFn: async () => {
       try {
         // Set admin username in session before fetching data
-        const adminSession = localStorage.getItem('adminUsername');
-        if (!adminSession) {
+        const adminUsername = localStorage.getItem('adminUsername');
+        if (!adminUsername) {
           toast({
             title: "Erreur",
             description: "Session admin non trouvée",
@@ -45,10 +45,13 @@ const AdminReservations = () => {
         }
 
         const { error: adminError } = await supabase.rpc('set_admin_username', {
-          username: adminSession
+          username: adminUsername
         });
 
-        if (adminError) throw adminError;
+        if (adminError) {
+          console.error("Error setting admin username:", adminError);
+          throw adminError;
+        }
 
         const { data, error } = await supabase
           .from("reservations")
@@ -112,9 +115,8 @@ const AdminReservations = () => {
     if (!reservationToDelete) return;
 
     try {
-      // Set admin username in session before delete
-      const adminSession = localStorage.getItem('adminUsername');
-      if (!adminSession) {
+      const adminUsername = localStorage.getItem('adminUsername');
+      if (!adminUsername) {
         toast({
           title: "Erreur",
           description: "Session admin non trouvée",
@@ -124,7 +126,7 @@ const AdminReservations = () => {
       }
 
       const { error: adminError } = await supabase.rpc('set_admin_username', {
-        username: adminSession
+        username: adminUsername
       });
 
       if (adminError) throw adminError;
@@ -160,9 +162,8 @@ const AdminReservations = () => {
     try {
       setIsSubmitting(true);
 
-      // Set admin username in session before update
-      const adminSession = localStorage.getItem('adminUsername');
-      if (!adminSession) {
+      const adminUsername = localStorage.getItem('adminUsername');
+      if (!adminUsername) {
         toast({
           title: "Erreur",
           description: "Session admin non trouvée",
@@ -172,7 +173,7 @@ const AdminReservations = () => {
       }
 
       const { error: adminError } = await supabase.rpc('set_admin_username', {
-        username: adminSession
+        username: adminUsername
       });
 
       if (adminError) throw adminError;
