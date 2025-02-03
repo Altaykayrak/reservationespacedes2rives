@@ -83,8 +83,8 @@ const AdminReservations = () => {
         throw error;
       }
     },
-    enabled: Boolean(isAdmin),
-    retry: false
+    enabled: Boolean(isAdmin), // La requête ne s'exécute que si isAdmin est true
+    refetchOnWindowFocus: false, // Évite les rechargements inutiles
   });
 
   const filteredReservations = reservations?.filter((reservation) => {
@@ -118,12 +118,6 @@ const AdminReservations = () => {
     if (!reservationToDelete) return;
 
     try {
-      const adminUsername = localStorage.getItem('adminUsername');
-      await supabase.auth.setSession({
-        access_token: adminUsername || '',
-        refresh_token: '',
-      });
-
       const { error } = await supabase
         .from('reservations')
         .delete()
@@ -146,11 +140,6 @@ const AdminReservations = () => {
 
     try {
       setIsSubmitting(true);
-      const adminUsername = localStorage.getItem('adminUsername');
-      await supabase.auth.setSession({
-        access_token: adminUsername || '',
-        refresh_token: '',
-      });
 
       const { error } = await supabase
         .from("reservations")
