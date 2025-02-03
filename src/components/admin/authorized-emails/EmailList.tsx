@@ -32,8 +32,10 @@ export const EmailList = ({ emails }: EmailListProps) => {
         .from("authorized_emails")
         .delete()
         .eq("id", id)
-        .headers({
-          'x-admin-username': adminUsername || ''
+        .select('*', {
+          headers: {
+            'x-admin-username': adminUsername || ''
+          }
         });
       if (error) throw error;
     },

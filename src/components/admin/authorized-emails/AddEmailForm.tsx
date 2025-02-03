@@ -14,10 +14,10 @@ export const AddEmailForm = () => {
       const adminUsername = localStorage.getItem('adminUsername');
       const { error } = await supabase
         .from("authorized_emails")
-        .insert([{ email }])
-        .select()
-        .headers({
-          'x-admin-username': adminUsername || ''
+        .insert([{ email }], {
+          headers: {
+            'x-admin-username': adminUsername || ''
+          }
         });
       
       if (error) throw error;

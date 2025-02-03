@@ -28,11 +28,12 @@ const AdminAuthorizedEmails = () => {
         
         const { data, error } = await supabase
           .from("authorized_emails")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .headers({
-            'x-admin-username': adminUsername || ''
-          });
+          .select("*", {
+            headers: {
+              'x-admin-username': adminUsername || ''
+            }
+          })
+          .order("created_at", { ascending: false });
 
         if (error) {
           console.error("Error fetching emails:", error);
