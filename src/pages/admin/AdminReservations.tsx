@@ -29,7 +29,7 @@ const AdminReservations = () => {
   const [selectedGroup, setSelectedGroup] = useState("all");
 
   // Vérifie si l'utilisateur est un admin
-  const { data: isAdmin, isLoading: isCheckingAdmin } = useQuery({
+  const { data: isAdmin } = useQuery({
     queryKey: ["isAdmin"],
     queryFn: async () => {
       const adminSession = localStorage.getItem('adminSession');
@@ -44,11 +44,9 @@ const AdminReservations = () => {
         console.log("Fetching reservations...");
         const adminUsername = localStorage.getItem('adminUsername');
         
-        // Set admin session
-        await supabase.auth.setSession({
-          access_token: adminUsername || '',
-          refresh_token: '',
-        });
+        if (!adminUsername) {
+          throw new Error("Admin username not found");
+        }
 
         // Set admin username in Postgres session
         const { error: setAdminError } = await supabase.rpc('set_admin_username', {
@@ -59,7 +57,8 @@ const AdminReservations = () => {
           console.error("Error setting admin username:", setAdminError);
           throw setAdminError;
         }
-        
+
+        // Fetch reservations with admin privileges
         const { data, error } = await supabase
           .from("reservations")
           .select(`
@@ -84,7 +83,8 @@ const AdminReservations = () => {
         throw error;
       }
     },
-    enabled: isAdmin,
+    enabled: Boolean(isAdmin),
+    retry: false
   });
 
   const filteredReservations = reservations?.filter((reservation) => {
@@ -173,18 +173,6 @@ const AdminReservations = () => {
       setIsSubmitting(false);
     }
   };
-
-  if (isCheckingAdmin) {
-    return (
-      <div>
-        <AdminNavbar />
-        <div className="container mx-auto p-8">
-          <h1 className="text-3xl font-bold mb-8">Gestion des réservations</h1>
-          <div>Vérification des droits d'accès...</div>
-        </div>
-      </div>
-    );
-  }
 
   if (!isAdmin) {
     return (
