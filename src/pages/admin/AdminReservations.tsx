@@ -49,6 +49,16 @@ const AdminReservations = () => {
           access_token: adminUsername || '',
           refresh_token: '',
         });
+
+        // Set admin username in Postgres session
+        const { error: setAdminError } = await supabase.rpc('set_admin_username', {
+          username: adminUsername,
+        });
+
+        if (setAdminError) {
+          console.error("Error setting admin username:", setAdminError);
+          throw setAdminError;
+        }
         
         const { data, error } = await supabase
           .from("reservations")
@@ -74,6 +84,7 @@ const AdminReservations = () => {
         throw error;
       }
     },
+    enabled: isAdmin,
   });
 
   const filteredReservations = reservations?.filter((reservation) => {
