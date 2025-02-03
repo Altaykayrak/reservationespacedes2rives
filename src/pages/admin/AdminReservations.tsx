@@ -1,13 +1,13 @@
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { ReservationList } from "@/components/admin/reservations/ReservationList";
 import { EditReservationDialog } from "@/components/admin/reservations/EditReservationDialog";
 import { DeleteReservationDialog } from "@/components/admin/reservations/DeleteReservationDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { ReservationFilters } from "@/components/admin/reservations/ReservationFilters";
+import { toast } from "sonner";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: {
@@ -18,7 +18,6 @@ type ReservationWithChild = Tables<"reservations"> & {
 };
 
 const AdminReservations = () => {
-  const { toast } = useToast();
   const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
   const [editingReservation, setEditingReservation] = useState<ReservationWithChild | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,30 +28,26 @@ const AdminReservations = () => {
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
 
-  const { data: reservations, refetch: refetchReservations } = useQuery({
+  // Vérifie si l'utilisateur est un admin
+  const { data: isAdmin, isLoading: isCheckingAdmin } = useQuery({
+    queryKey: ["isAdmin"],
+    queryFn: async () => {
+      const adminSession = localStorage.getItem('adminSession');
+      return adminSession === 'true';
+    },
+  });
+
+  const { data: reservations, refetch: refetchReservations, isLoading, error: queryError } = useQuery({
     queryKey: ["admin_reservations"],
     queryFn: async () => {
       try {
-        // Set admin username in session before fetching data
+        console.log("Fetching reservations...");
         const adminUsername = localStorage.getItem('adminUsername');
-        if (!adminUsername) {
-          toast({
-            title: "Erreur",
-            description: "Session admin non trouvée",
-            variant: "destructive",
-          });
-          return null;
-        }
-
-        const { error: adminError } = await supabase.rpc('set_admin_username', {
-          username: adminUsername
+        await supabase.auth.setSession({
+          access_token: adminUsername || '',
+          refresh_token: '',
         });
-
-        if (adminError) {
-          console.error("Error setting admin username:", adminError);
-          throw adminError;
-        }
-
+        
         const { data, error } = await supabase
           .from("reservations")
           .select(`
@@ -74,12 +69,7 @@ const AdminReservations = () => {
         return data as ReservationWithChild[];
       } catch (error) {
         console.error("Error in query function:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de récupérer les réservations",
-          variant: "destructive",
-        });
-        return null;
+        throw error;
       }
     },
   });
@@ -116,20 +106,10 @@ const AdminReservations = () => {
 
     try {
       const adminUsername = localStorage.getItem('adminUsername');
-      if (!adminUsername) {
-        toast({
-          title: "Erreur",
-          description: "Session admin non trouvée",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error: adminError } = await supabase.rpc('set_admin_username', {
-        username: adminUsername
+      await supabase.auth.setSession({
+        access_token: adminUsername || '',
+        refresh_token: '',
       });
-
-      if (adminError) throw adminError;
 
       const { error } = await supabase
         .from('reservations')
@@ -138,19 +118,11 @@ const AdminReservations = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Réservation supprimée",
-        description: "La réservation a été supprimée avec succès.",
-      });
-
+      toast.success("Réservation supprimée avec succès");
       await refetchReservations();
     } catch (error) {
       console.error('Error deleting reservation:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la suppression de la réservation.",
-        variant: "destructive",
-      });
+      toast.error("Une erreur est survenue lors de la suppression de la réservation");
     } finally {
       setReservationToDelete(null);
     }
@@ -161,22 +133,11 @@ const AdminReservations = () => {
 
     try {
       setIsSubmitting(true);
-
       const adminUsername = localStorage.getItem('adminUsername');
-      if (!adminUsername) {
-        toast({
-          title: "Erreur",
-          description: "Session admin non trouvée",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error: adminError } = await supabase.rpc('set_admin_username', {
-        username: adminUsername
+      await supabase.auth.setSession({
+        access_token: adminUsername || '',
+        refresh_token: '',
       });
-
-      if (adminError) throw adminError;
 
       const { error } = await supabase
         .from("reservations")
@@ -189,24 +150,54 @@ const AdminReservations = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Réservation mise à jour",
-        description: "La réservation a été modifiée avec succès.",
-      });
-
+      toast.success("Réservation mise à jour avec succès");
       await refetchReservations();
       setEditingReservation(null);
     } catch (error) {
       console.error("Error updating reservation:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la modification de la réservation.",
-        variant: "destructive",
-      });
+      toast.error("Une erreur est survenue lors de la modification de la réservation");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isCheckingAdmin) {
+    return (
+      <div>
+        <AdminNavbar />
+        <div className="container mx-auto p-8">
+          <h1 className="text-3xl font-bold mb-8">Gestion des réservations</h1>
+          <div>Vérification des droits d'accès...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div>
+        <AdminNavbar />
+        <div className="container mx-auto p-8">
+          <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
+          <div>Vous devez être administrateur pour accéder à cette page.</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (queryError) {
+    return (
+      <div>
+        <AdminNavbar />
+        <div className="container mx-auto p-8">
+          <h1 className="text-3xl font-bold mb-8">Gestion des réservations</h1>
+          <div className="text-red-500">
+            Erreur lors du chargement des réservations: {queryError.message}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -225,11 +216,15 @@ const AdminReservations = () => {
           onGroupChange={setSelectedGroup}
         />
 
-        <ReservationList
-          reservations={filteredReservations}
-          onEdit={setEditingReservation}
-          onDelete={setReservationToDelete}
-        />
+        {isLoading ? (
+          <div>Chargement des réservations...</div>
+        ) : (
+          <ReservationList
+            reservations={filteredReservations}
+            onEdit={setEditingReservation}
+            onDelete={setReservationToDelete}
+          />
+        )}
 
         <EditReservationDialog
           reservation={editingReservation}
