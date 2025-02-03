@@ -12,13 +12,14 @@ export const AddEmailForm = () => {
   const addEmailMutation = useMutation({
     mutationFn: async (email: string) => {
       const adminUsername = localStorage.getItem('adminUsername');
+      await supabase.auth.setSession({
+        access_token: adminUsername || '',
+        refresh_token: '',
+      });
+      
       const { error } = await supabase
         .from("authorized_emails")
-        .insert([{ email }], {
-          headers: {
-            'x-admin-username': adminUsername || ''
-          }
-        });
+        .insert({ email });
       
       if (error) throw error;
     },

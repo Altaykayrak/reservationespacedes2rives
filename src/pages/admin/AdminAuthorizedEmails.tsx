@@ -25,14 +25,14 @@ const AdminAuthorizedEmails = () => {
       try {
         console.log("Fetching authorized emails...");
         const adminUsername = localStorage.getItem('adminUsername');
+        await supabase.auth.setSession({
+          access_token: adminUsername || '',
+          refresh_token: '',
+        });
         
         const { data, error } = await supabase
           .from("authorized_emails")
-          .select("*", {
-            headers: {
-              'x-admin-username': adminUsername || ''
-            }
-          })
+          .select()
           .order("created_at", { ascending: false });
 
         if (error) {
