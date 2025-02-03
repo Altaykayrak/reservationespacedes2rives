@@ -43,6 +43,8 @@ const AdminReservations = () => {
       try {
         console.log("Fetching reservations...");
         const adminUsername = localStorage.getItem('adminUsername');
+        
+        // Set admin session
         await supabase.auth.setSession({
           access_token: adminUsername || '',
           refresh_token: '',
