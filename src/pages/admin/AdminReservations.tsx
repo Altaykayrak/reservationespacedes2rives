@@ -2,12 +2,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ReservationList } from "@/components/admin/reservations/ReservationList";
 import { EditReservationDialog } from "@/components/admin/reservations/EditReservationDialog";
 import { DeleteReservationDialog } from "@/components/admin/reservations/DeleteReservationDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { ReservationFilters } from "@/components/admin/reservations/ReservationFilters";
+import { useNavigate } from "react-router-dom";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: {
@@ -19,9 +20,11 @@ type ReservationWithChild = Tables<"reservations"> & {
 
 const AdminReservations = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
   const [editingReservation, setEditingReservation] = useState<ReservationWithChild | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,45 +32,81 @@ const AdminReservations = () => {
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
 
+  useEffect(() => {
+    const checkAdminAuth = () => {
+      const adminSession = localStorage.getItem('adminSession');
+      const adminUsername = localStorage.getItem('adminUsername');
+      
+      if (!adminSession || !adminUsername) {
+        toast({
+          title: "Session expirée",
+          description: "Veuillez vous reconnecter en tant qu'administrateur",
+          variant: "destructive",
+        });
+        navigate('/admin-login');
+        return;
+      }
+      setIsAdminAuthenticated(true);
+    };
+
+    checkAdminAuth();
+  }, [navigate, toast]);
+
   const { data: reservations, refetch: refetchReservations } = useQuery({
     queryKey: ["admin_reservations"],
     queryFn: async () => {
-      // Set admin username in session
-      const adminSession = localStorage.getItem('adminUsername');
-      if (!adminSession) {
-        console.error("Admin session not found");
+      if (!isAdminAuthenticated) {
+        console.error("Admin not authenticated");
         return null;
       }
 
-      const { error: adminError } = await supabase.rpc('set_admin_username', {
-        username: adminSession
-      });
-
-      if (adminError) {
-        console.error("Error setting admin username:", adminError);
-        throw adminError;
+      const adminUsername = localStorage.getItem('adminUsername');
+      if (!adminUsername) {
+        console.error("Admin username not found");
+        return null;
       }
 
-      const { data, error } = await supabase
-        .from("reservations")
-        .select(`
-          *,
-          children (
-            first_name,
-            last_name,
-            school_class
-          )
-        `)
-        .order('reservation_date', { ascending: true });
-      
-      if (error) {
-        console.error("Error fetching reservations:", error);
-        throw error;
-      }
+      try {
+        // Set admin username in session
+        const { error: adminError } = await supabase.rpc('set_admin_username', {
+          username: adminUsername
+        });
 
-      console.log("Fetched reservations:", data);
-      return data as ReservationWithChild[];
+        if (adminError) {
+          console.error("Error setting admin username:", adminError);
+          throw adminError;
+        }
+
+        const { data, error } = await supabase
+          .from("reservations")
+          .select(`
+            *,
+            children (
+              first_name,
+              last_name,
+              school_class
+            )
+          `)
+          .order('reservation_date', { ascending: true });
+        
+        if (error) {
+          console.error("Error fetching reservations:", error);
+          throw error;
+        }
+
+        console.log("Fetched reservations:", data);
+        return data as ReservationWithChild[];
+      } catch (error) {
+        console.error("Error in query function:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de récupérer les réservations",
+          variant: "destructive",
+        });
+        return null;
+      }
     },
+    enabled: isAdminAuthenticated,
   });
 
   const filteredReservations = reservations?.filter((reservation) => {
