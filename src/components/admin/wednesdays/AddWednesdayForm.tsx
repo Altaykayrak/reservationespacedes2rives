@@ -46,6 +46,23 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
     }
 
     try {
+      // Set admin username in session
+      const adminSession = localStorage.getItem('adminUsername');
+      if (!adminSession) {
+        toast({
+          title: "Erreur",
+          description: "Session admin non trouvée",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error: adminError } = await supabase.rpc('set_admin_username', {
+        username: adminSession
+      });
+
+      if (adminError) throw adminError;
+
       const dateToInsert = new Date(Date.UTC(
         selectedDate.getFullYear(),
         selectedDate.getMonth(),

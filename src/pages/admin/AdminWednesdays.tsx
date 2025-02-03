@@ -4,6 +4,7 @@ import { AddWednesdayForm } from "@/components/admin/wednesdays/AddWednesdayForm
 import { WednesdaysList } from "@/components/admin/wednesdays/WednesdaysList";
 import { useState } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
+import { useToast } from "@/hooks/use-toast";
 
 interface Wednesday {
   id: string;
@@ -14,13 +15,32 @@ interface Wednesday {
 
 const AdminWednesdays = () => {
   const [wednesdayToEdit, setWednesdayToEdit] = useState<Wednesday | null>(null);
+  const { toast } = useToast();
 
   const { data: wednesdays, refetch } = useQuery({
     queryKey: ["available_wednesdays"],
     queryFn: async () => {
+      // Set admin username in session
+      const adminSession = localStorage.getItem('adminUsername');
+      if (!adminSession) {
+        toast({
+          title: "Erreur",
+          description: "Session admin non trouvée",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      const { error: adminError } = await supabase.rpc('set_admin_username', {
+        username: adminSession
+      });
+
+      if (adminError) throw adminError;
+
       const { data, error } = await supabase
         .from("available_wednesdays")
         .select("*");
+      
       if (error) throw error;
       return data;
     },
