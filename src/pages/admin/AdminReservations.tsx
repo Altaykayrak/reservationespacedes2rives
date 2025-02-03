@@ -2,13 +2,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ReservationList } from "@/components/admin/reservations/ReservationList";
 import { EditReservationDialog } from "@/components/admin/reservations/EditReservationDialog";
 import { DeleteReservationDialog } from "@/components/admin/reservations/DeleteReservationDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { ReservationFilters } from "@/components/admin/reservations/ReservationFilters";
-import { useNavigate } from "react-router-dom";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: {
@@ -20,11 +19,9 @@ type ReservationWithChild = Tables<"reservations"> & {
 
 const AdminReservations = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
   const [editingReservation, setEditingReservation] = useState<ReservationWithChild | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,57 +29,27 @@ const AdminReservations = () => {
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
 
-  useEffect(() => {
-    const checkAdminAuth = async () => {
-      const adminSession = localStorage.getItem('adminSession');
-      const adminUsername = localStorage.getItem('adminUsername');
-      
-      if (!adminSession || !adminUsername) {
-        toast({
-          title: "Session expirée",
-          description: "Veuillez vous reconnecter en tant qu'administrateur",
-          variant: "destructive",
-        });
-        navigate('/admin-login');
-        return;
-      }
-
-      try {
-        // Set admin username in session
-        const { error: adminError } = await supabase.rpc('set_admin_username', {
-          username: adminUsername
-        });
-
-        if (adminError) {
-          console.error("Error setting admin username:", adminError);
-          toast({
-            title: "Erreur d'authentification",
-            description: "Erreur lors de la configuration de la session admin",
-            variant: "destructive",
-          });
-          navigate('/admin-login');
-          return;
-        }
-
-        setIsAdminAuthenticated(true);
-      } catch (error) {
-        console.error("Error checking admin auth:", error);
-        navigate('/admin-login');
-      }
-    };
-
-    checkAdminAuth();
-  }, [navigate, toast]);
-
   const { data: reservations, refetch: refetchReservations } = useQuery({
     queryKey: ["admin_reservations"],
     queryFn: async () => {
-      if (!isAdminAuthenticated) {
-        console.error("Admin not authenticated");
-        return null;
-      }
-
       try {
+        // Set admin username in session before fetching data
+        const adminSession = localStorage.getItem('adminUsername');
+        if (!adminSession) {
+          toast({
+            title: "Erreur",
+            description: "Session admin non trouvée",
+            variant: "destructive",
+          });
+          return null;
+        }
+
+        const { error: adminError } = await supabase.rpc('set_admin_username', {
+          username: adminSession
+        });
+
+        if (adminError) throw adminError;
+
         const { data, error } = await supabase
           .from("reservations")
           .select(`
@@ -112,7 +79,6 @@ const AdminReservations = () => {
         return null;
       }
     },
-    enabled: isAdminAuthenticated,
   });
 
   const filteredReservations = reservations?.filter((reservation) => {
