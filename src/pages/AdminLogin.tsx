@@ -29,22 +29,9 @@ export default function AdminLogin() {
 
   useEffect(() => {
     const checkAdminAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const { data: adminUser } = await supabase
-            .from('admin_users')
-            .select()
-            .eq('username', session.user.email)
-            .single();
-
-          if (adminUser && localStorage.getItem('adminSession') === 'true') {
-            navigate("/admin");
-          }
-        }
-      } catch (error) {
-        console.error("Erreur lors de la vérification de l'authentification:", error);
-        localStorage.removeItem('adminSession');
+      const adminSession = localStorage.getItem('adminSession');
+      if (adminSession === 'true') {
+        navigate("/admin");
       }
     };
 
@@ -62,11 +49,12 @@ export default function AdminLogin() {
     }
 
     try {
-      // Vérifier d'abord si l'utilisateur est un admin
+      // Vérifier les identifiants dans la table admin_users
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_users')
         .select()
         .eq('username', username.trim())
+        .eq('password', password.trim())
         .single();
 
       if (adminError || !adminUser) {
@@ -75,26 +63,10 @@ export default function AdminLogin() {
         return;
       }
 
-      // Authentifier avec Supabase en utilisant l'email formaté
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: `${username.trim()}@admin.com`,
-        password: password.trim(),
-      });
-
-      if (authError) {
-        console.error("Erreur d'authentification:", authError);
-        setError("Nom d'utilisateur ou mot de passe incorrect");
-        setShowErrorDialog(true);
-        return;
-      }
-
-      if (!data.session) {
-        setError("Erreur lors de la création de la session");
-        setShowErrorDialog(true);
-        return;
-      }
-
+      // Si les identifiants sont corrects, créer une session admin
       localStorage.setItem('adminSession', 'true');
+      localStorage.setItem('adminUsername', username.trim());
+      
       toast({
         title: "Succès",
         description: "Connexion administrateur réussie"
