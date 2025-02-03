@@ -33,7 +33,7 @@ const AdminReservations = () => {
   const [selectedGroup, setSelectedGroup] = useState("all");
 
   useEffect(() => {
-    const checkAdminAuth = () => {
+    const checkAdminAuth = async () => {
       const adminSession = localStorage.getItem('adminSession');
       const adminUsername = localStorage.getItem('adminUsername');
       
@@ -46,7 +46,29 @@ const AdminReservations = () => {
         navigate('/admin-login');
         return;
       }
-      setIsAdminAuthenticated(true);
+
+      try {
+        // Set admin username in session
+        const { error: adminError } = await supabase.rpc('set_admin_username', {
+          username: adminUsername
+        });
+
+        if (adminError) {
+          console.error("Error setting admin username:", adminError);
+          toast({
+            title: "Erreur d'authentification",
+            description: "Erreur lors de la configuration de la session admin",
+            variant: "destructive",
+          });
+          navigate('/admin-login');
+          return;
+        }
+
+        setIsAdminAuthenticated(true);
+      } catch (error) {
+        console.error("Error checking admin auth:", error);
+        navigate('/admin-login');
+      }
     };
 
     checkAdminAuth();
@@ -60,23 +82,7 @@ const AdminReservations = () => {
         return null;
       }
 
-      const adminUsername = localStorage.getItem('adminUsername');
-      if (!adminUsername) {
-        console.error("Admin username not found");
-        return null;
-      }
-
       try {
-        // Set admin username in session
-        const { error: adminError } = await supabase.rpc('set_admin_username', {
-          username: adminUsername
-        });
-
-        if (adminError) {
-          console.error("Error setting admin username:", adminError);
-          throw adminError;
-        }
-
         const { data, error } = await supabase
           .from("reservations")
           .select(`
