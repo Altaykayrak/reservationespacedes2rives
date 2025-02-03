@@ -11,9 +11,14 @@ export const AddEmailForm = () => {
 
   const addEmailMutation = useMutation({
     mutationFn: async (email: string) => {
+      const adminUsername = localStorage.getItem('adminUsername');
       const { error } = await supabase
         .from("authorized_emails")
-        .insert([{ email }]);
+        .insert([{ email }])
+        .select()
+        .headers({
+          'x-admin-username': adminUsername || ''
+        });
       
       if (error) throw error;
     },

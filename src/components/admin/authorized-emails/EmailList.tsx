@@ -27,10 +27,14 @@ export const EmailList = ({ emails }: EmailListProps) => {
 
   const deleteEmailMutation = useMutation({
     mutationFn: async (id: string) => {
+      const adminUsername = localStorage.getItem('adminUsername');
       const { error } = await supabase
         .from("authorized_emails")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .headers({
+          'x-admin-username': adminUsername || ''
+        });
       if (error) throw error;
     },
     onSuccess: () => {

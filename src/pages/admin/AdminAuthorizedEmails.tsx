@@ -24,11 +24,15 @@ const AdminAuthorizedEmails = () => {
     queryFn: async () => {
       try {
         console.log("Fetching authorized emails...");
+        const adminUsername = localStorage.getItem('adminUsername');
         
         const { data, error } = await supabase
           .from("authorized_emails")
           .select("*")
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .headers({
+            'x-admin-username': adminUsername || ''
+          });
 
         if (error) {
           console.error("Error fetching emails:", error);
