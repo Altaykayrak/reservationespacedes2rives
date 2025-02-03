@@ -77,7 +77,7 @@ export default function AdminLogin() {
 
       // Authentifier avec Supabase en utilisant l'email formaté
       const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: username.trim(),
+        email: `${username.trim()}@admin.com`,
         password: password.trim(),
       });
 
