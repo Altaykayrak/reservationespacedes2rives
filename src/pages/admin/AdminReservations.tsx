@@ -32,6 +32,23 @@ const AdminReservations = () => {
   const { data: reservations, refetch: refetchReservations } = useQuery({
     queryKey: ["admin_reservations"],
     queryFn: async () => {
+      // Set admin username in session
+      const adminSession = localStorage.getItem('adminUsername');
+      if (!adminSession) {
+        toast({
+          title: "Erreur",
+          description: "Session admin non trouvée",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      const { error: adminError } = await supabase.rpc('set_admin_username', {
+        username: adminSession
+      });
+
+      if (adminError) throw adminError;
+
       const { data, error } = await supabase
         .from("reservations")
         .select(`
@@ -80,6 +97,23 @@ const AdminReservations = () => {
     if (!reservationToDelete) return;
 
     try {
+      // Set admin username in session before delete
+      const adminSession = localStorage.getItem('adminUsername');
+      if (!adminSession) {
+        toast({
+          title: "Erreur",
+          description: "Session admin non trouvée",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error: adminError } = await supabase.rpc('set_admin_username', {
+        username: adminSession
+      });
+
+      if (adminError) throw adminError;
+
       const { error } = await supabase
         .from('reservations')
         .delete()
@@ -110,6 +144,24 @@ const AdminReservations = () => {
 
     try {
       setIsSubmitting(true);
+
+      // Set admin username in session before update
+      const adminSession = localStorage.getItem('adminUsername');
+      if (!adminSession) {
+        toast({
+          title: "Erreur",
+          description: "Session admin non trouvée",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error: adminError } = await supabase.rpc('set_admin_username', {
+        username: adminSession
+      });
+
+      if (adminError) throw adminError;
+
       const { error } = await supabase
         .from("reservations")
         .update({
