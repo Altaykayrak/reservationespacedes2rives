@@ -26,6 +26,7 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -35,21 +36,25 @@ export default function AdminLogin() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Use a direct query to check admin status
-          const { data: adminCheck, error: adminError } = await supabase
+          // Vérifier si l'utilisateur est admin
+          const { data: isAdmin, error: adminError } = await supabase
             .rpc('is_admin', { user_id: session.user.id });
 
           if (adminError) {
             console.error("Error checking admin status:", adminError);
+            setIsLoading(false);
             return;
           }
 
-          if (adminCheck) {
+          // Ne rediriger que si l'utilisateur est admin
+          if (isAdmin) {
             navigate("/admin");
           }
         }
+        setIsLoading(false);
       } catch (error) {
         console.error("Error checking authentication:", error);
+        setIsLoading(false);
       }
     };
 
@@ -67,6 +72,7 @@ export default function AdminLogin() {
     }
 
     try {
+      setIsLoading(true);
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
@@ -76,16 +82,18 @@ export default function AdminLogin() {
         console.error("Authentication error:", authError);
         setError("Email ou mot de passe incorrect");
         setShowErrorDialog(true);
+        setIsLoading(false);
         return;
       }
 
       if (!authData.user) {
         setError("Utilisateur non trouvé");
         setShowErrorDialog(true);
+        setIsLoading(false);
         return;
       }
 
-      // Check admin status using RPC function
+      // Vérifier si l'utilisateur est admin
       const { data: isAdmin, error: adminError } = await supabase
         .rpc('is_admin', { user_id: authData.user.id });
 
@@ -94,6 +102,7 @@ export default function AdminLogin() {
         setError("Une erreur est survenue lors de la vérification des droits d'accès");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
+        setIsLoading(false);
         return;
       }
 
@@ -101,6 +110,7 @@ export default function AdminLogin() {
         setError("Vous n'avez pas les droits d'accès administrateur");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
+        setIsLoading(false);
         return;
       }
 
@@ -115,8 +125,19 @@ export default function AdminLogin() {
       console.error("Connection error:", err);
       setError("Une erreur est survenue lors de la connexion");
       setShowErrorDialog(true);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-gray-600">Chargement...</p>
+      </div>
+    </div>;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -144,8 +165,8 @@ export default function AdminLogin() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Se connecter
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Connexion..." : "Se connecter"}
             </Button>
           </form>
         </CardContent>
