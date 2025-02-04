@@ -20,6 +20,17 @@ export const AddEmailForm = () => {
         throw new Error("Vous n'avez pas les droits pour ajouter des emails");
       }
 
+      // Get the current user's email to use as admin username
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        throw new Error("Impossible de récupérer l'email de l'utilisateur");
+      }
+
+      // Set admin username for the RLS policy
+      await supabase.rpc('set_admin_username', { 
+        username: user.email 
+      });
+
       const { error } = await supabase
         .from("authorized_emails")
         .insert({ email });
