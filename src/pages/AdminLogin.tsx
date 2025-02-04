@@ -65,9 +65,16 @@ export default function AdminLogin() {
         .select()
         .eq('username', username.trim())
         .eq('password', password.trim())
-        .single();
+        .maybeSingle();
 
-      if (adminError || !adminUser) {
+      if (adminError) {
+        console.error("Erreur de base de données:", adminError);
+        setError("Une erreur est survenue lors de la connexion");
+        setShowErrorDialog(true);
+        return;
+      }
+
+      if (!adminUser) {
         setError("Nom d'utilisateur ou mot de passe incorrect");
         setShowErrorDialog(true);
         return;
