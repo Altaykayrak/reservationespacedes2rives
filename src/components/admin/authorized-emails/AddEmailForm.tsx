@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,12 +12,14 @@ export const AddEmailForm = () => {
 
   const addEmailMutation = useMutation({
     mutationFn: async (email: string) => {
-      const adminUsername = localStorage.getItem('adminUsername');
-      await supabase.auth.setSession({
-        access_token: adminUsername || '',
-        refresh_token: '',
+      const { data: isAdmin } = await supabase.rpc('is_admin', { 
+        user_id: (await supabase.auth.getUser()).data.user?.id 
       });
-      
+
+      if (!isAdmin) {
+        throw new Error("Vous n'avez pas les droits pour ajouter des emails");
+      }
+
       const { error } = await supabase
         .from("authorized_emails")
         .insert({ email });
@@ -32,10 +35,8 @@ export const AddEmailForm = () => {
       console.error("Error adding email:", error);
       if (error.code === "23505") {
         toast.error("Cet email est déjà autorisé");
-      } else if (error.code === "42501") {
-        toast.error("Vous n'avez pas les droits pour ajouter des emails");
       } else {
-        toast.error("Une erreur est survenue lors de l'ajout de l'email");
+        toast.error(error.message || "Une erreur est survenue lors de l'ajout de l'email");
       }
     },
   });
