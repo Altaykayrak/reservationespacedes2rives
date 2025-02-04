@@ -35,25 +35,21 @@ export default function AdminLogin() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Vérifier si l'utilisateur est admin
-          const { data: roleData, error: roleError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .eq('role', 'admin')
-            .maybeSingle();
+          // Use a direct query to check admin status
+          const { data: adminCheck, error: adminError } = await supabase
+            .rpc('is_admin', { user_id: session.user.id });
 
-          if (roleError) {
-            console.error("Erreur lors de la vérification du rôle:", roleError);
+          if (adminError) {
+            console.error("Error checking admin status:", adminError);
             return;
           }
 
-          if (roleData?.role === 'admin') {
+          if (adminCheck) {
             navigate("/admin");
           }
         }
       } catch (error) {
-        console.error("Erreur lors de la vérification de l'authentification:", error);
+        console.error("Error checking authentication:", error);
       }
     };
 
@@ -77,7 +73,7 @@ export default function AdminLogin() {
       });
 
       if (authError) {
-        console.error("Erreur d'authentification:", authError);
+        console.error("Authentication error:", authError);
         setError("Email ou mot de passe incorrect");
         setShowErrorDialog(true);
         return;
@@ -89,23 +85,19 @@ export default function AdminLogin() {
         return;
       }
 
-      // Vérifier si l'utilisateur a le rôle admin
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', authData.user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
+      // Check admin status using RPC function
+      const { data: isAdmin, error: adminError } = await supabase
+        .rpc('is_admin', { user_id: authData.user.id });
 
-      if (roleError) {
-        console.error("Erreur de vérification du rôle:", roleError);
+      if (adminError) {
+        console.error("Error checking admin role:", adminError);
         setError("Une erreur est survenue lors de la vérification des droits d'accès");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
         return;
       }
 
-      if (!roleData || roleData.role !== 'admin') {
+      if (!isAdmin) {
         setError("Vous n'avez pas les droits d'accès administrateur");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
@@ -120,7 +112,7 @@ export default function AdminLogin() {
       navigate("/admin");
 
     } catch (err) {
-      console.error("Erreur de connexion:", err);
+      console.error("Connection error:", err);
       setError("Une erreur est survenue lors de la connexion");
       setShowErrorDialog(true);
     }

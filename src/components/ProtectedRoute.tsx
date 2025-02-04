@@ -34,19 +34,15 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
             return;
           }
 
-          // Vérifier si l'utilisateur est admin
-          const { data: roleData, error: roleError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .eq('role', 'admin')
-            .maybeSingle();
+          // Check admin status using RPC function
+          const { data: isAdmin, error: adminError } = await supabase
+            .rpc('is_admin', { user_id: session.user.id });
 
-          if (roleError) {
-            console.error("Erreur lors de la vérification du rôle:", roleError);
+          if (adminError) {
+            console.error("Error checking admin role:", adminError);
             setIsAuthenticated(false);
           } else {
-            setIsAuthenticated(roleData?.role === 'admin');
+            setIsAuthenticated(isAdmin);
           }
           
           setLoading(false);
@@ -77,14 +73,10 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         queryClient.clear();
       } else if (event === 'SIGNED_IN' && session) {
         if (location.pathname.startsWith('/admin')) {
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .eq('role', 'admin')
-            .maybeSingle();
+          const { data: isAdmin } = await supabase
+            .rpc('is_admin', { user_id: session.user.id });
 
-          setIsAuthenticated(roleData?.role === 'admin');
+          setIsAuthenticated(isAdmin);
         } else {
           setIsAuthenticated(true);
         }
