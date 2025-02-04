@@ -30,9 +30,18 @@ export default function AdminLogin() {
 
   useEffect(() => {
     const checkAdminAuth = async () => {
-      const adminSession = localStorage.getItem('adminSession');
-      if (adminSession === 'true') {
-        navigate("/admin");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Vérifier si l'utilisateur est admin
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (roleData?.role === 'admin') {
+          navigate("/admin");
+        }
       }
     };
 

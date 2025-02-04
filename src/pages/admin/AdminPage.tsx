@@ -1,9 +1,36 @@
-import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 
 export function AdminPage() {
-  const { user, loading } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Vérifier si l'utilisateur est admin
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single();
+
+          setIsAdmin(roleData?.role === 'admin');
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification du rôle admin:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
 
   if (loading) {
     return (
@@ -16,7 +43,7 @@ export function AdminPage() {
     );
   }
 
-  if (!user) {
+  if (!isAdmin) {
     return <Navigate to="/admin-login" replace />;
   }
 
