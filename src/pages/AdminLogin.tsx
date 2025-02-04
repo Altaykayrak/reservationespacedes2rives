@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,19 +31,31 @@ export default function AdminLogin() {
 
   useEffect(() => {
     const checkAdminAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Vérifier si l'utilisateur est admin
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Vérifier si l'utilisateur est admin
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
 
-        if (roleData?.role === 'admin') {
-          navigate("/admin");
+          if (roleData?.role === 'admin') {
+            // Seulement si l'utilisateur est authentifié ET a le rôle admin
+            navigate("/admin");
+          } else {
+            // Si l'utilisateur est connecté mais n'est pas admin, le déconnecter
+            await supabase.auth.signOut();
+            localStorage.removeItem('adminSession');
+          }
         }
+      } catch (error) {
+        console.error("Erreur lors de la vérification de l'authentification:", error);
+        // En cas d'erreur, on s'assure de nettoyer la session
+        localStorage.removeItem('adminSession');
       }
     };
 
@@ -106,7 +119,6 @@ export default function AdminLogin() {
 
       // Si on arrive ici, l'utilisateur est bien admin
       localStorage.setItem('adminSession', 'true');
-      localStorage.setItem('adminUsername', email.trim());
       
       toast({
         title: "Succès",

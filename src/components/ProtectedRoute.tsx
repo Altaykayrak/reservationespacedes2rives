@@ -1,3 +1,4 @@
+
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,10 +22,23 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       try {
         // For admin routes
         if (location.pathname.startsWith('/admin')) {
-          const adminSession = localStorage.getItem('adminSession');
-          if (adminSession === 'true') {
-            setIsAuthenticated(true);
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!session?.user) {
+            setIsAuthenticated(false);
+            setLoading(false);
+            return;
           }
+
+          // Vérifier si l'utilisateur est admin
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
+
+          setIsAuthenticated(roleData?.role === 'admin');
           setLoading(false);
           return;
         } 
@@ -84,7 +98,19 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       if (event === 'SIGNED_OUT') {
         await handleLogout();
       } else if (event === 'SIGNED_IN') {
-        setIsAuthenticated(true);
+        // Pour les routes admin, vérifier le rôle
+        if (location.pathname.startsWith('/admin')) {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session?.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
+
+          setIsAuthenticated(roleData?.role === 'admin');
+        } else {
+          setIsAuthenticated(true);
+        }
         // Reset query cache on sign in to ensure fresh data
         queryClient.resetQueries();
       }
