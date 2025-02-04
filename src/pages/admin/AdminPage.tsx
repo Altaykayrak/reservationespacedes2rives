@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,17 +14,19 @@ export function AdminPage() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Vérifier si l'utilisateur est admin
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .single();
+          // Check if user is admin using RPC function
+          const { data: isAdmin, error: adminError } = await supabase
+            .rpc('is_admin', { user_id: session.user.id });
 
-          setIsAdmin(roleData?.role === 'admin');
+          if (adminError) {
+            console.error("Error checking admin role:", adminError);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(isAdmin);
+          }
         }
       } catch (error) {
-        console.error("Erreur lors de la vérification du rôle admin:", error);
+        console.error("Error checking admin status:", error);
       } finally {
         setLoading(false);
       }

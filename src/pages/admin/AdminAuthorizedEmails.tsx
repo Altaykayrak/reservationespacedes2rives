@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useQuery } from "@tanstack/react-query";
@@ -9,12 +10,22 @@ import { EmailList } from "@/components/admin/authorized-emails/EmailList";
 const AdminAuthorizedEmails = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Vérifie si l'utilisateur est un admin
+  // Check if user is admin using RPC function
   const { data: isAdmin, isLoading: isCheckingAdmin } = useQuery({
     queryKey: ["isAdmin"],
     queryFn: async () => {
-      const adminSession = localStorage.getItem('adminSession');
-      return adminSession === 'true';
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return false;
+      
+      const { data: isAdmin, error: adminError } = await supabase
+        .rpc('is_admin', { user_id: session.user.id });
+
+      if (adminError) {
+        console.error("Error checking admin status:", adminError);
+        return false;
+      }
+
+      return isAdmin;
     },
   });
 
@@ -24,12 +35,6 @@ const AdminAuthorizedEmails = () => {
     queryFn: async () => {
       try {
         console.log("Fetching authorized emails...");
-        const adminUsername = localStorage.getItem('adminUsername');
-        await supabase.auth.setSession({
-          access_token: adminUsername || '',
-          refresh_token: '',
-        });
-        
         const { data, error } = await supabase
           .from("authorized_emails")
           .select()
@@ -47,6 +52,7 @@ const AdminAuthorizedEmails = () => {
         throw error;
       }
     },
+    enabled: Boolean(isAdmin), // Only fetch if user is admin
   });
 
   // Filter emails based on search term
