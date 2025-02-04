@@ -1,8 +1,10 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const AdminNavbar = () => {
   const location = useLocation();
@@ -17,13 +19,22 @@ export const AdminNavbar = () => {
     { href: "/admin/authorized-emails", label: "Emails autorisés" },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminSession');
-    toast({
-      title: "Déconnexion réussie",
-      description: "Vous avez été déconnecté avec succès.",
-    });
-    navigate('/admin-login');
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Déconnexion réussie",
+        description: "Vous avez été déconnecté avec succès.",
+      });
+      navigate('/admin-login');
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la déconnexion.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
