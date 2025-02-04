@@ -353,6 +353,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wednesday_allowed_classes: {
         Row: {
           created_at: string
@@ -387,6 +411,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
       set_admin_username: {
         Args: {
           username: string
@@ -395,7 +425,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
