@@ -21,7 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminLogin() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -37,7 +37,8 @@ export default function AdminLogin() {
           .from('user_roles')
           .select('role')
           .eq('user_id', session.user.id)
-          .single();
+          .eq('role', 'admin')
+          .maybeSingle();
 
         if (roleData?.role === 'admin') {
           navigate("/admin");
@@ -52,37 +53,60 @@ export default function AdminLogin() {
     e.preventDefault();
     setError(null);
 
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setError("Veuillez remplir tous les champs");
       setShowErrorDialog(true);
       return;
     }
 
     try {
-      // Vérifier les identifiants dans la table admin_users
-      const { data: adminUser, error: adminError } = await supabase
-        .from('admin_users')
-        .select()
-        .eq('username', username.trim())
-        .eq('password', password.trim())
+      // Connexion avec Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      if (authError) {
+        console.error("Erreur d'authentification:", authError);
+        setError("Email ou mot de passe incorrect");
+        setShowErrorDialog(true);
+        return;
+      }
+
+      if (!authData.user) {
+        setError("Utilisateur non trouvé");
+        setShowErrorDialog(true);
+        return;
+      }
+
+      // Vérifier si l'utilisateur a le rôle admin
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authData.user.id)
+        .eq('role', 'admin')
         .maybeSingle();
 
-      if (adminError) {
-        console.error("Erreur de base de données:", adminError);
-        setError("Une erreur est survenue lors de la connexion");
+      if (roleError) {
+        console.error("Erreur de vérification du rôle:", roleError);
+        setError("Une erreur est survenue lors de la vérification des droits d'accès");
         setShowErrorDialog(true);
+        // Déconnexion car l'utilisateur n'est pas admin
+        await supabase.auth.signOut();
         return;
       }
 
-      if (!adminUser) {
-        setError("Nom d'utilisateur ou mot de passe incorrect");
+      if (!roleData || roleData.role !== 'admin') {
+        setError("Vous n'avez pas les droits d'accès administrateur");
         setShowErrorDialog(true);
+        // Déconnexion car l'utilisateur n'est pas admin
+        await supabase.auth.signOut();
         return;
       }
 
-      // Si les identifiants sont corrects, créer une session admin
+      // Si on arrive ici, l'utilisateur est bien admin
       localStorage.setItem('adminSession', 'true');
-      localStorage.setItem('adminUsername', username.trim());
+      localStorage.setItem('adminUsername', email.trim());
       
       toast({
         title: "Succès",
@@ -111,10 +135,10 @@ export default function AdminLogin() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Input
-                type="text"
-                placeholder="Nom d'utilisateur"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="space-y-2">
