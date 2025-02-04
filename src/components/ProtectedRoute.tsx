@@ -20,10 +20,14 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+
         // For admin routes
         if (location.pathname.startsWith('/admin')) {
-          const { data: { session } } = await supabase.auth.getSession();
-          
           if (!session?.user) {
             setIsAuthenticated(false);
             setLoading(false);
@@ -31,54 +35,27 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           }
 
           // Vérifier si l'utilisateur est admin
-          const { data: roleData } = await supabase
+          const { data: roleData, error: roleError } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', session.user.id)
             .eq('role', 'admin')
             .maybeSingle();
 
-          setIsAuthenticated(roleData?.role === 'admin');
+          if (roleError) {
+            console.error("Erreur lors de la vérification du rôle:", roleError);
+            setIsAuthenticated(false);
+          } else {
+            setIsAuthenticated(roleData?.role === 'admin');
+          }
+          
           setLoading(false);
           return;
         } 
 
         // For user routes
-        const { data: { session }, error } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
         
-        if (error) {
-          console.error("Auth error:", error);
-          if (error.message.includes("Failed to fetch")) {
-            setConnectionError(true);
-            toast({
-              title: "Erreur de connexion",
-              description: "Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer.",
-              variant: "destructive",
-            });
-          } else if (error.message.includes("refresh_token_not_found")) {
-            // Clear any stale session data and cache
-            await handleLogout();
-            toast({
-              title: "Session expirée",
-              description: "Votre session a expiré. Veuillez vous reconnecter.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Erreur d'authentification",
-              description: "Veuillez vous reconnecter.",
-              variant: "destructive",
-            });
-          }
-          return;
-        }
-        
-        if (session) {
-          setIsAuthenticated(true);
-        } else {
-          // If no session, clear cache and local data
-          await handleLogout();
-        }
       } catch (error) {
         console.error("Auth check error:", error);
         setConnectionError(true);
@@ -96,14 +73,14 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
       if (event === 'SIGNED_OUT') {
-        await handleLogout();
-      } else if (event === 'SIGNED_IN') {
-        // Pour les routes admin, vérifier le rôle
+        setIsAuthenticated(false);
+        queryClient.clear();
+      } else if (event === 'SIGNED_IN' && session) {
         if (location.pathname.startsWith('/admin')) {
           const { data: roleData } = await supabase
             .from('user_roles')
             .select('role')
-            .eq('user_id', session?.user.id)
+            .eq('user_id', session.user.id)
             .eq('role', 'admin')
             .maybeSingle();
 
@@ -111,25 +88,16 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         } else {
           setIsAuthenticated(true);
         }
-        // Reset query cache on sign in to ensure fresh data
         queryClient.resetQueries();
       }
     });
 
     checkAuth();
 
-    // Cleanup subscription on unmount
     return () => {
       subscription.unsubscribe();
     };
   }, [location.pathname, toast, queryClient]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    localStorage.clear();
-    queryClient.clear(); // Clear all queries from cache
-    setIsAuthenticated(false);
-  };
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">
@@ -150,7 +118,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
-    // Redirect to appropriate login page based on route
     return location.pathname.startsWith('/admin') ? 
       <Navigate to="/admin-login" replace /> :
       <Navigate to="/login" replace />;

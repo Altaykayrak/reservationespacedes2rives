@@ -36,26 +36,24 @@ export default function AdminLogin() {
         
         if (session?.user) {
           // Vérifier si l'utilisateur est admin
-          const { data: roleData } = await supabase
+          const { data: roleData, error: roleError } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', session.user.id)
             .eq('role', 'admin')
             .maybeSingle();
 
+          if (roleError) {
+            console.error("Erreur lors de la vérification du rôle:", roleError);
+            return;
+          }
+
           if (roleData?.role === 'admin') {
-            // Seulement si l'utilisateur est authentifié ET a le rôle admin
             navigate("/admin");
-          } else {
-            // Si l'utilisateur est connecté mais n'est pas admin, le déconnecter
-            await supabase.auth.signOut();
-            localStorage.removeItem('adminSession');
           }
         }
       } catch (error) {
         console.error("Erreur lors de la vérification de l'authentification:", error);
-        // En cas d'erreur, on s'assure de nettoyer la session
-        localStorage.removeItem('adminSession');
       }
     };
 
@@ -73,7 +71,6 @@ export default function AdminLogin() {
     }
 
     try {
-      // Connexion avec Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
@@ -104,7 +101,6 @@ export default function AdminLogin() {
         console.error("Erreur de vérification du rôle:", roleError);
         setError("Une erreur est survenue lors de la vérification des droits d'accès");
         setShowErrorDialog(true);
-        // Déconnexion car l'utilisateur n'est pas admin
         await supabase.auth.signOut();
         return;
       }
@@ -112,14 +108,10 @@ export default function AdminLogin() {
       if (!roleData || roleData.role !== 'admin') {
         setError("Vous n'avez pas les droits d'accès administrateur");
         setShowErrorDialog(true);
-        // Déconnexion car l'utilisateur n'est pas admin
         await supabase.auth.signOut();
         return;
       }
 
-      // Si on arrive ici, l'utilisateur est bien admin
-      localStorage.setItem('adminSession', 'true');
-      
       toast({
         title: "Succès",
         description: "Connexion administrateur réussie"
