@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -81,6 +82,7 @@ export const HolidayReservationContent = () => {
           selectedChild={selectedChild}
           setSelectedChild={setSelectedChild}
           children={children}
+          setSelectedDates={setSelectedDates}
         />
 
         <PeriodSelector

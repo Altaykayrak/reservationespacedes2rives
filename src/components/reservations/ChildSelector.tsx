@@ -1,19 +1,23 @@
+
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 interface ChildSelectorProps {
   selectedChild: string;
   setSelectedChild: (childId: string) => void;
   children?: Tables<"children">[] | null;
+  setSelectedDates?: (dates: any[]) => void;
 }
 
 export const ChildSelector = ({
   selectedChild,
   setSelectedChild,
-  children
+  children,
+  setSelectedDates
 }: ChildSelectorProps) => {
   const location = useLocation();
   const isHolidayReservation = location.pathname === "/holiday-reservations";
@@ -39,6 +43,14 @@ export const ChildSelector = ({
         schoolClass.toUpperCase() === category.name.toUpperCase()
     );
   };
+
+  // Effect to handle child change
+  useEffect(() => {
+    if (selectedChild && setSelectedDates) {
+      // Reset dates when changing child
+      setSelectedDates([]);
+    }
+  }, [selectedChild, setSelectedDates]);
 
   // Filter children based on the current page and class
   const filteredChildren = children?.filter(child => {
