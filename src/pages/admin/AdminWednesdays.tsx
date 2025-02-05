@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AddWednesdayForm } from "@/components/admin/wednesdays/AddWednesdayForm";
@@ -20,22 +21,18 @@ const AdminWednesdays = () => {
   const { data: wednesdays, refetch } = useQuery({
     queryKey: ["available_wednesdays"],
     queryFn: async () => {
-      // Set admin username in session
-      const adminSession = localStorage.getItem('adminUsername');
-      if (!adminSession) {
+      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin', {
+        user_id: (await supabase.auth.getUser()).data.user?.id
+      });
+
+      if (adminError || !isAdmin) {
         toast({
           title: "Erreur",
-          description: "Session admin non trouvée",
+          description: "Vous n'avez pas les droits administrateur",
           variant: "destructive",
         });
         return null;
       }
-
-      const { error: adminError } = await supabase.rpc('set_admin_username', {
-        username: adminSession
-      });
-
-      if (adminError) throw adminError;
 
       const { data, error } = await supabase
         .from("available_wednesdays")

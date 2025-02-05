@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,22 +22,18 @@ export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListP
 
   const handleDeleteWednesday = async (id: string) => {
     try {
-      // Set admin username in session
-      const adminSession = localStorage.getItem('adminUsername');
-      if (!adminSession) {
+      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin', {
+        user_id: (await supabase.auth.getUser()).data.user?.id
+      });
+
+      if (adminError || !isAdmin) {
         toast({
           title: "Erreur",
-          description: "Session admin non trouvée",
+          description: "Vous n'avez pas les droits administrateur",
           variant: "destructive",
         });
         return;
       }
-
-      const { error: adminError } = await supabase.rpc('set_admin_username', {
-        username: adminSession
-      });
-
-      if (adminError) throw adminError;
 
       const { error } = await supabase
         .from("available_wednesdays")
