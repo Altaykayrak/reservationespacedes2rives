@@ -7,17 +7,18 @@ const checkAuthorizedEmail = async (email: string) => {
   
   const { data, error } = await supabase
     .from("authorized_emails")
-    .select("id")
+    .select("*")
     .ilike("email", email)
     .maybeSingle();
 
-  console.log("Query result:", { data, error });
+  console.log("Full query result:", { data, error });
 
-  if (error && error.code !== "PGRST116") {
+  if (error) {
     console.error("Database error:", error);
     throw error;
   }
 
+  console.log("Is email authorized?", !!data);
   return !!data;
 };
 
