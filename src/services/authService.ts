@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { RegisterFormData } from "@/schemas/registerSchema";
 
@@ -5,7 +6,7 @@ const checkAuthorizedEmail = async (email: string) => {
   const { data, error } = await supabase
     .from("authorized_emails")
     .select("id")
-    .eq("email", email)
+    .ilike("email", email)  // Utilisation de ilike au lieu de eq pour ignorer la casse
     .maybeSingle();
 
   if (error && error.code !== "PGRST116") {
