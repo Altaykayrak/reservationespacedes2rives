@@ -3,13 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RegisterFormData } from "@/schemas/registerSchema";
 
 const checkAuthorizedEmail = async (email: string) => {
-  const cleanEmail = email.trim().toLowerCase();
+  const cleanEmail = email.trim();
   console.log("Checking email:", cleanEmail);
   
   const { data, error } = await supabase
     .from("authorized_emails")
     .select("email")
-    .ilike("email", cleanEmail)
+    .eq("email_lower", cleanEmail.toLowerCase())
     .maybeSingle();
 
   console.log("Query parameters:", { cleanEmail });
