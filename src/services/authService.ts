@@ -7,8 +7,8 @@ const checkAuthorizedEmail = async (email: string) => {
   
   const { data, error } = await supabase
     .from("authorized_emails")
-    .select("*")
-    .ilike("email", email.trim().toLowerCase())
+    .select("email")
+    .eq("email", email.trim().toLowerCase())
     .maybeSingle();
 
   console.log("Full query result:", { data, error });
