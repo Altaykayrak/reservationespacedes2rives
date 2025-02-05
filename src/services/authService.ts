@@ -3,13 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RegisterFormData } from "@/schemas/registerSchema";
 
 const checkAuthorizedEmail = async (email: string) => {
+  console.log("Checking email:", email);
+  
   const { data, error } = await supabase
     .from("authorized_emails")
     .select("id")
-    .ilike("email", email)  // Utilisation de ilike au lieu de eq pour ignorer la casse
+    .ilike("email", email)
     .maybeSingle();
 
+  console.log("Query result:", { data, error });
+
   if (error && error.code !== "PGRST116") {
+    console.error("Database error:", error);
     throw error;
   }
 
@@ -18,6 +23,8 @@ const checkAuthorizedEmail = async (email: string) => {
 
 export const registerUser = async (formData: RegisterFormData) => {
   const isAuthorized = await checkAuthorizedEmail(formData.email);
+  
+  console.log("Is authorized:", isAuthorized);
   
   if (!isAuthorized) {
     throw new Error(
