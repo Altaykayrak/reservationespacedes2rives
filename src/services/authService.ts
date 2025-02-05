@@ -3,23 +3,27 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RegisterFormData } from "@/schemas/registerSchema";
 
 const checkAuthorizedEmail = async (email: string) => {
-  console.log("Checking email:", email);
+  const cleanEmail = email.trim().toLowerCase();
+  console.log("Checking email:", cleanEmail);
   
   const { data, error } = await supabase
     .from("authorized_emails")
     .select("email")
-    .eq("email", email.trim().toLowerCase())
+    .eq("email", cleanEmail)
     .maybeSingle();
 
+  console.log("Query parameters:", { cleanEmail });
   console.log("Full query result:", { data, error });
-
+  console.log("Raw data:", data);
+  
   if (error) {
     console.error("Database error:", error);
     throw error;
   }
 
-  console.log("Is email authorized?", !!data);
-  return !!data;
+  const isAuthorized = !!data;
+  console.log("Is email authorized?", isAuthorized);
+  return isAuthorized;
 };
 
 export const registerUser = async (formData: RegisterFormData) => {
