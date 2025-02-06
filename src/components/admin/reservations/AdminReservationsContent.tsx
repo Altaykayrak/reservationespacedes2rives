@@ -55,6 +55,13 @@ export const AdminReservationsContent = ({
         onGroupChange={setSelectedGroup}
       />
 
+      {/* Ajout du compteur de résultats */}
+      <div className="my-4 text-sm text-gray-600">
+        {filteredReservations ? (
+          <p>Total des réservations affichées : <span className="font-semibold">{filteredReservations.length}</span></p>
+        ) : null}
+      </div>
+
       {isLoading ? (
         <div>Chargement des réservations...</div>
       ) : (
@@ -93,3 +100,4 @@ export const AdminReservationsContent = ({
     </div>
   );
 };
+
