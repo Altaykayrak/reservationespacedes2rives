@@ -1,3 +1,4 @@
+
 import * as z from "zod";
 
 export const registerSchema = z.object({
@@ -21,6 +22,7 @@ export const registerSchema = z.object({
   secretQuestion: z.string().min(1, "Veuillez choisir une question secrète"),
   secretAnswer: z.string().min(1, "Veuillez fournir une réponse"),
   schoolCity: z.string().min(1, "Veuillez choisir une commune"),
+  automaticPayment: z.boolean().default(false),
 });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;

@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -37,6 +39,7 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
       secretQuestion: "",
       secretAnswer: "",
       schoolCity: "",
+      automaticPayment: false,
     },
   });
 
@@ -159,6 +162,26 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
                 </SelectContent>
               </Select>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="automaticPayment"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="leading-none">
+                <FormLabel>
+                  Prélèvement automatique pour régler vos factures (familles ayant fourni un RIB)
+                </FormLabel>
+              </div>
             </FormItem>
           )}
         />

@@ -47,6 +47,7 @@ export const registerUser = async (formData: RegisterFormData) => {
         secretQuestion: formData.secretQuestion,
         secretAnswer: formData.secretAnswer,
         schoolCity: formData.schoolCity,
+        automaticPayment: formData.automaticPayment,
       },
     },
   });
