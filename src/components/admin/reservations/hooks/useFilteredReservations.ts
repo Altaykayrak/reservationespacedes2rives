@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { ReservationWithChild } from "./useAdminReservations";
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 
 export const useFilteredReservations = (reservations: ReservationWithChild[] | undefined) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,7 +18,6 @@ export const useFilteredReservations = (reservations: ReservationWithChild[] | u
       ? fullName.includes(searchQuery.toLowerCase())
       : true;
 
-    // Format both dates to ensure consistent comparison
     const reservationDateStr = format(new Date(reservation.reservation_date), "yyyy-MM-dd");
 
     console.log("Comparing dates:", {
@@ -27,9 +26,10 @@ export const useFilteredReservations = (reservations: ReservationWithChild[] | u
       matches: selectedDate ? reservationDateStr === selectedDate : true
     });
 
-    const dateMatch = selectedDate
-      ? reservationDateStr === selectedDate
-      : true;
+    let dateMatch = true;
+    if (selectedDate) {
+      dateMatch = reservationDateStr === selectedDate;
+    }
 
     const classMatch = selectedClass === "all"
       ? true
