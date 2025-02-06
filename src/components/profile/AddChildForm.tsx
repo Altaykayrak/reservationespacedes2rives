@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,7 +37,7 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
       const { data, error } = await supabase
         .from('school_class')
         .select('*')
-        .order('name')
+        .order('order', { ascending: true })
       
       if (error) throw error
       return data
