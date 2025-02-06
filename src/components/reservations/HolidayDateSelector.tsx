@@ -80,16 +80,10 @@ export const HolidayDateSelector = ({
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
 
-  // Effet pour réinitialiser les dates lorsque l'enfant change
-  useEffect(() => {
-    if (!isTeenClass) {
-      setSelectedDates([]);
-    }
-  }, [selectedChild, isTeenClass, setSelectedDates]);
-
   // Effet pour sélectionner toutes les dates pour les adolescents
   useEffect(() => {
     if (isTeenClass && holidayPeriod) {
+      console.log("Sélection des dates pour adolescent");
       const dates: DateOption[] = [];
       const startDate = new Date(holidayPeriod.start_date);
       const endDate = new Date(holidayPeriod.end_date);

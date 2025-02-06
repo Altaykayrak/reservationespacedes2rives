@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useChildrenData } from "./useChildrenData";
 import { useHolidayPeriods } from "./useHolidayPeriods";
 import { useExistingReservations } from "./useExistingReservations";
@@ -53,6 +54,14 @@ export const useHolidayReservation = () => {
   const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
+
+  // Effet pour réinitialiser les dates lorsque l'enfant change
+  useEffect(() => {
+    if (selectedChild && !isTeenClass) {
+      console.log("Réinitialisation des dates - Enfant non adolescent");
+      setSelectedDates([]);
+    }
+  }, [selectedChild]);
 
   const resetForm = () => {
     setSelectedDates([]);
