@@ -8,11 +8,20 @@ export const useFilteredReservations = (reservations: ReservationWithChild[] | u
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
 
+  console.log("Selected date:", selectedDate);
+  console.log("All reservations:", reservations);
+
   const filteredReservations = reservations?.filter((reservation) => {
     const fullName = `${reservation.children?.first_name} ${reservation.children?.last_name}`.toLowerCase();
     const searchMatch = searchQuery 
       ? fullName.includes(searchQuery.toLowerCase())
       : true;
+
+    console.log("Comparing dates:", {
+      reservationDate: reservation.reservation_date,
+      selectedDate: selectedDate,
+      matches: selectedDate ? reservation.reservation_date === selectedDate : true
+    });
 
     const dateMatch = selectedDate
       ? reservation.reservation_date === selectedDate
@@ -35,6 +44,8 @@ export const useFilteredReservations = (reservations: ReservationWithChild[] | u
 
     return searchMatch && dateMatch && classMatch && groupMatch;
   });
+
+  console.log("Filtered reservations:", filteredReservations);
 
   return {
     searchQuery,
