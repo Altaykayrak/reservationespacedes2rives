@@ -9,8 +9,12 @@ export const useFilteredReservations = (reservations: ReservationWithChild[] | u
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
 
-  console.log("Selected date:", selectedDate);
-  console.log("All reservations:", reservations);
+  console.log("All reservations before filtering:", reservations?.map(r => ({
+    date: r.reservation_date,
+    child: `${r.children?.first_name} ${r.children?.last_name}`,
+    class: r.children?.school_class,
+    period_id: r.period_id
+  })));
 
   const filteredReservations = reservations?.filter((reservation) => {
     const fullName = `${reservation.children?.first_name} ${reservation.children?.last_name}`.toLowerCase();
@@ -20,10 +24,15 @@ export const useFilteredReservations = (reservations: ReservationWithChild[] | u
 
     const reservationDateStr = format(new Date(reservation.reservation_date), "yyyy-MM-dd");
 
-    console.log("Comparing dates:", {
+    console.log("Filtering reservation:", {
+      child: `${reservation.children?.first_name} ${reservation.children?.last_name}`,
       reservationDate: reservationDateStr,
       selectedDate: selectedDate,
-      matches: selectedDate ? reservationDateStr === selectedDate : true
+      dateMatches: selectedDate ? reservationDateStr === selectedDate : true,
+      withoutMeal: reservation.without_meal,
+      earlyDropoff: reservation.early_dropoff,
+      periodId: reservation.period_id,
+      status: reservation.status
     });
 
     let dateMatch = true;
@@ -46,10 +55,23 @@ export const useFilteredReservations = (reservations: ReservationWithChild[] | u
       ? true
       : getGroup(reservation.children?.school_class || "") === selectedGroup;
 
+    console.log("Match results:", {
+      child: `${reservation.children?.first_name} ${reservation.children?.last_name}`,
+      searchMatch,
+      dateMatch,
+      classMatch,
+      groupMatch,
+      willShow: searchMatch && dateMatch && classMatch && groupMatch
+    });
+
     return searchMatch && dateMatch && classMatch && groupMatch;
   });
 
-  console.log("Filtered reservations:", filteredReservations);
+  console.log("Final filtered reservations:", filteredReservations?.map(r => ({
+    date: r.reservation_date,
+    child: `${r.children?.first_name} ${r.children?.last_name}`,
+    class: r.children?.school_class
+  })));
 
   return {
     searchQuery,
