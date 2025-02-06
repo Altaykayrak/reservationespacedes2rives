@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,12 +24,12 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
       });
 
-      console.log("Résultat de la connexion:", { data, signInError });
+      console.log("Résultat de la connexion:", { session, signInError });
 
       if (signInError) {
         console.error("Erreur de connexion:", signInError);
@@ -40,10 +41,13 @@ export const useLoginForm = () => {
         return;
       }
 
-      if (data?.user) {
-        console.log("Connexion réussie, redirection...");
+      if (session) {
+        console.log("Connexion réussie, session établie:", session);
+        await supabase.auth.getSession(); // Récupère et stocke la session
         toast.success("Connexion réussie");
         navigate("/profile");
+      } else {
+        setError("Session non établie. Veuillez réessayer.");
       }
     } catch (err) {
       console.error("Erreur complète:", err);
