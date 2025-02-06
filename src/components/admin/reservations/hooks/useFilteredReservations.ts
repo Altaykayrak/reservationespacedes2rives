@@ -25,7 +25,8 @@ export const useFilteredReservations = (reservations: ReservationWithChild[] | u
     const getGroup = (schoolClass: string) => {
       if (["PS", "MS", "GS"].includes(schoolClass)) return "maternelle";
       if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass)) return "primaire";
-      return "ado";
+      if (["6EME", "5EME", "4EME", "3EME"].includes(schoolClass)) return "ado";
+      return "";
     };
 
     const groupMatch = selectedGroup === "all"
