@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -79,6 +80,14 @@ export const HolidayDateSelector = ({
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
 
+  // Effet pour réinitialiser les dates lorsque l'enfant change
+  useEffect(() => {
+    if (!isTeenClass) {
+      setSelectedDates([]);
+    }
+  }, [selectedChild, isTeenClass, setSelectedDates]);
+
+  // Effet pour sélectionner toutes les dates pour les adolescents
   useEffect(() => {
     if (isTeenClass && holidayPeriod) {
       const dates: DateOption[] = [];
