@@ -3,12 +3,13 @@ import { WednesdayReservationContent } from "@/components/reservations/Wednesday
 import { ReservationsList } from "@/components/reservations/ReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 type ReservationWithChild = Tables<"reservations"> & {
   children: Tables<"children">;
@@ -17,46 +18,65 @@ type ReservationWithChild = Tables<"reservations"> & {
 const WednesdayReservations = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+  const queryClient = useQueryClient();
 
-  // Vérifier la session au chargement
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session) {
-        console.error("Erreur de session:", error);
-        toast({
-          title: "Session expirée",
-          description: "Veuillez vous reconnecter pour continuer",
-          variant: "destructive",
-        });
-        navigate("/login");
-      }
-    };
-
-    checkSession();
-  }, [navigate, toast]);
+    if (!loading && !user) {
+      console.log("No user found, redirecting to login");
+      toast({
+        title: "Accès non autorisé",
+        description: "Veuillez vous connecter pour accéder à cette page",
+        variant: "destructive",
+      });
+      navigate("/login");
+    }
+  }, [user, loading, navigate, toast]);
 
   const { data: reservations, isError } = useQuery({
     queryKey: ["reservations"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("reservations")
-        .select(`
-          *,
-          children (*)
-        `)
-        .is('period_id', null) // Only get non-holiday reservations
-        .order('reservation_date', { ascending: true });
-      
-      if (error) {
-        console.error("Erreur lors de la récupération des réservations:", error);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error("No session found");
+        }
+
+        const { data, error } = await supabase
+          .from("reservations")
+          .select(`
+            *,
+            children (*)
+          `)
+          .is('period_id', null)
+          .order('reservation_date', { ascending: true });
+        
+        if (error) {
+          console.error("Erreur lors de la récupération des réservations:", error);
+          throw error;
+        }
+        return data as ReservationWithChild[];
+      } catch (error) {
+        console.error("Erreur complète:", error);
+        queryClient.invalidateQueries({ queryKey: ["reservations"] });
         throw error;
       }
-      return data as ReservationWithChild[];
     },
+    enabled: !!user,
   });
 
-  if (isError) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="text-center space-y-4">
@@ -113,3 +133,4 @@ const WednesdayReservations = () => {
 };
 
 export default WednesdayReservations;
+
