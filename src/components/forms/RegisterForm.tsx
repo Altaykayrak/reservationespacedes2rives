@@ -200,7 +200,7 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
               </FormControl>
               <div className="leading-none">
                 <FormLabel>
-                  J'ai lu les conditions générales d'utilisation et je les accepte
+                  J'ai pris connaissance des conditions générales d'utilisation et je les approuve
                 </FormLabel>
               </div>
             </FormItem>
