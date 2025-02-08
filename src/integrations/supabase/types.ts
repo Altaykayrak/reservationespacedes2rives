@@ -210,6 +210,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accepted_cgu: boolean
           automatic_payment: boolean
           created_at: string
           first_name: string | null
@@ -221,6 +222,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepted_cgu?: boolean
           automatic_payment?: boolean
           created_at?: string
           first_name?: string | null
@@ -232,6 +234,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepted_cgu?: boolean
           automatic_payment?: boolean
           created_at?: string
           first_name?: string | null

@@ -1,3 +1,4 @@
+
 export interface ProfileData {
   id: string
   first_name: string | null
@@ -6,6 +7,7 @@ export interface ProfileData {
   school_city: string
   secret_question: string
   automatic_payment: boolean
+  accepted_cgu: boolean
 }
 
 export interface Child {

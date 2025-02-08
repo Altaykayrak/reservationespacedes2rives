@@ -23,6 +23,9 @@ export const registerSchema = z.object({
   secretAnswer: z.string().min(1, "Veuillez fournir une réponse"),
   schoolCity: z.string().min(1, "Veuillez choisir une commune"),
   automaticPayment: z.boolean().default(false),
+  acceptedCgu: z.boolean().refine((val) => val === true, {
+    message: "Vous devez accepter les conditions générales d'utilisation",
+  }),
 });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;

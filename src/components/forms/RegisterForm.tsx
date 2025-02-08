@@ -40,6 +40,7 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
       secretAnswer: "",
       schoolCity: "",
       automaticPayment: false,
+      acceptedCgu: false,
     },
   });
 
@@ -180,6 +181,26 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
               <div className="leading-none">
                 <FormLabel>
                   Prélèvement automatique pour régler vos factures (familles ayant fourni un RIB)
+                </FormLabel>
+              </div>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="acceptedCgu"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="leading-none">
+                <FormLabel>
+                  J'ai lu les conditions générales d'utilisation et je les accepte
                 </FormLabel>
               </div>
             </FormItem>
