@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { EditProfileForm } from "@/components/EditProfileForm";
 import { ChildrenList } from "@/components/profile/ChildrenList";
@@ -122,7 +123,7 @@ const Profile = () => {
       <div className="container mx-auto p-4">
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <Button asChild variant="default" className="flex-1">
-            <Link to="/reservations">Réservations Mercredi</Link>
+            <Link to="/wednesday-reservations">Réservations Mercredi</Link>
           </Button>
           <Button asChild variant="default" className="flex-1">
             <Link to="/holiday-reservations">Réservations Vacances</Link>
