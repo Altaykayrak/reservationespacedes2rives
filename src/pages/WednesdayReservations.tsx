@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -20,18 +20,35 @@ const WednesdayReservations = () => {
   const { toast } = useToast();
   const { user, loading } = useAuth();
   const queryClient = useQueryClient();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      console.log("No user found, redirecting to login");
-      toast({
-        title: "Accès non autorisé",
-        description: "Veuillez vous connecter pour accéder à cette page",
-        variant: "destructive",
-      });
-      navigate("/login");
-    }
-  }, [user, loading, navigate, toast]);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session && !loading) {
+          console.log("No session found, redirecting to login");
+          toast({
+            title: "Accès non autorisé",
+            description: "Veuillez vous connecter pour accéder à cette page",
+            variant: "destructive",
+          });
+          navigate("/login");
+        }
+        setIsInitialized(true);
+      } catch (error) {
+        console.error("Error checking session:", error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la vérification de votre session",
+          variant: "destructive",
+        });
+        navigate("/login");
+      }
+    };
+
+    initializeAuth();
+  }, [navigate, toast, loading]);
 
   const { data: reservations, isError } = useQuery({
     queryKey: ["reservations"],
@@ -62,10 +79,10 @@ const WednesdayReservations = () => {
         throw error;
       }
     },
-    enabled: !!user,
+    enabled: !!user && isInitialized,
   });
 
-  if (loading) {
+  if (loading || !isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="text-center space-y-4">
