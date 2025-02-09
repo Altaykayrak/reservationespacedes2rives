@@ -2,6 +2,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import {
   Form,
   FormControl,
@@ -200,7 +201,7 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
               </FormControl>
               <div className="leading-none">
                 <FormLabel>
-                  J'ai pris connaissance des conditions générales d'utilisation et je les approuve
+                  J'ai pris connaissance <Link to="/terms-of-service" className="text-primary hover:underline">des conditions générales d'utilisation</Link> et je les approuve
                 </FormLabel>
               </div>
             </FormItem>
