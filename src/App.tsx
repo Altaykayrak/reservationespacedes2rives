@@ -21,6 +21,7 @@ import AdminHolidays from "@/pages/admin/AdminHolidays";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import HolidayReservations from "@/pages/HolidayReservations";
 import HolidayProgram from "@/pages/HolidayProgram";
+import TermsOfService from "@/pages/TermsOfService";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -129,6 +130,10 @@ const router = createBrowserRouter([
         <AdminAuthorizedEmails />
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/terms-of-service",
+    element: <TermsOfService />,
   },
 ]);
 

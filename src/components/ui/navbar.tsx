@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,11 +35,13 @@ export function Navbar() {
     { label: "Réservations mercredis", href: "/wednesday-reservations" },
     { label: "Réservations vacances", href: "/holiday-reservations" },
     { label: "Programme vacances", href: "/holiday-program" },
+    { label: "CGU", href: "/terms-of-service" },
   ];
 
   const publicMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
     { label: "Programme vacances", href: "/holiday-program" },
+    { label: "CGU", href: "/terms-of-service" },
   ];
 
   const menuItems = isAuthenticated ? authenticatedMenuItems : publicMenuItems;
