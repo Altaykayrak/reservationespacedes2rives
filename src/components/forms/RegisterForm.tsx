@@ -21,8 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { registerSchema, type RegisterFormData } from "@/schemas/registerSchema";
 import { secretQuestions, schoolCities } from "@/constants/registerConstants";
+import { useState } from "react";
 
 interface RegisterFormProps {
   onSubmit: (values: RegisterFormData) => Promise<void>;
@@ -30,6 +40,8 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
+  const [showCguAlert, setShowCguAlert] = useState(false);
+  
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -45,173 +57,199 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     },
   });
 
+  const handleSubmit = async (values: RegisterFormData) => {
+    if (!values.acceptedCgu) {
+      setShowCguAlert(true);
+      return;
+    }
+    await onSubmit(values);
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Prénom</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="lastName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nom</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mot de passe</FormLabel>
-              <FormControl>
-                <PasswordInput {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="secretQuestion"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Question secrète</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prénom</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisissez une question" />
-                  </SelectTrigger>
+                  <Input {...field} />
                 </FormControl>
-                <SelectContent>
-                  {secretQuestions.map((question) => (
-                    <SelectItem key={question} value={question}>
-                      {question}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="secretAnswer"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Réponse</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="schoolCity"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Commune de scolarisation</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisissez une commune" />
-                  </SelectTrigger>
+                  <Input {...field} />
                 </FormControl>
-                <SelectContent>
-                  {schoolCities.map((city) => (
-                    <SelectItem key={city} value={city}>
-                      {city}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="automaticPayment"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="leading-none">
-                <FormLabel>
-                  Prélèvement automatique pour régler vos factures (familles ayant fourni un RIB)
-                </FormLabel>
-              </div>
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="acceptedCgu"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="leading-none">
-                <FormLabel>
-                  J'ai pris connaissance <Link to="/terms-of-service" className="text-primary hover:underline">des conditions générales d'utilisation</Link> et je les approuve
-                </FormLabel>
-              </div>
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mot de passe</FormLabel>
+                <FormControl>
+                  <PasswordInput {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Inscription en cours..." : "S'inscrire"}
-        </Button>
-      </form>
-    </Form>
+          <FormField
+            control={form.control}
+            name="secretQuestion"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Question secrète</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisissez une question" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {secretQuestions.map((question) => (
+                      <SelectItem key={question} value={question}>
+                        {question}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="secretAnswer"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Réponse</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="schoolCity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Commune de scolarisation</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisissez une commune" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {schoolCities.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="automaticPayment"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="leading-none">
+                  <FormLabel>
+                    Prélèvement automatique pour régler vos factures (familles ayant fourni un RIB)
+                  </FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="acceptedCgu"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="leading-none">
+                  <FormLabel>
+                    J'ai pris connaissance <Link to="/terms-of-service" className="text-primary hover:underline">des conditions générales d'utilisation</Link> et je les approuve
+                  </FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Inscription en cours..." : "S'inscrire"}
+          </Button>
+        </form>
+      </Form>
+
+      <AlertDialog open={showCguAlert} onOpenChange={setShowCguAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Conditions générales d'utilisation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous devez accepter les conditions générales d'utilisation pour continuer votre inscription.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowCguAlert(false)}>
+              D'accord
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
