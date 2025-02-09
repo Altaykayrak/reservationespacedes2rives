@@ -253,3 +253,4 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     </>
   );
 };
+
