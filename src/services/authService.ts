@@ -48,6 +48,7 @@ export const registerUser = async (formData: RegisterFormData) => {
         secretAnswer: formData.secretAnswer,
         schoolCity: formData.schoolCity,
         automaticPayment: formData.automaticPayment,
+        acceptedCgu: formData.acceptedCgu, // Added this line to include acceptedCgu
       },
     },
   });
