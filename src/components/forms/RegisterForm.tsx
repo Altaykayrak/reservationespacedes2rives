@@ -57,7 +57,10 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
         </form>
       </Form>
 
-      <CguAlert open={showCguAlert} onOpenChange={setShowCguAlert} />
+      <CguAlert 
+        open={showCguAlert} 
+        onOpenChange={(open) => setShowCguAlert(open)}
+      />
     </>
   );
 };
