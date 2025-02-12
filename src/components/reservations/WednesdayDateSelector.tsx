@@ -1,13 +1,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { addHours } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "lucide-react";
+import { useAvailableWednesdays } from "@/hooks/useAvailableWednesdays";
+import { WednesdayAvailability } from "./WednesdayAvailability";
+import { WednesdayOptions } from "./WednesdayOptions";
 
 interface DateOption {
   date: Date;
@@ -22,26 +24,12 @@ interface WednesdayDateSelectorProps {
   isDateAlreadyReserved: (date: Date) => boolean;
 }
 
-interface WednesdayWithCounts {
-  id: string;
-  date: string;
-  max_participants_kindergarten: number;
-  max_participants_primary: number;
-  kindergartenReservations: number;
-  primaryReservations: number;
-  isFull: boolean;
-}
-
 export const WednesdayDateSelector = ({
-  selectedDates = [], // Ajout d'une valeur par défaut
+  selectedDates = [],
   handleDateToggle,
   handleOptionChange,
   isDateAlreadyReserved,
 }: WednesdayDateSelectorProps) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const minDate = addHours(today, 72);
-
   const { data: childInfo } = useQuery({
     queryKey: ["selectedChild"],
     queryFn: async () => {
@@ -58,84 +46,7 @@ export const WednesdayDateSelector = ({
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
   const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
 
-  const { data: availableWednesdays = [], isLoading, error } = useQuery<WednesdayWithCounts[]>({
-    queryKey: ["available_wednesdays"],
-    queryFn: async () => {
-      console.log('Démarrage de la requête pour les mercredis disponibles');
-      
-      try {
-        // 1. Récupération des mercredis
-        console.log('Récupération des mercredis...');
-        const wednesdaysResult = await supabase
-          .from("available_wednesdays")
-          .select('*')
-          .order('date', { ascending: true });
-
-        if (wednesdaysResult.error) throw wednesdaysResult.error;
-        console.log('Mercredis récupérés:', wednesdaysResult.data);
-
-        // 2. Récupération de toutes les réservations confirmées
-        console.log('Récupération des réservations...');
-        const reservationsResult = await supabase
-          .from("wednesday_reservations")
-          .select('*, children(*)')
-          .eq('status', 'confirmed');
-
-        if (reservationsResult.error) throw reservationsResult.error;
-        console.log('Réservations confirmées récupérées:', reservationsResult.data);
-
-        // 3. Traitement des mercredis
-        const processedWednesdays = wednesdaysResult.data.map(wednesday => {
-          console.log(`\nTraitement du mercredi ${wednesday.date}`);
-
-          // Filtrer les réservations confirmées pour ce mercredi
-          const wednesdayReservations = reservationsResult.data.filter(r => 
-            r.wednesday_id === wednesday.id
-          );
-
-          console.log(`Réservations confirmées trouvées pour ${wednesday.date}:`, wednesdayReservations);
-
-          // Comptage par type de classe
-          const kindergartenCount = wednesdayReservations.filter(r => 
-            r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class)
-          ).length;
-
-          const primaryCount = wednesdayReservations.filter(r => 
-            r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
-          ).length;
-
-          console.log(`Résultats pour ${wednesday.date}:`, {
-            kindergartenCount,
-            primaryCount,
-            maxKindergarten: wednesday.max_participants_kindergarten,
-            maxPrimary: wednesday.max_participants_primary
-          });
-
-          return {
-            id: wednesday.id,
-            date: wednesday.date,
-            max_participants_kindergarten: wednesday.max_participants_kindergarten,
-            max_participants_primary: wednesday.max_participants_primary,
-            kindergartenReservations: kindergartenCount,
-            primaryReservations: primaryCount,
-            isFull: isKindergarten 
-              ? kindergartenCount >= wednesday.max_participants_kindergarten
-              : primaryCount >= wednesday.max_participants_primary
-          };
-        }).filter(wednesday => {
-          const wednesdayDate = new Date(wednesday.date);
-          return wednesdayDate >= minDate;
-        });
-
-        console.log('Résultat final:', processedWednesdays);
-        return processedWednesdays;
-
-      } catch (error) {
-        console.error('Erreur lors du traitement:', error);
-        throw error;
-      }
-    },
-  });
+  const { data: availableWednesdays = [], isLoading, error } = useAvailableWednesdays(!!isKindergarten, !!isPrimary);
 
   if (isLoading) {
     return (
@@ -155,7 +66,6 @@ export const WednesdayDateSelector = ({
   }
 
   if (!availableWednesdays || availableWednesdays.length === 0) {
-    console.log('Aucun mercredi disponible trouvé');
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
         <Calendar className="h-12 w-12 text-muted-foreground" />
@@ -168,8 +78,6 @@ export const WednesdayDateSelector = ({
       </div>
     );
   }
-
-  console.log('Mercredis disponibles à afficher:', availableWednesdays);
 
   return (
     <ScrollArea className="h-[300px] pr-3">
@@ -205,60 +113,21 @@ export const WednesdayDateSelector = ({
                     {format(date, "EEEE d MMMM yyyy", { locale: fr })}
                   </Label>
                   <div className="text-sm space-y-0.5">
-                    {isDisabled ? (
-                      <span className="text-gray-600">
-                        {isReserved ? "(Déjà réservé)" : "Complet"}
-                      </span>
-                    ) : (
-                      <div className="space-y-0.5">
-                        <span className="block text-green-600">
-                          Maternelles : {wednesday.max_participants_kindergarten - wednesday.kindergartenReservations} places restantes 
-                          ({wednesday.kindergartenReservations}/{wednesday.max_participants_kindergarten})
-                        </span>
-                        <span className="block text-green-600">
-                          Primaires : {wednesday.max_participants_primary - wednesday.primaryReservations} places restantes
-                          ({wednesday.primaryReservations}/{wednesday.max_participants_primary})
-                        </span>
-                      </div>
-                    )}
+                    <WednesdayAvailability
+                      wednesday={wednesday}
+                      isDisabled={isDisabled}
+                      isReserved={isReserved}
+                    />
                   </div>
                 </div>
               </div>
               {selectedDateOption && !isDisabled && (
-                <div className="ml-6 space-y-1 bg-white/50 p-2 rounded-md">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`without-meal-${wednesday.date}`}
-                      checked={selectedDateOption.withoutMeal}
-                      onCheckedChange={(checked) =>
-                        handleOptionChange(date, 'withoutMeal', checked as boolean)
-                      }
-                      className="border-green-200"
-                    />
-                    <Label 
-                      htmlFor={`without-meal-${wednesday.date}`}
-                      className="text-sm text-green-900"
-                    >
-                      Sans repas
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`early-dropoff-${wednesday.date}`}
-                      checked={selectedDateOption.earlyDropoff}
-                      onCheckedChange={(checked) =>
-                        handleOptionChange(date, 'earlyDropoff', checked as boolean)
-                      }
-                      className="border-green-200"
-                    />
-                    <Label 
-                      htmlFor={`early-dropoff-${wednesday.date}`}
-                      className="text-sm text-green-900"
-                    >
-                      Accueil avant 8h30
-                    </Label>
-                  </div>
-                </div>
+                <WednesdayOptions
+                  date={date}
+                  withoutMeal={selectedDateOption.withoutMeal}
+                  earlyDropoff={selectedDateOption.earlyDropoff}
+                  onOptionChange={handleOptionChange}
+                />
               )}
             </div>
           );
