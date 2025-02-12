@@ -1,17 +1,82 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
-import { ChildReservationCard } from "./ChildReservationCard";
-import { HolidayReservationWithChild } from "@/types/reservations";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { HolidayReservationWithChild } from "@/types/reservations";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { User } from "lucide-react";
 
 type GroupedReservations = Record<string, {
   childName: string;
   schoolClass: string;
   reservations: HolidayReservationWithChild[];
 }>;
+
+interface ChildReservationCardProps {
+  childName: string;
+  schoolClass: string;
+  reservations: HolidayReservationWithChild[];
+  onUpdate: () => void;
+}
+
+export const HolidayChildReservationCard = ({
+  childName,
+  schoolClass,
+  reservations,
+  onUpdate,
+}: ChildReservationCardProps) => {
+  return (
+    <Card className="overflow-hidden border-gray-100 shadow-sm h-full">
+      <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white p-2 md:p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 md:h-7 md:w-7 items-center justify-center rounded-full bg-primary/10">
+              <User className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-xs md:text-sm font-medium text-gray-800">{childName}</h3>
+              <p className="text-[10px] md:text-xs text-muted-foreground">{schoolClass}</p>
+            </div>
+          </div>
+          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 text-[8px] md:text-[10px]">
+            {reservations.length} réservation{reservations.length > 1 ? 's' : ''}
+          </Badge>
+        </div>
+      </div>
+      <div className="divide-y divide-gray-50 bg-white">
+        {reservations.map((reservation) => (
+          <div key={reservation.id} className="flex items-center justify-between p-3 transition-colors hover:bg-gray-50">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-gray-800">
+                {new Date(reservation.reservation_date).toLocaleDateString('fr-FR', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {reservation.without_meal && (
+                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                    Sans repas
+                  </span>
+                )}
+                {reservation.early_dropoff && (
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                    Accueil avant 8h30
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+};
 
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
@@ -91,7 +156,7 @@ export const HolidayReservationsList = () => {
     return <EmptyReservations />;
   }
 
-  const reservationsByChild = reservations?.reduce((acc, reservation) => {
+  const reservationsByChild = reservations.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {
@@ -116,7 +181,7 @@ export const HolidayReservationsList = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Object.entries(reservationsByChild).map(([childId, data]) => (
-          <ChildReservationCard
+          <HolidayChildReservationCard
             key={childId}
             childName={data.childName}
             schoolClass={data.schoolClass}

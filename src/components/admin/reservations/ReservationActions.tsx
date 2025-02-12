@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { WednesdayReservationWithChild } from "./hooks/useAdminReservations";
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 interface ReservationActionsProps {
   refetchReservations: () => Promise<unknown>;

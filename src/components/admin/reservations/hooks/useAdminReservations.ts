@@ -15,9 +15,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
           .select(`
             *,
             children (*),
-            available_wednesdays (
-              date
-            )
+            available_wednesdays (*)
           `)
           .order('created_at', { ascending: true });
         
