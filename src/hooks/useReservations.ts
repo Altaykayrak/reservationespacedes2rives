@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,8 +34,34 @@ export const useReservations = () => {
     queryKey: ["wednesday_reservations"],
     queryFn: async () => {
       console.log("Fetching wednesday reservations...");
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user?.id) {
+        console.log("No session found");
+        return [];
+      }
+
+      // D'abord, récupérer les IDs des enfants de l'utilisateur
+      const { data: userChildren, error: childrenError } = await supabase
+        .from('children')
+        .select('id')
+        .eq('profile_id', session.user.id);
+
+      if (childrenError) {
+        console.error("Erreur lors de la récupération des enfants:", childrenError);
+        throw childrenError;
+      }
+
+      if (!userChildren?.length) {
+        console.log("Aucun enfant trouvé pour cet utilisateur");
+        return [];
+      }
+
+      const childrenIds = userChildren.map(child => child.id);
+
+      // Ensuite, récupérer les réservations pour ces enfants
       const { data, error } = await supabase
-        .from("wednesday_reservations")
+        .from('wednesday_reservations')
         .select(`
           id,
           child_id,
@@ -42,105 +69,45 @@ export const useReservations = () => {
           without_meal,
           early_dropoff,
           status,
-          children (
+          created_at,
+          updated_at,
+          children:child_id (
             id,
             first_name,
             last_name,
             school_class
+          ),
+          available_wednesdays:wednesday_id (
+            id,
+            date,
+            max_participants_kindergarten,
+            max_participants_primary
           )
         `)
+        .in('child_id', childrenIds)
         .eq('status', 'confirmed')
         .order('created_at', { ascending: true });
-      
-      if (error) throw error;
+
+      if (error) {
+        console.error("Erreur lors de la récupération des réservations:", error);
+        throw error;
+      }
+
+      console.log("Réservations récupérées:", data);
       return data as WednesdayReservationWithChild[];
     },
     staleTime: 30000,
     gcTime: 3600000,
   });
 
-  // Préchargement des données
-  const prefetchData = async () => {
-    await queryClient.prefetchQuery({
-      queryKey: ["children"],
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from("children")
-          .select("*")
-          .order('created_at', { ascending: true });
-        
-        if (error) throw error;
-        return data;
-      },
-    });
-
-    await queryClient.prefetchQuery({
-      queryKey: ["wednesday_reservations"],
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from("wednesday_reservations")
-          .select(`
-            id,
-            child_id,
-            wednesday_id,
-            without_meal,
-            early_dropoff,
-            status,
-            children (
-              id,
-              first_name,
-              last_name,
-              school_class
-            )
-          `)
-          .eq('status', 'confirmed')
-          .order('created_at', { ascending: true });
-        
-        if (error) throw error;
-        return data as WednesdayReservationWithChild[];
-      },
-    });
-  };
-
-  // Appel du préchargement au montage du composant
-  useState(() => {
-    prefetchData();
-  });
-
   const isDateReservedForChild = (childId: string, date: Date) => {
-    if (!wednesdayReservations || !childId) return false;
+    if (!wednesdayReservations) return false;
     
     return wednesdayReservations.some(
       (reservation) => 
         reservation.child_id === childId &&
-        reservation.wednesday_id === date.toISOString().split('T')[0]
+        reservation.available_wednesdays?.date === date.toISOString().split('T')[0]
     );
-  };
-
-  const handleDateToggle = (date: Date) => {
-    setSelectedDates(prev => {
-      const existingDate = prev.find(d => d.date.getTime() === date.getTime());
-      if (existingDate) {
-        return prev.filter(d => d.date.getTime() !== date.getTime());
-      } else {
-        return [...prev, { date, withoutMeal: false, earlyDropoff: false }];
-      }
-    });
-  };
-
-  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
-    setSelectedDates(prev => 
-      prev.map(d => 
-        d.date.getTime() === date.getTime() 
-          ? { ...d, [option]: value }
-          : d
-      )
-    );
-  };
-
-  const resetForm = () => {
-    setSelectedChild("");
-    setSelectedDates([]);
   };
 
   return {
@@ -148,11 +115,15 @@ export const useReservations = () => {
     selectedChild,
     setSelectedChild,
     children,
-    handleDateToggle,
-    handleOptionChange,
-    handleSubmit: () => {}, // Cette fonction sera implémentée plus tard avec useReservationSubmission
+    wednesdayReservations,
+    handleDateToggle: () => {}, // Cette fonction sera implémentée plus tard
+    handleOptionChange: () => {}, // Cette fonction sera implémentée plus tard
+    handleSubmit: () => {}, // Cette fonction sera implémentée plus tard
     isDateReservedForChild,
-    resetForm,
+    resetForm: () => {
+      setSelectedChild("");
+      setSelectedDates([]);
+    },
     refetchReservations,
     isSubmitting,
   };
