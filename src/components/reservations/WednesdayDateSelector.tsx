@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addHours } from "date-fns";
@@ -65,24 +64,22 @@ export const WednesdayDateSelector = ({
 
       console.log('Fetched wednesdays:', wednesdays);
 
-      // Deuxième requête pour toutes les réservations confirmées de ces mercredis
+      // Deuxième requête pour toutes les réservations de ces mercredis
       const wednesdayIds = wednesdays.map(w => w.id);
       const { data: reservationsData, error: reservationsError } = await supabase
         .from("reservations")
         .select(`
           id,
           wednesday_id,
-          status,
           children!inner (
             id,
             school_class
           )
         `)
-        .in('wednesday_id', wednesdayIds)
-        .eq('status', 'confirmed');  // Ajout du filtre sur le statut
+        .in('wednesday_id', wednesdayIds);  // Suppression du filtre sur le statut
 
       if (reservationsError) throw reservationsError;
-      console.log('Fetched confirmed reservations:', reservationsData);
+      console.log('Fetched reservations:', reservationsData);
 
       // Traitement des données
       return wednesdays.map(wednesday => {
@@ -102,8 +99,7 @@ export const WednesdayDateSelector = ({
           date: wednesday.date,
           reservations: wednesdayReservations.map(r => ({
             id: r.id,
-            schoolClass: r.children.school_class,
-            status: r.status
+            schoolClass: r.children.school_class
           })),
           kindergartenCount,
           primaryCount,
