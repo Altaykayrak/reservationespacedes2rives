@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addHours } from "date-fns";
@@ -70,52 +71,40 @@ export const WednesdayDateSelector = ({
         const wednesdaysResult = await supabase
           .from("available_wednesdays")
           .select('*')
-          .gte('date', today.toISOString().split('T')[0])
           .order('date', { ascending: true });
 
         if (wednesdaysResult.error) throw wednesdaysResult.error;
         console.log('Mercredis récupérés:', wednesdaysResult.data);
 
-        // 2. Récupération de toutes les réservations
+        // 2. Récupération de toutes les réservations confirmées
         console.log('Récupération des réservations...');
         const reservationsResult = await supabase
-          .from("reservations")
-          .select('*, children(*)');
+          .from("wednesday_reservations")
+          .select('*, children(*)')
+          .eq('status', 'confirmed');
 
         if (reservationsResult.error) throw reservationsResult.error;
-        console.log('Réservations récupérées:', reservationsResult.data);
+        console.log('Réservations confirmées récupérées:', reservationsResult.data);
 
         // 3. Traitement des mercredis
         const processedWednesdays = wednesdaysResult.data.map(wednesday => {
           console.log(`\nTraitement du mercredi ${wednesday.date}`);
 
-          // Filtrer les réservations pour ce mercredi
-          const wednesdayReservations = reservationsResult.data.filter(r => {
-            return r.wednesday_id === wednesday.id || r.reservation_date === wednesday.date;
-          });
+          // Filtrer les réservations confirmées pour ce mercredi
+          const wednesdayReservations = reservationsResult.data.filter(r => 
+            r.wednesday_id === wednesday.id
+          );
 
-          console.log(`Réservations trouvées pour ${wednesday.date}:`, wednesdayReservations);
+          console.log(`Réservations confirmées trouvées pour ${wednesday.date}:`, wednesdayReservations);
 
           // Comptage par type de classe
-          const kindergartenCount = wednesdayReservations.reduce((count, r) => {
-            const isKindergartenClass = r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class);
-            console.log(`Vérification maternelle:`, {
-              id: r.id,
-              class: r.children?.school_class,
-              isKindergarten: isKindergartenClass
-            });
-            return count + (isKindergartenClass ? 1 : 0);
-          }, 0);
+          const kindergartenCount = wednesdayReservations.filter(r => 
+            r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class)
+          ).length;
 
-          const primaryCount = wednesdayReservations.reduce((count, r) => {
-            const isPrimaryClass = r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class);
-            console.log(`Vérification primaire:`, {
-              id: r.id,
-              class: r.children?.school_class,
-              isPrimary: isPrimaryClass
-            });
-            return count + (isPrimaryClass ? 1 : 0);
-          }, 0);
+          const primaryCount = wednesdayReservations.filter(r => 
+            r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+          ).length;
 
           console.log(`Résultats pour ${wednesday.date}:`, {
             kindergartenCount,

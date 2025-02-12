@@ -208,6 +208,60 @@ export type Database = {
           },
         ]
       }
+      holiday_reservations: {
+        Row: {
+          child_id: string
+          created_at: string
+          early_dropoff: boolean | null
+          id: string
+          period_id: string
+          reservation_date: string
+          reservation_number: string
+          status: string | null
+          updated_at: string
+          without_meal: boolean | null
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          early_dropoff?: boolean | null
+          id?: string
+          period_id: string
+          reservation_date: string
+          reservation_number: string
+          status?: string | null
+          updated_at?: string
+          without_meal?: boolean | null
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          early_dropoff?: boolean | null
+          id?: string
+          period_id?: string
+          reservation_date?: string
+          reservation_number?: string
+          status?: string | null
+          updated_at?: string
+          without_meal?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_reservations_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_reservations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "available_holiday_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           accepted_cgu: boolean
@@ -246,77 +300,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      reservations: {
-        Row: {
-          child_id: string
-          created_at: string
-          early_dropoff: boolean | null
-          id: string
-          period_id: string | null
-          reservation_date: string
-          reservation_number: string
-          status: string | null
-          updated_at: string
-          wednesday_id: string | null
-          without_meal: boolean | null
-        }
-        Insert: {
-          child_id: string
-          created_at?: string
-          early_dropoff?: boolean | null
-          id?: string
-          period_id?: string | null
-          reservation_date: string
-          reservation_number: string
-          status?: string | null
-          updated_at?: string
-          wednesday_id?: string | null
-          without_meal?: boolean | null
-        }
-        Update: {
-          child_id?: string
-          created_at?: string
-          early_dropoff?: boolean | null
-          id?: string
-          period_id?: string | null
-          reservation_date?: string
-          reservation_number?: string
-          status?: string | null
-          updated_at?: string
-          wednesday_id?: string | null
-          without_meal?: boolean | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_period"
-            columns: ["period_id"]
-            isOneToOne: false
-            referencedRelation: "available_holiday_periods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reservations_child_id_fkey"
-            columns: ["child_id"]
-            isOneToOne: false
-            referencedRelation: "children"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reservations_period_id_fkey"
-            columns: ["period_id"]
-            isOneToOne: false
-            referencedRelation: "available_holiday_periods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reservations_wednesday_id_fkey"
-            columns: ["wednesday_id"]
-            isOneToOne: false
-            referencedRelation: "available_wednesdays"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       school_class: {
         Row: {
@@ -421,6 +404,57 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "wednesday_allowed_classes_wednesday_id_fkey"
+            columns: ["wednesday_id"]
+            isOneToOne: false
+            referencedRelation: "available_wednesdays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wednesday_reservations: {
+        Row: {
+          child_id: string
+          created_at: string
+          early_dropoff: boolean | null
+          id: string
+          reservation_number: string
+          status: string | null
+          updated_at: string
+          wednesday_id: string
+          without_meal: boolean | null
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          early_dropoff?: boolean | null
+          id?: string
+          reservation_number: string
+          status?: string | null
+          updated_at?: string
+          wednesday_id: string
+          without_meal?: boolean | null
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          early_dropoff?: boolean | null
+          id?: string
+          reservation_number?: string
+          status?: string | null
+          updated_at?: string
+          wednesday_id?: string
+          without_meal?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wednesday_reservations_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wednesday_reservations_wednesday_id_fkey"
             columns: ["wednesday_id"]
             isOneToOne: false
             referencedRelation: "available_wednesdays"
