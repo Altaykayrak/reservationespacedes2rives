@@ -258,6 +258,7 @@ export type Database = {
           reservation_number: string
           status: string | null
           updated_at: string
+          wednesday_id: string | null
           without_meal: boolean | null
         }
         Insert: {
@@ -270,6 +271,7 @@ export type Database = {
           reservation_number: string
           status?: string | null
           updated_at?: string
+          wednesday_id?: string | null
           without_meal?: boolean | null
         }
         Update: {
@@ -282,6 +284,7 @@ export type Database = {
           reservation_number?: string
           status?: string | null
           updated_at?: string
+          wednesday_id?: string | null
           without_meal?: boolean | null
         }
         Relationships: [
@@ -304,6 +307,13 @@ export type Database = {
             columns: ["period_id"]
             isOneToOne: false
             referencedRelation: "available_holiday_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_wednesday_id_fkey"
+            columns: ["wednesday_id"]
+            isOneToOne: false
+            referencedRelation: "available_wednesdays"
             referencedColumns: ["id"]
           },
         ]

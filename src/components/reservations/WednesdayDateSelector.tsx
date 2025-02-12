@@ -37,8 +37,8 @@ export const WednesdayDateSelector = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("children")
-        .select("school_class")
-        .single();
+        .select()
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -55,7 +55,7 @@ export const WednesdayDateSelector = ({
         .from("available_wednesdays")
         .select(`
           *,
-          reservations!inner (
+          reservations (
             child_id,
             children (
               school_class
