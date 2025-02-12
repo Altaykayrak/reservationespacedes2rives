@@ -45,13 +45,15 @@ export const WednesdayDateSelector = ({
     },
   });
 
+  console.log("Child info:", childInfo);
+
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
   const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
 
-  const { data: availableWednesdays } = useQuery({
-    queryKey: ["available_wednesdays"],
+  const { data: availableWednesdays, isLoading, error } = useQuery({
+    queryKey: ["available_wednesdays", childInfo?.school_class],
     queryFn: async () => {
-      console.log("Fetching available wednesdays for child class:", childInfo?.school_class);
+      console.log("Fetching available wednesdays");
       
       const { data: wednesdays, error } = await supabase
         .from("available_wednesdays")
@@ -112,8 +114,35 @@ export const WednesdayDateSelector = ({
         return wednesdayDate >= minDate;
       });
     },
-    enabled: !!childInfo?.school_class,
+    enabled: true, // On active toujours la requête des mercredis
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Chargement des mercredis disponibles...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Error in component:", error);
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+        <div>
+          <h3 className="font-semibold text-destructive">Erreur</h3>
+          <p className="text-sm text-muted-foreground">
+            Une erreur est survenue lors du chargement des mercredis disponibles.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!availableWednesdays || availableWednesdays.length === 0) {
     return (
@@ -132,7 +161,7 @@ export const WednesdayDateSelector = ({
   return (
     <ScrollArea className="h-[300px] pr-3">
       <div className="space-y-1">
-        {availableWednesdays?.map((wednesday) => {
+        {availableWednesdays.map((wednesday) => {
           const date = new Date(wednesday.date);
           const selectedDateOption = selectedDates.find(
             (d) => d.date.getTime() === date.getTime()
