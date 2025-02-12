@@ -24,12 +24,10 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
-      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
       });
-
-      console.log("Résultat de la connexion:", { session, signInError });
 
       if (signInError) {
         console.error("Erreur de connexion:", signInError);
@@ -41,9 +39,8 @@ export const useLoginForm = () => {
         return;
       }
 
-      if (session) {
-        console.log("Connexion réussie, session établie:", session);
-        await supabase.auth.getSession(); // Récupère et stocke la session
+      if (data.session) {
+        console.log("Connexion réussie, session établie:", data.session);
         toast.success("Connexion réussie");
         navigate("/profile");
       } else {
