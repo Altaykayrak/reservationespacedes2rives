@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { HolidayPeriodItem } from "./HolidayPeriodItem";
+import HolidayPeriodItem from "./HolidayPeriodItem";
 import { Tables } from "@/integrations/supabase/types";
 
 type HolidayPeriod = Tables<"available_holiday_periods">;
@@ -78,7 +78,7 @@ export const HolidayPeriodsList = ({ holidays, onDelete }: HolidayPeriodsListPro
           <HolidayPeriodItem
             key={holiday.id}
             holiday={holiday}
-            reservationCount={getReservationCountForPeriod(holiday.id)}
+            onEdit={() => {}} // Add the onEdit handler as needed
             onDelete={() => handleDelete(holiday.id)}
           />
         ))}
