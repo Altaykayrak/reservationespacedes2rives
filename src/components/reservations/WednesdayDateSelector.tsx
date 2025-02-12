@@ -44,61 +44,54 @@ export const WednesdayDateSelector = ({
     },
   });
 
-  console.log("Child info:", childInfo);
-
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
   const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
 
   const { data: availableWednesdays, isLoading, error } = useQuery({
     queryKey: ["available_wednesdays", childInfo?.school_class],
     queryFn: async () => {
-      console.log("Fetching available wednesdays");
-      
-      const { data: wednesdays, error } = await supabase
+      const { data: wednesdays, error: wednesdaysError } = await supabase
         .from("available_wednesdays")
         .select(`
           id,
           date,
           max_participants_kindergarten,
-          max_participants_primary,
-          reservations:reservations(
-            id,
-            child_id,
-            children:children(
-              id,
-              school_class
-            )
-          )
+          max_participants_primary
         `)
         .gte('date', today.toISOString().split('T')[0])
         .order('date', { ascending: true });
-      
-      if (error) {
-        console.error("Error fetching wednesdays:", error);
-        throw error;
-      }
 
-      console.log("Raw wednesdays data with full structure:", wednesdays);
+      if (wednesdaysError) throw wednesdaysError;
+
+      const wednesdayIds = wednesdays?.map(w => w.id) || [];
+      const { data: reservations, error: reservationsError } = await supabase
+        .from("reservations")
+        .select(`
+          id,
+          wednesday_id,
+          children (
+            id,
+            school_class
+          )
+        `)
+        .in('wednesday_id', wednesdayIds);
+
+      if (reservationsError) throw reservationsError;
 
       return wednesdays?.map(wednesday => {
-        console.log(`Analyzing reservations for ${wednesday.date}:`, wednesday.reservations);
+        const wednesdayReservations = reservations?.filter(r => r.wednesday_id === wednesday.id) || [];
         
-        const kindergartenReservations = wednesday.reservations.filter(r => {
-          console.log("Checking reservation:", r);
-          return r.children && ["PS", "MS", "GS"].includes(r.children.school_class);
-        }).length;
+        const kindergartenReservations = wednesdayReservations.filter(r => 
+          r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class)
+        ).length;
 
-        const primaryReservations = wednesday.reservations.filter(r => {
-          console.log("Checking reservation:", r);
-          return r.children && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class);
-        }).length;
+        const primaryReservations = wednesdayReservations.filter(r => 
+          r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+        ).length;
 
         console.log(`Wednesday ${wednesday.date} detailed stats:`, {
-          totalReservations: wednesday.reservations.length,
-          reservationsDetails: wednesday.reservations.map(r => ({
-            childId: r.child_id,
-            schoolClass: r.children?.school_class
-          })),
+          date: wednesday.date,
+          totalReservations: wednesdayReservations.length,
           kindergartenCount: kindergartenReservations,
           primaryCount: primaryReservations,
           maxKindergarten: wednesday.max_participants_kindergarten,
