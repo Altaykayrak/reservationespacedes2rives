@@ -1,3 +1,4 @@
+
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -21,11 +22,22 @@ export const useReservationMutations = (onSuccess: () => void) => {
     mutationFn: async (reservationData: ReservationData) => {
       console.log("Creating reservation with data:", reservationData);
       
+      // First, get the wednesday_id for the given date
+      const { data: wednesday, error: wednesdayError } = await supabase
+        .from("available_wednesdays")
+        .select("id")
+        .eq("date", format(reservationData.date, "yyyy-MM-dd"))
+        .single();
+
+      if (wednesdayError) throw wednesdayError;
+      if (!wednesday) throw new Error("Mercredi non disponible");
+
       const reservationNumber = generateReservationNumber();
       const { data, error } = await supabase
         .from("reservations")
         .insert({
           child_id: reservationData.childId,
+          wednesday_id: wednesday.id,
           reservation_date: format(reservationData.date, "yyyy-MM-dd"),
           without_meal: reservationData.withoutMeal,
           early_dropoff: reservationData.earlyDropoff,
@@ -37,20 +49,9 @@ export const useReservationMutations = (onSuccess: () => void) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      toast({
-        title: "Réservation confirmée",
-        description: "Votre réservation a été enregistrée avec succès. Un email de confirmation vous a été envoyé.",
-      });
-      onSuccess();
-    },
     onError: (error: Error) => {
       console.error("Reservation error:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue lors de la réservation.",
-        variant: "destructive",
-      });
+      throw error; // Re-throw the error to be handled by the calling code
     },
   });
 

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useReservationQueries } from "./useReservationQueries";
@@ -98,12 +99,32 @@ export const useReservations = () => {
       setIsSubmitting(true);
 
       for (const dateOption of selectedDates) {
-        await createReservationMutation.mutateAsync({
-          childId: selectedChild,
-          date: dateOption.date,
-          withoutMeal: dateOption.withoutMeal,
-          earlyDropoff: dateOption.earlyDropoff,
-        });
+        try {
+          await createReservationMutation.mutateAsync({
+            childId: selectedChild,
+            date: dateOption.date,
+            withoutMeal: dateOption.withoutMeal,
+            earlyDropoff: dateOption.earlyDropoff,
+          });
+        } catch (error: any) {
+          console.error("Error creating reservation:", error);
+          
+          // Handle policy violation error
+          if (error?.message?.includes('policy')) {
+            toast({
+              title: "Places complètes",
+              description: `Plus de places disponibles pour le ${format(dateOption.date, 'dd/MM/yyyy')}`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Erreur",
+              description: "Une erreur est survenue lors de la création de la réservation.",
+              variant: "destructive",
+            });
+          }
+          return; // Stop processing further dates if there's an error
+        }
       }
 
       toast({
@@ -114,8 +135,9 @@ export const useReservations = () => {
       setSelectedDates([]);
       // Invalider le cache pour forcer une mise à jour
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["available_wednesdays"] });
     } catch (error: any) {
-      console.error("Error creating reservations:", error);
+      console.error("Error in handleSubmit:", error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la création des réservations.",

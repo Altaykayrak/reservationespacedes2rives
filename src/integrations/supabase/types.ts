@@ -433,6 +433,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_wednesday_spots_available: {
+        Args: {
+          wednesday_id: string
+          child_school_class: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: {
           user_id: string
