@@ -55,16 +55,48 @@ const WednesdayReservations = () => {
           throw new Error("No session found");
         }
 
-        console.log("Fetching wednesday reservations for user:", session.user.id);
+        console.log("Current user ID:", session.user.id);
 
+        // Récupérer d'abord les enfants de l'utilisateur
+        const { data: userChildren, error: childrenError } = await supabase
+          .from('children')
+          .select('id')
+          .eq('profile_id', session.user.id);
+
+        if (childrenError) {
+          console.error("Erreur lors de la récupération des enfants:", childrenError);
+          throw childrenError;
+        }
+
+        const childrenIds = userChildren.map(child => child.id);
+        console.log("Children IDs:", childrenIds);
+
+        // Récupérer les réservations pour ces enfants
         const { data, error } = await supabase
-          .from("wednesday_reservations")
+          .from('wednesday_reservations')
           .select(`
-            *,
-            children (*),
-            available_wednesdays (*)
+            id,
+            child_id,
+            wednesday_id,
+            without_meal,
+            early_dropoff,
+            status,
+            created_at,
+            children:child_id (
+              id,
+              first_name,
+              last_name,
+              school_class
+            ),
+            available_wednesdays!inner (
+              id,
+              date,
+              max_participants_kindergarten,
+              max_participants_primary
+            )
           `)
           .eq('status', 'confirmed')
+          .in('child_id', childrenIds)
           .order('created_at', { ascending: true });
         
         if (error) {
