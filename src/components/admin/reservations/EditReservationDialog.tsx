@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { WednesdayReservationWithChild } from "./hooks/useAdminReservations";
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 interface EditReservationDialogProps {
   reservation: WednesdayReservationWithChild | null;

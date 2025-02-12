@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { ReservationItem } from "./ReservationItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { WednesdayReservationWithChild } from "./hooks/useAdminReservations";
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 interface ReservationListProps {
   reservations: WednesdayReservationWithChild[] | null;

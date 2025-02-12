@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { WednesdayReservationWithChild } from "./useAdminReservations";
+import { WednesdayReservationWithChild } from "@/types/reservations";
 import { format } from "date-fns";
 
 export const useFilteredReservations = (reservations: WednesdayReservationWithChild[] | undefined) => {

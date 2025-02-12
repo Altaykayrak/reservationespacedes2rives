@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Pencil, Trash2 } from "lucide-react";
 import { ReservationBadges } from "@/components/reservations/ReservationBadges";
-import { WednesdayReservationWithChild } from "./hooks/useAdminReservations";
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 interface ReservationItemProps {
   reservation: WednesdayReservationWithChild;
