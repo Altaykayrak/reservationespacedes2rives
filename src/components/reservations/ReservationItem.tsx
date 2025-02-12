@@ -54,6 +54,11 @@ export const ReservationItem = ({
     }
   };
 
+  // Si les données ne sont pas complètement chargées, on affiche un message de chargement
+  if (!reservation.available_wednesdays) {
+    return <div>Chargement...</div>;
+  }
+
   return (
     <>
       <div className="flex items-center justify-between p-3 transition-colors hover:bg-gray-50">
