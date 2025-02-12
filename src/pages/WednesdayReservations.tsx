@@ -104,7 +104,18 @@ const WednesdayReservations = () => {
           throw error;
         }
 
-        console.log("Réservations confirmées récupérées:", data);
+        // Ajout de logs détaillés pour chaque réservation
+        data?.forEach((reservation, index) => {
+          console.log(`Réservation ${index + 1}:`, {
+            id: reservation.id,
+            has_children_data: !!reservation.children,
+            children_data: reservation.children,
+            has_wednesday_data: !!reservation.available_wednesdays,
+            wednesday_data: reservation.available_wednesdays,
+            status: reservation.status
+          });
+        });
+
         return data as WednesdayReservationWithChild[];
       } catch (error) {
         console.error("Erreur complète:", error);
