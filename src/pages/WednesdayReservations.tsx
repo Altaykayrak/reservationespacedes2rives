@@ -102,9 +102,15 @@ const WednesdayReservations = () => {
           throw error;
         }
 
-        console.log("Réservations confirmées récupérées:", data);
+        // Transformation des données pour correspondre au type attendu
+        const transformedData = data.map(reservation => ({
+          ...reservation,
+          available_wednesdays: reservation.available_wednesdays?.[0] // La jointure retourne un tableau, nous prenons le premier élément
+        }));
 
-        return data as WednesdayReservationWithChild[];
+        console.log("Réservations après transformation:", transformedData);
+
+        return transformedData as WednesdayReservationWithChild[];
       } catch (error) {
         console.error("Erreur complète:", error);
         queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] });
