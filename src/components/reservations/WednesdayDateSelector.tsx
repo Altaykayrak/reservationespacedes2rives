@@ -51,13 +51,16 @@ export const WednesdayDateSelector = ({
   const { data: availableWednesdays } = useQuery({
     queryKey: ["available_wednesdays"],
     queryFn: async () => {
+      console.log("Fetching available wednesdays for child class:", childInfo?.school_class);
+      
       const { data: wednesdays, error } = await supabase
         .from("available_wednesdays")
         .select(`
           *,
-          reservations (
+          reservations!inner(
             id,
-            children (
+            status,
+            children!inner(
               school_class
             )
           )
@@ -65,30 +68,50 @@ export const WednesdayDateSelector = ({
         .gte('date', today.toISOString().split('T')[0])
         .order('date', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching wednesdays:", error);
+        throw error;
+      }
+
+      console.log("Raw wednesdays data:", wednesdays);
 
       return wednesdays?.map(wednesday => {
         const kindergartenReservations = wednesday.reservations.filter(r => 
-          r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class)
+          r.status === 'confirmed' && 
+          r.children?.school_class && 
+          ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
         const primaryReservations = wednesday.reservations.filter(r => 
-          r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+          r.status === 'confirmed' && 
+          r.children?.school_class && 
+          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
         ).length;
+
+        console.log(`Wednesday ${wednesday.date} stats:`, {
+          kindergartenReservations,
+          primaryReservations,
+          maxKindergarten: wednesday.max_participants_kindergarten,
+          maxPrimary: wednesday.max_participants_primary
+        });
 
         const isFull = (isKindergarten && kindergartenReservations >= wednesday.max_participants_kindergarten) ||
                       (isPrimary && primaryReservations >= wednesday.max_participants_primary);
 
+        console.log(`Is full for current child? ${isFull}`);
+
         return {
           ...wednesday,
           isFull,
+          kindergartenReservations,
+          primaryReservations
         };
       }).filter(wednesday => {
         const wednesdayDate = new Date(wednesday.date);
         return wednesdayDate >= minDate;
       });
     },
-    enabled: !!childInfo?.school_class, // N'exécute la requête que si nous avons les informations de l'enfant
+    enabled: !!childInfo?.school_class,
   });
 
   if (!availableWednesdays || availableWednesdays.length === 0) {
@@ -116,6 +139,10 @@ export const WednesdayDateSelector = ({
           const isReserved = isDateAlreadyReserved(date);
           const isDisabled = isReserved || wednesday.isFull;
 
+          const remainingSpots = isKindergarten 
+            ? wednesday.max_participants_kindergarten - wednesday.kindergartenReservations
+            : wednesday.max_participants_primary - wednesday.primaryReservations;
+
           return (
             <div
               key={wednesday.date}
@@ -138,11 +165,17 @@ export const WednesdayDateSelector = ({
                   >
                     {format(date, "EEEE d MMMM yyyy", { locale: fr })}
                   </Label>
-                  {isDisabled && (
-                    <span className="text-sm text-gray-600">
-                      {isReserved ? "(Déjà réservé)" : "Complet"}
-                    </span>
-                  )}
+                  <div className="text-sm">
+                    {isDisabled ? (
+                      <span className="text-gray-600">
+                        {isReserved ? "(Déjà réservé)" : "Complet"}
+                      </span>
+                    ) : (
+                      <span className="text-green-600">
+                        {`Places restantes: ${remainingSpots}`}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               {selectedDateOption && !isDisabled && (
