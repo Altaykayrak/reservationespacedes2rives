@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addHours } from "date-fns";
@@ -47,29 +48,31 @@ export const WednesdayDateSelector = ({
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
   const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
 
-  const { data: availableWednesdays, isLoading, error } = useQuery({
+  const { data: availableWednesdays = [], isLoading, error } = useQuery({
     queryKey: ["available_wednesdays", childInfo?.school_class],
     queryFn: async () => {
+      console.log('Fetching wednesdays data...');
+      
+      // Première requête pour les mercredis disponibles
       const { data: wednesdays, error: wednesdaysError } = await supabase
         .from("available_wednesdays")
-        .select(`
-          id,
-          date,
-          max_participants_kindergarten,
-          max_participants_primary
-        `)
+        .select()
         .gte('date', today.toISOString().split('T')[0])
         .order('date', { ascending: true });
 
       if (wednesdaysError) throw wednesdaysError;
+      if (!wednesdays) return [];
 
-      const wednesdayIds = wednesdays?.map(w => w.id) || [];
-      const { data: reservations, error: reservationsError } = await supabase
+      console.log('Fetched wednesdays:', wednesdays);
+
+      // Deuxième requête pour toutes les réservations de ces mercredis
+      const wednesdayIds = wednesdays.map(w => w.id);
+      const { data: reservationsData, error: reservationsError } = await supabase
         .from("reservations")
         .select(`
           id,
           wednesday_id,
-          children (
+          children!inner (
             id,
             school_class
           )
@@ -77,72 +80,64 @@ export const WednesdayDateSelector = ({
         .in('wednesday_id', wednesdayIds);
 
       if (reservationsError) throw reservationsError;
+      console.log('Fetched reservations:', reservationsData);
 
-      return wednesdays?.map(wednesday => {
-        const wednesdayReservations = reservations?.filter(r => r.wednesday_id === wednesday.id) || [];
-        
-        const kindergartenReservations = wednesdayReservations.filter(r => 
-          r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class)
+      // Traitement des données
+      return wednesdays.map(wednesday => {
+        const wednesdayReservations = (reservationsData || [])
+          .filter(r => r.wednesday_id === wednesday.id);
+
+        const kindergartenCount = wednesdayReservations.filter(r => 
+          ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
-        const primaryReservations = wednesdayReservations.filter(r => 
-          r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+        const primaryCount = wednesdayReservations.filter(r => 
+          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
         ).length;
 
-        console.log(`Wednesday ${wednesday.date} detailed stats:`, {
+        // Log détaillé pour chaque mercredi
+        console.log(`Wednesday ${wednesday.date} stats:`, {
           date: wednesday.date,
-          totalReservations: wednesdayReservations.length,
-          kindergartenCount: kindergartenReservations,
-          primaryCount: primaryReservations,
+          kindergartenCount,
+          primaryCount,
           maxKindergarten: wednesday.max_participants_kindergarten,
-          maxPrimary: wednesday.max_participants_primary
+          maxPrimary: wednesday.max_participants_primary,
+          totalReservations: wednesdayReservations.length
         });
-
-        const isFull = (isKindergarten && kindergartenReservations >= wednesday.max_participants_kindergarten) ||
-                      (isPrimary && primaryReservations >= wednesday.max_participants_primary);
 
         return {
           ...wednesday,
-          isFull,
-          kindergartenReservations,
-          primaryReservations
+          kindergartenReservations: kindergartenCount,
+          primaryReservations: primaryCount,
+          isFull: isKindergarten ? 
+            kindergartenCount >= wednesday.max_participants_kindergarten :
+            primaryCount >= wednesday.max_participants_primary
         };
       }).filter(wednesday => {
         const wednesdayDate = new Date(wednesday.date);
         return wednesdayDate >= minDate;
       });
     },
-    enabled: true,
+    enabled: !!childInfo,
   });
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <div>
-          <p className="text-sm text-muted-foreground">
-            Chargement des mercredis disponibles...
-          </p>
-        </div>
+      <div className="flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
 
   if (error) {
-    console.error("Error in component:", error);
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
-        <div>
-          <h3 className="font-semibold text-destructive">Erreur</h3>
-          <p className="text-sm text-muted-foreground">
-            Une erreur est survenue lors du chargement des mercredis disponibles.
-          </p>
-        </div>
+      <div className="text-center p-4 text-red-500">
+        Une erreur est survenue lors du chargement des dates
       </div>
     );
   }
 
-  if (!availableWednesdays || availableWednesdays.length === 0) {
+  if (!availableWednesdays.length) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
         <Calendar className="h-12 w-12 text-muted-foreground" />
