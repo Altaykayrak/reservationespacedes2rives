@@ -71,6 +71,11 @@ const WednesdayReservations = () => {
         const childrenIds = userChildren.map(child => child.id);
         console.log("Children IDs:", childrenIds);
 
+        if (childrenIds.length === 0) {
+          console.log("Aucun enfant trouvé pour cet utilisateur");
+          return [];
+        }
+
         // Récupérer les réservations pour ces enfants
         const { data, error } = await supabase
           .from('wednesday_reservations')
@@ -104,6 +109,8 @@ const WednesdayReservations = () => {
           throw error;
         }
 
+        console.log("Nombre de réservations trouvées:", data?.length || 0);
+        
         // Ajout de logs détaillés pour chaque réservation
         data?.forEach((reservation, index) => {
           console.log(`Réservation ${index + 1}:`, {
