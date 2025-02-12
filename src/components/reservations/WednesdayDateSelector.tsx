@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addHours } from "date-fns";
@@ -61,7 +60,6 @@ export const WednesdayDateSelector = ({
           *,
           reservations!wednesday_id(
             id,
-            status,
             child_id,
             children!child_id(
               school_class
@@ -79,21 +77,17 @@ export const WednesdayDateSelector = ({
       console.log("Raw wednesdays data:", wednesdays);
 
       return wednesdays?.map(wednesday => {
-        // Filtrer uniquement les réservations confirmées
-        const confirmedReservations = wednesday.reservations.filter(r => r.status === 'confirmed');
-        
-        const kindergartenReservations = confirmedReservations.filter(r => 
+        const kindergartenReservations = wednesday.reservations.filter(r => 
           r.children?.school_class && 
           ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
-        const primaryReservations = confirmedReservations.filter(r => 
+        const primaryReservations = wednesday.reservations.filter(r => 
           r.children?.school_class && 
           ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
         ).length;
 
         console.log(`Wednesday ${wednesday.date} stats:`, {
-          confirmations: confirmedReservations.length,
           kindergartenReservations,
           primaryReservations,
           maxKindergarten: wednesday.max_participants_kindergarten,
