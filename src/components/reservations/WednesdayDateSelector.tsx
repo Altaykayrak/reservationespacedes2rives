@@ -169,9 +169,8 @@ export const WednesdayDateSelector = ({
           const isReserved = isDateAlreadyReserved(date);
           const isDisabled = isReserved || wednesday.isFull;
 
-          const remainingSpots = isKindergarten 
-            ? wednesday.max_participants_kindergarten - wednesday.kindergartenReservations
-            : wednesday.max_participants_primary - wednesday.primaryReservations;
+          const kindergartenSpots = wednesday.max_participants_kindergarten - wednesday.kindergartenReservations;
+          const primarySpots = wednesday.max_participants_primary - wednesday.primaryReservations;
 
           return (
             <div
@@ -195,15 +194,20 @@ export const WednesdayDateSelector = ({
                   >
                     {format(date, "EEEE d MMMM yyyy", { locale: fr })}
                   </Label>
-                  <div className="text-sm">
+                  <div className="text-sm space-y-0.5">
                     {isDisabled ? (
                       <span className="text-gray-600">
                         {isReserved ? "(Déjà réservé)" : "Complet"}
                       </span>
                     ) : (
-                      <span className="text-green-600">
-                        {`Places restantes: ${remainingSpots}`}
-                      </span>
+                      <div className="space-y-0.5">
+                        <span className="block text-green-600">
+                          Maternelles : {kindergartenSpots} places restantes
+                        </span>
+                        <span className="block text-green-600">
+                          Primaires : {primarySpots} places restantes
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
