@@ -72,11 +72,7 @@ export const WednesdayDateSelector = ({
           id,
           date,
           max_participants_kindergarten,
-          max_participants_primary,
-          reservations:reservations(
-            id,
-            children(school_class)
-          )
+          max_participants_primary
         `)
         .gte('date', today.toISOString().split('T')[0])
         .order('date', { ascending: true });
@@ -88,20 +84,43 @@ export const WednesdayDateSelector = ({
 
       if (!wednesdays) return [];
 
-      console.log('Données brutes des mercredis:', wednesdays);
+      console.log('Mercredis récupérés:', wednesdays);
+
+      // Récupération de TOUTES les réservations pour ces dates
+      const { data: reservations, error: reservationsError } = await supabase
+        .from("reservations")
+        .select(`
+          id,
+          wednesday_id,
+          reservation_date,
+          children ( school_class )
+        `)
+        .or(`wednesday_id.in.(${wednesdays.map(w => w.id).join(',')}),reservation_date.in.(${wednesdays.map(w => w.date).join(',')})`);
+
+      if (reservationsError) {
+        console.error('Erreur lors de la récupération des réservations:', reservationsError);
+        throw reservationsError;
+      }
+
+      console.log('Toutes les réservations récupérées:', reservations);
 
       // Traitement des données pour chaque mercredi
       return wednesdays.map(wednesday => {
-        // S'assurer que reservations est un tableau
-        const reservations = wednesday.reservations || [];
+        // Filtrer les réservations pour ce mercredi (soit par wednesday_id, soit par date)
+        const wednesdayReservations = (reservations || []).filter(r => 
+          r.wednesday_id === wednesday.id || 
+          r.reservation_date === wednesday.date
+        );
+        
+        console.log(`Réservations pour le mercredi ${wednesday.date}:`, wednesdayReservations);
         
         // Compter les réservations par type
-        const kindergartenCount = reservations.filter(reservation => 
+        const kindergartenCount = wednesdayReservations.filter(reservation => 
           reservation.children?.school_class && 
           ["PS", "MS", "GS"].includes(reservation.children.school_class)
         ).length;
 
-        const primaryCount = reservations.filter(reservation => 
+        const primaryCount = wednesdayReservations.filter(reservation => 
           reservation.children?.school_class && 
           ["CP", "CE1", "CE2", "CM1", "CM2"].includes(reservation.children.school_class)
         ).length;
