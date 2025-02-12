@@ -57,10 +57,10 @@ export const WednesdayDateSelector = ({
         .from("available_wednesdays")
         .select(`
           *,
-          reservations!inner(
+          reservations(
             id,
             status,
-            children!inner(
+            children(
               school_class
             )
           )
@@ -76,13 +76,14 @@ export const WednesdayDateSelector = ({
       console.log("Raw wednesdays data:", wednesdays);
 
       return wednesdays?.map(wednesday => {
-        const kindergartenReservations = wednesday.reservations.filter(r => 
+        const reservations = wednesday.reservations || [];
+        const kindergartenReservations = reservations.filter(r => 
           r.status === 'confirmed' && 
           r.children?.school_class && 
           ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
-        const primaryReservations = wednesday.reservations.filter(r => 
+        const primaryReservations = reservations.filter(r => 
           r.status === 'confirmed' && 
           r.children?.school_class && 
           ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
@@ -131,7 +132,7 @@ export const WednesdayDateSelector = ({
   return (
     <ScrollArea className="h-[300px] pr-3">
       <div className="space-y-1">
-        {availableWednesdays.map((wednesday) => {
+        {availableWednesdays?.map((wednesday) => {
           const date = new Date(wednesday.date);
           const selectedDateOption = selectedDates.find(
             (d) => d.date.getTime() === date.getTime()
