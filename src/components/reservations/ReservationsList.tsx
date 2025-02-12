@@ -49,7 +49,21 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     return <EmptyReservations />;
   }
 
-  const reservationsByChild = reservations.reduce((acc, reservation) => {
+  // Filtrer les réservations valides (qui ont toutes les données requises)
+  const validReservations = reservations.filter(
+    (reservation) => reservation.available_wednesdays?.date && reservation.children
+  );
+
+  if (validReservations.length === 0) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">Aucune réservation valide trouvée.</p>
+      </div>
+    );
+  }
+
+  // Grouper les réservations par enfant
+  const reservationsByChild = validReservations.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {
@@ -63,12 +77,10 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   }, {} as GroupedReservations);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos mercredis réservés (sous réserve de règlement)
-        </h2>
-      </div>
+    <div>
+      <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
+        Vos mercredis réservés (sous réserve de règlement)
+      </h2>
       <ScrollArea className="h-[450px]">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
           {Object.entries(reservationsByChild).map(([childId, data]) => (
