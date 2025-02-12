@@ -13,10 +13,18 @@ export const ReservationItem = ({
   reservation,
   onUpdate
 }: ReservationItemProps) => {
-  // Vérifier que nous avons toutes les données nécessaires
-  if (!reservation.available_wednesdays || !reservation.children) {
-    console.error("Missing required data in reservation:", reservation);
-    return <div>Données de réservation incomplètes</div>;
+  if (!reservation.available_wednesdays?.date || !reservation.children) {
+    console.error("Missing required data in reservation:", {
+      hasAvailableWednesdays: !!reservation.available_wednesdays,
+      hasChildren: !!reservation.children,
+      reservation: reservation
+    });
+    return (
+      <div className="p-3 bg-red-50 text-red-700 rounded-md">
+        <p className="text-sm">Les données de cette réservation sont incomplètes.</p>
+        <p className="text-xs mt-1">Veuillez contacter le support si le problème persiste.</p>
+      </div>
+    );
   }
 
   return (
