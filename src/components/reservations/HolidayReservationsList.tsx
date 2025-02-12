@@ -2,19 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
-import { Tables } from "@/integrations/supabase/types";
+import { HolidayReservationWithChild } from "@/types/reservations";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-type ReservationWithChild = Tables<"reservations"> & {
-  children: Tables<"children">;
-};
-
 type GroupedReservations = Record<string, {
   childName: string;
   schoolClass: string;
-  reservations: ReservationWithChild[];
+  reservations: HolidayReservationWithChild[];
 }>;
 
 export const HolidayReservationsList = () => {
@@ -27,24 +23,23 @@ export const HolidayReservationsList = () => {
       if (!user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase
-        .from("reservations")
+        .from("holiday_reservations")
         .select(`
           *,
           children (*)
         `)
-        .not('period_id', 'is', null) // Only get holiday reservations (with period_id)
+        .eq('status', 'confirmed')
         .order('reservation_date', { ascending: true });
       
       if (error) {
         console.error("Error fetching reservations:", error);
         throw error;
       }
-      return data as ReservationWithChild[];
+      return data as HolidayReservationWithChild[];
     },
   });
 
   useEffect(() => {
-    // Subscribe to all changes (INSERT, UPDATE, DELETE) on the reservations table
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -52,7 +47,7 @@ export const HolidayReservationsList = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'reservations'
+          table: 'holiday_reservations'
         },
         (payload) => {
           console.log('Reservation change detected:', payload);
@@ -61,7 +56,6 @@ export const HolidayReservationsList = () => {
       )
       .subscribe();
 
-    // Cleanup subscription on component unmount
     return () => {
       supabase.removeChannel(channel);
     };
@@ -97,7 +91,7 @@ export const HolidayReservationsList = () => {
     return <EmptyReservations />;
   }
 
-  const reservationsByChild = reservations.reduce((acc, reservation) => {
+  const reservationsByChild = reservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {

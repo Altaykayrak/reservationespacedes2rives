@@ -1,15 +1,11 @@
-
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
-
-type WednesdayReservationWithChild = Tables<"wednesday_reservations"> & {
-  children: Tables<"children">;
-};
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 export const useReservations = () => {
   const queryClient = useQueryClient();
+  const isSubmitting = useIsMutating() > 0;
   const [selectedChild, setSelectedChild] = useState("");
   const [selectedDates, setSelectedDates] = useState<Array<{
     date: Date;
@@ -17,7 +13,6 @@ export const useReservations = () => {
     earlyDropoff: boolean;
   }>>([]);
 
-  // Optimisation des requêtes children avec staleTime et gcTime
   const { data: children } = useQuery({
     queryKey: ["children"],
     queryFn: async () => {
@@ -30,11 +25,10 @@ export const useReservations = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 30000, // Les données restent "fraîches" pendant 30 secondes
-    gcTime: 3600000, // Garbage collection après 1 heure
+    staleTime: 30000,
+    gcTime: 3600000,
   });
 
-  // Optimisation des requêtes wednesday_reservations
   const { data: wednesdayReservations, refetch: refetchReservations } = useQuery({
     queryKey: ["wednesday_reservations"],
     queryFn: async () => {
@@ -160,5 +154,6 @@ export const useReservations = () => {
     isDateReservedForChild,
     resetForm,
     refetchReservations,
+    isSubmitting,
   };
 };

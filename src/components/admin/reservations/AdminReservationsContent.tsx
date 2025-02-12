@@ -1,14 +1,13 @@
-
 import { ReservationList } from "./ReservationList";
 import { ReservationFilters } from "./ReservationFilters";
 import { EditReservationDialog } from "./EditReservationDialog";
 import { DeleteReservationDialog } from "./DeleteReservationDialog";
 import { useFilteredReservations } from "./hooks/useFilteredReservations";
 import { useReservationActions } from "./ReservationActions";
-import { ReservationWithChild } from "./hooks/useAdminReservations";
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 interface AdminReservationsContentProps {
-  reservations: ReservationWithChild[] | undefined;
+  reservations: WednesdayReservationWithChild[] | undefined;
   isLoading: boolean;
   refetchReservations: () => Promise<unknown>;
 }
@@ -100,4 +99,3 @@ export const AdminReservationsContent = ({
     </div>
   );
 };
-
