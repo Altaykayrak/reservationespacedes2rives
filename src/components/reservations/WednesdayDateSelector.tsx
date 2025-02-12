@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addHours } from "date-fns";
@@ -31,19 +32,57 @@ export const WednesdayDateSelector = ({
   today.setHours(0, 0, 0, 0);
   const minDate = addHours(today, 72);
 
+  const { data: childInfo } = useQuery({
+    queryKey: ["selectedChild"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("school_class")
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
+  const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
+
   const { data: availableWednesdays } = useQuery({
     queryKey: ["available_wednesdays"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: wednesdays, error } = await supabase
         .from("available_wednesdays")
-        .select("*")
+        .select(`
+          *,
+          reservations!inner (
+            child_id,
+            children (
+              school_class
+            )
+          )
+        `)
         .gte('date', today.toISOString().split('T')[0])
         .order('date', { ascending: true });
       
       if (error) throw error;
 
-      // Filtrer les dates qui sont dans moins de 72 heures
-      return data?.filter(wednesday => {
+      // Ajout du calcul des places restantes pour chaque mercredi
+      return wednesdays?.map(wednesday => {
+        const kindergartenReservations = wednesday.reservations.filter(r => 
+          ["PS", "MS", "GS"].includes(r.children.school_class)
+        ).length;
+
+        const primaryReservations = wednesday.reservations.filter(r => 
+          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+        ).length;
+
+        return {
+          ...wednesday,
+          remainingKindergartenSpots: wednesday.max_participants_kindergarten - kindergartenReservations,
+          remainingPrimarySpots: wednesday.max_participants_primary - primaryReservations,
+        };
+      }).filter(wednesday => {
         const wednesdayDate = new Date(wednesday.date);
         return wednesdayDate >= minDate;
       });
@@ -74,6 +113,14 @@ export const WednesdayDateSelector = ({
           );
           const isReserved = isDateAlreadyReserved(date);
 
+          // Vérifier s'il reste des places selon le niveau scolaire
+          const noSpots = (isKindergarten && wednesday.remainingKindergartenSpots <= 0) || 
+                         (isPrimary && wednesday.remainingPrimarySpots <= 0);
+
+          const spotsMessage = isKindergarten 
+            ? `Places restantes en maternelle : ${wednesday.remainingKindergartenSpots}`
+            : `Places restantes en primaire : ${wednesday.remainingPrimarySpots}`;
+
           return (
             <div
               key={wednesday.date}
@@ -83,25 +130,25 @@ export const WednesdayDateSelector = ({
                 <Checkbox
                   id={wednesday.date}
                   checked={!!selectedDateOption}
-                  onCheckedChange={() => !isReserved && handleDateToggle(date)}
-                  disabled={isReserved}
+                  onCheckedChange={() => !isReserved && !noSpots && handleDateToggle(date)}
+                  disabled={isReserved || noSpots}
                   className="border-green-200"
                 />
-                <Label
-                  htmlFor={wednesday.date}
-                  className={`flex-1 cursor-pointer font-medium ${
-                    isReserved ? 'text-gray-500' : 'text-green-900'
-                  }`}
-                >
-                  {format(date, "EEEE d MMMM yyyy", { locale: fr })}
-                  {isReserved && (
-                    <span className="ml-2 text-sm text-gray-500">
-                      (Déjà réservé)
-                    </span>
-                  )}
-                </Label>
+                <div className="flex flex-col">
+                  <Label
+                    htmlFor={wednesday.date}
+                    className={`flex-1 cursor-pointer font-medium ${
+                      isReserved || noSpots ? 'text-gray-500' : 'text-green-900'
+                    }`}
+                  >
+                    {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+                  </Label>
+                  <span className="text-sm text-gray-600">
+                    {isReserved ? "(Déjà réservé)" : noSpots ? "Complet" : spotsMessage}
+                  </span>
+                </div>
               </div>
-              {selectedDateOption && !isReserved && (
+              {selectedDateOption && !isReserved && !noSpots && (
                 <div className="ml-6 space-y-1 bg-white/50 p-2 rounded-md">
                   <div className="flex items-center space-x-2">
                     <Checkbox
