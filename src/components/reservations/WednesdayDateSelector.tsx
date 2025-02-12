@@ -33,7 +33,7 @@ interface WednesdayWithCounts {
 }
 
 export const WednesdayDateSelector = ({
-  selectedDates,
+  selectedDates = [], // Ajout d'une valeur par défaut
   handleDateToggle,
   handleOptionChange,
   isDateAlreadyReserved,
@@ -42,7 +42,6 @@ export const WednesdayDateSelector = ({
   today.setHours(0, 0, 0, 0);
   const minDate = addHours(today, 72);
 
-  // On charge d'abord les infos de l'enfant
   const { data: childInfo } = useQuery({
     queryKey: ["selectedChild"],
     queryFn: async () => {
@@ -59,7 +58,6 @@ export const WednesdayDateSelector = ({
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
   const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
 
-  // Requête pour les mercredis disponibles avec leurs réservations
   const { data: availableWednesdays = [], isLoading, error } = useQuery<WednesdayWithCounts[]>({
     queryKey: ["available_wednesdays"],
     queryFn: async () => {
@@ -178,7 +176,7 @@ export const WednesdayDateSelector = ({
       <div className="space-y-1">
         {availableWednesdays.map((wednesday) => {
           const date = new Date(wednesday.date);
-          const selectedDateOption = selectedDates.find(
+          const selectedDateOption = selectedDates?.find(
             (d) => d.date.getTime() === date.getTime()
           );
           const isReserved = isDateAlreadyReserved(date);
