@@ -1,20 +1,13 @@
+
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Pencil, Trash2 } from "lucide-react";
 import { ReservationBadges } from "@/components/reservations/ReservationBadges";
-import { Tables } from "@/integrations/supabase/types";
-
-type ReservationWithChild = Tables<"reservations"> & {
-  children: {
-    first_name: string;
-    last_name: string;
-    school_class: string;
-  };
-};
+import { WednesdayReservationWithChild } from "./hooks/useAdminReservations";
 
 interface ReservationItemProps {
-  reservation: ReservationWithChild;
-  onEdit: (reservation: ReservationWithChild) => void;
+  reservation: WednesdayReservationWithChild;
+  onEdit: (reservation: WednesdayReservationWithChild) => void;
   onDelete: (id: string) => void;
 }
 
@@ -34,7 +27,7 @@ export const ReservationItem = ({
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>Classe: {reservation.children?.school_class}</span>
               <span>•</span>
-              <span>{format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr })}</span>
+              <span>{format(new Date(reservation.available_wednesdays.date), "EEEE d MMMM yyyy", { locale: fr })}</span>
             </div>
           </div>
           <ReservationBadges 

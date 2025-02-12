@@ -1,19 +1,12 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Tables } from "@/integrations/supabase/types";
-
-type ReservationWithChild = Tables<"reservations"> & {
-  children: {
-    first_name: string;
-    last_name: string;
-    school_class: string;
-  };
-};
+import { WednesdayReservationWithChild } from "./hooks/useAdminReservations";
 
 interface EditReservationDialogProps {
-  reservation: ReservationWithChild | null;
+  reservation: WednesdayReservationWithChild | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: () => void;

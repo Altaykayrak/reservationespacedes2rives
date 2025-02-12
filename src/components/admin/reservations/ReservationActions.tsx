@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ReservationWithChild } from "./hooks/useAdminReservations";
+import { WednesdayReservationWithChild } from "./hooks/useAdminReservations";
 
 interface ReservationActionsProps {
   refetchReservations: () => Promise<unknown>;
@@ -10,7 +10,7 @@ interface ReservationActionsProps {
 
 export const useReservationActions = ({ refetchReservations }: ReservationActionsProps) => {
   const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
-  const [editingReservation, setEditingReservation] = useState<ReservationWithChild | null>(null);
+  const [editingReservation, setEditingReservation] = useState<WednesdayReservationWithChild | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDelete = async () => {
@@ -18,7 +18,7 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
 
     try {
       const { error } = await supabase
-        .from('reservations')
+        .from('wednesday_reservations')
         .delete()
         .eq('id', reservationToDelete);
 
@@ -41,7 +41,7 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
       setIsSubmitting(true);
 
       const { error } = await supabase
-        .from("reservations")
+        .from("wednesday_reservations")
         .update({
           without_meal: editingReservation.without_meal,
           early_dropoff: editingReservation.early_dropoff,
