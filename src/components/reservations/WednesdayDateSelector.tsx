@@ -64,111 +64,89 @@ export const WednesdayDateSelector = ({
     queryFn: async () => {
       console.log('Démarrage de la requête pour les mercredis disponibles');
       
-      // Récupération des mercredis futurs uniquement
-      const { data: wednesdays, error: wednesdaysError } = await supabase
-        .from("available_wednesdays")
-        .select(`
-          id,
-          date,
-          max_participants_kindergarten,
-          max_participants_primary
-        `)
-        .gte('date', today.toISOString().split('T')[0])
-        .order('date', { ascending: true });
+      try {
+        // 1. Récupération des mercredis
+        console.log('Récupération des mercredis...');
+        const wednesdaysResult = await supabase
+          .from("available_wednesdays")
+          .select('*')
+          .gte('date', today.toISOString().split('T')[0])
+          .order('date', { ascending: true });
 
-      if (wednesdaysError) {
-        console.error('Erreur lors de la récupération des mercredis:', wednesdaysError);
-        throw wednesdaysError;
-      }
+        if (wednesdaysResult.error) throw wednesdaysResult.error;
+        console.log('Mercredis récupérés:', wednesdaysResult.data);
 
-      if (!wednesdays) return [];
+        // 2. Récupération de toutes les réservations
+        console.log('Récupération des réservations...');
+        const reservationsResult = await supabase
+          .from("reservations")
+          .select('*, children(*)');
 
-      console.log('Mercredis récupérés:', wednesdays);
+        if (reservationsResult.error) throw reservationsResult.error;
+        console.log('Réservations récupérées:', reservationsResult.data);
 
-      // Récupération de TOUTES les réservations sans filtrer par status
-      const reservationsQuery = supabase
-        .from("reservations")
-        .select(`
-          id,
-          wednesday_id,
-          child_id,
-          reservation_date,
-          status,
-          children(
-            school_class
-          )
-        `);
+        // 3. Traitement des mercredis
+        const processedWednesdays = wednesdaysResult.data.map(wednesday => {
+          console.log(`\nTraitement du mercredi ${wednesday.date}`);
 
-      console.log('Requête réservations:', reservationsQuery);
-
-      const { data: reservations, error: reservationsError } = await reservationsQuery;
-
-      if (reservationsError) {
-        console.error('Erreur lors de la récupération des réservations:', reservationsError);
-        throw reservationsError;
-      }
-
-      console.log('Toutes les réservations récupérées:', reservations);
-
-      // Traitement des données pour chaque mercredi
-      return wednesdays.map(wednesday => {
-        // Filtrer les réservations pour ce mercredi uniquement
-        const wednesdayReservations = reservations?.filter(r => {
-          const matchesWednesday = r.wednesday_id === wednesday.id || r.reservation_date === wednesday.date;
-          console.log(`Vérification réservation pour ${wednesday.date}:`, {
-            reservation: r,
-            matchesWednesday,
-            hasSchoolClass: !!r.children?.school_class
+          // Filtrer les réservations pour ce mercredi
+          const wednesdayReservations = reservationsResult.data.filter(r => {
+            return r.wednesday_id === wednesday.id || r.reservation_date === wednesday.date;
           });
-          return matchesWednesday;
-        }) || [];
-        
-        console.log(`Réservations pour le mercredi ${wednesday.date}:`, wednesdayReservations);
-        
-        // Compter les réservations par type
-        const kindergartenCount = wednesdayReservations.filter(r => {
-          const isKindergarten = r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class);
-          console.log(`Vérification maternelle pour ${r.id}:`, {
-            schoolClass: r.children?.school_class,
-            isKindergarten
-          });
-          return isKindergarten;
-        }).length;
 
-        const primaryCount = wednesdayReservations.filter(r => {
-          const isPrimary = r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class);
-          console.log(`Vérification primaire pour ${r.id}:`, {
-            schoolClass: r.children?.school_class,
-            isPrimary
-          });
-          return isPrimary;
-        }).length;
+          console.log(`Réservations trouvées pour ${wednesday.date}:`, wednesdayReservations);
 
-        console.log(`Stats pour le mercredi ${wednesday.date}:`, {
-          date: wednesday.date,
-          kindergartenCount,
-          primaryCount,
-          maxKindergarten: wednesday.max_participants_kindergarten,
-          maxPrimary: wednesday.max_participants_primary,
-          reservations: wednesdayReservations
+          // Comptage par type de classe
+          const kindergartenCount = wednesdayReservations.reduce((count, r) => {
+            const isKindergartenClass = r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class);
+            console.log(`Vérification maternelle:`, {
+              id: r.id,
+              class: r.children?.school_class,
+              isKindergarten: isKindergartenClass
+            });
+            return count + (isKindergartenClass ? 1 : 0);
+          }, 0);
+
+          const primaryCount = wednesdayReservations.reduce((count, r) => {
+            const isPrimaryClass = r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class);
+            console.log(`Vérification primaire:`, {
+              id: r.id,
+              class: r.children?.school_class,
+              isPrimary: isPrimaryClass
+            });
+            return count + (isPrimaryClass ? 1 : 0);
+          }, 0);
+
+          console.log(`Résultats pour ${wednesday.date}:`, {
+            kindergartenCount,
+            primaryCount,
+            maxKindergarten: wednesday.max_participants_kindergarten,
+            maxPrimary: wednesday.max_participants_primary
+          });
+
+          return {
+            id: wednesday.id,
+            date: wednesday.date,
+            max_participants_kindergarten: wednesday.max_participants_kindergarten,
+            max_participants_primary: wednesday.max_participants_primary,
+            kindergartenReservations: kindergartenCount,
+            primaryReservations: primaryCount,
+            isFull: isKindergarten 
+              ? kindergartenCount >= wednesday.max_participants_kindergarten
+              : primaryCount >= wednesday.max_participants_primary
+          };
+        }).filter(wednesday => {
+          const wednesdayDate = new Date(wednesday.date);
+          return wednesdayDate >= minDate;
         });
 
-        // Construction de l'objet avec les comptages
-        return {
-          id: wednesday.id,
-          date: wednesday.date,
-          max_participants_kindergarten: wednesday.max_participants_kindergarten,
-          max_participants_primary: wednesday.max_participants_primary,
-          kindergartenReservations: kindergartenCount,
-          primaryReservations: primaryCount,
-          isFull: isKindergarten 
-            ? kindergartenCount >= wednesday.max_participants_kindergarten
-            : primaryCount >= wednesday.max_participants_primary
-        };
-      }).filter(wednesday => {
-        const wednesdayDate = new Date(wednesday.date);
-        return wednesdayDate >= minDate;
-      });
+        console.log('Résultat final:', processedWednesdays);
+        return processedWednesdays;
+
+      } catch (error) {
+        console.error('Erreur lors du traitement:', error);
+        throw error;
+      }
     },
   });
 
