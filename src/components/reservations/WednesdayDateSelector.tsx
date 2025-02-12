@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addHours } from "date-fns";
@@ -71,12 +72,12 @@ export const WednesdayDateSelector = ({
         .select(`
           id,
           wednesday_id,
-          children!inner (
+          children (
             id,
             school_class
           )
         `)
-        .in('wednesday_id', wednesdayIds);  // Suppression du filtre sur le statut
+        .in('wednesday_id', wednesdayIds);
 
       if (reservationsError) throw reservationsError;
       console.log('Fetched reservations:', reservationsData);
@@ -87,11 +88,11 @@ export const WednesdayDateSelector = ({
           .filter(r => r.wednesday_id === wednesday.id);
 
         const kindergartenCount = wednesdayReservations.filter(r => 
-          ["PS", "MS", "GS"].includes(r.children.school_class)
+          r.children && ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
         const primaryCount = wednesdayReservations.filter(r => 
-          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+          r.children && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
         ).length;
 
         // Log détaillé pour chaque mercredi
@@ -99,7 +100,7 @@ export const WednesdayDateSelector = ({
           date: wednesday.date,
           reservations: wednesdayReservations.map(r => ({
             id: r.id,
-            schoolClass: r.children.school_class
+            schoolClass: r.children?.school_class
           })),
           kindergartenCount,
           primaryCount,
