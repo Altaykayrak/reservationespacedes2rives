@@ -1,18 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
-
-export type WednesdayReservationWithChild = Tables<"wednesday_reservations"> & {
-  children: {
-    first_name: string;
-    last_name: string;
-    school_class: string;
-  };
-  available_wednesdays: {
-    date: string;
-  };
-};
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 export const useAdminReservations = (isAdmin: boolean | undefined) => {
   return useQuery({
@@ -25,11 +14,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
           .from("wednesday_reservations")
           .select(`
             *,
-            children (
-              first_name,
-              last_name,
-              school_class
-            ),
+            children (*),
             available_wednesdays (
               date
             )

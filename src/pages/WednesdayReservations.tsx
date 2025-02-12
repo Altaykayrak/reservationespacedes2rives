@@ -4,15 +4,11 @@ import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-
-type WednesdayReservationWithChild = Tables<"wednesday_reservations"> & {
-  children: Tables<"children">;
-};
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 const WednesdayReservations = () => {
   const navigate = useNavigate();
@@ -49,7 +45,7 @@ const WednesdayReservations = () => {
     initializeAuth();
   }, [navigate, toast, loading]);
 
-  const { data: reservations, isError } = useQuery({
+  const { data: reservations, isError } = useQuery<WednesdayReservationWithChild[]>({
     queryKey: ["wednesday_reservations"],
     queryFn: async () => {
       try {

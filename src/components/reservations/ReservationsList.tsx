@@ -1,64 +1,55 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
 import { useEffect } from "react";
-
-type ReservationWithChild = Tables<"reservations"> & {
-  children: Tables<"children">;
-};
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 type GroupedReservations = Record<string, {
   childName: string;
   schoolClass: string;
-  reservations: ReservationWithChild[];
+  reservations: WednesdayReservationWithChild[];
 }>;
 
 interface ReservationsListProps {
-  reservations: ReservationWithChild[] | null;
+  reservations: WednesdayReservationWithChild[] | null;
 }
 
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   const queryClient = useQueryClient();
-  
-  const { data: holidayPeriods } = useQuery({
-    queryKey: ["availableHolidays"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("available_holiday_periods")
-        .select("*");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
 
-  // Filter out past reservations and keep only NON-holiday reservations
-  const filteredReservations = reservations?.filter(reservation => {
-    const reservationDate = new Date(reservation.reservation_date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'wednesday_reservations'
+        },
+        (payload) => {
+          console.log('Reservation change detected:', payload);
+          queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] });
+        }
+      )
+      .subscribe();
 
-    // Check if the reservation is in the future
-    if (reservationDate < today) return false;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
-    // Check if the reservation date falls within any holiday period
-    const isHolidayReservation = holidayPeriods?.some(holiday => {
-      const startDate = new Date(holiday.start_date);
-      const endDate = new Date(holiday.end_date);
-      return reservationDate >= startDate && reservationDate <= endDate;
-    });
+  if (!reservations || reservations.length === 0) {
+    return <EmptyReservations />;
+  }
 
-    // Keep only NON-holiday reservations (mercredis hors vacances)
-    return !isHolidayReservation;
-  });
-
-  const reservationsByChild = filteredReservations?.reduce((acc, reservation) => {
+  const reservationsByChild = reservations?.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {
@@ -70,35 +61,6 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     acc[childId].reservations.push(reservation);
     return acc;
   }, {} as GroupedReservations);
-
-  useEffect(() => {
-    // Subscribe to all changes (INSERT, UPDATE, DELETE) on the reservations table
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'reservations'
-        },
-        (payload) => {
-          console.log('Reservation change detected:', payload);
-          // Invalider le cache au lieu de recharger la page
-          queryClient.invalidateQueries({ queryKey: ["reservations"] });
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscription on component unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  if (!reservationsByChild || Object.keys(reservationsByChild).length === 0) {
-    return <EmptyReservations />;
-  }
 
   return (
     <div className="space-y-4">
@@ -115,7 +77,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
               childName={data.childName}
               schoolClass={data.schoolClass}
               reservations={data.reservations}
-              onUpdate={() => queryClient.invalidateQueries({ queryKey: ["reservations"] })}
+              onUpdate={() => queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] })}
             />
           ))}
         </div>
