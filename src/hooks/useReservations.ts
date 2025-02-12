@@ -17,7 +17,7 @@ export const useReservations = () => {
     earlyDropoff: boolean;
   }>>([]);
 
-  // Optimisation des requêtes children avec staleTime et cacheTime
+  // Optimisation des requêtes children avec staleTime et gcTime
   const { data: children } = useQuery({
     queryKey: ["children"],
     queryFn: async () => {
@@ -31,7 +31,7 @@ export const useReservations = () => {
       return data;
     },
     staleTime: 30000, // Les données restent "fraîches" pendant 30 secondes
-    cacheTime: 3600000, // Cache conservé pendant 1 heure
+    gcTime: 3600000, // Garbage collection après 1 heure
   });
 
   // Optimisation des requêtes wednesday_reservations
@@ -62,7 +62,7 @@ export const useReservations = () => {
       return data as WednesdayReservationWithChild[];
     },
     staleTime: 30000,
-    cacheTime: 3600000,
+    gcTime: 3600000,
   });
 
   // Préchargement des données
