@@ -9,7 +9,15 @@ export const useExistingReservations = (selectedChild: string) => {
       if (!selectedChild) return [];
       const { data, error } = await supabase
         .from("wednesday_reservations")
-        .select("*, available_wednesdays!inner(*)")
+        .select(`
+          *,
+          available_wednesdays!wednesday_reservations_wednesday_id_fkey (
+            id,
+            date,
+            max_participants_kindergarten,
+            max_participants_primary
+          )
+        `)
         .eq("child_id", selectedChild);
       
       if (error) throw error;
@@ -21,6 +29,7 @@ export const useExistingReservations = (selectedChild: string) => {
   const isDateAlreadyReserved = (date: Date) => {
     if (!existingReservations) return false;
     return existingReservations.some(reservation => {
+      if (!reservation.available_wednesdays) return false;
       const reservationDate = new Date(reservation.available_wednesdays.date);
       return reservationDate.getTime() === date.getTime();
     });

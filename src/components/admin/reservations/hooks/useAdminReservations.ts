@@ -13,9 +13,16 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
         const { data, error } = await supabase
           .from("wednesday_reservations")
           .select(`
-            *,
-            children (*),
-            available_wednesdays (*)
+            id,
+            child_id,
+            wednesday_id,
+            without_meal,
+            early_dropoff,
+            status,
+            created_at,
+            updated_at,
+            children!wednesday_reservations_child_id_fkey (*),
+            available_wednesdays!wednesday_reservations_wednesday_id_fkey (*)
           `)
           .order('created_at', { ascending: true });
         
