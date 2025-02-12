@@ -141,7 +141,7 @@ export const WednesdayDateSelector = ({
     );
   }
 
-  if (!availableWednesdays.length) {
+  if (!availableWednesdays || availableWednesdays.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
         <Calendar className="h-12 w-12 text-muted-foreground" />
