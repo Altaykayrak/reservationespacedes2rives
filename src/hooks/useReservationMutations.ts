@@ -34,11 +34,10 @@ export const useReservationMutations = (onSuccess: () => void) => {
 
       const reservationNumber = generateReservationNumber();
       const { data, error } = await supabase
-        .from("reservations")
+        .from("wednesday_reservations")
         .insert({
           child_id: reservationData.childId,
           wednesday_id: wednesday.id,
-          reservation_date: format(reservationData.date, "yyyy-MM-dd"),
           without_meal: reservationData.withoutMeal,
           early_dropoff: reservationData.earlyDropoff,
           reservation_number: reservationNumber,
@@ -51,7 +50,7 @@ export const useReservationMutations = (onSuccess: () => void) => {
     },
     onError: (error: Error) => {
       console.error("Reservation error:", error);
-      throw error; // Re-throw the error to be handled by the calling code
+      throw error;
     },
   });
 

@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -16,11 +17,11 @@ export const useReservationQueries = () => {
     },
   });
 
-  const { data: reservations, refetch: refetchReservations } = useQuery({
-    queryKey: ["reservations"],
+  const { data: wednesdayReservations, refetch: refetchReservations } = useQuery({
+    queryKey: ["wednesday_reservations"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("reservations")
+        .from("wednesday_reservations")
         .select(`
           *,
           children (
@@ -29,10 +30,10 @@ export const useReservationQueries = () => {
             school_class
           )
         `)
-        .order('reservation_date', { ascending: true });
+        .order('created_at', { ascending: true });
       
       if (error) throw error;
-      return data as (Tables<"reservations"> & {
+      return data as (Tables<"wednesday_reservations"> & {
         children: Tables<"children">;
       })[];
     },
@@ -48,18 +49,19 @@ export const useReservationQueries = () => {
   });
 
   const isDateReservedForChild = (childId: string, date: Date) => {
-    if (!reservations) return false;
+    if (!wednesdayReservations) return false;
     
-    return reservations.some(
+    // Pour les mercredis, nous cherchons une réservation correspondante
+    return wednesdayReservations.some(
       (reservation) => 
-        reservation.child_id === childId && 
-        reservation.reservation_date === format(date, "yyyy-MM-dd")
+        reservation.child_id === childId &&
+        reservation.wednesday_id === format(date, "yyyy-MM-dd")
     );
   };
 
   return {
     children,
-    reservations,
+    wednesdayReservations,
     refetchReservations,
     userProfile,
     isDateReservedForChild,
