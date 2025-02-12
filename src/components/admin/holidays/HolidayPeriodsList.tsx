@@ -1,166 +1,89 @@
-import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
-import EditHolidayDialog from "./EditHolidayDialog";
-import HolidayPeriodItem from "./HolidayPeriodItem";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { HolidayPeriodItem } from "./HolidayPeriodItem";
+import { Tables } from "@/integrations/supabase/types";
 
-interface HolidayPeriod {
-  id: string;
-  name: string;
-  start_date: string;
-  end_date: string;
-  max_participants_kindergarten: number;
-  max_participants_primary: number;
-  max_participants_teen: number;
-}
+type HolidayPeriod = Tables<"available_holiday_periods">;
 
-const HolidayPeriodsList = ({ 
-  holidays,
-  onDelete: refreshList
-}: { 
+interface HolidayPeriodsListProps {
   holidays: HolidayPeriod[];
   onDelete: () => void;
-}) => {
-  const { toast } = useToast();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedHoliday, setSelectedHoliday] = useState<HolidayPeriod | null>(null);
-  const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
-  const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
-  const [maxParticipantsTeen, setMaxParticipantsTeen] = useState("");
+}
 
-  const handleDeleteHolidayPeriod = async (id: string, startDate: string, endDate: string) => {
-    try {
-      const { data: reservations, error: reservationsError } = await supabase
-        .from("reservations")
-        .select("id")
-        .gte("reservation_date", startDate)
-        .lte("reservation_date", endDate);
+export const HolidayPeriodsList = ({ holidays, onDelete }: HolidayPeriodsListProps) => {
+  const { data: reservationCounts } = useQuery({
+    queryKey: ["holiday_reservation_counts"],
+    queryFn: async () => {
+      const counts: Record<string, number> = {};
 
-      if (reservationsError) throw reservationsError;
+      const { data: reservations, error } = await supabase
+        .from("holiday_reservations")
+        .select('period_id');
 
-      if (reservations && reservations.length > 0) {
-        toast({
-          title: "Suppression impossible",
-          description: "Il existe déjà des réservations pour cette période. La suppression n'est pas possible.",
-          variant: "destructive",
-        });
-        return;
+      if (error) {
+        console.error("Error fetching reservations:", error);
+        return {};
       }
 
-      const { error } = await supabase
-        .from("available_holiday_periods")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "La période de vacances a été supprimée avec succès",
+      reservations?.forEach((reservation) => {
+        const periodId = reservation.period_id;
+        counts[periodId] = (counts[periodId] || 0) + 1;
       });
 
-      refreshList();
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+      return counts;
+    },
+  });
+
+  const getReservationCountForPeriod = (periodId: string) => {
+    return reservationCounts?.[periodId] || 0;
   };
 
-  const handleEditHolidayPeriod = async (holiday: HolidayPeriod) => {
-    try {
-      const { data: reservations, error: reservationsError } = await supabase
-        .from("reservations")
-        .select("id")
-        .gte("reservation_date", holiday.start_date)
-        .lte("reservation_date", holiday.end_date);
+  const handleDelete = async (holidayId: string) => {
+    const { data: reservations, error: countError } = await supabase
+      .from("holiday_reservations")
+      .select('id', { count: 'exact' })
+      .eq('period_id', holidayId);
 
-      if (reservationsError) throw reservationsError;
-
-      if (reservations && reservations.length > 0) {
-        toast({
-          title: "Modification impossible",
-          description: "Il existe déjà des réservations pour cette période. La modification n'est pas possible.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setSelectedHoliday(holiday);
-      setMaxParticipantsKindergarten(holiday.max_participants_kindergarten.toString());
-      setMaxParticipantsPrimary(holiday.max_participants_primary.toString());
-      setMaxParticipantsTeen(holiday.max_participants_teen.toString());
-      setIsEditDialogOpen(true);
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+    if (countError) {
+      console.error("Error checking reservations:", countError);
+      return;
     }
-  };
 
-  const handleSaveEdit = async () => {
-    if (!selectedHoliday) return;
-
-    try {
-      const { error } = await supabase
-        .from("available_holiday_periods")
-        .update({
-          max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
-          max_participants_primary: parseInt(maxParticipantsPrimary),
-          max_participants_teen: parseInt(maxParticipantsTeen),
-        })
-        .eq("id", selectedHoliday.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "La période de vacances a été modifiée avec succès",
-      });
-
-      setIsEditDialogOpen(false);
-      refreshList();
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+    if (reservations && reservations.length > 0) {
+      alert("Impossible de supprimer cette période car elle a des réservations.");
+      return;
     }
+
+    const { error: deleteError } = await supabase
+      .from('available_holiday_periods')
+      .delete()
+      .eq('id', holidayId);
+
+    if (deleteError) {
+      console.error("Error deleting holiday period:", deleteError);
+      return;
+    }
+
+    onDelete();
   };
 
   return (
-    <Card className="p-6 lg:col-span-2">
-      <h2 className="text-xl font-semibold mb-4">Périodes de vacances disponibles</h2>
-      
+    <div>
+      <h2 className="text-lg font-semibold mb-4">Périodes de vacances</h2>
       <div className="space-y-4">
-        {holidays?.map((holiday) => (
+        {holidays.map((holiday) => (
           <HolidayPeriodItem
             key={holiday.id}
             holiday={holiday}
-            onEdit={handleEditHolidayPeriod}
-            onDelete={handleDeleteHolidayPeriod}
+            reservationCount={getReservationCountForPeriod(holiday.id)}
+            onDelete={() => handleDelete(holiday.id)}
           />
         ))}
       </div>
-
-      <EditHolidayDialog
-        isOpen={isEditDialogOpen}
-        onClose={() => setIsEditDialogOpen(false)}
-        onSave={handleSaveEdit}
-        maxParticipantsKindergarten={maxParticipantsKindergarten}
-        maxParticipantsPrimary={maxParticipantsPrimary}
-        maxParticipantsTeen={maxParticipantsTeen}
-        setMaxParticipantsKindergarten={setMaxParticipantsKindergarten}
-        setMaxParticipantsPrimary={setMaxParticipantsPrimary}
-        setMaxParticipantsTeen={setMaxParticipantsTeen}
-      />
-    </Card>
+    </div>
   );
 };
 
