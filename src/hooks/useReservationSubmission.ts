@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -79,7 +80,7 @@ export const useReservationSubmission = (
         }
 
         const { error: reservationError } = await supabase
-          .from("reservations")
+          .from("holiday_reservations")
           .insert({
             child_id: selectedChild,
             period_id: period.id,
