@@ -49,10 +49,24 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     return <EmptyReservations />;
   }
 
+  console.log("Réservations reçues:", reservations);
+
   // Filtrer les réservations valides (qui ont toutes les données requises)
   const validReservations = reservations.filter(
-    (reservation) => reservation.available_wednesdays?.date && reservation.children
+    (reservation) => {
+      const isValid = reservation.available_wednesdays && reservation.children;
+      if (!isValid) {
+        console.log("Réservation invalide:", {
+          id: reservation.id,
+          available_wednesdays: reservation.available_wednesdays,
+          children: reservation.children
+        });
+      }
+      return isValid;
+    }
   );
+
+  console.log("Réservations valides:", validReservations);
 
   if (validReservations.length === 0) {
     return (
