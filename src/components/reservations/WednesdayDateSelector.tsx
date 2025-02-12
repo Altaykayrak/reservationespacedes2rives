@@ -67,7 +67,6 @@ export const WednesdayDateSelector = ({
       
       if (error) throw error;
 
-      // Ajout du calcul des places restantes pour chaque mercredi
       return wednesdays?.map(wednesday => {
         const kindergartenReservations = wednesday.reservations.filter(r => 
           ["PS", "MS", "GS"].includes(r.children.school_class)
@@ -113,13 +112,8 @@ export const WednesdayDateSelector = ({
           );
           const isReserved = isDateAlreadyReserved(date);
 
-          // Vérifier s'il reste des places selon le niveau scolaire
           const noSpots = (isKindergarten && wednesday.remainingKindergartenSpots <= 0) || 
                          (isPrimary && wednesday.remainingPrimarySpots <= 0);
-
-          const spotsMessage = isKindergarten 
-            ? `Places restantes en maternelle : ${wednesday.remainingKindergartenSpots}`
-            : `Places restantes en primaire : ${wednesday.remainingPrimarySpots}`;
 
           return (
             <div
@@ -143,9 +137,11 @@ export const WednesdayDateSelector = ({
                   >
                     {format(date, "EEEE d MMMM yyyy", { locale: fr })}
                   </Label>
-                  <span className="text-sm text-gray-600">
-                    {isReserved ? "(Déjà réservé)" : noSpots ? "Complet" : spotsMessage}
-                  </span>
+                  {(isReserved || noSpots) && (
+                    <span className="text-sm text-gray-600">
+                      {isReserved ? "(Déjà réservé)" : "Complet"}
+                    </span>
+                  )}
                 </div>
               </div>
               {selectedDateOption && !isReserved && !noSpots && (
