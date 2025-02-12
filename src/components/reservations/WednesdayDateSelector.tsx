@@ -56,7 +56,7 @@ export const WednesdayDateSelector = ({
         .select(`
           *,
           reservations (
-            child_id,
+            id,
             children (
               school_class
             )
@@ -69,23 +69,26 @@ export const WednesdayDateSelector = ({
 
       return wednesdays?.map(wednesday => {
         const kindergartenReservations = wednesday.reservations.filter(r => 
-          ["PS", "MS", "GS"].includes(r.children.school_class)
+          r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
         const primaryReservations = wednesday.reservations.filter(r => 
-          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+          r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
         ).length;
+
+        const isFull = (isKindergarten && kindergartenReservations >= wednesday.max_participants_kindergarten) ||
+                      (isPrimary && primaryReservations >= wednesday.max_participants_primary);
 
         return {
           ...wednesday,
-          remainingKindergartenSpots: wednesday.max_participants_kindergarten - kindergartenReservations,
-          remainingPrimarySpots: wednesday.max_participants_primary - primaryReservations,
+          isFull,
         };
       }).filter(wednesday => {
         const wednesdayDate = new Date(wednesday.date);
         return wednesdayDate >= minDate;
       });
     },
+    enabled: !!childInfo?.school_class, // N'exécute la requête que si nous avons les informations de l'enfant
   });
 
   if (!availableWednesdays || availableWednesdays.length === 0) {
@@ -111,9 +114,7 @@ export const WednesdayDateSelector = ({
             (d) => d.date.getTime() === date.getTime()
           );
           const isReserved = isDateAlreadyReserved(date);
-
-          const noSpots = (isKindergarten && wednesday.remainingKindergartenSpots <= 0) || 
-                         (isPrimary && wednesday.remainingPrimarySpots <= 0);
+          const isDisabled = isReserved || wednesday.isFull;
 
           return (
             <div
@@ -124,27 +125,27 @@ export const WednesdayDateSelector = ({
                 <Checkbox
                   id={wednesday.date}
                   checked={!!selectedDateOption}
-                  onCheckedChange={() => !isReserved && !noSpots && handleDateToggle(date)}
-                  disabled={isReserved || noSpots}
+                  onCheckedChange={() => !isDisabled && handleDateToggle(date)}
+                  disabled={isDisabled}
                   className="border-green-200"
                 />
                 <div className="flex flex-col">
                   <Label
                     htmlFor={wednesday.date}
                     className={`flex-1 cursor-pointer font-medium ${
-                      isReserved || noSpots ? 'text-gray-500' : 'text-green-900'
+                      isDisabled ? 'text-gray-500' : 'text-green-900'
                     }`}
                   >
                     {format(date, "EEEE d MMMM yyyy", { locale: fr })}
                   </Label>
-                  {(isReserved || noSpots) && (
+                  {isDisabled && (
                     <span className="text-sm text-gray-600">
                       {isReserved ? "(Déjà réservé)" : "Complet"}
                     </span>
                   )}
                 </div>
               </div>
-              {selectedDateOption && !isReserved && !noSpots && (
+              {selectedDateOption && !isDisabled && (
                 <div className="ml-6 space-y-1 bg-white/50 p-2 rounded-md">
                   <div className="flex items-center space-x-2">
                     <Checkbox
