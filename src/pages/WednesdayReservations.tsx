@@ -1,3 +1,4 @@
+
 import { WednesdayReservationContent } from "@/components/reservations/WednesdayReservationContent";
 import { ReservationsList } from "@/components/reservations/ReservationsList";
 import { CalendarDays } from "lucide-react";
@@ -54,18 +55,24 @@ const WednesdayReservations = () => {
           throw new Error("No session found");
         }
 
+        console.log("Fetching wednesday reservations for user:", session.user.id);
+
         const { data, error } = await supabase
           .from("wednesday_reservations")
           .select(`
             *,
-            children (*)
+            children (*),
+            available_wednesdays (*)
           `)
+          .eq('status', 'confirmed')
           .order('created_at', { ascending: true });
         
         if (error) {
           console.error("Erreur lors de la récupération des réservations:", error);
           throw error;
         }
+
+        console.log("Fetched reservations:", data);
         return data as WednesdayReservationWithChild[];
       } catch (error) {
         console.error("Erreur complète:", error);
