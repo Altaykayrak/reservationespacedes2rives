@@ -86,17 +86,22 @@ export const WednesdayDateSelector = ({
       console.log('Mercredis récupérés:', wednesdays);
 
       // Récupération de TOUTES les réservations sans filtrer par status
-      const { data: reservations, error: reservationsError } = await supabase
+      const reservationsQuery = supabase
         .from("reservations")
         .select(`
           id,
           wednesday_id,
           child_id,
           reservation_date,
-          children!inner(
+          status,
+          children(
             school_class
           )
         `);
+
+      console.log('Requête réservations:', reservationsQuery);
+
+      const { data: reservations, error: reservationsError } = await reservationsQuery;
 
       if (reservationsError) {
         console.error('Erreur lors de la récupération des réservations:', reservationsError);
@@ -108,34 +113,48 @@ export const WednesdayDateSelector = ({
       // Traitement des données pour chaque mercredi
       return wednesdays.map(wednesday => {
         // Filtrer les réservations pour ce mercredi uniquement
-        // On prend toutes les réservations qui correspondent soit au wednesday_id soit à la date
-        const wednesdayReservations = reservations?.filter(r => 
-          r.wednesday_id === wednesday.id || 
-          r.reservation_date === wednesday.date
-        ) || [];
+        const wednesdayReservations = reservations?.filter(r => {
+          const matchesWednesday = r.wednesday_id === wednesday.id || r.reservation_date === wednesday.date;
+          console.log(`Vérification réservation pour ${wednesday.date}:`, {
+            reservation: r,
+            matchesWednesday,
+            hasSchoolClass: !!r.children?.school_class
+          });
+          return matchesWednesday;
+        }) || [];
         
         console.log(`Réservations pour le mercredi ${wednesday.date}:`, wednesdayReservations);
         
         // Compter les réservations par type
-        const kindergartenCount = wednesdayReservations.filter(r => 
-          r.children?.school_class && 
-          ["PS", "MS", "GS"].includes(r.children.school_class)
-        ).length;
+        const kindergartenCount = wednesdayReservations.filter(r => {
+          const isKindergarten = r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class);
+          console.log(`Vérification maternelle pour ${r.id}:`, {
+            schoolClass: r.children?.school_class,
+            isKindergarten
+          });
+          return isKindergarten;
+        }).length;
 
-        const primaryCount = wednesdayReservations.filter(r => 
-          r.children?.school_class && 
-          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
-        ).length;
+        const primaryCount = wednesdayReservations.filter(r => {
+          const isPrimary = r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class);
+          console.log(`Vérification primaire pour ${r.id}:`, {
+            schoolClass: r.children?.school_class,
+            isPrimary
+          });
+          return isPrimary;
+        }).length;
 
         console.log(`Stats pour le mercredi ${wednesday.date}:`, {
+          date: wednesday.date,
           kindergartenCount,
           primaryCount,
           maxKindergarten: wednesday.max_participants_kindergarten,
-          maxPrimary: wednesday.max_participants_primary
+          maxPrimary: wednesday.max_participants_primary,
+          reservations: wednesdayReservations
         });
 
         // Construction de l'objet avec les comptages
-        const processedWednesday: WednesdayWithCounts = {
+        return {
           id: wednesday.id,
           date: wednesday.date,
           max_participants_kindergarten: wednesday.max_participants_kindergarten,
@@ -146,8 +165,6 @@ export const WednesdayDateSelector = ({
             ? kindergartenCount >= wednesday.max_participants_kindergarten
             : primaryCount >= wednesday.max_participants_primary
         };
-
-        return processedWednesday;
       }).filter(wednesday => {
         const wednesdayDate = new Date(wednesday.date);
         return wednesdayDate >= minDate;
