@@ -65,7 +65,7 @@ export const WednesdayDateSelector = ({
     queryFn: async () => {
       console.log('Démarrage de la requête pour les mercredis disponibles');
       
-      // Récupération des mercredis
+      // Récupération des mercredis futurs uniquement
       const { data: wednesdays, error: wednesdaysError } = await supabase
         .from("available_wednesdays")
         .select(`
@@ -86,16 +86,19 @@ export const WednesdayDateSelector = ({
 
       console.log('Mercredis récupérés:', wednesdays);
 
-      // Récupération de TOUTES les réservations pour ces dates
+      // Récupération de TOUTES les réservations confirmées
       const { data: reservations, error: reservationsError } = await supabase
         .from("reservations")
         .select(`
           id,
           wednesday_id,
+          child_id,
           reservation_date,
-          children ( school_class )
+          children:child_id (
+            school_class
+          )
         `)
-        .or(`wednesday_id.in.(${wednesdays.map(w => w.id).join(',')}),reservation_date.in.(${wednesdays.map(w => w.date).join(',')})`);
+        .eq('status', 'confirmed');
 
       if (reservationsError) {
         console.error('Erreur lors de la récupération des réservations:', reservationsError);
@@ -106,23 +109,23 @@ export const WednesdayDateSelector = ({
 
       // Traitement des données pour chaque mercredi
       return wednesdays.map(wednesday => {
-        // Filtrer les réservations pour ce mercredi (soit par wednesday_id, soit par date)
-        const wednesdayReservations = (reservations || []).filter(r => 
-          r.wednesday_id === wednesday.id || 
-          r.reservation_date === wednesday.date
-        );
+        // Filtrer les réservations pour ce mercredi uniquement
+        const wednesdayReservations = reservations?.filter(r => 
+          r.wednesday_id === wednesday.id ||
+          (r.reservation_date === wednesday.date && !r.wednesday_id)
+        ) || [];
         
         console.log(`Réservations pour le mercredi ${wednesday.date}:`, wednesdayReservations);
         
         // Compter les réservations par type
-        const kindergartenCount = wednesdayReservations.filter(reservation => 
-          reservation.children?.school_class && 
-          ["PS", "MS", "GS"].includes(reservation.children.school_class)
+        const kindergartenCount = wednesdayReservations.filter(r => 
+          r.children?.school_class && 
+          ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
-        const primaryCount = wednesdayReservations.filter(reservation => 
-          reservation.children?.school_class && 
-          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(reservation.children.school_class)
+        const primaryCount = wednesdayReservations.filter(r => 
+          r.children?.school_class && 
+          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
         ).length;
 
         console.log(`Stats pour le mercredi ${wednesday.date}:`, {
@@ -132,6 +135,7 @@ export const WednesdayDateSelector = ({
           maxPrimary: wednesday.max_participants_primary
         });
 
+        // Construction de l'objet avec les comptages
         const processedWednesday: WednesdayWithCounts = {
           id: wednesday.id,
           date: wednesday.date,
@@ -284,3 +288,4 @@ export const WednesdayDateSelector = ({
     </ScrollArea>
   );
 };
+
