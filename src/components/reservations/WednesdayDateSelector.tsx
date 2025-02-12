@@ -59,10 +59,11 @@ export const WednesdayDateSelector = ({
         .from("available_wednesdays")
         .select(`
           *,
-          reservations(
+          reservations!wednesday_id(
             id,
             status,
-            children(
+            child_id,
+            children!child_id(
               school_class
             )
           )
@@ -78,20 +79,21 @@ export const WednesdayDateSelector = ({
       console.log("Raw wednesdays data:", wednesdays);
 
       return wednesdays?.map(wednesday => {
-        const reservations = wednesday.reservations || [];
-        const kindergartenReservations = reservations.filter(r => 
-          r.status === 'confirmed' && 
+        // Filtrer uniquement les réservations confirmées
+        const confirmedReservations = wednesday.reservations.filter(r => r.status === 'confirmed');
+        
+        const kindergartenReservations = confirmedReservations.filter(r => 
           r.children?.school_class && 
           ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
-        const primaryReservations = reservations.filter(r => 
-          r.status === 'confirmed' && 
+        const primaryReservations = confirmedReservations.filter(r => 
           r.children?.school_class && 
           ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
         ).length;
 
         console.log(`Wednesday ${wednesday.date} stats:`, {
+          confirmations: confirmedReservations.length,
           kindergartenReservations,
           primaryReservations,
           maxKindergarten: wednesday.max_participants_kindergarten,
@@ -100,8 +102,6 @@ export const WednesdayDateSelector = ({
 
         const isFull = (isKindergarten && kindergartenReservations >= wednesday.max_participants_kindergarten) ||
                       (isPrimary && primaryReservations >= wednesday.max_participants_primary);
-
-        console.log(`Is full for current child? ${isFull}`);
 
         return {
           ...wednesday,
@@ -114,7 +114,7 @@ export const WednesdayDateSelector = ({
         return wednesdayDate >= minDate;
       });
     },
-    enabled: true, // On active toujours la requête des mercredis
+    enabled: true,
   });
 
   if (isLoading) {
