@@ -1,4 +1,3 @@
-
 import { WednesdayReservationContent } from "@/components/reservations/WednesdayReservationContent";
 import { ReservationsList } from "@/components/reservations/ReservationsList";
 import { CalendarDays } from "lucide-react";
@@ -76,29 +75,13 @@ const WednesdayReservations = () => {
           return [];
         }
 
-        // Récupérer les réservations pour ces enfants
+        // Récupérer les réservations avec une jointure explicite
         const { data, error } = await supabase
           .from('wednesday_reservations')
           .select(`
-            id,
-            child_id,
-            wednesday_id,
-            without_meal,
-            early_dropoff,
-            status,
-            created_at,
-            children:child_id (
-              id,
-              first_name,
-              last_name,
-              school_class
-            ),
-            available_wednesdays:wednesday_id (
-              id,
-              date,
-              max_participants_kindergarten,
-              max_participants_primary
-            )
+            *,
+            children!wednesday_reservations_child_id_fkey (*),
+            available_wednesdays!wednesday_reservations_wednesday_id_fkey (*)
           `)
           .eq('status', 'confirmed')
           .in('child_id', childrenIds)
