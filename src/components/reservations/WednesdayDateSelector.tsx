@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addHours } from "date-fns";
@@ -86,7 +85,7 @@ export const WednesdayDateSelector = ({
 
       console.log('Mercredis récupérés:', wednesdays);
 
-      // Récupération de TOUTES les réservations confirmées
+      // Récupération de TOUTES les réservations sans filtrer par status
       const { data: reservations, error: reservationsError } = await supabase
         .from("reservations")
         .select(`
@@ -94,11 +93,10 @@ export const WednesdayDateSelector = ({
           wednesday_id,
           child_id,
           reservation_date,
-          children:child_id (
+          children!inner(
             school_class
           )
-        `)
-        .eq('status', 'confirmed');
+        `);
 
       if (reservationsError) {
         console.error('Erreur lors de la récupération des réservations:', reservationsError);
@@ -110,9 +108,10 @@ export const WednesdayDateSelector = ({
       // Traitement des données pour chaque mercredi
       return wednesdays.map(wednesday => {
         // Filtrer les réservations pour ce mercredi uniquement
+        // On prend toutes les réservations qui correspondent soit au wednesday_id soit à la date
         const wednesdayReservations = reservations?.filter(r => 
-          r.wednesday_id === wednesday.id ||
-          (r.reservation_date === wednesday.date && !r.wednesday_id)
+          r.wednesday_id === wednesday.id || 
+          r.reservation_date === wednesday.date
         ) || [];
         
         console.log(`Réservations pour le mercredi ${wednesday.date}:`, wednesdayReservations);
@@ -288,4 +287,3 @@ export const WednesdayDateSelector = ({
     </ScrollArea>
   );
 };
-
