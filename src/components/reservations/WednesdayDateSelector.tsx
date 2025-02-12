@@ -57,11 +57,15 @@ export const WednesdayDateSelector = ({
       const { data: wednesdays, error } = await supabase
         .from("available_wednesdays")
         .select(`
-          *,
-          reservations!wednesday_id(
+          id,
+          date,
+          max_participants_kindergarten,
+          max_participants_primary,
+          reservations:reservations(
             id,
             child_id,
-            children!child_id(
+            children:children(
+              id,
               school_class
             )
           )
@@ -74,22 +78,29 @@ export const WednesdayDateSelector = ({
         throw error;
       }
 
-      console.log("Raw wednesdays data:", wednesdays);
+      console.log("Raw wednesdays data with full structure:", wednesdays);
 
       return wednesdays?.map(wednesday => {
-        const kindergartenReservations = wednesday.reservations.filter(r => 
-          r.children?.school_class && 
-          ["PS", "MS", "GS"].includes(r.children.school_class)
-        ).length;
+        console.log(`Analyzing reservations for ${wednesday.date}:`, wednesday.reservations);
+        
+        const kindergartenReservations = wednesday.reservations.filter(r => {
+          console.log("Checking reservation:", r);
+          return r.children && ["PS", "MS", "GS"].includes(r.children.school_class);
+        }).length;
 
-        const primaryReservations = wednesday.reservations.filter(r => 
-          r.children?.school_class && 
-          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
-        ).length;
+        const primaryReservations = wednesday.reservations.filter(r => {
+          console.log("Checking reservation:", r);
+          return r.children && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class);
+        }).length;
 
-        console.log(`Wednesday ${wednesday.date} stats:`, {
-          kindergartenReservations,
-          primaryReservations,
+        console.log(`Wednesday ${wednesday.date} detailed stats:`, {
+          totalReservations: wednesday.reservations.length,
+          reservationsDetails: wednesday.reservations.map(r => ({
+            childId: r.child_id,
+            schoolClass: r.children?.school_class
+          })),
+          kindergartenCount: kindergartenReservations,
+          primaryCount: primaryReservations,
           maxKindergarten: wednesday.max_participants_kindergarten,
           maxPrimary: wednesday.max_participants_primary
         });
