@@ -3,7 +3,7 @@ import { WednesdayReservationContent } from "@/components/reservations/Wednesday
 import { ReservationsList } from "@/components/reservations/ReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -15,7 +15,6 @@ const WednesdayReservations = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading } = useAuth();
-  const queryClient = useQueryClient();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -46,84 +45,53 @@ const WednesdayReservations = () => {
     initializeAuth();
   }, [navigate, toast, loading]);
 
-  const { data: reservations, isError } = useQuery<WednesdayReservationWithChild[]>({
+  const { data: reservations, isError } = useQuery({
     queryKey: ["wednesday_reservations"],
     queryFn: async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error("No session found");
-        }
+      if (!user?.id) return [];
 
-        // Récupérer d'abord les enfants de l'utilisateur
-        const { data: userChildren, error: childrenError } = await supabase
-          .from('children')
-          .select('id')
-          .eq('profile_id', session.user.id);
+      // Récupérer d'abord les enfants de l'utilisateur
+      const { data: userChildren, error: childrenError } = await supabase
+        .from('children')
+        .select('id')
+        .eq('profile_id', user.id);
 
-        if (childrenError) {
-          console.error("Erreur lors de la récupération des enfants:", childrenError);
-          throw childrenError;
-        }
+      if (childrenError) throw childrenError;
+      if (!userChildren?.length) return [];
 
-        const childrenIds = userChildren.map(child => child.id);
+      const childrenIds = userChildren.map(child => child.id);
 
-        if (childrenIds.length === 0) {
-          console.log("Aucun enfant trouvé pour cet utilisateur");
-          return [];
-        }
-
-        // Récupérer les réservations avec les jointures
-        const { data, error } = await supabase
-          .from('wednesday_reservations')
-          .select(`
+      // Récupérer les réservations avec les jointures
+      const { data, error } = await supabase
+        .from('wednesday_reservations')
+        .select(`
+          id,
+          child_id,
+          wednesday_id,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          children:child_id (
             id,
-            child_id,
-            wednesday_id,
-            without_meal,
-            early_dropoff,
-            status,
-            created_at,
-            updated_at,
-            children!wednesday_reservations_child_id_fkey (
-              id,
-              first_name,
-              last_name,
-              school_class
-            ),
-            available_wednesdays!wednesday_reservations_wednesday_id_fkey (
-              id,
-              date,
-              max_participants_kindergarten,
-              max_participants_primary
-            )
-          `)
-          .eq('status', 'confirmed')
-          .in('child_id', childrenIds)
-          .order('created_at', { ascending: true });
-        
-        if (error) {
-          console.error("Erreur lors de la récupération des réservations:", error);
-          throw error;
-        }
+            first_name,
+            last_name,
+            school_class
+          ),
+          available_wednesdays:wednesday_id (
+            id,
+            date,
+            max_participants_kindergarten,
+            max_participants_primary
+          )
+        `)
+        .eq('status', 'confirmed')
+        .in('child_id', childrenIds)
+        .order('created_at', { ascending: true });
 
-        console.log("Réservations brutes:", data);
-
-        // Transformer les données pour qu'elles correspondent au type attendu
-        const transformedData = data.map(reservation => ({
-          ...reservation,
-          children: reservation.children,
-          available_wednesdays: reservation.available_wednesdays
-        }));
-
-        console.log("Réservations transformées:", transformedData);
-
-        return transformedData as WednesdayReservationWithChild[];
-      } catch (error) {
-        console.error("Erreur complète:", error);
-        queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] });
-        throw error;
-      }
+      if (error) throw error;
+      return (data || []) as WednesdayReservationWithChild[];
     },
     enabled: !!user && isInitialized,
   });
@@ -139,7 +107,7 @@ const WednesdayReservations = () => {
     );
   }
 
-  if (isError || !user) {
+  if (isError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="text-center space-y-4">
@@ -147,20 +115,12 @@ const WednesdayReservations = () => {
           <p className="text-gray-600">
             Une erreur est survenue lors du chargement des réservations.
           </p>
-          <div className="space-x-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Retour
-            </button>
-            <button
-              onClick={() => navigate("/login")}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-            >
-              Se connecter
-            </button>
-          </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Retour
+          </button>
         </div>
       </div>
     );
