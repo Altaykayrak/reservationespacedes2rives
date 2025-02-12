@@ -88,7 +88,7 @@ const WednesdayReservations = () => {
               last_name,
               school_class
             ),
-            available_wednesdays!inner (
+            available_wednesdays:wednesday_id (
               id,
               date,
               max_participants_kindergarten,
@@ -104,7 +104,7 @@ const WednesdayReservations = () => {
           throw error;
         }
 
-        console.log("Fetched reservations:", data);
+        console.log("Réservations confirmées récupérées:", data);
         return data as WednesdayReservationWithChild[];
       } catch (error) {
         console.error("Erreur complète:", error);
