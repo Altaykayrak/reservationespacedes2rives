@@ -75,13 +75,23 @@ const WednesdayReservations = () => {
           return [];
         }
 
-        // Récupérer les réservations avec une jointure explicite
+        // Récupérer les réservations avec les jointures
         const { data, error } = await supabase
           .from('wednesday_reservations')
           .select(`
             *,
-            children!wednesday_reservations_child_id_fkey (*),
-            available_wednesdays!wednesday_reservations_wednesday_id_fkey (*)
+            children (
+              id,
+              first_name,
+              last_name,
+              school_class
+            ),
+            available_wednesdays:wednesday_id (
+              id,
+              date,
+              max_participants_kindergarten,
+              max_participants_primary
+            )
           `)
           .eq('status', 'confirmed')
           .in('child_id', childrenIds)
@@ -92,19 +102,7 @@ const WednesdayReservations = () => {
           throw error;
         }
 
-        console.log("Nombre de réservations trouvées:", data?.length || 0);
-        
-        // Ajout de logs détaillés pour chaque réservation
-        data?.forEach((reservation, index) => {
-          console.log(`Réservation ${index + 1}:`, {
-            id: reservation.id,
-            has_children_data: !!reservation.children,
-            children_data: reservation.children,
-            has_wednesday_data: !!reservation.available_wednesdays,
-            wednesday_data: reservation.available_wednesdays,
-            status: reservation.status
-          });
-        });
+        console.log("Réservations confirmées récupérées:", data);
 
         return data as WednesdayReservationWithChild[];
       } catch (error) {
