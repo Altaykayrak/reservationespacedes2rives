@@ -32,6 +32,7 @@ export const WednesdayDateSelector = ({
   today.setHours(0, 0, 0, 0);
   const minDate = addHours(today, 72);
 
+  // On charge d'abord les infos de l'enfant
   const { data: childInfo } = useQuery({
     queryKey: ["selectedChild"],
     queryFn: async () => {
@@ -48,65 +49,68 @@ export const WednesdayDateSelector = ({
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
   const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
 
+  // Requête pour les mercredis disponibles
   const { data: availableWednesdays = [], isLoading, error } = useQuery({
-    queryKey: ["available_wednesdays", childInfo?.school_class],
+    queryKey: ["available_wednesdays"],
     queryFn: async () => {
-      console.log('Fetching wednesdays data...');
+      console.log('Démarrage de la requête pour les mercredis disponibles');
       
-      // Première requête pour les mercredis disponibles
+      // Récupération des mercredis
       const { data: wednesdays, error: wednesdaysError } = await supabase
         .from("available_wednesdays")
-        .select()
+        .select(`
+          id,
+          date,
+          max_participants_kindergarten,
+          max_participants_primary
+        `)
         .gte('date', today.toISOString().split('T')[0])
         .order('date', { ascending: true });
 
-      if (wednesdaysError) throw wednesdaysError;
+      if (wednesdaysError) {
+        console.error('Erreur lors de la récupération des mercredis:', wednesdaysError);
+        throw wednesdaysError;
+      }
+
+      console.log('Mercredis récupérés:', wednesdays);
+
       if (!wednesdays) return [];
 
-      console.log('Fetched wednesdays:', wednesdays);
-
-      // Deuxième requête pour toutes les réservations de ces mercredis
-      const wednesdayIds = wednesdays.map(w => w.id);
-      const { data: reservationsData, error: reservationsError } = await supabase
+      // Récupération des réservations
+      const { data: reservations, error: reservationsError } = await supabase
         .from("reservations")
         .select(`
           id,
           wednesday_id,
-          children (
-            id,
-            school_class
-          )
+          children ( school_class )
         `)
-        .in('wednesday_id', wednesdayIds);
+        .in('wednesday_id', wednesdays.map(w => w.id));
 
-      if (reservationsError) throw reservationsError;
-      console.log('Fetched reservations:', reservationsData);
+      if (reservationsError) {
+        console.error('Erreur lors de la récupération des réservations:', reservationsError);
+        throw reservationsError;
+      }
 
-      // Traitement des données
+      console.log('Réservations récupérées:', reservations);
+
+      // Calcul des places disponibles pour chaque mercredi
       return wednesdays.map(wednesday => {
-        const wednesdayReservations = (reservationsData || [])
+        const wednesdayReservations = (reservations || [])
           .filter(r => r.wednesday_id === wednesday.id);
 
         const kindergartenCount = wednesdayReservations.filter(r => 
-          r.children && ["PS", "MS", "GS"].includes(r.children.school_class)
+          r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
         const primaryCount = wednesdayReservations.filter(r => 
-          r.children && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+          r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
         ).length;
 
-        // Log détaillé pour chaque mercredi
-        console.log(`Wednesday ${wednesday.date} stats:`, {
-          date: wednesday.date,
-          reservations: wednesdayReservations.map(r => ({
-            id: r.id,
-            schoolClass: r.children?.school_class
-          })),
+        console.log(`Stats pour le mercredi ${wednesday.date}:`, {
           kindergartenCount,
           primaryCount,
           maxKindergarten: wednesday.max_participants_kindergarten,
-          maxPrimary: wednesday.max_participants_primary,
-          totalReservations: wednesdayReservations.length
+          maxPrimary: wednesday.max_participants_primary
         });
 
         return {
@@ -122,7 +126,6 @@ export const WednesdayDateSelector = ({
         return wednesdayDate >= minDate;
       });
     },
-    enabled: !!childInfo,
   });
 
   if (isLoading) {
@@ -134,6 +137,7 @@ export const WednesdayDateSelector = ({
   }
 
   if (error) {
+    console.error('Erreur dans le composant:', error);
     return (
       <div className="text-center p-4 text-red-500">
         Une erreur est survenue lors du chargement des dates
@@ -142,6 +146,7 @@ export const WednesdayDateSelector = ({
   }
 
   if (!availableWednesdays || availableWednesdays.length === 0) {
+    console.log('Aucun mercredi disponible trouvé');
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
         <Calendar className="h-12 w-12 text-muted-foreground" />
@@ -154,6 +159,8 @@ export const WednesdayDateSelector = ({
       </div>
     );
   }
+
+  console.log('Mercredis disponibles à afficher:', availableWednesdays);
 
   return (
     <ScrollArea className="h-[300px] pr-3">
