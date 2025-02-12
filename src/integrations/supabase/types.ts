@@ -447,6 +447,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_wednesday_id"
+            columns: ["wednesday_id"]
+            isOneToOne: false
+            referencedRelation: "available_wednesdays"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "wednesday_reservations_child_id_fkey"
             columns: ["child_id"]
             isOneToOne: false

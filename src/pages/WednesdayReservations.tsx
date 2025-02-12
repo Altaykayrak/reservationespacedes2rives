@@ -1,3 +1,4 @@
+
 import { WednesdayReservationContent } from "@/components/reservations/WednesdayReservationContent";
 import { ReservationsList } from "@/components/reservations/ReservationsList";
 import { CalendarDays } from "lucide-react";
@@ -54,8 +55,6 @@ const WednesdayReservations = () => {
           throw new Error("No session found");
         }
 
-        console.log("Current user ID:", session.user.id);
-
         // Récupérer d'abord les enfants de l'utilisateur
         const { data: userChildren, error: childrenError } = await supabase
           .from('children')
@@ -68,7 +67,6 @@ const WednesdayReservations = () => {
         }
 
         const childrenIds = userChildren.map(child => child.id);
-        console.log("Children IDs:", childrenIds);
 
         if (childrenIds.length === 0) {
           console.log("Aucun enfant trouvé pour cet utilisateur");
@@ -79,14 +77,21 @@ const WednesdayReservations = () => {
         const { data, error } = await supabase
           .from('wednesday_reservations')
           .select(`
-            *,
-            children (
+            id,
+            child_id,
+            wednesday_id,
+            without_meal,
+            early_dropoff,
+            status,
+            created_at,
+            updated_at,
+            children!wednesday_reservations_child_id_fkey (
               id,
               first_name,
               last_name,
               school_class
             ),
-            available_wednesdays:wednesday_id (
+            available_wednesdays!wednesday_reservations_wednesday_id_fkey (
               id,
               date,
               max_participants_kindergarten,
@@ -102,13 +107,16 @@ const WednesdayReservations = () => {
           throw error;
         }
 
-        // Transformation des données pour correspondre au type attendu
+        console.log("Réservations brutes:", data);
+
+        // Transformer les données pour qu'elles correspondent au type attendu
         const transformedData = data.map(reservation => ({
           ...reservation,
-          available_wednesdays: reservation.available_wednesdays?.[0] // La jointure retourne un tableau, nous prenons le premier élément
+          children: reservation.children,
+          available_wednesdays: reservation.available_wednesdays
         }));
 
-        console.log("Réservations après transformation:", transformedData);
+        console.log("Réservations transformées:", transformedData);
 
         return transformedData as WednesdayReservationWithChild[];
       } catch (error) {
