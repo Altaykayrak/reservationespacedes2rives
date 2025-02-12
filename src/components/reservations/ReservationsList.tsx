@@ -34,7 +34,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
           table: 'wednesday_reservations'
         },
         (payload) => {
-          console.log('Reservation change detected:', payload);
+          console.log('Changement de réservation détecté:', payload);
           queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] });
         }
       )
@@ -49,7 +49,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
     return <EmptyReservations />;
   }
 
-  const reservationsByChild = reservations?.reduce((acc, reservation) => {
+  const reservationsByChild = reservations.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {
@@ -71,7 +71,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
       </div>
       <ScrollArea className="h-[450px]">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
-          {Object.entries(reservationsByChild || {}).map(([childId, data]) => (
+          {Object.entries(reservationsByChild).map(([childId, data]) => (
             <ChildReservationCard
               key={childId}
               childName={data.childName}

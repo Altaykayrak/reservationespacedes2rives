@@ -2,16 +2,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ReservationItem } from "./ReservationItem";
-import { Tables } from "@/integrations/supabase/types";
 import { User } from "lucide-react";
-import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
-
-type ReservationData = WednesdayReservationWithChild | HolidayReservationWithChild;
+import { WednesdayReservationWithChild } from "@/types/reservations";
 
 interface ChildReservationCardProps {
   childName: string;
   schoolClass: string;
-  reservations: ReservationData[];
+  reservations: WednesdayReservationWithChild[];
   onUpdate: () => void;
 }
 
