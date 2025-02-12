@@ -195,10 +195,6 @@ export const WednesdayDateSelector = ({
           const isReserved = isDateAlreadyReserved(date);
           const isDisabled = isReserved || wednesday.isFull;
 
-          // Calcul des places restantes
-          const kindergartenSpots = wednesday.max_participants_kindergarten - wednesday.kindergartenReservations;
-          const primarySpots = wednesday.max_participants_primary - wednesday.primaryReservations;
-
           return (
             <div
               key={wednesday.date}
@@ -229,10 +225,12 @@ export const WednesdayDateSelector = ({
                     ) : (
                       <div className="space-y-0.5">
                         <span className="block text-green-600">
-                          Maternelles : {kindergartenSpots} places restantes
+                          Maternelles : {wednesday.max_participants_kindergarten - wednesday.kindergartenReservations} places restantes 
+                          ({wednesday.kindergartenReservations}/{wednesday.max_participants_kindergarten})
                         </span>
                         <span className="block text-green-600">
-                          Primaires : {primarySpots} places restantes
+                          Primaires : {wednesday.max_participants_primary - wednesday.primaryReservations} places restantes
+                          ({wednesday.primaryReservations}/{wednesday.max_participants_primary})
                         </span>
                       </div>
                     )}
