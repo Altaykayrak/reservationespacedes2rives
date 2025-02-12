@@ -1,4 +1,3 @@
-
 import { WednesdayReservationContent } from "@/components/reservations/WednesdayReservationContent";
 import { ReservationsList } from "@/components/reservations/ReservationsList";
 import { CalendarDays } from "lucide-react";
@@ -11,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-type ReservationWithChild = Tables<"reservations"> & {
+type WednesdayReservationWithChild = Tables<"wednesday_reservations"> & {
   children: Tables<"children">;
 };
 
@@ -51,7 +50,7 @@ const WednesdayReservations = () => {
   }, [navigate, toast, loading]);
 
   const { data: reservations, isError } = useQuery({
-    queryKey: ["reservations"],
+    queryKey: ["wednesday_reservations"],
     queryFn: async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -60,22 +59,21 @@ const WednesdayReservations = () => {
         }
 
         const { data, error } = await supabase
-          .from("reservations")
+          .from("wednesday_reservations")
           .select(`
             *,
             children (*)
           `)
-          .is('period_id', null)
-          .order('reservation_date', { ascending: true });
+          .order('created_at', { ascending: true });
         
         if (error) {
           console.error("Erreur lors de la récupération des réservations:", error);
           throw error;
         }
-        return data as ReservationWithChild[];
+        return data as WednesdayReservationWithChild[];
       } catch (error) {
         console.error("Erreur complète:", error);
-        queryClient.invalidateQueries({ queryKey: ["reservations"] });
+        queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] });
         throw error;
       }
     },
@@ -150,4 +148,3 @@ const WednesdayReservations = () => {
 };
 
 export default WednesdayReservations;
-
