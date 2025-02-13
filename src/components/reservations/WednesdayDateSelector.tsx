@@ -10,7 +10,6 @@ import { Calendar } from "lucide-react";
 import { useAvailableWednesdays } from "@/hooks/useAvailableWednesdays";
 import { WednesdayAvailability } from "./WednesdayAvailability";
 import { WednesdayOptions } from "./WednesdayOptions";
-import { useEffect } from "react";
 
 interface DateOption {
   date: Date;
@@ -47,53 +46,7 @@ export const WednesdayDateSelector = ({
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
   const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
 
-  const { data: availableWednesdays = [], isLoading, error, refetch } = useAvailableWednesdays(!!isKindergarten, !!isPrimary);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'wednesday_reservations'
-        },
-        () => {
-          console.log('Nouvelle réservation détectée');
-          refetch();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'wednesday_reservations'
-        },
-        () => {
-          console.log('Mise à jour de réservation détectée');
-          refetch();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'wednesday_reservations'
-        },
-        () => {
-          console.log('Suppression de réservation détectée');
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetch]);
+  const { data: availableWednesdays = [], isLoading, error } = useAvailableWednesdays(!!isKindergarten, !!isPrimary);
 
   if (isLoading) {
     return (
