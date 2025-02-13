@@ -489,6 +489,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_school_class_group: {
+        Args: {
+          school_class: string
+        }
+        Returns: Database["public"]["Enums"]["school_class_group"]
+      }
       is_admin: {
         Args: {
           user_id: string
@@ -503,6 +509,7 @@ export type Database = {
       }
     }
     Enums: {
+      school_class_group: "kindergarten" | "primary" | "teen"
       user_role: "admin" | "user"
     }
     CompositeTypes: {

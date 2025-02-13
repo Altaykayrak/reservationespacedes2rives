@@ -36,11 +36,7 @@ export const DateItem = ({
   const { data: spotsLeft, isLoading } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
-      console.log("Checking spots for:", {
-        period_id: periodId,
-        reservation_date: format(date, 'yyyy-MM-dd'),
-        child_school_class: childSchoolClass,
-      });
+      if (!childSchoolClass) return null;
 
       const { data: spotCount, error } = await supabase
         .rpc('check_holiday_spots_available', {
@@ -54,7 +50,7 @@ export const DateItem = ({
         return null;
       }
 
-      console.log("Spots left response:", spotCount);
+      console.log("Spots left response for", childSchoolClass, ":", spotCount);
       return spotCount;
     },
     enabled: !!periodId && !!childSchoolClass,
@@ -65,6 +61,12 @@ export const DateItem = ({
     if (spots <= 0) return "bg-red-100 text-red-800";
     if (spots <= 5) return "bg-orange-100 text-orange-800";
     return "bg-green-100 text-green-800";
+  };
+
+  const getGroupName = (schoolClass: string) => {
+    if (['PS', 'MS', 'GS'].includes(schoolClass)) return 'maternelle';
+    if (['CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(schoolClass)) return 'primaire';
+    return 'adolescent';
   };
 
   return (
@@ -91,17 +93,19 @@ export const DateItem = ({
               </span>
             )}
           </Label>
-          <div className="mt-1">
+          <div className="mt-1 flex flex-wrap gap-2">
             {!isLoading && spotsLeft !== null && (
-              <Badge 
-                variant="secondary" 
-                className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
-              >
-                {spotsLeft <= 0 
-                  ? "Complet" 
-                  : `${spotsLeft} place${spotsLeft > 1 ? 's' : ''} restante${spotsLeft > 1 ? 's' : ''}`
-                }
-              </Badge>
+              <>
+                <Badge 
+                  variant="secondary" 
+                  className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
+                >
+                  {spotsLeft <= 0 
+                    ? `Groupe ${getGroupName(childSchoolClass)} complet` 
+                    : `${spotsLeft} place${spotsLeft > 1 ? 's' : ''} restante${spotsLeft > 1 ? 's' : ''}`
+                  }
+                </Badge>
+              </>
             )}
           </div>
         </div>
