@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addHours } from "date-fns";
 import { useEffect } from "react";
@@ -15,6 +15,7 @@ export interface WednesdayWithCounts {
 }
 
 export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boolean) => {
+  const queryClient = useQueryClient();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const minDate = addHours(today, 72);
@@ -75,7 +76,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
     }
   };
 
-  const { data, refetch, ...rest } = useQuery({
+  const query = useQuery({
     queryKey: ["available_wednesdays"],
     queryFn: fetchWednesdays,
     staleTime: 0,
@@ -96,7 +97,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
         },
         (payload) => {
           console.log('Changement détecté dans les réservations:', payload);
-          refetch();
+          queryClient.invalidateQueries({ queryKey: ["available_wednesdays"] });
         }
       )
       .on(
@@ -108,7 +109,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
         },
         (payload) => {
           console.log('Changement détecté dans les mercredis disponibles:', payload);
-          refetch();
+          queryClient.invalidateQueries({ queryKey: ["available_wednesdays"] });
         }
       )
       .subscribe();
@@ -116,7 +117,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refetch]);
+  }, [queryClient]);
 
-  return { data, ...rest };
+  return query;
 };
