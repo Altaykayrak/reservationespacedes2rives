@@ -37,19 +37,17 @@ export const DateItem = ({
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Abonnement aux changements de la table holiday_reservations
     const channel = supabase
       .channel('holiday-spots-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Écoute tous les événements (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'holiday_reservations'
         },
         (payload) => {
           console.log('Changement détecté dans les réservations:', payload);
-          // Invalide le cache pour forcer un rechargement des données
           queryClient.invalidateQueries({
             queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass]
           });
@@ -57,7 +55,6 @@ export const DateItem = ({
       )
       .subscribe();
 
-    // Nettoyage de l'abonnement
     return () => {
       supabase.removeChannel(channel);
     };
@@ -102,9 +99,11 @@ export const DateItem = ({
   const isDisabled = isReserved || isTeenClass || (spotsLeft !== null && spotsLeft <= 0);
 
   return (
-    <div className={`space-y-1 p-2 rounded-lg transition-colors ${
-      isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
-    }`}>
+    <div 
+      className={`relative space-y-1 p-2 rounded-lg transition-colors ${
+        isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
+      }`}
+    >
       <div className="flex items-start gap-2">
         <Checkbox
           id={date.toISOString()}
@@ -114,7 +113,7 @@ export const DateItem = ({
           className={`mt-1 ${isReserved ? 'border-gray-300' : 'border-blue-200'}`}
         />
         <div className="flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2">
             <Label
               htmlFor={date.toISOString()}
               className={`cursor-pointer font-medium ${
@@ -124,7 +123,7 @@ export const DateItem = ({
               {format(date, "EEEE d MMMM yyyy", { locale: fr })}
             </Label>
             {isReserved && (
-              <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-200">
+              <Badge variant="outline" className="ml-2">
                 Déjà réservée
               </Badge>
             )}
