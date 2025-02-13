@@ -9,6 +9,7 @@ import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
 import { useEffect } from "react";
 import { WednesdayReservationWithChild } from "@/types/reservations";
+import { useLocation } from "react-router-dom";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -22,6 +23,8 @@ interface ReservationsListProps {
 
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
 
   useEffect(() => {
     const channel = supabase
@@ -51,6 +54,27 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
 
   console.log("Réservations reçues:", reservations);
 
+  // Fetch school class categories to identify teen classes
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isTeenClass = (schoolClass: string) => {
+    return schoolClassCategories?.some(
+      category => 
+        category.category === "adolescent" && 
+        schoolClass.toUpperCase() === category.name.toUpperCase()
+    );
+  };
+
   // Filtrer les réservations valides (qui ont toutes les données requises)
   const validReservations = reservations.filter(
     (reservation) => {
@@ -62,7 +86,12 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
           children: reservation.children
         });
       }
-      return isValid;
+      if (isTeenHolidayReservation) {
+        // Pour la page Club Ado, montrer uniquement les réservations des adolescents
+        return isValid && isTeenClass(reservation.children.school_class);
+      }
+      // Pour les autres pages, montrer uniquement les réservations des non-adolescents
+      return isValid && !isTeenClass(reservation.children.school_class);
     }
   );
 
@@ -93,7 +122,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   return (
     <div>
       <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
-        Vos mercredis réservés (sous réserve de règlement)
+        Vos {isTeenHolidayReservation ? "activités Club Ado" : "mercredis"} réservés (sous réserve de règlement)
       </h2>
       <ScrollArea className="h-[450px]">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">

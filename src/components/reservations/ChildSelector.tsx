@@ -21,6 +21,7 @@ export const ChildSelector = ({
 }: ChildSelectorProps) => {
   const location = useLocation();
   const isHolidayReservation = location.pathname === "/holiday-reservations";
+  const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
 
   // Fetch school class categories to identify teen classes
   const { data: schoolClassCategories } = useQuery({
@@ -57,11 +58,14 @@ export const ChildSelector = ({
     const isTeen = isTeenClass(child.school_class);
     const isPS = child.school_class.toUpperCase().includes("PS");
     
-    if (isHolidayReservation) {
-      // For holiday reservations, show all children except PS
-      return !isPS;
+    if (isTeenHolidayReservation) {
+      // Pour la page Club Ado, montrer uniquement les adolescents
+      return isTeen;
+    } else if (isHolidayReservation) {
+      // Pour les réservations vacances normales, exclure les ados et PS
+      return !isTeen && !isPS;
     } else {
-      // For wednesday reservations, exclude teens and PS
+      // Pour les réservations mercredis, exclure les ados et PS
       return !isTeen && !isPS;
     }
   });
