@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
-import { Calendar, Users, MapPin } from "lucide-react";
+import { Calendar, Users } from "lucide-react";
 import { HolidayReservationsDisplay } from "@/components/reservations/HolidayReservationsDisplay";
 
 const Index = () => {
@@ -53,7 +53,7 @@ const Index = () => {
       {/* Features Section */}
       <div className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {/* Activités variées */}
             <div className="text-center">
               <Calendar className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
@@ -71,16 +71,6 @@ const Index = () => {
               <p className="text-gray-600">
                 Une équipe d'animateurs professionnels et passionnés pour
                 accompagner vos enfants dans leur développement.
-              </p>
-            </div>
-
-            {/* Cadre exceptionnel */}
-            <div className="text-center">
-              <MapPin className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
-              <h2 className="text-2xl font-bold mb-4">Cadre exceptionnel</h2>
-              <p className="text-gray-600">
-                Un environnement chaleureux et accueillant au cœur de nos belles
-                communes, propice à l'apprentissage et à la découverte.
               </p>
             </div>
           </div>
