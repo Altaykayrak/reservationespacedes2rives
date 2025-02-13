@@ -5,8 +5,9 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DateOptions } from "./DateOptions";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 interface DateItemProps {
   date: Date;
@@ -33,6 +34,35 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Abonnement aux changements de la table holiday_reservations
+    const channel = supabase
+      .channel('holiday-spots-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Écoute tous les événements (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'holiday_reservations'
+        },
+        (payload) => {
+          console.log('Changement détecté dans les réservations:', payload);
+          // Invalide le cache pour forcer un rechargement des données
+          queryClient.invalidateQueries({
+            queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass]
+          });
+        }
+      )
+      .subscribe();
+
+    // Nettoyage de l'abonnement
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, periodId, date, childSchoolClass]);
+
   const { data: spotsLeft, isLoading } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
