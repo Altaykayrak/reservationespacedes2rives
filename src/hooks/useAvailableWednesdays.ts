@@ -34,7 +34,15 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
 
       const reservationsResult = await supabase
         .from("wednesday_reservations")
-        .select('*, children(*)')
+        .select(`
+          *,
+          children (
+            id,
+            first_name,
+            last_name,
+            school_class
+          )
+        `)
         .eq('status', 'confirmed');
 
       if (reservationsResult.error) throw reservationsResult.error;
@@ -42,16 +50,22 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
 
       const processedWednesdays = wednesdaysResult.data.map(wednesday => {
         const wednesdayReservations = reservationsResult.data.filter(r => 
-          r.wednesday_id === wednesday.id
+          r.wednesday_id === wednesday.id && r.children !== null
         );
 
         const kindergartenCount = wednesdayReservations.filter(r => 
-          r.children?.school_class && ["PS", "MS", "GS"].includes(r.children.school_class)
+          r.children && ["PS", "MS", "GS"].includes(r.children.school_class)
         ).length;
 
         const primaryCount = wednesdayReservations.filter(r => 
-          r.children?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+          r.children && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
         ).length;
+
+        console.log(`Décompte pour le mercredi ${wednesday.date}:`, {
+          maternelle: kindergartenCount,
+          primaire: primaryCount,
+          réservations: wednesdayReservations
+        });
 
         return {
           id: wednesday.id,
