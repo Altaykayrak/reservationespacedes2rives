@@ -71,13 +71,13 @@ export const useReservations = () => {
           status,
           created_at,
           updated_at,
-          children:child_id (
+          children!wednesday_reservations_child_id_fkey (
             id,
             first_name,
             last_name,
             school_class
           ),
-          available_wednesdays:wednesday_id (
+          available_wednesdays!fk_wednesday_id (
             id,
             date,
             max_participants_kindergarten,
