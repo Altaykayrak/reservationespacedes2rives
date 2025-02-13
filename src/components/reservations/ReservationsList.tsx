@@ -26,6 +26,19 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   const location = useLocation();
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
 
+  // Déplacer useQuery en dehors de toute condition
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
@@ -53,19 +66,6 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   }
 
   console.log("Réservations reçues:", reservations);
-
-  // Fetch school class categories to identify teen classes
-  const { data: schoolClassCategories } = useQuery({
-    queryKey: ["schoolClassCategories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("school_class_categories")
-        .select("*");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const isTeenClass = (schoolClass: string) => {
     return schoolClassCategories?.some(
