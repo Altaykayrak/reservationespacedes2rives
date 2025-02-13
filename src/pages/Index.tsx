@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
 import { Calendar, Users, MapPin } from "lucide-react";
+import { HolidayReservationsDisplay } from "@/components/reservations/HolidayReservationsDisplay";
 
 const Index = () => {
   return (
@@ -38,6 +40,14 @@ const Index = () => {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Reservations Display Section */}
+      <div className="container mx-auto px-4 py-12">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          Vos réservations de vacances
+        </h2>
+        <HolidayReservationsDisplay />
       </div>
 
       {/* Features Section */}
