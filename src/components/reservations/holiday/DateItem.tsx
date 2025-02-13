@@ -42,7 +42,7 @@ export const DateItem = ({
         child_school_class: childSchoolClass,
       });
 
-      const { data, error } = await supabase
+      const { data: spotCount, error } = await supabase
         .rpc('check_holiday_spots_available', {
           period_id: periodId,
           reservation_date: format(date, 'yyyy-MM-dd'),
@@ -54,8 +54,8 @@ export const DateItem = ({
         return null;
       }
 
-      console.log("Spots left response:", data);
-      return data?.spots_left ?? null;
+      console.log("Spots left response:", spotCount);
+      return spotCount;
     },
     enabled: !!periodId && !!childSchoolClass,
   });
