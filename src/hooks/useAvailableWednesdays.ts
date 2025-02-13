@@ -20,6 +20,19 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
   today.setHours(0, 0, 0, 0);
   const minDate = addHours(today, 72);
 
+  const { data: childInfo } = useQuery({
+    queryKey: ["selectedChild"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("school_class")
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const fetchWednesdays = async () => {
     console.log('Démarrage de la requête pour les mercredis disponibles');
     
@@ -32,65 +45,43 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
       if (wednesdaysResult.error) throw wednesdaysResult.error;
       console.log('Mercredis récupérés:', wednesdaysResult.data);
 
-      const reservationsResult = await supabase
-        .from("wednesday_reservations")
-        .select(`
-          id,
-          wednesday_id,
-          status,
-          children (
-            id,
-            first_name,
-            last_name,
-            school_class
-          )
-        `)
-        .eq('status', 'confirmed');
+      const processedWednesdays = await Promise.all(wednesdaysResult.data.map(async (wednesday) => {
+        // Utiliser la nouvelle fonction RPC pour obtenir les places restantes
+        const { data: spotsLeft, error } = await supabase
+          .rpc('check_wednesday_spots_remaining', {
+            wednesday_id: wednesday.id,
+            child_school_class: childInfo?.school_class || (isKindergarten ? 'MS' : 'CP')
+          });
 
-      if (reservationsResult.error) throw reservationsResult.error;
-      const confirmedReservations = reservationsResult.data.filter(r => r.children !== null);
-      console.log('Réservations confirmées filtrées:', confirmedReservations);
+        if (error) {
+          console.error('Erreur lors du calcul des places restantes:', error);
+          return null;
+        }
 
-      const processedWednesdays = wednesdaysResult.data.map(wednesday => {
-        // Filtrer les réservations pour ce mercredi spécifique
-        const wednesdayReservations = confirmedReservations.filter(reservation => 
-          reservation.wednesday_id === wednesday.id
-        );
+        console.log(`Places restantes pour le mercredi ${wednesday.date}:`, spotsLeft);
 
-        console.log(`Réservations pour le mercredi ${wednesday.date}:`, wednesdayReservations);
-
-        // Compter les réservations par type
-        const kindergartenCount = wednesdayReservations.filter(reservation => 
-          ["PS", "MS", "GS"].includes(reservation.children.school_class)
-        ).length;
-
-        const primaryCount = wednesdayReservations.filter(reservation => 
-          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(reservation.children.school_class)
-        ).length;
-
-        console.log(`Décompte pour le mercredi ${wednesday.date}:`, {
-          maternelle: kindergartenCount,
-          primaire: primaryCount,
-          total_reservations: wednesdayReservations.length
-        });
+        const isKindergartenClass = childInfo?.school_class && ["PS", "MS", "GS", "Petite Section", "Moyenne Section", "Grande Section"].includes(childInfo.school_class);
+        const maxSpots = isKindergartenClass ? wednesday.max_participants_kindergarten : wednesday.max_participants_primary;
 
         return {
           id: wednesday.id,
           date: wednesday.date,
           max_participants_kindergarten: wednesday.max_participants_kindergarten,
           max_participants_primary: wednesday.max_participants_primary,
-          kindergartenReservations: kindergartenCount,
-          primaryReservations: primaryCount,
-          isFull: isKindergarten 
-            ? kindergartenCount >= wednesday.max_participants_kindergarten
-            : primaryCount >= wednesday.max_participants_primary
+          kindergartenReservations: isKindergartenClass ? maxSpots - spotsLeft : 0,
+          primaryReservations: !isKindergartenClass ? maxSpots - spotsLeft : 0,
+          isFull: spotsLeft <= 0
         };
-      }).filter(wednesday => {
-        const wednesdayDate = new Date(wednesday.date);
-        return wednesdayDate >= minDate;
-      });
+      }));
 
-      return processedWednesdays;
+      // Filtrer les mercredis nuls et les dates passées
+      return processedWednesdays
+        .filter(wednesday => wednesday !== null)
+        .filter(wednesday => {
+          const wednesdayDate = new Date(wednesday!.date);
+          return wednesdayDate >= minDate;
+        }) as WednesdayWithCounts[];
+
     } catch (error) {
       console.error('Erreur lors du traitement:', error);
       throw error;
@@ -98,12 +89,13 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
   };
 
   const query = useQuery({
-    queryKey: ["available_wednesdays"],
+    queryKey: ["available_wednesdays", childInfo?.school_class],
     queryFn: fetchWednesdays,
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
+    enabled: !!childInfo?.school_class
   });
 
   useEffect(() => {

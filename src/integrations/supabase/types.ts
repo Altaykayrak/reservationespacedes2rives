@@ -489,6 +489,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_wednesday_spots_remaining: {
+        Args: {
+          wednesday_id: string
+          child_school_class: string
+        }
+        Returns: number
+      }
       get_school_class_group: {
         Args: {
           school_class: string
