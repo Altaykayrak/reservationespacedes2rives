@@ -55,7 +55,7 @@ export const DateItem = ({
       }
 
       console.log("Spots left response:", data);
-      return typeof data === 'number' ? data : null;
+      return data?.spots_left ?? null;
     },
     enabled: !!periodId && !!childSchoolClass,
   });
