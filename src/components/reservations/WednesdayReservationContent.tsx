@@ -5,12 +5,6 @@ import { useReservations } from "@/hooks/useReservations";
 import { ChildSelector } from "./ChildSelector";
 import { WednesdayDateSelector } from "./WednesdayDateSelector";
 
-interface DateOption {
-  date: Date;
-  withoutMeal: boolean;
-  earlyDropoff: boolean;
-}
-
 export const WednesdayReservationContent = () => {
   const {
     selectedDates,

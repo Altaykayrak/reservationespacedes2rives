@@ -47,15 +47,8 @@ export const useReservations = () => {
         .select('id')
         .eq('profile_id', session.user.id);
 
-      if (childrenError) {
-        console.error("Erreur lors de la récupération des enfants:", childrenError);
-        throw childrenError;
-      }
-
-      if (!userChildren?.length) {
-        console.log("Aucun enfant trouvé pour cet utilisateur");
-        return [];
-      }
+      if (childrenError) throw childrenError;
+      if (!userChildren?.length) return [];
 
       const childrenIds = userChildren.map(child => child.id);
 
@@ -88,17 +81,31 @@ export const useReservations = () => {
         .eq('status', 'confirmed')
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error("Erreur lors de la récupération des réservations:", error);
-        throw error;
-      }
-
-      console.log("Réservations récupérées:", data);
+      if (error) throw error;
       return data as WednesdayReservationWithChild[];
     },
     staleTime: 30000,
     gcTime: 3600000,
   });
+
+  const handleDateToggle = (date: Date) => {
+    setSelectedDates(prev => {
+      const existing = prev.find(d => d.date.getTime() === date.getTime());
+      if (existing) {
+        return prev.filter(d => d.date.getTime() !== date.getTime());
+      }
+      return [...prev, { date, withoutMeal: false, earlyDropoff: false }];
+    });
+  };
+
+  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
+    setSelectedDates(prev => prev.map(d => {
+      if (d.date.getTime() === date.getTime()) {
+        return { ...d, [option]: value };
+      }
+      return d;
+    }));
+  };
 
   const isDateReservedForChild = (childId: string, date: Date) => {
     if (!wednesdayReservations) return false;
@@ -116,8 +123,8 @@ export const useReservations = () => {
     setSelectedChild,
     children,
     wednesdayReservations,
-    handleDateToggle: () => {}, // Cette fonction sera implémentée plus tard
-    handleOptionChange: () => {}, // Cette fonction sera implémentée plus tard
+    handleDateToggle,
+    handleOptionChange,
     handleSubmit: () => {}, // Cette fonction sera implémentée plus tard
     isDateReservedForChild,
     resetForm: () => {
