@@ -101,6 +101,9 @@ export const useReservationSubmission = (
       await refetchReservations();
       resetForm();
 
+      // Ajout du rechargement de la page après une réservation réussie
+      window.location.reload();
+
     } catch (error: any) {
       console.error("Erreur lors de la création des réservations:", error);
       toast({
