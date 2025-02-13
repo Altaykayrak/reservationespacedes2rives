@@ -87,9 +87,9 @@ export const useReservationSubmission = (
           .eq("child_id", selectedChild)
           .eq("period_id", period.id)
           .eq("reservation_date", format(dateOption.date, "yyyy-MM-dd"))
-          .single();
+          .maybeSingle();
 
-        if (checkError && checkError.code !== "PGRST116") { // PGRST116 signifie qu'aucun résultat n'a été trouvé
+        if (checkError) {
           throw checkError;
         }
 
