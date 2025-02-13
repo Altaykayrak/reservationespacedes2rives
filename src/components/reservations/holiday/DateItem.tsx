@@ -99,43 +99,45 @@ export const DateItem = ({
     return 'adolescent';
   };
 
+  const isDisabled = isReserved || isTeenClass || (spotsLeft !== null && spotsLeft <= 0);
+
   return (
-    <div className="space-y-1 bg-blue-50/30 p-2 rounded-lg hover:bg-blue-100/30 transition-colors">
+    <div className={`space-y-1 p-2 rounded-lg transition-colors ${
+      isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
+    }`}>
       <div className="flex items-start gap-2">
         <Checkbox
           id={date.toISOString()}
           checked={isSelected}
-          onCheckedChange={() => !isReserved && !isTeenClass && onDateToggle()}
-          disabled={isReserved || isTeenClass || (spotsLeft !== null && spotsLeft <= 0)}
-          className="border-blue-200 mt-1"
+          onCheckedChange={onDateToggle}
+          disabled={isDisabled}
+          className={`mt-1 ${isReserved ? 'border-gray-300' : 'border-blue-200'}`}
         />
         <div className="flex-1">
           <Label
             htmlFor={date.toISOString()}
             className={`cursor-pointer font-medium ${
-              isReserved ? 'text-gray-500' : 'text-blue-900'
+              isDisabled ? 'text-gray-500' : 'text-blue-900'
             }`}
           >
             {format(date, "EEEE d MMMM yyyy", { locale: fr })}
             {isReserved && (
-              <span className="ml-2 text-sm text-gray-500">
+              <span className="ml-2 text-sm font-normal text-gray-500">
                 (Déjà réservé)
               </span>
             )}
           </Label>
           <div className="mt-1 flex flex-wrap gap-2">
-            {!isLoading && spotsLeft !== null && (
-              <>
-                <Badge 
-                  variant="secondary" 
-                  className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
-                >
-                  {spotsLeft <= 0 
-                    ? `Groupe ${getGroupName(childSchoolClass)} complet` 
-                    : `${spotsLeft} place${spotsLeft > 1 ? 's' : ''} restante${spotsLeft > 1 ? 's' : ''}`
-                  }
-                </Badge>
-              </>
+            {!isLoading && spotsLeft !== null && !isReserved && (
+              <Badge 
+                variant="secondary" 
+                className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
+              >
+                {spotsLeft <= 0 
+                  ? `Groupe ${getGroupName(childSchoolClass)} complet` 
+                  : `${spotsLeft} place${spotsLeft > 1 ? 's' : ''} restante${spotsLeft > 1 ? 's' : ''}`
+                }
+              </Badge>
             )}
           </div>
         </div>
