@@ -5,14 +5,7 @@ import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./HolidayDateSelector";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-
-interface DateOption {
-  date: Date;
-  withoutMeal: boolean;
-  earlyDropoff: boolean;
-}
+import { Toaster } from "@/components/ui/toaster";
 
 export const HolidayReservationContent = () => {
   const {
@@ -30,41 +23,6 @@ export const HolidayReservationContent = () => {
     setSelectedDates
   } = useHolidayReservation();
 
-  // Fetch child information to check if they're in a teen class
-  const { data: childInfo } = useQuery({
-    queryKey: ["child", selectedChild],
-    queryFn: async () => {
-      if (!selectedChild) return null;
-      const { data, error } = await supabase
-        .from("children")
-        .select("school_class")
-        .eq("id", selectedChild)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: Boolean(selectedChild),
-  });
-
-  // Fetch school class categories to identify teen classes
-  const { data: schoolClassCategories } = useQuery({
-    queryKey: ["schoolClassCategories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("school_class_categories")
-        .select("*")
-        .eq("category", "adolescent");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
-    category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
-  );
-
   if (!holidayPeriods || holidayPeriods.length === 0) {
     return (
       <Card className="p-6">
@@ -76,41 +34,44 @@ export const HolidayReservationContent = () => {
   }
 
   return (
-    <Card className="p-6">
-      <div className="space-y-6">
-        <ChildSelector
-          selectedChild={selectedChild}
-          setSelectedChild={setSelectedChild}
-          children={children}
-          setSelectedDates={setSelectedDates}
-        />
-
-        <PeriodSelector
-          selectedPeriod={selectedPeriod}
-          setSelectedPeriod={setSelectedPeriod}
-          holidayPeriods={holidayPeriods}
-        />
-
-        {selectedPeriod && (
-          <HolidayDateSelector
-            selectedDates={selectedDates}
-            handleDateToggle={handleDateToggle}
-            handleOptionChange={handleOptionChange}
-            isDateAlreadyReserved={isDateAlreadyReserved}
-            periodId={selectedPeriod}
+    <>
+      <Card className="p-6">
+        <div className="space-y-6">
+          <ChildSelector
             selectedChild={selectedChild}
+            setSelectedChild={setSelectedChild}
+            children={children}
             setSelectedDates={setSelectedDates}
           />
-        )}
 
-        <Button
-          onClick={handleSubmit}
-          className="w-full"
-          disabled={!selectedChild || !selectedPeriod}
-        >
-          Confirmer la réservation
-        </Button>
-      </div>
-    </Card>
+          <PeriodSelector
+            selectedPeriod={selectedPeriod}
+            setSelectedPeriod={setSelectedPeriod}
+            holidayPeriods={holidayPeriods}
+          />
+
+          {selectedPeriod && (
+            <HolidayDateSelector
+              selectedDates={selectedDates}
+              handleDateToggle={handleDateToggle}
+              handleOptionChange={handleOptionChange}
+              isDateAlreadyReserved={isDateAlreadyReserved}
+              periodId={selectedPeriod}
+              selectedChild={selectedChild}
+              setSelectedDates={setSelectedDates}
+            />
+          )}
+
+          <Button
+            onClick={handleSubmit}
+            className="w-full"
+            disabled={!selectedChild || !selectedPeriod}
+          >
+            Confirmer la réservation
+          </Button>
+        </div>
+      </Card>
+      <Toaster />
+    </>
   );
 };

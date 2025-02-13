@@ -68,7 +68,6 @@ export const useReservationSubmission = (
     }
 
     try {
-      // Vérification préalable des réservations existantes
       for (const dateOption of selectedDates) {
         const period = holidayPeriods?.find(period => {
           const startDate = new Date(period.start_date);
@@ -80,7 +79,6 @@ export const useReservationSubmission = (
           throw new Error(`Période non trouvée pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
         }
 
-        // Vérification si la réservation existe déjà
         const { data: existingReservation, error: checkError } = await supabase
           .from("holiday_reservations")
           .select()
@@ -98,7 +96,6 @@ export const useReservationSubmission = (
         }
       }
 
-      // Si toutes les vérifications sont passées, procéder aux insertions
       for (const dateOption of selectedDates) {
         const period = holidayPeriods?.find(period => {
           const startDate = new Date(period.start_date);
@@ -127,8 +124,6 @@ export const useReservationSubmission = (
 
       await refetchReservations();
       resetForm();
-
-      // Ajout du rechargement de la page après une réservation réussie
       window.location.reload();
 
     } catch (error: any) {
