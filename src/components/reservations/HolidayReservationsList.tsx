@@ -9,6 +9,7 @@ import { HolidayReservationWithChild } from "@/types/reservations";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { User } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -81,6 +82,20 @@ export const HolidayChildReservationCard = ({
 
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isTeenPage = location.pathname === "/teenholiday-reservations";
+
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: reservations, isError, error, refetch } = useQuery({
     queryKey: ["holiday_reservations"],
@@ -169,7 +184,31 @@ export const HolidayReservationsList = () => {
     return <EmptyReservations />;
   }
 
-  const reservationsByChild = reservations.reduce((acc, reservation) => {
+  const isTeenClass = (schoolClass: string) => {
+    return schoolClassCategories?.some(
+      category => 
+        category.category === "adolescent" && 
+        schoolClass.toUpperCase() === category.name.toUpperCase()
+    );
+  };
+
+  // Filtrer les réservations selon la page et la catégorie d'âge
+  const filteredReservations = reservations.filter(reservation => {
+    const isTeen = isTeenClass(reservation.children.school_class);
+    return isTeenPage ? isTeen : !isTeen;
+  });
+
+  if (filteredReservations.length === 0) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">
+          Aucune réservation trouvée pour {isTeenPage ? "les adolescents" : "les enfants de maternelle et primaire"}.
+        </p>
+      </div>
+    );
+  }
+
+  const reservationsByChild = filteredReservations.reduce((acc, reservation) => {
     if (!reservation.children) {
       console.warn('Reservation without child data:', reservation);
       return acc;
@@ -191,7 +230,7 @@ export const HolidayReservationsList = () => {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos vacances réservées (sous réserve de règlement)
+          Vos {isTeenPage ? "activités Club Ado" : "vacances"} réservées (sous réserve de règlement)
         </h2>
         <p className="text-sm text-red-600 mb-4">
           Pour toute modification de vos réservations (ajout ou suppression de journées), merci de contacter l'accueil.
