@@ -20,19 +20,6 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
   today.setHours(0, 0, 0, 0);
   const minDate = addHours(today, 72);
 
-  const { data: childInfo } = useQuery({
-    queryKey: ["selectedChild"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("children")
-        .select("school_class")
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const fetchWednesdays = async () => {
     console.log('Démarrage de la requête pour les mercredis disponibles');
     
@@ -46,37 +33,38 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
       console.log('Mercredis récupérés:', wednesdaysResult.data);
 
       const processedWednesdays = await Promise.all(wednesdaysResult.data.map(async (wednesday) => {
-        // Par défaut, utiliser la classe en fonction du type (maternelle/primaire)
-        const defaultClass = isKindergarten ? 'MS' : 'CP';
-        const schoolClass = childInfo?.school_class || defaultClass;
-        
-        console.log('Vérification des places pour la classe:', schoolClass);
-
-        // Utiliser la nouvelle fonction RPC pour obtenir les places restantes
-        const { data: spotsLeft, error } = await supabase
+        // Calculer les places restantes pour les deux catégories
+        const { data: kindergartenSpots, error: kindergartenError } = await supabase
           .rpc('check_wednesday_spots_remaining', {
             wednesday_id: wednesday.id,
-            child_school_class: schoolClass
+            child_school_class: 'MS'
           });
 
-        if (error) {
-          console.error('Erreur lors du calcul des places restantes:', error);
+        const { data: primarySpots, error: primaryError } = await supabase
+          .rpc('check_wednesday_spots_remaining', {
+            wednesday_id: wednesday.id,
+            child_school_class: 'CP'
+          });
+
+        if (kindergartenError || primaryError) {
+          console.error('Erreur lors du calcul des places restantes:', kindergartenError || primaryError);
           return null;
         }
 
-        console.log(`Places restantes pour le mercredi ${wednesday.date}:`, spotsLeft);
+        console.log(`Places restantes maternelle pour le mercredi ${wednesday.date}:`, kindergartenSpots);
+        console.log(`Places restantes primaire pour le mercredi ${wednesday.date}:`, primarySpots);
 
-        const isKindergartenClass = schoolClass && ["PS", "MS", "GS", "Petite Section", "Moyenne Section", "Grande Section"].includes(schoolClass);
-        const maxSpots = isKindergartenClass ? wednesday.max_participants_kindergarten : wednesday.max_participants_primary;
+        const kindergartenReservations = wednesday.max_participants_kindergarten - (kindergartenSpots || 0);
+        const primaryReservations = wednesday.max_participants_primary - (primarySpots || 0);
 
         return {
           id: wednesday.id,
           date: wednesday.date,
           max_participants_kindergarten: wednesday.max_participants_kindergarten,
           max_participants_primary: wednesday.max_participants_primary,
-          kindergartenReservations: isKindergartenClass ? maxSpots - spotsLeft : 0,
-          primaryReservations: !isKindergartenClass ? maxSpots - spotsLeft : 0,
-          isFull: spotsLeft <= 0
+          kindergartenReservations,
+          primaryReservations,
+          isFull: (isKindergarten && kindergartenSpots <= 0) || (isPrimary && primarySpots <= 0)
         };
       }));
 
@@ -95,7 +83,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
   };
 
   const query = useQuery({
-    queryKey: ["available_wednesdays", childInfo?.school_class],
+    queryKey: ["available_wednesdays", isKindergarten, isPrimary],
     queryFn: fetchWednesdays,
     staleTime: 0,
     refetchOnMount: true,
