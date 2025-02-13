@@ -55,12 +55,36 @@ export const WednesdayDateSelector = ({
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'wednesday_reservations'
         },
-        (payload) => {
-          console.log('Changement détecté dans les réservations:', payload);
+        () => {
+          console.log('Nouvelle réservation détectée');
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'wednesday_reservations'
+        },
+        () => {
+          console.log('Mise à jour de réservation détectée');
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'wednesday_reservations'
+        },
+        () => {
+          console.log('Suppression de réservation détectée');
           refetch();
         }
       )
