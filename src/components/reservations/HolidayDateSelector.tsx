@@ -80,7 +80,7 @@ export const HolidayDateSelector = ({
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
 
-  // Effet pour sélectionner toutes les dates pour les adolescents
+  // Effet pour gérer la sélection des dates pour les adolescents
   useEffect(() => {
     if (isTeenClass && holidayPeriod) {
       console.log("Sélection des dates pour adolescent");
@@ -102,6 +102,13 @@ export const HolidayDateSelector = ({
       setSelectedDates(dates);
     }
   }, [isTeenClass, holidayPeriod, setSelectedDates]);
+
+  // Effet pour réinitialiser les dates lors du changement de période
+  useEffect(() => {
+    if (!isTeenClass) {
+      setSelectedDates([]);
+    }
+  }, [periodId, selectedChild, isTeenClass, setSelectedDates]);
 
   if (!holidayPeriod) {
     return (
