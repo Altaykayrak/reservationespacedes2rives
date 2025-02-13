@@ -60,7 +60,7 @@ export const useHolidayReservation = () => {
     setSelectedDates([]);
   }, [selectedChild]);
 
-  // Effet pour présélectionner les dates pour les adolescents uniquement sur la page teen
+  // Effet pour présélectionner les dates uniquement pour les ados sur la page teen
   useEffect(() => {
     const isTeenPage = window.location.pathname === "/teenholiday-reservations";
     
@@ -102,13 +102,21 @@ export const useHolidayReservation = () => {
   );
 
   const handleDateToggle = (date: Date) => {
-    if (isTeenClass && window.location.pathname === "/teenholiday-reservations") return; // Empêcher la modification manuelle pour les adolescents sur la page teen
+    const isTeenPage = window.location.pathname === "/teenholiday-reservations";
+    
+    // N'empêcher la modification manuelle que pour les ados sur la page teen
+    if (isTeenClass && isTeenPage) return;
     
     const existingDate = selectedDates.find(d => d.date.getTime() === date.getTime());
     if (existingDate) {
       setSelectedDates(selectedDates.filter(d => d.date.getTime() !== date.getTime()));
     } else {
-      setSelectedDates([...selectedDates, { date, withoutMeal: false, earlyDropoff: false }]);
+      // Sur la page normale, même pour les ados, permettre de choisir les options
+      setSelectedDates([...selectedDates, { 
+        date, 
+        withoutMeal: false, 
+        earlyDropoff: false 
+      }]);
     }
   };
 
