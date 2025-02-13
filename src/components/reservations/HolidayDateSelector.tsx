@@ -69,15 +69,11 @@ export const HolidayDateSelector = ({
         currentDate.setDate(currentDate.getDate() + 1);
       }
       setSelectedDates(dates);
-    }
-  }, [isTeenClass, holidayPeriod, setSelectedDates]);
-
-  // Effet pour réinitialiser les dates lors du changement de période
-  useEffect(() => {
-    if (!isTeenClass) {
+    } else {
+      // Si ce n'est pas un adolescent, on réinitialise les dates
       setSelectedDates([]);
     }
-  }, [periodId, selectedChild, isTeenClass, setSelectedDates]);
+  }, [isTeenClass, holidayPeriod, setSelectedDates]);
 
   return (
     <HolidayPeriodProvider 
