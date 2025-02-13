@@ -46,11 +46,17 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
       console.log('Mercredis récupérés:', wednesdaysResult.data);
 
       const processedWednesdays = await Promise.all(wednesdaysResult.data.map(async (wednesday) => {
+        // Par défaut, utiliser la classe en fonction du type (maternelle/primaire)
+        const defaultClass = isKindergarten ? 'MS' : 'CP';
+        const schoolClass = childInfo?.school_class || defaultClass;
+        
+        console.log('Vérification des places pour la classe:', schoolClass);
+
         // Utiliser la nouvelle fonction RPC pour obtenir les places restantes
         const { data: spotsLeft, error } = await supabase
           .rpc('check_wednesday_spots_remaining', {
             wednesday_id: wednesday.id,
-            child_school_class: childInfo?.school_class || (isKindergarten ? 'MS' : 'CP')
+            child_school_class: schoolClass
           });
 
         if (error) {
@@ -60,7 +66,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
 
         console.log(`Places restantes pour le mercredi ${wednesday.date}:`, spotsLeft);
 
-        const isKindergartenClass = childInfo?.school_class && ["PS", "MS", "GS", "Petite Section", "Moyenne Section", "Grande Section"].includes(childInfo.school_class);
+        const isKindergartenClass = schoolClass && ["PS", "MS", "GS", "Petite Section", "Moyenne Section", "Grande Section"].includes(schoolClass);
         const maxSpots = isKindergartenClass ? wednesday.max_participants_kindergarten : wednesday.max_participants_primary;
 
         return {
@@ -94,8 +100,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    enabled: !!childInfo?.school_class
+    refetchOnReconnect: true
   });
 
   useEffect(() => {
