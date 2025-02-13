@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface DateOption {
   date: Date;
@@ -18,6 +19,7 @@ export const useWednesdayReservationSubmission = (
   resetForm: () => void
 ) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async () => {
     if (!selectedChild) {
@@ -80,12 +82,17 @@ export const useWednesdayReservationSubmission = (
         if (reservationError) throw reservationError;
       }
 
+      // Forcer la mise à jour des données après les réservations
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["available_wednesdays"] }),
+        refetchReservations()
+      ]);
+
       toast({
         title: "Succès",
         description: "Les réservations ont été créées avec succès.",
       });
 
-      await refetchReservations();
       resetForm();
 
     } catch (error: any) {
