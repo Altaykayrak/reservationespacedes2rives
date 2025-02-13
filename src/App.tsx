@@ -1,10 +1,9 @@
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
-import WednesdayReservations from "@/pages/WednesdayReservations";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -20,8 +19,10 @@ import AdminWednesdays from "@/pages/admin/AdminWednesdays";
 import AdminHolidays from "@/pages/admin/AdminHolidays";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import HolidayReservations from "@/pages/HolidayReservations";
+import TeenHolidayReservations from "@/pages/TeenHolidayReservations";
 import HolidayProgram from "@/pages/HolidayProgram";
 import TermsOfService from "@/pages/TermsOfService";
+import WednesdayReservations from "@/pages/WednesdayReservations";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -76,6 +77,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <HolidayReservations />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/teenholiday-reservations",
+    element: (
+      <ProtectedRoute>
+        <TeenHolidayReservations />
       </ProtectedRoute>
     ),
   },
