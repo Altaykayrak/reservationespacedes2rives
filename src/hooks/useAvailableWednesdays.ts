@@ -75,5 +75,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
         throw error;
       }
     },
+    staleTime: 30000,
+    gcTime: 3600000,
   });
 };
