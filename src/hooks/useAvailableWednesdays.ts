@@ -35,7 +35,9 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
       const reservationsResult = await supabase
         .from("wednesday_reservations")
         .select(`
-          *,
+          id,
+          wednesday_id,
+          status,
           children (
             id,
             first_name,
@@ -46,25 +48,30 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
         .eq('status', 'confirmed');
 
       if (reservationsResult.error) throw reservationsResult.error;
-      console.log('Réservations confirmées récupérées:', reservationsResult.data);
+      const confirmedReservations = reservationsResult.data.filter(r => r.children !== null);
+      console.log('Réservations confirmées filtrées:', confirmedReservations);
 
       const processedWednesdays = wednesdaysResult.data.map(wednesday => {
-        const wednesdayReservations = reservationsResult.data.filter(r => 
-          r.wednesday_id === wednesday.id && r.children !== null
+        // Filtrer les réservations pour ce mercredi spécifique
+        const wednesdayReservations = confirmedReservations.filter(reservation => 
+          reservation.wednesday_id === wednesday.id
         );
 
-        const kindergartenCount = wednesdayReservations.filter(r => 
-          r.children && ["PS", "MS", "GS"].includes(r.children.school_class)
+        console.log(`Réservations pour le mercredi ${wednesday.date}:`, wednesdayReservations);
+
+        // Compter les réservations par type
+        const kindergartenCount = wednesdayReservations.filter(reservation => 
+          ["PS", "MS", "GS"].includes(reservation.children.school_class)
         ).length;
 
-        const primaryCount = wednesdayReservations.filter(r => 
-          r.children && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(r.children.school_class)
+        const primaryCount = wednesdayReservations.filter(reservation => 
+          ["CP", "CE1", "CE2", "CM1", "CM2"].includes(reservation.children.school_class)
         ).length;
 
         console.log(`Décompte pour le mercredi ${wednesday.date}:`, {
           maternelle: kindergartenCount,
           primaire: primaryCount,
-          réservations: wednesdayReservations
+          total_reservations: wednesdayReservations.length
         });
 
         return {
