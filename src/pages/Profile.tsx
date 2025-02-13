@@ -128,6 +128,9 @@ const Profile = () => {
           <Button asChild variant="default" className="flex-1">
             <Link to="/holiday-reservations">Réservations Vacances</Link>
           </Button>
+          <Button asChild variant="default" className="flex-1">
+            <Link to="/teenholiday-reservations">Réservations Club Ado</Link>
+          </Button>
         </div>
 
         <div className="grid gap-8">
