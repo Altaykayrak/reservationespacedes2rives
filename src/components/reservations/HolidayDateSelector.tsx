@@ -54,23 +54,27 @@ export const HolidayDateSelector = ({
     if (!selectedChild) return;
 
     if (isTeenClass && holidayPeriod) {
-      console.log("Sélection des dates pour adolescent");
-      const dates: DateOption[] = [];
-      const startDate = new Date(holidayPeriod.start_date);
-      const endDate = new Date(holidayPeriod.end_date);
-      const currentDate = new Date(startDate);
+      // On n'applique la présélection que sur la page teen
+      const isTeenPage = window.location.pathname === "/teenholiday-reservations";
+      if (isTeenPage) {
+        console.log("Sélection des dates pour adolescent");
+        const dates: DateOption[] = [];
+        const startDate = new Date(holidayPeriod.start_date);
+        const endDate = new Date(holidayPeriod.end_date);
+        const currentDate = new Date(startDate);
 
-      while (currentDate <= endDate) {
-        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-          dates.push({
-            date: new Date(currentDate),
-            withoutMeal: true,
-            earlyDropoff: false
-          });
+        while (currentDate <= endDate) {
+          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+            dates.push({
+              date: new Date(currentDate),
+              withoutMeal: true,
+              earlyDropoff: false
+            });
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
         }
-        currentDate.setDate(currentDate.getDate() + 1);
+        setSelectedDates(dates);
       }
-      setSelectedDates(dates);
     } else {
       // Si ce n'est pas un adolescent, on réinitialise les dates
       setSelectedDates([]);
@@ -79,7 +83,8 @@ export const HolidayDateSelector = ({
 
   // Effet pour réinitialiser les dates lors du changement de période
   useEffect(() => {
-    if (!isTeenClass) {
+    const isTeenPage = window.location.pathname === "/teenholiday-reservations";
+    if (!isTeenClass || !isTeenPage) {
       setSelectedDates([]);
     }
   }, [periodId, isTeenClass, setSelectedDates]);
@@ -92,7 +97,7 @@ export const HolidayDateSelector = ({
       childInfo={childInfo} 
       isTeenClass={!!isTeenClass}
     >
-      {isTeenClass ? (
+      {window.location.pathname === "/teenholiday-reservations" && isTeenClass ? (
         <TeenClassDateSelector
           selectedDates={selectedDates}
           isDateAlreadyReserved={isDateAlreadyReserved}
