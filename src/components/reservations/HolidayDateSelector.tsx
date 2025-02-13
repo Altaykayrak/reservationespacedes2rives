@@ -142,6 +142,8 @@ export const HolidayDateSelector = ({
                   option === 'earlyDropoff' ? handleOptionChange(dateOption.date, option, value) : null
                 }
                 isTeenClass={true}
+                periodId={periodId}
+                childSchoolClass={childInfo?.school_class || ''}
               />
             ))}
           </div>
@@ -191,6 +193,8 @@ export const HolidayDateSelector = ({
               onDateToggle={() => handleDateToggle(date)}
               onOptionChange={(option, value) => handleOptionChange(date, option, value)}
               isTeenClass={false}
+              periodId={periodId}
+              childSchoolClass={childInfo?.school_class || ''}
             />
           );
         })}
