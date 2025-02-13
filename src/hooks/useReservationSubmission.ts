@@ -68,6 +68,7 @@ export const useReservationSubmission = (
     }
 
     try {
+      // Vérification préalable des réservations existantes
       for (const dateOption of selectedDates) {
         const period = holidayPeriods?.find(period => {
           const startDate = new Date(period.start_date);
@@ -79,11 +80,37 @@ export const useReservationSubmission = (
           throw new Error(`Période non trouvée pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
         }
 
+        // Vérification si la réservation existe déjà
+        const { data: existingReservation, error: checkError } = await supabase
+          .from("holiday_reservations")
+          .select()
+          .eq("child_id", selectedChild)
+          .eq("period_id", period.id)
+          .eq("reservation_date", format(dateOption.date, "yyyy-MM-dd"))
+          .single();
+
+        if (checkError && checkError.code !== "PGRST116") { // PGRST116 signifie qu'aucun résultat n'a été trouvé
+          throw checkError;
+        }
+
+        if (existingReservation) {
+          throw new Error(`Une réservation existe déjà pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
+        }
+      }
+
+      // Si toutes les vérifications sont passées, procéder aux insertions
+      for (const dateOption of selectedDates) {
+        const period = holidayPeriods?.find(period => {
+          const startDate = new Date(period.start_date);
+          const endDate = new Date(period.end_date);
+          return dateOption.date >= startDate && dateOption.date <= endDate;
+        });
+
         const { error: reservationError } = await supabase
           .from("holiday_reservations")
           .insert({
             child_id: selectedChild,
-            period_id: period.id,
+            period_id: period!.id,
             reservation_date: format(dateOption.date, "yyyy-MM-dd"),
             without_meal: dateOption.withoutMeal,
             early_dropoff: dateOption.earlyDropoff,
