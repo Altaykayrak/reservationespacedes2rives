@@ -55,13 +55,35 @@ export const useHolidayReservation = () => {
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
 
-  // Effet pour réinitialiser les dates lorsque l'enfant change
+  // Effet pour réinitialiser les dates lors du changement d'enfant
   useEffect(() => {
-    if (selectedChild && !isTeenClass) {
-      console.log("Réinitialisation des dates - Enfant non adolescent");
-      setSelectedDates([]);
-    }
+    setSelectedDates([]);
   }, [selectedChild]);
+
+  // Effet pour présélectionner les dates pour les adolescents
+  useEffect(() => {
+    if (selectedChild && isTeenClass && selectedPeriod && holidayPeriods) {
+      const period = holidayPeriods.find(p => p.id === selectedPeriod);
+      if (period) {
+        const dates: DateOption[] = [];
+        const startDate = new Date(period.start_date);
+        const endDate = new Date(period.end_date);
+        const currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+            dates.push({
+              date: new Date(currentDate),
+              withoutMeal: true,
+              earlyDropoff: false
+            });
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        setSelectedDates(dates);
+      }
+    }
+  }, [selectedChild, isTeenClass, selectedPeriod, holidayPeriods]);
 
   const resetForm = () => {
     setSelectedDates([]);
@@ -78,6 +100,8 @@ export const useHolidayReservation = () => {
   );
 
   const handleDateToggle = (date: Date) => {
+    if (isTeenClass) return; // Empêcher la modification manuelle pour les adolescents
+    
     const existingDate = selectedDates.find(d => d.date.getTime() === date.getTime());
     if (existingDate) {
       setSelectedDates(selectedDates.filter(d => d.date.getTime() !== date.getTime()));

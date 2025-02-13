@@ -19,6 +19,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
 }) => {
   const { holidayPeriod, childInfo, isTeenClass } = useHolidayPeriodContext();
 
+  // Si ce n'est pas un adolescent, on ne devrait pas afficher ce composant
   if (!isTeenClass || !holidayPeriod) return null;
 
   return (
