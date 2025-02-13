@@ -65,20 +65,25 @@ export const DateItem = ({
     queryFn: async () => {
       if (!childSchoolClass) return null;
 
-      const { data: spotCount, error } = await supabase
-        .rpc('check_holiday_spots_available', {
-          period_id: periodId,
-          reservation_date: format(date, 'yyyy-MM-dd'),
-          child_school_class: childSchoolClass,
-        });
+      try {
+        const { data: spotCount, error } = await supabase
+          .rpc('check_holiday_spots_available', {
+            period_id: periodId,
+            reservation_date: format(date, 'yyyy-MM-dd'),
+            child_school_class: childSchoolClass,
+          });
 
-      if (error) {
-        console.error("Error checking spots available:", error);
+        if (error) {
+          console.error("Error checking spots available:", error);
+          return null;
+        }
+
+        console.log("Spots left response for", childSchoolClass, ":", spotCount);
+        return spotCount;
+      } catch (error) {
+        console.error("Error in spots check:", error);
         return null;
       }
-
-      console.log("Spots left response for", childSchoolClass, ":", spotCount);
-      return spotCount;
     },
     enabled: !!periodId && !!childSchoolClass,
   });
@@ -91,8 +96,10 @@ export const DateItem = ({
   };
 
   const getGroupName = (schoolClass: string) => {
-    if (['PS', 'MS', 'GS'].includes(schoolClass)) return 'maternelle';
-    if (['CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(schoolClass)) return 'primaire';
+    if (["PS", "MS", "GS", "Petite Section", "Moyenne Section", "Grande Section"].includes(schoolClass)) 
+      return 'maternelle';
+    if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass)) 
+      return 'primaire';
     return 'adolescent';
   };
 
