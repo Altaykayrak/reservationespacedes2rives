@@ -49,8 +49,10 @@ export const HolidayDateSelector = ({
 
   const { childInfo, isTeenClass } = useHolidayClassification(selectedChild);
 
-  // Effet pour gérer la sélection des dates pour les adolescents
+  // Effet pour réinitialiser les dates lors du changement d'enfant
   useEffect(() => {
+    if (!selectedChild) return;
+
     if (isTeenClass && holidayPeriod) {
       console.log("Sélection des dates pour adolescent");
       const dates: DateOption[] = [];
@@ -73,11 +75,20 @@ export const HolidayDateSelector = ({
       // Si ce n'est pas un adolescent, on réinitialise les dates
       setSelectedDates([]);
     }
-  }, [isTeenClass, holidayPeriod, setSelectedDates]);
+  }, [selectedChild, isTeenClass, holidayPeriod, setSelectedDates]);
+
+  // Effet pour réinitialiser les dates lors du changement de période
+  useEffect(() => {
+    if (!isTeenClass) {
+      setSelectedDates([]);
+    }
+  }, [periodId, isTeenClass, setSelectedDates]);
+
+  if (!holidayPeriod || !selectedChild) return null;
 
   return (
     <HolidayPeriodProvider 
-      holidayPeriod={holidayPeriod || null} 
+      holidayPeriod={holidayPeriod} 
       childInfo={childInfo} 
       isTeenClass={!!isTeenClass}
     >
