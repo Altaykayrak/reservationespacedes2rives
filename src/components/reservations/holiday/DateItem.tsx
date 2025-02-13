@@ -33,9 +33,15 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
-  const { data: spotsLeft } = useQuery({
+  const { data: spotsLeft, isLoading } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
+      console.log("Checking spots for:", {
+        period_id: periodId,
+        reservation_date: format(date, 'yyyy-MM-dd'),
+        child_school_class: childSchoolClass,
+      });
+
       const { data, error } = await supabase
         .rpc('check_holiday_spots_available', {
           period_id: periodId,
@@ -48,7 +54,8 @@ export const DateItem = ({
         return null;
       }
 
-      return data as number;
+      console.log("Spots left response:", data);
+      return typeof data === 'number' ? data : null;
     },
     enabled: !!periodId && !!childSchoolClass,
   });
@@ -85,7 +92,7 @@ export const DateItem = ({
             )}
           </Label>
           <div className="mt-1">
-            {spotsLeft !== null && (
+            {!isLoading && spotsLeft !== null && (
               <Badge 
                 variant="secondary" 
                 className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
