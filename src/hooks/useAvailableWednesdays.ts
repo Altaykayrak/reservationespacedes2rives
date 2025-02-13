@@ -91,6 +91,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
     refetchOnReconnect: true
   });
 
+  // L'effet doit être déclaré après useQuery et avant tout retour conditionnel
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')

@@ -46,7 +46,10 @@ export const WednesdayDateSelector = ({
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
   const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
 
-  const { data: availableWednesdays = [], isLoading, error } = useAvailableWednesdays(!!isKindergarten, !!isPrimary);
+  const { data: availableWednesdays = [], isLoading, error } = useAvailableWednesdays(
+    Boolean(isKindergarten),
+    Boolean(isPrimary)
+  );
 
   if (isLoading) {
     return (
