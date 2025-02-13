@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { WednesdayReservationWithChild } from "@/types/reservations";
+import { useWednesdayReservationSubmission } from "./useWednesdayReservationSubmission";
 
 export const useReservations = () => {
   const queryClient = useQueryClient();
@@ -117,6 +118,19 @@ export const useReservations = () => {
     );
   };
 
+  const resetForm = () => {
+    setSelectedChild("");
+    setSelectedDates([]);
+  };
+
+  const { handleSubmit } = useWednesdayReservationSubmission(
+    selectedChild,
+    selectedDates,
+    (date) => isDateReservedForChild(selectedChild, date),
+    refetchReservations,
+    resetForm
+  );
+
   return {
     selectedDates,
     selectedChild,
@@ -125,12 +139,9 @@ export const useReservations = () => {
     wednesdayReservations,
     handleDateToggle,
     handleOptionChange,
-    handleSubmit: () => {}, // Cette fonction sera implémentée plus tard
+    handleSubmit,
     isDateReservedForChild,
-    resetForm: () => {
-      setSelectedChild("");
-      setSelectedDates([]);
-    },
+    resetForm,
     refetchReservations,
     isSubmitting,
   };

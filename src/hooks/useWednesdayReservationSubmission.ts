@@ -1,0 +1,102 @@
+
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
+
+export const useWednesdayReservationSubmission = (
+  selectedChild: string,
+  selectedDates: DateOption[],
+  isDateAlreadyReserved: (date: Date) => boolean,
+  refetchReservations: () => Promise<any>,
+  resetForm: () => void
+) => {
+  const { toast } = useToast();
+
+  const handleSubmit = async () => {
+    if (!selectedChild) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un enfant.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedDates.length === 0) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner au moins une date.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const alreadyReservedDates = selectedDates.filter(dateOption => 
+      isDateAlreadyReserved(dateOption.date)
+    );
+
+    if (alreadyReservedDates.length > 0) {
+      const datesList = alreadyReservedDates
+        .map(d => format(d.date, "d MMMM yyyy", { locale: fr }))
+        .join(", ");
+      
+      toast({
+        title: "Dates déjà réservées",
+        description: `Les dates suivantes sont déjà réservées pour cet enfant : ${datesList}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      for (const dateOption of selectedDates) {
+        // D'abord, récupérer l'ID du mercredi correspondant à la date
+        const { data: wednesday, error: wednesdayError } = await supabase
+          .from("available_wednesdays")
+          .select("id")
+          .eq("date", format(dateOption.date, "yyyy-MM-dd"))
+          .single();
+
+        if (wednesdayError) throw wednesdayError;
+        if (!wednesday) throw new Error(`Mercredi non trouvé pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
+
+        const { error: reservationError } = await supabase
+          .from("wednesday_reservations")
+          .insert({
+            child_id: selectedChild,
+            wednesday_id: wednesday.id,
+            without_meal: dateOption.withoutMeal,
+            early_dropoff: dateOption.earlyDropoff,
+            reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          });
+
+        if (reservationError) throw reservationError;
+      }
+
+      toast({
+        title: "Succès",
+        description: "Les réservations ont été créées avec succès.",
+      });
+
+      await refetchReservations();
+      resetForm();
+
+    } catch (error: any) {
+      console.error("Erreur lors de la création des réservations:", error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Une erreur est survenue lors de la création des réservations.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return { handleSubmit };
+};
