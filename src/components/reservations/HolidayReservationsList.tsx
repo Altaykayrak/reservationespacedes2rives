@@ -119,7 +119,7 @@ export const HolidayReservationsList = () => {
 
   useEffect(() => {
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('holiday-reservations-changes')
       .on(
         'postgres_changes',
         {
@@ -128,7 +128,7 @@ export const HolidayReservationsList = () => {
           table: 'holiday_reservations'
         },
         (payload) => {
-          console.log('Reservation change detected:', payload);
+          console.log('Changement de réservation de vacances détecté:', payload);
           refetch();
         }
       )
