@@ -19,8 +19,8 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
 }) => {
   const { holidayPeriod, childInfo, isTeenClass } = useHolidayPeriodContext();
 
-  // Si ce n'est pas un adolescent, on ne devrait pas afficher ce composant
-  if (!isTeenClass || !holidayPeriod) return null;
+  // Si ce n'est pas un adolescent ou si c'est la page des réservations normales, on ne devrait pas afficher ce composant
+  if (!isTeenClass || !holidayPeriod || window.location.pathname === "/holiday-reservations") return null;
 
   return (
     <div className="space-y-4">
