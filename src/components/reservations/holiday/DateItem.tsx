@@ -3,6 +3,8 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DateOptions } from "./DateOptions";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 interface DateItemProps {
   date: Date;
@@ -13,6 +15,8 @@ interface DateItemProps {
   onDateToggle: () => void;
   onOptionChange: (option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
   isTeenClass?: boolean;
+  periodId: string;
+  childSchoolClass: string;
 }
 
 export const DateItem = ({
@@ -24,7 +28,29 @@ export const DateItem = ({
   onDateToggle,
   onOptionChange,
   isTeenClass = false,
+  periodId,
+  childSchoolClass,
 }: DateItemProps) => {
+  const { data: spotsLeft } = useQuery({
+    queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('check_holiday_spots_available', {
+          period_id: periodId,
+          reservation_date: format(date, 'yyyy-MM-dd'),
+          child_school_class: childSchoolClass,
+        });
+
+      if (error) {
+        console.error("Error checking spots available:", error);
+        return null;
+      }
+
+      return data as number;
+    },
+    enabled: !!periodId && !!childSchoolClass,
+  });
+
   return (
     <div className="space-y-1 bg-blue-50/30 p-2 rounded-lg hover:bg-blue-100/30 transition-colors">
       <div className="flex items-center space-x-2">
