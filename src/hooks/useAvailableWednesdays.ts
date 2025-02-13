@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addHours } from "date-fns";
+import { useEffect } from "react";
 
 export interface WednesdayWithCounts {
   id: string;
@@ -18,7 +19,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
   today.setHours(0, 0, 0, 0);
   const minDate = addHours(today, 72);
 
-  return useQuery<WednesdayWithCounts[]>({
+  const { data, refetch, ...rest } = useQuery<WednesdayWithCounts[]>({
     queryKey: ["available_wednesdays"],
     queryFn: async () => {
       console.log('Démarrage de la requête pour les mercredis disponibles');
@@ -75,9 +76,45 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
         throw error;
       }
     },
-    staleTime: 0, // Désactive le cache
+    staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'wednesday_reservations'
+        },
+        (payload) => {
+          console.log('Changement détecté dans les réservations:', payload);
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'available_wednesdays'
+        },
+        (payload) => {
+          console.log('Changement détecté dans les mercredis disponibles:', payload);
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
+
+  return { data, ...rest };
 };
