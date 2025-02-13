@@ -28,7 +28,7 @@ const WednesdayReservations = () => {
             description: "Veuillez vous connecter pour accéder à cette page",
             variant: "destructive",
           });
-          navigate("/login");
+          navigate("../login", { relative: "path" });
         }
         setIsInitialized(true);
       } catch (error) {
@@ -38,7 +38,7 @@ const WednesdayReservations = () => {
           description: "Une erreur est survenue lors de la vérification de votre session",
           variant: "destructive",
         });
-        navigate("/login");
+        navigate("../login", { relative: "path" });
       }
     };
 
@@ -73,13 +73,13 @@ const WednesdayReservations = () => {
           status,
           created_at,
           updated_at,
-          children:child_id (
+          children!wednesday_reservations_child_id_fkey (
             id,
             first_name,
             last_name,
             school_class
           ),
-          available_wednesdays:wednesday_id (
+          available_wednesdays!fk_wednesday_id (
             id,
             date,
             max_participants_kindergarten,
@@ -91,7 +91,17 @@ const WednesdayReservations = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return (data || []) as WednesdayReservationWithChild[];
+      
+      // Type assertion plus sûre avec une vérification des données
+      const validReservations = (data || []).map(reservation => {
+        if (!reservation.children || !reservation.available_wednesdays) {
+          console.error("Invalid reservation data:", reservation);
+          return null;
+        }
+        return reservation as WednesdayReservationWithChild;
+      }).filter((r): r is WednesdayReservationWithChild => r !== null);
+
+      return validReservations;
     },
     enabled: !!user && isInitialized,
   });
