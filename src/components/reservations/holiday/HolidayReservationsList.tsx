@@ -143,7 +143,7 @@ export const HolidayReservationsList = () => {
         throw error;
       }
 
-      return (data as unknown as any[]).map(reservation => ({
+      const transformedData: HolidayReservationWithChild[] = data.map((reservation: any) => ({
         id: reservation.id,
         child_id: reservation.child_id,
         period_id: reservation.period_id,
@@ -164,7 +164,9 @@ export const HolidayReservationsList = () => {
           }
         },
         available_holiday_periods: reservation.available_holiday_periods
-      })) as HolidayReservationWithChild[];
+      }));
+
+      return transformedData;
     },
   });
 
