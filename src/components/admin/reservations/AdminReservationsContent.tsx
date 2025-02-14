@@ -1,19 +1,23 @@
+
 import { ReservationList } from "./ReservationList";
 import { ReservationFilters } from "./ReservationFilters";
 import { EditReservationDialog } from "./EditReservationDialog";
 import { DeleteReservationDialog } from "./DeleteReservationDialog";
 import { useFilteredReservations } from "./hooks/useFilteredReservations";
 import { useReservationActions } from "./ReservationActions";
-import { WednesdayReservationWithChild } from "@/types/reservations";
+import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AdminReservationsContentProps {
-  reservations: WednesdayReservationWithChild[] | undefined;
+  wednesdayReservations: WednesdayReservationWithChild[] | null;
+  holidayReservations: HolidayReservationWithChild[] | null;
   isLoading: boolean;
   refetchReservations: () => Promise<unknown>;
 }
 
 export const AdminReservationsContent = ({
-  reservations,
+  wednesdayReservations,
+  holidayReservations,
   isLoading,
   refetchReservations
 }: AdminReservationsContentProps) => {
@@ -26,8 +30,9 @@ export const AdminReservationsContent = ({
     setSelectedClass,
     selectedGroup,
     setSelectedGroup,
-    filteredReservations
-  } = useFilteredReservations(reservations);
+    filteredWednesdayReservations,
+    filteredHolidayReservations
+  } = useFilteredReservations(wednesdayReservations, holidayReservations);
 
   const {
     reservationToDelete,
@@ -43,33 +48,59 @@ export const AdminReservationsContent = ({
     <div className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-8">Gestion des réservations</h1>
 
-      <ReservationFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
-        selectedClass={selectedClass}
-        onClassChange={setSelectedClass}
-        selectedGroup={selectedGroup}
-        onGroupChange={setSelectedGroup}
-      />
+      <Tabs defaultValue="wednesday" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="wednesday">Mercredis</TabsTrigger>
+          <TabsTrigger value="holiday">Vacances</TabsTrigger>
+        </TabsList>
 
-      {/* Ajout du compteur de résultats */}
-      <div className="my-4 text-sm text-gray-600">
-        {filteredReservations ? (
-          <p>Total des réservations affichées : <span className="font-semibold">{filteredReservations.length}</span></p>
-        ) : null}
-      </div>
-
-      {isLoading ? (
-        <div>Chargement des réservations...</div>
-      ) : (
-        <ReservationList
-          reservations={filteredReservations}
-          onEdit={setEditingReservation}
-          onDelete={setReservationToDelete}
+        <ReservationFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          selectedClass={selectedClass}
+          onClassChange={setSelectedClass}
+          selectedGroup={selectedGroup}
+          onGroupChange={setSelectedGroup}
         />
-      )}
+
+        <TabsContent value="wednesday">
+          <div className="my-4 text-sm text-gray-600">
+            {filteredWednesdayReservations ? (
+              <p>Total des réservations affichées : <span className="font-semibold">{filteredWednesdayReservations.length}</span></p>
+            ) : null}
+          </div>
+
+          {isLoading ? (
+            <div>Chargement des réservations...</div>
+          ) : (
+            <ReservationList
+              reservations={filteredWednesdayReservations}
+              onEdit={setEditingReservation}
+              onDelete={setReservationToDelete}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="holiday">
+          <div className="my-4 text-sm text-gray-600">
+            {filteredHolidayReservations ? (
+              <p>Total des réservations affichées : <span className="font-semibold">{filteredHolidayReservations.length}</span></p>
+            ) : null}
+          </div>
+
+          {isLoading ? (
+            <div>Chargement des réservations...</div>
+          ) : (
+            <ReservationList
+              reservations={filteredHolidayReservations}
+              onEdit={setEditingReservation}
+              onDelete={setReservationToDelete}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
 
       <EditReservationDialog
         reservation={editingReservation}

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { WednesdayReservationWithChild } from "@/types/reservations";
+import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 
 interface ReservationActionsProps {
   refetchReservations: () => Promise<unknown>;
@@ -10,15 +10,18 @@ interface ReservationActionsProps {
 
 export const useReservationActions = ({ refetchReservations }: ReservationActionsProps) => {
   const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
-  const [editingReservation, setEditingReservation] = useState<WednesdayReservationWithChild | null>(null);
+  const [editingReservation, setEditingReservation] = useState<WednesdayReservationWithChild | HolidayReservationWithChild | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDelete = async () => {
     if (!reservationToDelete) return;
 
     try {
+      const isWednesdayReservation = 'wednesday_id' in (editingReservation || {});
+      const table = isWednesdayReservation ? 'wednesday_reservations' : 'holiday_reservations';
+
       const { error } = await supabase
-        .from('wednesday_reservations')
+        .from(table)
         .delete()
         .eq('id', reservationToDelete);
 
@@ -40,8 +43,11 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
     try {
       setIsSubmitting(true);
 
+      const isWednesdayReservation = 'wednesday_id' in editingReservation;
+      const table = isWednesdayReservation ? 'wednesday_reservations' : 'holiday_reservations';
+
       const { error } = await supabase
-        .from("wednesday_reservations")
+        .from(table)
         .update({
           without_meal: editingReservation.without_meal,
           early_dropoff: editingReservation.early_dropoff,

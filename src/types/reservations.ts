@@ -26,4 +26,5 @@ export type WednesdayReservationWithChild = {
 
 export type HolidayReservationWithChild = Tables<"holiday_reservations"> & {
   children: Tables<"children">;
+  available_holiday_periods: Tables<"available_holiday_periods">;
 };

@@ -6,7 +6,12 @@ import { AdminReservationsContent } from "@/components/admin/reservations/AdminR
 
 const AdminReservations = () => {
   const { data: isAdmin } = useAdminAuth();
-  const { data: reservations, refetch: refetchReservations, isLoading, error: queryError } = useAdminReservations(isAdmin);
+  const { 
+    data, 
+    refetch: refetchReservations, 
+    isLoading, 
+    error: queryError 
+  } = useAdminReservations(isAdmin);
 
   if (!isAdmin) {
     return (
@@ -38,7 +43,8 @@ const AdminReservations = () => {
     <div>
       <AdminNavbar />
       <AdminReservationsContent
-        reservations={reservations}
+        wednesdayReservations={data?.wednesdayReservations || null}
+        holidayReservations={data?.holidayReservations || null}
         isLoading={isLoading}
         refetchReservations={refetchReservations}
       />
