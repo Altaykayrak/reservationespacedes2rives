@@ -12,6 +12,11 @@ import WednesdayReservations from "./pages/WednesdayReservations"
 import HolidayReservations from "./pages/HolidayReservations"
 import TeenHolidayReservations from "./pages/TeenHolidayReservations"
 import { AdminPage } from "./pages/admin/AdminPage"
+import AdminDashboard from "./pages/admin/AdminDashboard"
+import AdminWednesdays from "./pages/admin/AdminWednesdays"
+import AdminHolidays from "./pages/admin/AdminHolidays"
+import AdminReservations from "./pages/admin/AdminReservations"
+import AdminAuthorizedEmails from "./pages/admin/AdminAuthorizedEmails"
 
 import "./App.css"
 
@@ -54,6 +59,31 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <ProtectedRoute><AdminPage /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/admin/dashboard",
+    element: <ProtectedRoute><AdminDashboard /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/admin/wednesdays",
+    element: <ProtectedRoute><AdminWednesdays /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/admin/holidays",
+    element: <ProtectedRoute><AdminHolidays /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/admin/reservations",
+    element: <ProtectedRoute><AdminReservations /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/admin/authorized-emails",
+    element: <ProtectedRoute><AdminAuthorizedEmails /></ProtectedRoute>,
     errorElement: <ErrorBoundary />
   }
 ])
