@@ -1,3 +1,4 @@
+
 import { ReservationList } from "./ReservationList";
 import { ReservationFilters } from "./ReservationFilters";
 import { EditReservationDialog } from "./EditReservationDialog";
@@ -56,23 +57,44 @@ export const AdminReservationsContent = ({
     const doc = new jsPDF();
     doc.setFont("helvetica");
     doc.setFontSize(16);
-    doc.text("Liste des réservations", 15, 15);
+
+    // Ajouter le titre en fonction du type de réservation
+    const title = 'wednesday_id' in (reservations[0] || {}) 
+      ? "Liste des réservations du mercredi" 
+      : "Liste des réservations des vacances";
+    doc.text(title, 15, 15);
+
+    // Ajouter les filtres appliqués
+    doc.setFontSize(10);
+    let filterText = [];
+    if (searchQuery) filterText.push(`Recherche: ${searchQuery}`);
+    if (selectedDate) filterText.push(`Date: ${format(new Date(selectedDate), 'dd/MM/yyyy')}`);
+    if (selectedClass && selectedClass !== 'all') filterText.push(`Classe: ${selectedClass}`);
+    if (selectedGroup && selectedGroup !== 'all') filterText.push(`Groupe: ${selectedGroup}`);
+    
+    if (filterText.length > 0) {
+      doc.text("Filtres appliqués:", 15, 25);
+      filterText.forEach((text, index) => {
+        doc.text(text, 15, 30 + (index * 5));
+      });
+    }
+
     doc.setFontSize(12);
     
     const badgeStyle = {
       withoutMeal: {
-        border: '#EAB308', // yellow-500
-        text: '#A16207',   // yellow-700
-        bg: '#FEFCE8'      // yellow-50
+        border: '#EAB308',
+        text: '#A16207',
+        bg: '#FEFCE8'
       },
       earlyDropoff: {
-        border: '#3B82F6', // blue-500
-        text: '#1D4ED8',   // blue-700
-        bg: '#EFF6FF'      // blue-50
+        border: '#3B82F6',
+        text: '#1D4ED8',
+        bg: '#EFF6FF'
       }
     };
 
-    let y = 30;
+    let y = filterText.length > 0 ? 45 : 30;
     const lineHeight = 8;
     const margin = 15;
     const dateWidth = 30;
@@ -125,7 +147,8 @@ export const AdminReservationsContent = ({
       y += lineHeight;
     });
 
-    doc.save(`reservations_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
+    doc.save(`reservations_${timestamp}.pdf`);
   };
 
   const exportToExcel = (reservations: (WednesdayReservationWithChild | HolidayReservationWithChild)[] | null) => {
@@ -150,7 +173,7 @@ export const AdminReservationsContent = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `reservations_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.download = `reservations_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
