@@ -1,6 +1,6 @@
-import { useRouteError } from "react-router-dom";
+
+import { useRouteError, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { useNavigate } from "react-router-dom";
 
 interface RouterError {
   message?: string;

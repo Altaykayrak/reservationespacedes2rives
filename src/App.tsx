@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster"
 import ErrorBoundary from "@/components/ErrorBoundary"
@@ -14,25 +14,51 @@ import TeenHolidayReservations from "./pages/TeenHolidayReservations"
 
 import "./App.css"
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/login",
+    element: <Login />,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/register",
+    element: <Register />,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/wednesday-reservations",
+    element: <ProtectedRoute><WednesdayReservations /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/holiday-reservations",
+    element: <ProtectedRoute><HolidayReservations /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/teenholiday-reservations",
+    element: <ProtectedRoute><TeenHolidayReservations /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/admin-login",
+    element: <AdminLogin />,
+    errorElement: <ErrorBoundary />
+  }
+])
+
 function App() {
   return (
-    <ErrorBoundary>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          <Route path="/wednesday-reservations" element={<ProtectedRoute><WednesdayReservations /></ProtectedRoute>} />
-          <Route path="/holiday-reservations" element={<ProtectedRoute><HolidayReservations /></ProtectedRoute>} />
-          <Route path="/teenholiday-reservations" element={<ProtectedRoute><TeenHolidayReservations /></ProtectedRoute>} />
-
-          <Route path="/admin-login" element={<AdminLogin />} />
-        </Routes>
-        <Toaster />
-        <ShadcnToaster />
-      </BrowserRouter>
-    </ErrorBoundary>
+    <>
+      <RouterProvider router={router} />
+      <Toaster />
+      <ShadcnToaster />
+    </>
   )
 }
 
