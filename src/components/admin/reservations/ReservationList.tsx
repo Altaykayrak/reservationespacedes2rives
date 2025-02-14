@@ -2,11 +2,11 @@
 import { Card } from "@/components/ui/card";
 import { ReservationItem } from "./ReservationItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { WednesdayReservationWithChild } from "@/types/reservations";
+import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 
 interface ReservationListProps {
-  reservations: WednesdayReservationWithChild[] | null;
-  onEdit: (reservation: WednesdayReservationWithChild) => void;
+  reservations: (WednesdayReservationWithChild | HolidayReservationWithChild)[] | null;
+  onEdit: (reservation: WednesdayReservationWithChild | HolidayReservationWithChild) => void;
   onDelete: (id: string) => void;
 }
 

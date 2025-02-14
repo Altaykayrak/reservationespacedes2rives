@@ -3,11 +3,11 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Pencil, Trash2 } from "lucide-react";
 import { ReservationBadges } from "@/components/reservations/ReservationBadges";
-import { WednesdayReservationWithChild } from "@/types/reservations";
+import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 
 interface ReservationItemProps {
-  reservation: WednesdayReservationWithChild;
-  onEdit: (reservation: WednesdayReservationWithChild) => void;
+  reservation: WednesdayReservationWithChild | HolidayReservationWithChild;
+  onEdit: (reservation: WednesdayReservationWithChild | HolidayReservationWithChild) => void;
   onDelete: (id: string) => void;
 }
 
@@ -16,6 +16,16 @@ export const ReservationItem = ({
   onEdit,
   onDelete,
 }: ReservationItemProps) => {
+  const getReservationDate = () => {
+    if ('wednesday_id' in reservation) {
+      // C'est une réservation du mercredi
+      return format(new Date(reservation.available_wednesdays.date), "EEEE d MMMM yyyy", { locale: fr });
+    } else {
+      // C'est une réservation de vacances
+      return format(new Date(reservation.reservation_date), "EEEE d MMMM yyyy", { locale: fr });
+    }
+  };
+
   return (
     <div className="flex flex-col p-4 border rounded bg-white shadow-sm">
       <div className="flex justify-between items-center">
@@ -27,7 +37,7 @@ export const ReservationItem = ({
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>Classe: {reservation.children?.school_class}</span>
               <span>•</span>
-              <span>{format(new Date(reservation.available_wednesdays.date), "EEEE d MMMM yyyy", { locale: fr })}</span>
+              <span>{getReservationDate()}</span>
             </div>
           </div>
           <ReservationBadges 
