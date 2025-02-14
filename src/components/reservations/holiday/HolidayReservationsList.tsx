@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -8,6 +9,7 @@ import { HolidayReservationWithChild } from "@/types/reservations";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { User } from "lucide-react";
+import { Tables } from "@/integrations/supabase/types";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -82,6 +84,18 @@ export const HolidayReservationsList = () => {
   const navigate = useNavigate();
   const isTeenPage = window.location.pathname === "/teenholiday-reservations";
 
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: reservations, isError, error, refetch } = useQuery({
     queryKey: ["holiday_reservations"],
     queryFn: async () => {
@@ -102,8 +116,23 @@ export const HolidayReservationsList = () => {
       const { data, error } = await supabase
         .from("holiday_reservations")
         .select(`
-          *,
-          children (*),
+          id,
+          child_id,
+          period_id,
+          reservation_date,
+          reservation_number,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          children (
+            id,
+            first_name,
+            last_name,
+            school_class,
+            profile_id
+          ),
           available_holiday_periods (*)
         `)
         .eq('status', 'confirmed')
@@ -116,52 +145,35 @@ export const HolidayReservationsList = () => {
       }
 
       // Transform data to match expected type
-      const transformedData = data.map(reservation => ({
-        id: reservation.id,
-        child_id: reservation.child_id,
-        period_id: reservation.period_id,
-        reservation_date: reservation.reservation_date,
-        reservation_number: reservation.reservation_number,
-        without_meal: reservation.without_meal,
-        early_dropoff: reservation.early_dropoff,
-        status: reservation.status,
-        created_at: reservation.created_at,
-        updated_at: reservation.updated_at,
-        children: {
-          id: reservation.children.id,
-          first_name: reservation.children.first_name,
-          last_name: reservation.children.last_name,
-          school_class: reservation.children.school_class,
-          profile: {
-            school_city: reservation.children.profile_id ? reservation.children.school_city : ''
-          }
-        },
-        available_holiday_periods: reservation.available_holiday_periods
-      }));
+      const transformedData = data.map(reservation => {
+        const child = reservation.children as Tables<'children'>;
+        return {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          period_id: reservation.period_id,
+          reservation_date: reservation.reservation_date,
+          reservation_number: reservation.reservation_number,
+          without_meal: reservation.without_meal,
+          early_dropoff: reservation.early_dropoff,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
+          children: {
+            id: child.id,
+            first_name: child.first_name,
+            last_name: child.last_name,
+            school_class: child.school_class,
+            profile: {
+              school_city: ''
+            }
+          },
+          available_holiday_periods: reservation.available_holiday_periods
+        };
+      });
 
-      return transformedData as HolidayReservationWithChild[];
+      return transformedData;
     },
   });
-
-  const { data: schoolClassCategories } = useQuery({
-    queryKey: ["schoolClassCategories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("school_class_categories")
-        .select("*");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const isTeenClass = (schoolClass: string) => {
-    return schoolClassCategories?.some(
-      category => 
-        category.category === "adolescent" && 
-        schoolClass.toUpperCase() === category.name.toUpperCase()
-    );
-  };
 
   useEffect(() => {
     const channel = supabase
@@ -215,7 +227,15 @@ export const HolidayReservationsList = () => {
     return <EmptyReservations />;
   }
 
-  // Filtrer les réservations en fonction de la page
+  const isTeenClass = (schoolClass: string) => {
+    return schoolClassCategories?.some(
+      category => 
+        category.category === "adolescent" && 
+        schoolClass.toUpperCase() === category.name.toUpperCase()
+    );
+  };
+
+  // Filtrer les réservations selon la page et la catégorie d'âge
   const filteredReservations = reservations.filter(reservation => {
     const isTeen = isTeenClass(reservation.children.school_class);
     return isTeenPage ? isTeen : !isTeen;
@@ -225,7 +245,7 @@ export const HolidayReservationsList = () => {
     return (
       <div className="p-6 text-center">
         <p className="text-gray-600">
-          Aucune réservation trouvée pour {isTeenPage ? "les adolescents" : "les enfants"}.
+          Aucune réservation trouvée pour {isTeenPage ? "les adolescents" : "les enfants de maternelle et primaire"}.
         </p>
       </div>
     );
