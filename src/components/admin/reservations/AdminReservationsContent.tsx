@@ -1,4 +1,3 @@
-
 import { ReservationList } from "./ReservationList";
 import { ReservationFilters } from "./ReservationFilters";
 import { EditReservationDialog } from "./EditReservationDialog";
@@ -56,17 +55,18 @@ export const AdminReservationsContent = ({
     
     const doc = new jsPDF();
     doc.setFont("helvetica");
-    doc.setFontSize(16);
 
-    // Ajouter le titre en fonction du type de réservation
+    // Titre
+    doc.setFontSize(16);
     const title = 'wednesday_id' in (reservations[0] || {}) 
       ? "Liste des réservations du mercredi" 
       : "Liste des réservations des vacances";
     doc.text(title, 15, 15);
-
-    // Ajouter les filtres appliqués
+    
+    // Informations sur les filtres
     doc.setFontSize(10);
-    let filterText = [];
+    let y = 30;
+    const filterText = [];
     if (searchQuery) filterText.push(`Recherche: ${searchQuery}`);
     if (selectedDate) filterText.push(`Date: ${format(new Date(selectedDate), 'dd/MM/yyyy')}`);
     if (selectedClass && selectedClass !== 'all') filterText.push(`Classe: ${selectedClass}`);
@@ -74,78 +74,74 @@ export const AdminReservationsContent = ({
     
     if (filterText.length > 0) {
       doc.text("Filtres appliqués:", 15, 25);
-      filterText.forEach((text, index) => {
-        doc.text(text, 15, 30 + (index * 5));
+      filterText.forEach((text) => {
+        doc.text(text, 20, y);
+        y += 5;
       });
+      y += 5;
     }
 
-    doc.setFontSize(12);
+    // En-têtes du tableau
+    doc.setFontSize(11);
+    doc.setTextColor(0);
+    doc.setFillColor(240, 240, 240);
     
-    const badgeStyle = {
-      withoutMeal: {
-        border: '#EAB308',
-        text: '#A16207',
-        bg: '#FEFCE8'
-      },
-      earlyDropoff: {
-        border: '#3B82F6',
-        text: '#1D4ED8',
-        bg: '#EFF6FF'
-      }
-    };
+    const headers = [
+      { text: "Date", x: 15, width: 25 },
+      { text: "Nom", x: 40, width: 30 },
+      { text: "Prénom", x: 70, width: 30 },
+      { text: "Classe", x: 100, width: 20 },
+      { text: "Options", x: 120, width: 75 }
+    ];
 
-    let y = filterText.length > 0 ? 45 : 30;
-    const lineHeight = 8;
-    const margin = 15;
-    const dateWidth = 30;
-    const nameWidth = 40;
-    const classWidth = 20;
-    
+    // Dessiner l'en-tête du tableau
+    doc.setFillColor(240, 240, 240);
+    doc.rect(15, y - 5, 180, 7, 'F');
+    headers.forEach(header => {
+      doc.text(header.text, header.x, y);
+    });
+    y += 5;
+
+    // Contenu du tableau
+    doc.setFontSize(10);
     reservations.forEach((r) => {
-      if (y > 270) {
+      if (y > 280) {
         doc.addPage();
-        y = 30;
+        y = 20;
       }
 
       const date = format(
         new Date('wednesday_id' in r ? r.available_wednesdays.date : r.reservation_date),
-        'dd/MM/yyyy',
-        { locale: fr }
+        'dd/MM/yyyy'
       );
 
-      const fullName = `${r.children?.first_name} ${r.children?.last_name}`;
-      
-      doc.text(date, margin, y);
-      doc.text(fullName, margin + dateWidth, y);
-      doc.text(`(${r.children?.school_class || ''})`, margin + dateWidth + nameWidth, y);
+      // Lignes du tableau
+      doc.line(15, y - 3, 195, y - 3);
 
-      let badgeX = margin + dateWidth + nameWidth + classWidth;
+      // Données
+      doc.text(date, 15, y);
+      doc.text(r.children.last_name, 40, y);
+      doc.text(r.children.first_name, 70, y);
+      doc.text(r.children.school_class, 100, y);
 
-      if (r.without_meal) {
-        doc.setFillColor(badgeStyle.withoutMeal.bg);
-        doc.setDrawColor(badgeStyle.withoutMeal.border);
-        doc.setTextColor(badgeStyle.withoutMeal.text);
-        
-        doc.roundedRect(badgeX, y - 4, 25, 6, 1, 1, 'FD');
-        doc.text('Sans repas', badgeX + 2, y);
-        
-        badgeX += 30;
-      }
+      // Options
+      const options = [];
+      if (r.early_dropoff) options.push("Accueil avant 8h30");
+      if (r.without_meal) options.push("Sans repas");
+      doc.text(options.join(", "), 120, y);
 
-      if (r.early_dropoff) {
-        doc.setFillColor(badgeStyle.earlyDropoff.bg);
-        doc.setDrawColor(badgeStyle.earlyDropoff.border);
-        doc.setTextColor(badgeStyle.earlyDropoff.text);
-        
-        doc.roundedRect(badgeX, y - 4, 35, 6, 1, 1, 'FD');
-        doc.text('Accueil avant 8h30', badgeX + 2, y);
-      }
-
-      doc.setTextColor(0);
-      doc.setDrawColor(0);
-      
-      y += lineHeight;
+      y += 7;
     });
+
+    // Dernière ligne du tableau
+    doc.line(15, y - 3, 195, y - 3);
+
+    // Lignes verticales du tableau
+    const tableHeight = y - 35;
+    headers.forEach(header => {
+      doc.line(header.x, 30, header.x, y - 3);
+    });
+    doc.line(195, 30, 195, y - 3);
 
     const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
     doc.save(`reservations_${timestamp}.pdf`);
