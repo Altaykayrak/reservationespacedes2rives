@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, FileSpreadsheet } from "lucide-react";
 import { format } from "date-fns";
 import { jsPDF } from "jspdf";
+import { fr } from "date-fns/locale";
 
 interface AdminReservationsContentProps {
   wednesdayReservations: WednesdayReservationWithChild[] | null;
@@ -51,43 +52,75 @@ export const AdminReservationsContent = ({
     if (!reservations) return;
     
     const doc = new jsPDF();
-    const rows = reservations.map(r => ({
-      date: format(new Date(('available_wednesdays' in r) ? r.available_wednesdays.date : r.reservation_date), 'dd/MM/yyyy'),
-      nom: r.children?.last_name,
-      prenom: r.children?.first_name,
-      classe: r.children?.school_class,
-      repas: r.without_meal ? "Non" : "Oui",
-      garderie: r.early_dropoff ? "Oui" : "Non",
-      status: r.status
-    }));
-
     doc.setFont("helvetica");
-    doc.setFontSize(12);
-    
     doc.setFontSize(16);
     doc.text("Liste des réservations", 15, 15);
     doc.setFontSize(12);
     
-    const headers = ["Date", "Nom", "Prénom", "Classe", "Repas", "Garderie", "Statut"];
+    const badgeStyle = {
+      withoutMeal: {
+        border: '#EAB308', // yellow-500
+        text: '#A16207',   // yellow-700
+        bg: '#FEFCE8'      // yellow-50
+      },
+      earlyDropoff: {
+        border: '#3B82F6', // blue-500
+        text: '#1D4ED8',   // blue-700
+        bg: '#EFF6FF'      // blue-50
+      }
+    };
+
     let y = 30;
+    const lineHeight = 8;
+    const margin = 15;
+    const dateWidth = 30;
+    const nameWidth = 40;
+    const classWidth = 20;
     
-    rows.forEach((row, index) => {
+    reservations.forEach((r) => {
       if (y > 270) {
         doc.addPage();
         y = 30;
       }
+
+      const date = format(
+        new Date('wednesday_id' in r ? r.available_wednesdays.date : r.reservation_date),
+        'dd/MM/yyyy',
+        { locale: fr }
+      );
+
+      const fullName = `${r.children?.first_name} ${r.children?.last_name}`;
       
-      doc.text([
-        row.date,
-        row.nom || '',
-        row.prenom || '',
-        row.classe || '',
-        row.repas,
-        row.garderie,
-        row.status
-      ].join(' - '), 15, y);
+      doc.text(date, margin, y);
+      doc.text(fullName, margin + dateWidth, y);
+      doc.text(`(${r.children?.school_class || ''})`, margin + dateWidth + nameWidth, y);
+
+      let badgeX = margin + dateWidth + nameWidth + classWidth;
+
+      if (r.without_meal) {
+        doc.setFillColor(badgeStyle.withoutMeal.bg);
+        doc.setDrawColor(badgeStyle.withoutMeal.border);
+        doc.setTextColor(badgeStyle.withoutMeal.text);
+        
+        doc.roundedRect(badgeX, y - 4, 25, 6, 1, 1, 'FD');
+        doc.text('Sans repas', badgeX + 2, y);
+        
+        badgeX += 30;
+      }
+
+      if (r.early_dropoff) {
+        doc.setFillColor(badgeStyle.earlyDropoff.bg);
+        doc.setDrawColor(badgeStyle.earlyDropoff.border);
+        doc.setTextColor(badgeStyle.earlyDropoff.text);
+        
+        doc.roundedRect(badgeX, y - 4, 35, 6, 1, 1, 'FD');
+        doc.text('Accueil avant 8h30', badgeX + 2, y);
+      }
+
+      doc.setTextColor(0);
+      doc.setDrawColor(0);
       
-      y += 10;
+      y += lineHeight;
     });
 
     doc.save(`reservations_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
