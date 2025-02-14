@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
+import { Calendar, CalendarHeart, ClipboardList } from "lucide-react";
 
 const AdminDashboard = () => {
   return (
@@ -13,7 +15,10 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="p-6 flex flex-col h-full">
             <div className="flex-grow">
-              <h2 className="text-xl font-semibold mb-4">Mercredis</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">Paramétrage Mercredi</h2>
+              </div>
               <p className="text-gray-600">Gérer les mercredis disponibles et les classes autorisées</p>
             </div>
             <Button asChild className="mt-4">
@@ -23,7 +28,10 @@ const AdminDashboard = () => {
 
           <Card className="p-6 flex flex-col h-full">
             <div className="flex-grow">
-              <h2 className="text-xl font-semibold mb-4">Vacances</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <CalendarHeart className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">Paramétrage Vacances</h2>
+              </div>
               <p className="text-gray-600">Gérer les périodes de vacances et les classes autorisées</p>
             </div>
             <Button asChild className="mt-4">
@@ -33,7 +41,10 @@ const AdminDashboard = () => {
 
           <Card className="p-6 flex flex-col h-full">
             <div className="flex-grow">
-              <h2 className="text-xl font-semibold mb-4">Réservations</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <ClipboardList className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">Gestion des réservations</h2>
+              </div>
               <p className="text-gray-600">Voir et gérer toutes les réservations</p>
             </div>
             <Button asChild className="mt-4">
