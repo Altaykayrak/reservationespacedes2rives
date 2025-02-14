@@ -11,6 +11,7 @@ import AdminLogin from "./pages/AdminLogin"
 import WednesdayReservations from "./pages/WednesdayReservations"
 import HolidayReservations from "./pages/HolidayReservations"
 import TeenHolidayReservations from "./pages/TeenHolidayReservations"
+import { AdminPage } from "./pages/admin/AdminPage"
 
 import "./App.css"
 
@@ -48,6 +49,11 @@ const router = createBrowserRouter([
   {
     path: "/admin-login",
     element: <AdminLogin />,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/admin",
+    element: <ProtectedRoute><AdminPage /></ProtectedRoute>,
     errorElement: <ErrorBoundary />
   }
 ])
