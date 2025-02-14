@@ -28,7 +28,7 @@ export const ReservationItem = ({
     <div className="flex items-center justify-between px-4 py-1.5 border-b hover:bg-gray-50 transition-colors">
       <div className="flex items-center gap-2 text-sm">
         <span className="font-medium">
-          {reservation.children?.first_name} {reservation.children?.last_name}
+          {reservation.children?.last_name} {reservation.children?.first_name}
         </span>
         <span className="text-gray-500">
           ({reservation.children?.school_class})
