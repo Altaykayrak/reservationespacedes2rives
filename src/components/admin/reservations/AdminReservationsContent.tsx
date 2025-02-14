@@ -1,4 +1,3 @@
-
 import { ReservationList } from "./ReservationList";
 import { ReservationFilters } from "./ReservationFilters";
 import { EditReservationDialog } from "./EditReservationDialog";
@@ -10,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FileText, FileSpreadsheet } from "lucide-react";
 import { format } from "date-fns";
+import { jsPDF } from "jspdf";
 
 interface AdminReservationsContentProps {
   wednesdayReservations: WednesdayReservationWithChild[] | null;
@@ -50,6 +50,7 @@ export const AdminReservationsContent = ({
   const exportToPDF = (reservations: (WednesdayReservationWithChild | HolidayReservationWithChild)[] | null) => {
     if (!reservations) return;
     
+    const doc = new jsPDF();
     const rows = reservations.map(r => ({
       date: format(new Date(('available_wednesdays' in r) ? r.available_wednesdays.date : r.reservation_date), 'dd/MM/yyyy'),
       nom: r.children?.last_name,
@@ -60,19 +61,36 @@ export const AdminReservationsContent = ({
       status: r.status
     }));
 
-    const content = rows.map(row => 
-      `${row.date} - ${row.nom} ${row.prenom} (${row.classe}) - Repas: ${row.repas} - Garderie: ${row.garderie} - Status: ${row.status}`
-    ).join('\n');
+    doc.setFont("helvetica");
+    doc.setFontSize(12);
+    
+    doc.setFontSize(16);
+    doc.text("Liste des réservations", 15, 15);
+    doc.setFontSize(12);
+    
+    const headers = ["Date", "Nom", "Prénom", "Classe", "Repas", "Garderie", "Statut"];
+    let y = 30;
+    
+    rows.forEach((row, index) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 30;
+      }
+      
+      doc.text([
+        row.date,
+        row.nom || '',
+        row.prenom || '',
+        row.classe || '',
+        row.repas,
+        row.garderie,
+        row.status
+      ].join(' - '), 15, y);
+      
+      y += 10;
+    });
 
-    const blob = new Blob([content], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `reservations_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    doc.save(`reservations_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   const exportToExcel = (reservations: (WednesdayReservationWithChild | HolidayReservationWithChild)[] | null) => {
