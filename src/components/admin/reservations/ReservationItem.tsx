@@ -2,6 +2,7 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Pencil, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 
 interface ReservationItemProps {
@@ -35,16 +36,14 @@ export const ReservationItem = ({
         <span className="text-gray-400">•</span>
         <span>{getReservationDate()}</span>
         {reservation.without_meal && (
-          <>
-            <span className="text-gray-400">•</span>
-            <span className="text-orange-600">Sans repas</span>
-          </>
+          <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">
+            Sans repas
+          </Badge>
         )}
         {reservation.early_dropoff && (
-          <>
-            <span className="text-gray-400">•</span>
-            <span className="text-blue-600">Arrivée avant 8h30</span>
-          </>
+          <Badge variant="outline" className="border-blue-500 text-blue-700 bg-blue-50">
+            Accueil avant 8h30
+          </Badge>
         )}
       </div>
       <div className="flex gap-1">
