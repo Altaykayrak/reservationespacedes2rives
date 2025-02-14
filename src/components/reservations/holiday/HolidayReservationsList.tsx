@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -113,20 +112,11 @@ export const HolidayReservationsList = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
-      const { data, error } = await supabase
+      const { data: rawReservations, error } = await supabase
         .from("holiday_reservations")
         .select(`
-          id,
-          child_id,
-          period_id,
-          reservation_date,
-          reservation_number,
-          without_meal,
-          early_dropoff,
-          status,
-          created_at,
-          updated_at,
-          children (
+          *,
+          children:children (
             id,
             first_name,
             last_name,
@@ -136,7 +126,7 @@ export const HolidayReservationsList = () => {
               school_city
             )
           ),
-          available_holiday_periods (*)
+          available_holiday_periods:available_holiday_periods (*)
         `)
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
@@ -147,7 +137,9 @@ export const HolidayReservationsList = () => {
         throw error;
       }
 
-      const transformedData: HolidayReservationWithChild[] = data.map((reservation: any) => ({
+      if (!rawReservations) return [];
+
+      return rawReservations.map((reservation: any): HolidayReservationWithChild => ({
         id: reservation.id,
         child_id: reservation.child_id,
         period_id: reservation.period_id,
@@ -169,8 +161,6 @@ export const HolidayReservationsList = () => {
         },
         available_holiday_periods: reservation.available_holiday_periods
       }));
-
-      return transformedData;
     },
   });
 
