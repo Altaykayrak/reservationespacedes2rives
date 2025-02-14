@@ -12,18 +12,6 @@ export const useFilteredReservations = (
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
 
-  console.log("All wednesday reservations before filtering:", wednesdayReservations?.map(r => ({
-    date: r.available_wednesdays.date,
-    child: `${r.children?.first_name} ${r.children?.last_name}`,
-    class: r.children?.school_class
-  })));
-
-  console.log("All holiday reservations before filtering:", holidayReservations?.map(r => ({
-    date: r.reservation_date,
-    child: `${r.children?.first_name} ${r.children?.last_name}`,
-    class: r.children?.school_class
-  })));
-
   const filterReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
     reservations: T[] | null | undefined,
     isWednesday: boolean
@@ -50,9 +38,10 @@ export const useFilteredReservations = (
         : reservation.children?.school_class === selectedClass;
 
       const getGroup = (schoolClass: string) => {
-        if (["PS", "MS", "GS"].includes(schoolClass)) return "maternelle";
-        if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass)) return "primaire";
-        if (["6EME", "5EME", "4EME", "3EME"].includes(schoolClass)) return "ado";
+        const normalizedClass = schoolClass.toUpperCase();
+        if (["PS", "MS", "GS"].includes(normalizedClass)) return "maternelle";
+        if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) return "primaire";
+        if (["6EME", "5EME", "4EME", "3EME", "SECONDE", "PREMIERE", "TERMINALE", "6ÈME", "5ÈME", "4ÈME", "3ÈME"].includes(normalizedClass)) return "ado";
         return "";
       };
 
