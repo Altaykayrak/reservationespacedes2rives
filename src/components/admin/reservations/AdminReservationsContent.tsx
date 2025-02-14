@@ -7,6 +7,9 @@ import { useFilteredReservations } from "./hooks/useFilteredReservations";
 import { useReservationActions } from "./ReservationActions";
 import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { FileText, FileSpreadsheet } from "lucide-react";
+import { format } from "date-fns";
 
 interface AdminReservationsContentProps {
   wednesdayReservations: WednesdayReservationWithChild[] | null;
@@ -44,6 +47,63 @@ export const AdminReservationsContent = ({
     handleUpdate
   } = useReservationActions({ refetchReservations });
 
+  const exportToPDF = (reservations: (WednesdayReservationWithChild | HolidayReservationWithChild)[] | null) => {
+    if (!reservations) return;
+    
+    const rows = reservations.map(r => ({
+      date: format(new Date(('available_wednesdays' in r) ? r.available_wednesdays.date : r.reservation_date), 'dd/MM/yyyy'),
+      nom: r.children?.last_name,
+      prenom: r.children?.first_name,
+      classe: r.children?.school_class,
+      repas: r.without_meal ? "Non" : "Oui",
+      garderie: r.early_dropoff ? "Oui" : "Non",
+      status: r.status
+    }));
+
+    const content = rows.map(row => 
+      `${row.date} - ${row.nom} ${row.prenom} (${row.classe}) - Repas: ${row.repas} - Garderie: ${row.garderie} - Status: ${row.status}`
+    ).join('\n');
+
+    const blob = new Blob([content], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reservations_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportToExcel = (reservations: (WednesdayReservationWithChild | HolidayReservationWithChild)[] | null) => {
+    if (!reservations) return;
+    
+    const rows = reservations.map(r => ({
+      date: format(new Date(('available_wednesdays' in r) ? r.available_wednesdays.date : r.reservation_date), 'dd/MM/yyyy'),
+      nom: r.children?.last_name,
+      prenom: r.children?.first_name,
+      classe: r.children?.school_class,
+      repas: r.without_meal ? "Non" : "Oui",
+      garderie: r.early_dropoff ? "Oui" : "Non",
+      status: r.status
+    }));
+
+    const headers = "Date;Nom;Prénom;Classe;Repas;Garderie;Status\n";
+    const content = headers + rows.map(row => 
+      `${row.date};${row.nom};${row.prenom};${row.classe};${row.repas};${row.garderie};${row.status}`
+    ).join('\n');
+
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reservations_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-8">Gestion des réservations</h1>
@@ -66,39 +126,83 @@ export const AdminReservationsContent = ({
         />
 
         <TabsContent value="wednesday">
-          <div className="my-4 text-sm text-gray-600">
-            {filteredWednesdayReservations ? (
-              <p>Total des réservations affichées : <span className="font-semibold">{filteredWednesdayReservations.length}</span></p>
-            ) : null}
-          </div>
+          <div className="my-4">
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-sm text-gray-600">
+                {filteredWednesdayReservations ? (
+                  <p>Total des réservations affichées : <span className="font-semibold">{filteredWednesdayReservations.length}</span></p>
+                ) : null}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => exportToPDF(filteredWednesdayReservations)}
+                  disabled={!filteredWednesdayReservations?.length}
+                >
+                  <FileText className="mr-2" />
+                  Export PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => exportToExcel(filteredWednesdayReservations)}
+                  disabled={!filteredWednesdayReservations?.length}
+                >
+                  <FileSpreadsheet className="mr-2" />
+                  Export Excel
+                </Button>
+              </div>
+            </div>
 
-          {isLoading ? (
-            <div>Chargement des réservations...</div>
-          ) : (
-            <ReservationList
-              reservations={filteredWednesdayReservations}
-              onEdit={setEditingReservation}
-              onDelete={setReservationToDelete}
-            />
-          )}
+            {isLoading ? (
+              <div>Chargement des réservations...</div>
+            ) : (
+              <ReservationList
+                reservations={filteredWednesdayReservations}
+                onEdit={setEditingReservation}
+                onDelete={setReservationToDelete}
+              />
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="holiday">
-          <div className="my-4 text-sm text-gray-600">
-            {filteredHolidayReservations ? (
-              <p>Total des réservations affichées : <span className="font-semibold">{filteredHolidayReservations.length}</span></p>
-            ) : null}
-          </div>
+          <div className="my-4">
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-sm text-gray-600">
+                {filteredHolidayReservations ? (
+                  <p>Total des réservations affichées : <span className="font-semibold">{filteredHolidayReservations.length}</span></p>
+                ) : null}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => exportToPDF(filteredHolidayReservations)}
+                  disabled={!filteredHolidayReservations?.length}
+                >
+                  <FileText className="mr-2" />
+                  Export PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => exportToExcel(filteredHolidayReservations)}
+                  disabled={!filteredHolidayReservations?.length}
+                >
+                  <FileSpreadsheet className="mr-2" />
+                  Export Excel
+                </Button>
+              </div>
+            </div>
 
-          {isLoading ? (
-            <div>Chargement des réservations...</div>
-          ) : (
-            <ReservationList
-              reservations={filteredHolidayReservations}
-              onEdit={setEditingReservation}
-              onDelete={setReservationToDelete}
-            />
-          )}
+            {isLoading ? (
+              <div>Chargement des réservations...</div>
+            ) : (
+              <ReservationList
+                reservations={filteredHolidayReservations}
+                onEdit={setEditingReservation}
+                onDelete={setReservationToDelete}
+              />
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 
