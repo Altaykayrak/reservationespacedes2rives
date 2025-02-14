@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { registerSchema, type RegisterFormData } from "@/schemas/registerSchema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PersonalInfoFields } from "./register/PersonalInfoFields";
 import { SecurityFields } from "./register/SecurityFields";
 import { SchoolFields } from "./register/SchoolFields";
@@ -34,11 +34,32 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     },
   });
 
+  // Charger les données sauvegardées au chargement du composant
+  useEffect(() => {
+    const savedData = localStorage.getItem('registerFormData');
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      Object.keys(parsedData).forEach((key) => {
+        form.setValue(key as keyof RegisterFormData, parsedData[key]);
+      });
+    }
+  }, [form]);
+
+  // Sauvegarder les données lorsqu'elles changent
+  useEffect(() => {
+    const subscription = form.watch((data) => {
+      localStorage.setItem('registerFormData', JSON.stringify(data));
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const handleSubmit = async (values: RegisterFormData) => {
     if (!values.acceptedCgu) {
       setShowCguAlert(true);
       return;
     }
+    // Nettoyer le localStorage après une soumission réussie
+    localStorage.removeItem('registerFormData');
     await onSubmit(values);
   };
 
