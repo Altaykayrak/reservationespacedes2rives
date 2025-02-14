@@ -471,7 +471,74 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      holiday_reservations_with_children: {
+        Row: {
+          child_id: string | null
+          children: Json | null
+          created_at: string | null
+          early_dropoff: boolean | null
+          id: string | null
+          period_id: string | null
+          reservation_date: string | null
+          reservation_number: string | null
+          status: string | null
+          updated_at: string | null
+          without_meal: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_reservations_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_reservations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "available_holiday_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wednesday_reservations_with_children: {
+        Row: {
+          child_id: string | null
+          children: Json | null
+          created_at: string | null
+          early_dropoff: boolean | null
+          id: string | null
+          reservation_number: string | null
+          status: string | null
+          updated_at: string | null
+          wednesday_id: string | null
+          without_meal: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_wednesday_id"
+            columns: ["wednesday_id"]
+            isOneToOne: false
+            referencedRelation: "available_wednesdays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wednesday_reservations_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wednesday_reservations_wednesday_id_fkey"
+            columns: ["wednesday_id"]
+            isOneToOne: false
+            referencedRelation: "available_wednesdays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_holiday_spots_available: {

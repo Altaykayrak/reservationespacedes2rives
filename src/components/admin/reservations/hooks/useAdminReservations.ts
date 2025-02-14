@@ -15,9 +15,9 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
       try {
         console.log("Fetching all reservations...");
 
-        // Récupérer les réservations du mercredi
+        // Récupérer les réservations du mercredi depuis la vue
         const { data: wednesdayData, error: wednesdayError } = await supabase
-          .from("wednesday_reservations")
+          .from("wednesday_reservations_with_children")
           .select(`
             id,
             child_id,
@@ -27,7 +27,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             status,
             created_at,
             updated_at,
-            children!wednesday_reservations_child_id_fkey (*),
+            children,
             available_wednesdays!wednesday_reservations_wednesday_id_fkey (*)
           `)
           .order('created_at', { ascending: true });
@@ -37,9 +37,9 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
           throw wednesdayError;
         }
 
-        // Récupérer les réservations des vacances
+        // Récupérer les réservations des vacances depuis la vue
         const { data: holidayData, error: holidayError } = await supabase
-          .from("holiday_reservations")
+          .from("holiday_reservations_with_children")
           .select(`
             id,
             child_id,
@@ -51,7 +51,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             status,
             created_at,
             updated_at,
-            children (*),
+            children,
             available_holiday_periods (*)
           `)
           .order('created_at', { ascending: true });
