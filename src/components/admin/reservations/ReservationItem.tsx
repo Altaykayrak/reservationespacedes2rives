@@ -27,40 +27,35 @@ export const ReservationItem = ({
   };
 
   return (
-    <div className="flex flex-col p-4 border rounded bg-white shadow-sm">
-      <div className="flex justify-between items-center">
-        <div className="flex flex-col gap-2">
-          <div>
-            <p className="font-medium">
-              {reservation.children?.first_name} {reservation.children?.last_name}
-            </p>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>Classe: {reservation.children?.school_class}</span>
-              <span>•</span>
-              <span>{getReservationDate()}</span>
-            </div>
-          </div>
+    <div className="flex items-center justify-between px-4 py-2 border-b hover:bg-gray-50 transition-colors">
+      <div className="flex items-center gap-4">
+        <div>
+          <p className="font-medium">
+            {reservation.children?.first_name} {reservation.children?.last_name}
+            <span className="text-sm text-gray-500 ml-2">({reservation.children?.school_class})</span>
+          </p>
+          <p className="text-sm text-gray-600">{getReservationDate()}</p>
           <ReservationBadges 
             withoutMeal={Boolean(reservation.without_meal)}
             earlyDropoff={Boolean(reservation.early_dropoff)}
           />
         </div>
-        <div className="flex gap-2">
-          <button 
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Modifier la réservation"
-            onClick={() => onEdit(reservation)}
-          >
-            <Pencil className="h-4 w-4 text-blue-500" />
-          </button>
-          <button 
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Supprimer la réservation"
-            onClick={() => onDelete(reservation.id)}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </button>
-        </div>
+      </div>
+      <div className="flex gap-1">
+        <button 
+          className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Modifier la réservation"
+          onClick={() => onEdit(reservation)}
+        >
+          <Pencil className="h-4 w-4 text-blue-500" />
+        </button>
+        <button 
+          className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Supprimer la réservation"
+          onClick={() => onDelete(reservation.id)}
+        >
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </button>
       </div>
     </div>
   );
