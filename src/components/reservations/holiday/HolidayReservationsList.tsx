@@ -117,15 +117,26 @@ export const HolidayReservationsList = () => {
 
       // Transform data to match expected type
       const transformedData = data.map(reservation => ({
-        ...reservation,
+        id: reservation.id,
+        child_id: reservation.child_id,
+        period_id: reservation.period_id,
+        reservation_date: reservation.reservation_date,
+        reservation_number: reservation.reservation_number,
+        without_meal: reservation.without_meal,
+        early_dropoff: reservation.early_dropoff,
+        status: reservation.status,
+        created_at: reservation.created_at,
+        updated_at: reservation.updated_at,
         children: {
-          ...reservation.children,
+          id: reservation.children.id,
+          first_name: reservation.children.first_name,
+          last_name: reservation.children.last_name,
+          school_class: reservation.children.school_class,
           profile: {
-            school_city: reservation.children.profile_id ? 
-              reservation.children.school_city : 
-              ''
+            school_city: reservation.children.profile_id ? reservation.children.school_city : ''
           }
-        }
+        },
+        available_holiday_periods: reservation.available_holiday_periods
       }));
 
       return transformedData as HolidayReservationWithChild[];
