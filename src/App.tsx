@@ -11,7 +11,6 @@ import AdminLogin from "./pages/AdminLogin"
 import WednesdayReservations from "./pages/WednesdayReservations"
 import HolidayReservations from "./pages/HolidayReservations"
 import TeenHolidayReservations from "./pages/TeenHolidayReservations"
-import { AdminPage } from "./pages/admin/AdminPage"
 import AdminDashboard from "./pages/admin/AdminDashboard"
 import AdminWednesdays from "./pages/admin/AdminWednesdays"
 import AdminHolidays from "./pages/admin/AdminHolidays"
@@ -58,11 +57,6 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: <ProtectedRoute><AdminPage /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
-  },
-  {
-    path: "/admin/dashboard",
     element: <ProtectedRoute><AdminDashboard /></ProtectedRoute>,
     errorElement: <ErrorBoundary />
   },
