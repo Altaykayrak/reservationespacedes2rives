@@ -24,7 +24,17 @@ export type WednesdayReservationWithChild = {
   };
 };
 
-export type HolidayReservationWithChild = Tables<"holiday_reservations"> & {
+export type HolidayReservationWithChild = {
+  id: string;
+  child_id: string;
+  period_id: string;
+  reservation_date: string;
+  reservation_number: string;
+  without_meal: boolean;
+  early_dropoff: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
   children: Tables<"children">;
   available_holiday_periods: Tables<"available_holiday_periods">;
 };

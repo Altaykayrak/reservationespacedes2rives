@@ -45,6 +45,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             child_id,
             period_id,
             reservation_date,
+            reservation_number,
             without_meal,
             early_dropoff,
             status,
@@ -64,8 +65,8 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
         console.log("Fetched holiday reservations:", holidayData);
 
         return {
-          wednesdayReservations: wednesdayData,
-          holidayReservations: holidayData
+          wednesdayReservations: wednesdayData as WednesdayReservationWithChild[],
+          holidayReservations: holidayData as HolidayReservationWithChild[]
         };
       } catch (error) {
         console.error("Error in query function:", error);
