@@ -13,7 +13,7 @@ export const useFilteredReservations = (
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("date");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("name"); // Changed default to "name"
 
   const sortReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
     reservations: T[] | null | undefined
@@ -22,9 +22,18 @@ export const useFilteredReservations = (
 
     return [...reservations].sort((a, b) => {
       if (sortOrder === "name") {
-        const nameA = `${a.children?.first_name} ${a.children?.last_name}`.toLowerCase();
-        const nameB = `${b.children?.first_name} ${b.children?.last_name}`.toLowerCase();
-        return nameA.localeCompare(nameB);
+        // D'abord comparer les noms de famille
+        const lastNameA = a.children?.last_name.toLowerCase() || '';
+        const lastNameB = b.children?.last_name.toLowerCase() || '';
+        
+        if (lastNameA !== lastNameB) {
+          return lastNameA.localeCompare(lastNameB);
+        }
+        
+        // Si les noms sont identiques, comparer les prénoms
+        const firstNameA = a.children?.first_name.toLowerCase() || '';
+        const firstNameB = b.children?.first_name.toLowerCase() || '';
+        return firstNameA.localeCompare(firstNameB);
       } else {
         const dateA = new Date('wednesday_id' in a ? a.available_wednesdays.date : a.reservation_date);
         const dateB = new Date('wednesday_id' in b ? b.available_wednesdays.date : b.reservation_date);
