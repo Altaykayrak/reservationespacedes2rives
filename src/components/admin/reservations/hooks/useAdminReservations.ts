@@ -64,13 +64,34 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
         console.log("Fetched wednesday reservations:", wednesdayData);
         console.log("Fetched holiday reservations:", holidayData);
 
-        // Cast the data to the correct types
-        const typedWednesdayData = (wednesdayData || []) as WednesdayReservationWithChild[];
-        const typedHolidayData = (holidayData || []) as HolidayReservationWithChild[];
+        // Transform the data to match the expected types
+        const transformedWednesdayData = wednesdayData?.map(reservation => ({
+          ...reservation,
+          children: {
+            ...reservation.children,
+            profile: {
+              school_city: typeof reservation.children === 'object' && reservation.children !== null
+                ? (reservation.children as any).profile?.school_city || ''
+                : ''
+            }
+          }
+        })) || [];
+
+        const transformedHolidayData = holidayData?.map(reservation => ({
+          ...reservation,
+          children: {
+            ...reservation.children,
+            profile: {
+              school_city: typeof reservation.children === 'object' && reservation.children !== null
+                ? (reservation.children as any).profile?.school_city || ''
+                : ''
+            }
+          }
+        })) || [];
 
         return {
-          wednesdayReservations: typedWednesdayData,
-          holidayReservations: typedHolidayData
+          wednesdayReservations: transformedWednesdayData as WednesdayReservationWithChild[],
+          holidayReservations: transformedHolidayData as HolidayReservationWithChild[]
         };
       } catch (error) {
         console.error("Error in query function:", error);

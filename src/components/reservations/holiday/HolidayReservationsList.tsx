@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -104,7 +103,8 @@ export const HolidayReservationsList = () => {
         .from("holiday_reservations")
         .select(`
           *,
-          children (*)
+          children (*),
+          available_holiday_periods (*)
         `)
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
@@ -114,11 +114,24 @@ export const HolidayReservationsList = () => {
         console.error("Error fetching reservations:", error);
         throw error;
       }
-      return data as HolidayReservationWithChild[];
+
+      // Transform data to match expected type
+      const transformedData = data.map(reservation => ({
+        ...reservation,
+        children: {
+          ...reservation.children,
+          profile: {
+            school_city: reservation.children.profile_id ? 
+              reservation.children.school_city : 
+              ''
+          }
+        }
+      }));
+
+      return transformedData as HolidayReservationWithChild[];
     },
   });
 
-  // Récupérer les catégories de classes pour identifier les ados
   const { data: schoolClassCategories } = useQuery({
     queryKey: ["schoolClassCategories"],
     queryFn: async () => {
