@@ -3,6 +3,8 @@ import { useState } from "react";
 import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 import { format } from "date-fns";
 
+type SortOrder = "date" | "name";
+
 export const useFilteredReservations = (
   wednesdayReservations: WednesdayReservationWithChild[] | null | undefined,
   holidayReservations: HolidayReservationWithChild[] | null | undefined
@@ -11,12 +13,31 @@ export const useFilteredReservations = (
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("date");
+
+  const sortReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
+    reservations: T[] | null | undefined
+  ) => {
+    if (!reservations) return reservations;
+
+    return [...reservations].sort((a, b) => {
+      if (sortOrder === "name") {
+        const nameA = `${a.children?.first_name} ${a.children?.last_name}`.toLowerCase();
+        const nameB = `${b.children?.first_name} ${b.children?.last_name}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      } else {
+        const dateA = new Date('wednesday_id' in a ? a.available_wednesdays.date : a.reservation_date);
+        const dateB = new Date('wednesday_id' in b ? b.available_wednesdays.date : b.reservation_date);
+        return dateA.getTime() - dateB.getTime();
+      }
+    });
+  };
 
   const filterReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
     reservations: T[] | null | undefined,
     isWednesday: boolean
   ) => {
-    return reservations?.filter((reservation) => {
+    const filteredReservations = reservations?.filter((reservation) => {
       const fullName = `${reservation.children?.first_name} ${reservation.children?.last_name}`.toLowerCase();
       const searchMatch = searchQuery 
         ? fullName.includes(searchQuery.toLowerCase())
@@ -51,6 +72,8 @@ export const useFilteredReservations = (
 
       return searchMatch && dateMatch && classMatch && groupMatch;
     });
+
+    return sortReservations(filteredReservations);
   };
 
   const filteredWednesdayReservations = filterReservations(wednesdayReservations, true);
@@ -65,6 +88,8 @@ export const useFilteredReservations = (
     setSelectedClass,
     selectedGroup,
     setSelectedGroup,
+    sortOrder,
+    setSortOrder,
     filteredWednesdayReservations,
     filteredHolidayReservations
   };

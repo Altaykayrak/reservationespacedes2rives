@@ -35,7 +35,9 @@ export const AdminReservationsContent = ({
     selectedGroup,
     setSelectedGroup,
     filteredWednesdayReservations,
-    filteredHolidayReservations
+    filteredHolidayReservations,
+    sortOrder,
+    setSortOrder
   } = useFilteredReservations(wednesdayReservations, holidayReservations);
 
   const {
@@ -179,10 +181,19 @@ export const AdminReservationsContent = ({
         <TabsContent value="wednesday">
           <div className="my-4">
             <div className="flex justify-between items-center mb-4">
-              <div className="text-sm text-gray-600">
-                {filteredWednesdayReservations ? (
-                  <p>Total des réservations affichées : <span className="font-semibold">{filteredWednesdayReservations.length}</span></p>
-                ) : null}
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-600">
+                  {filteredWednesdayReservations ? (
+                    <p>Total des réservations affichées : <span className="font-semibold">{filteredWednesdayReservations.length}</span></p>
+                  ) : null}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSortOrder(sortOrder === "date" ? "name" : "date")}
+                >
+                  Trier par {sortOrder === "date" ? "nom" : "date"}
+                </Button>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -219,10 +230,19 @@ export const AdminReservationsContent = ({
         <TabsContent value="holiday">
           <div className="my-4">
             <div className="flex justify-between items-center mb-4">
-              <div className="text-sm text-gray-600">
-                {filteredHolidayReservations ? (
-                  <p>Total des réservations affichées : <span className="font-semibold">{filteredHolidayReservations.length}</span></p>
-                ) : null}
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-600">
+                  {filteredHolidayReservations ? (
+                    <p>Total des réservations affichées : <span className="font-semibold">{filteredHolidayReservations.length}</span></p>
+                  ) : null}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSortOrder(sortOrder === "date" ? "name" : "date")}
+                >
+                  Trier par {sortOrder === "date" ? "nom" : "date"}
+                </Button>
               </div>
               <div className="flex gap-2">
                 <Button
