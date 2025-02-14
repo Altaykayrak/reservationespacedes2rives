@@ -1,6 +1,18 @@
 
 import { Tables } from "@/integrations/supabase/types";
 
+type ChildProfile = {
+  school_city: string;
+};
+
+type ChildWithProfile = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  school_class: string;
+  profile: ChildProfile;
+};
+
 export type WednesdayReservationWithChild = {
   id: string;
   child_id: string;
@@ -10,12 +22,7 @@ export type WednesdayReservationWithChild = {
   status: string;
   created_at: string;
   updated_at: string;
-  children: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    school_class: string;
-  };
+  children: ChildWithProfile;
   available_wednesdays: {
     id: string;
     date: string;
@@ -35,6 +42,6 @@ export type HolidayReservationWithChild = {
   status: string;
   created_at: string;
   updated_at: string;
-  children: Tables<"children">;
+  children: ChildWithProfile;
   available_holiday_periods: Tables<"available_holiday_periods">;
 };

@@ -64,9 +64,13 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
         console.log("Fetched wednesday reservations:", wednesdayData);
         console.log("Fetched holiday reservations:", holidayData);
 
+        // Cast the data to the correct types
+        const typedWednesdayData = (wednesdayData || []) as WednesdayReservationWithChild[];
+        const typedHolidayData = (holidayData || []) as HolidayReservationWithChild[];
+
         return {
-          wednesdayReservations: wednesdayData as WednesdayReservationWithChild[],
-          holidayReservations: holidayData as HolidayReservationWithChild[]
+          wednesdayReservations: typedWednesdayData,
+          holidayReservations: typedHolidayData
         };
       } catch (error) {
         console.error("Error in query function:", error);
