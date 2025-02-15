@@ -27,8 +27,17 @@ export const useHolidayReservations = () => {
       const { data: rawReservations, error } = await supabase
         .from("holiday_reservations")
         .select(`
-          *,
-          children:children (
+          id,
+          child_id,
+          period_id,
+          reservation_date,
+          reservation_number,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          children (
             id,
             first_name,
             last_name,
@@ -49,7 +58,7 @@ export const useHolidayReservations = () => {
 
       if (!rawReservations) return [];
 
-      return rawReservations.map((reservation: any) => ({
+      const transformedReservations: HolidayReservationWithChild[] = rawReservations.map((reservation: any) => ({
         id: reservation.id,
         child_id: reservation.child_id,
         period_id: reservation.period_id,
@@ -69,7 +78,9 @@ export const useHolidayReservations = () => {
             school_city: reservation.children.profile?.school_city || ''
           }
         }
-      })) as HolidayReservationWithChild[];
+      }));
+
+      return transformedReservations;
     },
   });
 
