@@ -22,6 +22,7 @@ interface WednesdayDateSelectorProps {
   handleDateToggle: (date: Date) => void;
   handleOptionChange: (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
   isDateAlreadyReserved: (date: Date) => boolean;
+  selectedChild: string;
 }
 
 export const WednesdayDateSelector = ({
@@ -29,18 +30,23 @@ export const WednesdayDateSelector = ({
   handleDateToggle,
   handleOptionChange,
   isDateAlreadyReserved,
+  selectedChild,
 }: WednesdayDateSelectorProps) => {
   const { data: childInfo } = useQuery({
-    queryKey: ["selectedChild"],
+    queryKey: ["selectedChild", selectedChild],
     queryFn: async () => {
+      if (!selectedChild) return null;
+      
       const { data, error } = await supabase
         .from("children")
         .select("school_class")
+        .eq("id", selectedChild)
         .maybeSingle();
       
       if (error) throw error;
       return data;
     },
+    enabled: !!selectedChild,
   });
 
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
@@ -135,16 +141,16 @@ export const WednesdayDateSelector = ({
                     </Label>
                   </div>
                   <div className="mt-1">
-                    {!childInfo && (
+                    {!selectedChild && (
                       <Badge variant="secondary" className="bg-gray-100 text-gray-600">
                         Sélectionnez un enfant
                       </Badge>
                     )}
-                    {childInfo && isReserved ? (
+                    {selectedChild && isReserved ? (
                       <Badge variant="secondary" className="bg-gray-100 text-gray-600">
                         Déjà réservé
                       </Badge>
-                    ) : childInfo && spotsLeft !== null && (
+                    ) : selectedChild && spotsLeft !== null && (
                       <Badge 
                         variant="secondary" 
                         className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
