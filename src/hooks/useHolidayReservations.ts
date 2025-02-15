@@ -45,7 +45,7 @@ export const useHolidayReservations = () => {
           status,
           created_at,
           updated_at,
-          children (
+          children!inner (
             id,
             first_name,
             last_name,
@@ -86,7 +86,7 @@ export const useHolidayReservations = () => {
           last_name: reservation.children.last_name,
           school_class: reservation.children.school_class,
           profile: {
-            school_city: reservation.children.profile?.school_city || ''
+            school_city: reservation.children.profile.school_city
           }
         }
       }));
@@ -94,8 +94,6 @@ export const useHolidayReservations = () => {
       console.log("Transformed reservations:", typedReservations);
       return typedReservations;
     },
-    staleTime: 1000, // Données périmées après 1 seconde
-    gcTime: 0, // Pas de mise en cache
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true
@@ -113,20 +111,12 @@ export const useHolidayReservations = () => {
           schema: 'public',
           table: 'holiday_reservations'
         },
-        async (payload) => {
+        (payload) => {
           console.log('Changement détecté dans les réservations:', payload);
-          // Invalider et recharger immédiatement les queries
-          await queryClient.invalidateQueries({ 
-            queryKey: ["holiday_reservations"],
-            exact: true,
-            refetchType: 'all'
+          // Invalider la query immédiatement
+          queryClient.invalidateQueries({ 
+            queryKey: ["holiday_reservations"]
           });
-          await queryClient.invalidateQueries({ 
-            queryKey: ["spots_left"],
-            exact: true,
-            refetchType: 'all'
-          });
-          await refetch({ throwOnError: true });
         }
       )
       .subscribe((status) => {
@@ -137,7 +127,7 @@ export const useHolidayReservations = () => {
       console.log("Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
-  }, [queryClient, refetch]);
+  }, [queryClient]);
 
   return { reservations, isError, error, refetch };
 };
