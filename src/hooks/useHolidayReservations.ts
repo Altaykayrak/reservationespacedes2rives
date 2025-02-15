@@ -10,6 +10,7 @@ export const useHolidayReservations = () => {
   const { data: reservations, isError, error, refetch } = useQuery({
     queryKey: ["holiday_reservations"],
     queryFn: async () => {
+      console.log("Fetching holiday reservations...");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -18,7 +19,7 @@ export const useHolidayReservations = () => {
         .from("children")
         .select(`
           id,
-          profiles!inner (
+          profile:profiles!inner (
             school_city
           )
         `)
@@ -48,7 +49,10 @@ export const useHolidayReservations = () => {
             id,
             first_name,
             last_name,
-            school_class
+            school_class,
+            profile:profiles!inner (
+              school_city
+            )
           )
         `)
         .eq('status', 'confirmed')
@@ -62,11 +66,7 @@ export const useHolidayReservations = () => {
 
       if (!rawReservations) return [];
 
-      // Créer un map des school_city par child_id
-      const schoolCityMap = userChildren.reduce((acc, child) => {
-        acc[child.id] = child.profiles?.school_city || '';
-        return acc;
-      }, {} as Record<string, string>);
+      console.log("Raw reservations:", rawReservations);
 
       // Construction explicite du type attendu
       const typedReservations = rawReservations.map(reservation => {
@@ -87,19 +87,18 @@ export const useHolidayReservations = () => {
             last_name: reservation.children.last_name,
             school_class: reservation.children.school_class,
             profile: {
-              school_city: schoolCityMap[reservation.child_id]
+              school_city: reservation.children.profile?.school_city || ''
             }
           }
         };
         return transformedReservation;
       });
 
+      console.log("Transformed reservations:", typedReservations);
       return typedReservations;
     },
-    // Ajout des options pour forcer le rechargement
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    staleTime: 0, // Considérer les données comme immédiatement périmées
+    cacheTime: 0, // Ne pas mettre en cache les données
   });
 
   useEffect(() => {
@@ -114,12 +113,13 @@ export const useHolidayReservations = () => {
           schema: 'public',
           table: 'holiday_reservations'
         },
-        (payload) => {
+        async (payload) => {
           console.log('Changement détecté dans les réservations:', payload);
-          // Forcer un refetch immédiat
-          queryClient.invalidateQueries({ queryKey: ["holiday_reservations"], refetchType: 'active' });
-          queryClient.invalidateQueries({ queryKey: ["spots_left"], refetchType: 'active' });
-          refetch();
+          // Invalider immédiatement les queries
+          await queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
+          await queryClient.invalidateQueries({ queryKey: ["spots_left"] });
+          // Forcer un refetch
+          await refetch();
         }
       )
       .subscribe((status) => {
