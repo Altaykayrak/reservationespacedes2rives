@@ -15,7 +15,12 @@ export const useHolidayReservations = () => {
 
       const { data: userChildren } = await supabase
         .from("children")
-        .select("id")
+        .select(`
+          id,
+          profiles!inner (
+            school_city
+          )
+        `)
         .eq('profile_id', user.id);
 
       if (!userChildren || userChildren.length === 0) {
@@ -37,14 +42,11 @@ export const useHolidayReservations = () => {
           status,
           created_at,
           updated_at,
-          children:children!inner (
+          children (
             id,
             first_name,
             last_name,
-            school_class,
-            profiles!inner (
-              school_city
-            )
+            school_class
           )
         `)
         .eq('status', 'confirmed')
@@ -58,34 +60,33 @@ export const useHolidayReservations = () => {
 
       if (!rawReservations) return [];
 
-      const transformedReservations = rawReservations.map((reservation: any) => {
-        // Vérifions la structure des données dans la console
-        console.log('Raw reservation data:', JSON.stringify(reservation, null, 2));
-        
-        return {
-          id: reservation.id,
-          child_id: reservation.child_id,
-          period_id: reservation.period_id,
-          reservation_date: reservation.reservation_date,
-          reservation_number: reservation.reservation_number,
-          without_meal: reservation.without_meal ?? false,
-          early_dropoff: reservation.early_dropoff ?? false,
-          status: reservation.status,
-          created_at: reservation.created_at,
-          updated_at: reservation.updated_at,
-          children: {
-            id: reservation.children.id,
-            first_name: reservation.children.first_name,
-            last_name: reservation.children.last_name,
-            school_class: reservation.children.school_class,
-            profile: {
-              school_city: reservation.children.profiles.school_city
-            }
-          }
-        } as HolidayReservationWithChild;
-      });
+      // Créer un map des school_city par child_id
+      const schoolCityMap = userChildren.reduce((acc, child) => {
+        acc[child.id] = child.profiles?.school_city || '';
+        return acc;
+      }, {} as Record<string, string>);
 
-      return transformedReservations;
+      return rawReservations.map(reservation => ({
+        id: reservation.id,
+        child_id: reservation.child_id,
+        period_id: reservation.period_id,
+        reservation_date: reservation.reservation_date,
+        reservation_number: reservation.reservation_number,
+        without_meal: reservation.without_meal ?? false,
+        early_dropoff: reservation.early_dropoff ?? false,
+        status: reservation.status,
+        created_at: reservation.created_at,
+        updated_at: reservation.updated_at,
+        children: {
+          id: reservation.children.id,
+          first_name: reservation.children.first_name,
+          last_name: reservation.children.last_name,
+          school_class: reservation.children.school_class,
+          profile: {
+            school_city: schoolCityMap[reservation.child_id]
+          }
+        }
+      })) as HolidayReservationWithChild[];
     },
   });
 
