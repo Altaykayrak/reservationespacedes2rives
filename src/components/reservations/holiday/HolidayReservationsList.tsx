@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -136,7 +135,7 @@ export const HolidayReservationsList = () => {
             first_name,
             last_name,
             school_class,
-            profiles (
+            profile:profiles (
               school_city
             )
           )
@@ -152,31 +151,27 @@ export const HolidayReservationsList = () => {
 
       if (!rawReservations) return [];
 
-      return rawReservations.map((reservation: any): HolidayReservationWithChild => {
-        const period = availablePeriods?.find(p => p.id === reservation.period_id);
-        return {
-          id: reservation.id,
-          child_id: reservation.child_id,
-          period_id: reservation.period_id,
-          reservation_date: reservation.reservation_date,
-          reservation_number: reservation.reservation_number,
-          without_meal: reservation.without_meal,
-          early_dropoff: reservation.early_dropoff,
-          status: reservation.status,
-          created_at: reservation.created_at,
-          updated_at: reservation.updated_at,
-          children: {
-            id: reservation.children.id,
-            first_name: reservation.children.first_name,
-            last_name: reservation.children.last_name,
-            school_class: reservation.children.school_class,
-            profile: {
-              school_city: reservation.children.profiles?.school_city || ''
-            }
-          },
-          available_holiday_periods: period || {} as Tables<"available_holiday_periods">
-        };
-      });
+      return rawReservations.map((reservation: any) => ({
+        id: reservation.id,
+        child_id: reservation.child_id,
+        period_id: reservation.period_id,
+        reservation_date: reservation.reservation_date,
+        reservation_number: reservation.reservation_number,
+        without_meal: reservation.without_meal,
+        early_dropoff: reservation.early_dropoff,
+        status: reservation.status,
+        created_at: reservation.created_at,
+        updated_at: reservation.updated_at,
+        children: {
+          id: reservation.children.id,
+          first_name: reservation.children.first_name,
+          last_name: reservation.children.last_name,
+          school_class: reservation.children.school_class,
+          profile: {
+            school_city: reservation.children.profile?.school_city || ''
+          }
+        }
+      }));
     },
   });
 

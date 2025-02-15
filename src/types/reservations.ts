@@ -43,5 +43,5 @@ export type HolidayReservationWithChild = {
   created_at: string;
   updated_at: string;
   children: ChildWithProfile;
-  available_holiday_periods: Tables<"available_holiday_periods">;
+  available_holiday_periods?: Tables<"available_holiday_periods">;
 };
