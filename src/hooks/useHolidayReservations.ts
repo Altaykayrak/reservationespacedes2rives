@@ -2,7 +2,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
-import { DatabaseHolidayReservation, HolidayReservationWithChild } from "@/types/reservations";
+import { HolidayReservationWithChild } from "@/types/reservations";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export const useHolidayReservations = () => {
@@ -51,22 +51,33 @@ export const useHolidayReservations = () => {
 
       // Transformation des données avec vérification de type
       const transformedData = data.map(reservation => {
-        const transformedReservation = { ...reservation };
-        
-        if (transformedReservation.children) {
-          transformedReservation.children = {
-            id: transformedReservation.children.id,
-            first_name: transformedReservation.children.first_name,
-            last_name: transformedReservation.children.last_name,
-            school_class: transformedReservation.children.school_class,
-            profile: transformedReservation.children.profile || {
-              school_city: ""
-            }
-          };
+        if (!reservation.children || !reservation.children.profile) {
+          console.warn('Missing children or profile data for reservation:', reservation.id);
+          return null;
         }
-        
-        return transformedReservation as HolidayReservationWithChild;
-      });
+
+        return {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          period_id: reservation.period_id,
+          reservation_date: reservation.reservation_date,
+          reservation_number: reservation.reservation_number,
+          without_meal: reservation.without_meal ?? false,
+          early_dropoff: reservation.early_dropoff ?? false,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
+          children: {
+            id: reservation.children.id,
+            first_name: reservation.children.first_name,
+            last_name: reservation.children.last_name,
+            school_class: reservation.children.school_class,
+            profile: {
+              school_city: reservation.children.profile.school_city || ""
+            }
+          }
+        } as HolidayReservationWithChild;
+      }).filter((reservation): reservation is HolidayReservationWithChild => reservation !== null);
 
       console.log("Transformed reservations:", transformedData);
       return transformedData;
