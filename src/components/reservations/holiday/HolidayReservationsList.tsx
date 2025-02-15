@@ -16,7 +16,7 @@ type GroupedReservations = Record<string, {
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
   const isTeenPage = window.location.pathname === "/teenholiday-reservations";
-  const { reservations, isError, error, refetch } = useHolidayReservations();
+  const { reservations: rawReservations, isError, error, refetch } = useHolidayReservations();
   const { isTeenClass } = useSchoolClassCategories();
 
   if (isError) {
@@ -45,9 +45,20 @@ export const HolidayReservationsList = () => {
     );
   }
 
-  if (!reservations || reservations.length === 0) {
+  if (!rawReservations || rawReservations.length === 0) {
     return <EmptyReservations />;
   }
+
+  // Transform raw reservations to match the expected type
+  const reservations = rawReservations.map(res => ({
+    ...res,
+    children: {
+      ...res.children,
+      profile: {
+        school_city: res.children.profiles?.school_city || ''
+      }
+    }
+  })) as HolidayReservationWithChild[];
 
   const filteredReservations = reservations.filter(reservation => {
     const isTeen = isTeenClass(reservation.children.school_class);
