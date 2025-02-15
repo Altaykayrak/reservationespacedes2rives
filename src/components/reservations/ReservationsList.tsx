@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyReservations } from "./EmptyReservations";
 import { ChildReservationCard } from "./ChildReservationCard";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { WednesdayReservationWithChild } from "@/types/reservations";
 import { useLocation } from "react-router-dom";
 
@@ -24,9 +23,43 @@ interface ReservationsListProps {
 export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   const queryClient = useQueryClient();
   const location = useLocation();
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
 
-  // Déplacer useQuery en dehors de toute condition
+  useEffect(() => {
+    if (containerRef.current) {
+      // Nettoyage de l'ancien ResizeObserver
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
+
+      // Création d'un nouveau ResizeObserver avec gestion d'erreur
+      resizeObserverRef.current = new ResizeObserver((entries) => {
+        try {
+          // Traiter les changements de taille ici si nécessaire
+          entries.forEach(() => {
+            // Mettre à jour uniquement si nécessaire
+            window.requestAnimationFrame(() => {
+              // Code de mise à jour si nécessaire
+            });
+          });
+        } catch (error) {
+          console.warn("ResizeObserver error:", error);
+        }
+      });
+
+      // Observer le conteneur
+      resizeObserverRef.current.observe(containerRef.current);
+    }
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
+    };
+  }, []);
+
   const { data: schoolClassCategories } = useQuery({
     queryKey: ["schoolClassCategories"],
     queryFn: async () => {
@@ -120,7 +153,7 @@ export const ReservationsList = ({ reservations }: ReservationsListProps) => {
   }, {} as GroupedReservations);
 
   return (
-    <div>
+    <div ref={containerRef}>
       <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
         Vos {isTeenHolidayReservation ? "activités Club Ado" : "mercredis"} réservés (sous réserve de règlement)
       </h2>
