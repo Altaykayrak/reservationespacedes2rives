@@ -32,6 +32,7 @@ export const WednesdayReservationContent = () => {
             handleDateToggle={handleDateToggle}
             handleOptionChange={handleOptionChange}
             isDateAlreadyReserved={(date) => isDateReservedForChild(selectedChild, date)}
+            selectedChild={selectedChild}
           />
 
           <Button
