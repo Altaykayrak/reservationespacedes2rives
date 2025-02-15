@@ -49,7 +49,7 @@ export const HolidayChildReservationCard = ({
               </span>
               <div className="flex flex-wrap gap-2 mt-1">
                 {reservation.without_meal && (
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded">
                     Sans repas
                   </span>
                 )}
