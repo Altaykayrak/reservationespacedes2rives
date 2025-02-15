@@ -73,7 +73,7 @@ export const useReservations = () => {
               school_city
             )
           ),
-          available_wednesdays (
+          available_wednesdays!fk_wednesday_id (
             id,
             date,
             max_participants_kindergarten,
