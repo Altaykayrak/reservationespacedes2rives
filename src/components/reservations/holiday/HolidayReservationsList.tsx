@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -114,6 +115,16 @@ export const HolidayReservationsList = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
+      // Récupérer d'abord les périodes de vacances disponibles
+      const { data: availablePeriods, error: periodsError } = await supabase
+        .from("available_holiday_periods")
+        .select("*");
+
+      if (periodsError) {
+        console.error("Error fetching available periods:", periodsError);
+        throw periodsError;
+      }
+
       const { data: holidayReservations, error } = await supabase
         .from("holiday_reservations")
         .select(`
@@ -126,8 +137,7 @@ export const HolidayReservationsList = () => {
             profiles (
               school_city
             )
-          ),
-          available_holiday_periods!inner (*)
+          )
         `)
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
@@ -141,9 +151,11 @@ export const HolidayReservationsList = () => {
       if (!holidayReservations) return [];
 
       return holidayReservations.map(reservation => {
-        if (!reservation.available_holiday_periods) {
-          console.error('Missing available_holiday_periods for reservation:', reservation);
-          throw new Error('Missing available_holiday_periods data');
+        // Trouver la période correspondante
+        const period = availablePeriods?.find(p => p.id === reservation.period_id);
+        
+        if (!period) {
+          console.warn(`No matching holiday period found for reservation ${reservation.id}`);
         }
 
         return {
@@ -166,7 +178,18 @@ export const HolidayReservationsList = () => {
               school_city: reservation.children.profiles.school_city
             }
           },
-          available_holiday_periods: reservation.available_holiday_periods
+          // Utiliser une valeur par défaut si period n'est pas trouvé
+          available_holiday_periods: period || {
+            id: reservation.period_id,
+            name: "Période inconnue",
+            start_date: reservation.reservation_date,
+            end_date: reservation.reservation_date,
+            max_participants_kindergarten: 0,
+            max_participants_primary: 0,
+            max_participants_teen: 0,
+            created_at: reservation.created_at,
+            updated_at: reservation.updated_at
+          }
         } satisfies HolidayReservationWithChild;
       });
     },
