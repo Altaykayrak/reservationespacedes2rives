@@ -14,31 +14,29 @@ export const useHolidayReservations = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Première requête pour obtenir les enfants de l'utilisateur
+      const { data: userChildren } = await supabase
+        .from("children")
+        .select("id")
+        .eq('profile_id', user.id);
+
+      if (!userChildren || userChildren.length === 0) {
+        return [];
+      }
+
+      const childrenIds = userChildren.map(child => child.id);
+
       const { data: rawReservations, error } = await supabase
         .from("holiday_reservations")
         .select(`
-          id,
-          child_id,
-          period_id,
-          reservation_date,
-          reservation_number,
-          without_meal,
-          early_dropoff,
-          status,
-          created_at,
-          updated_at,
-          children!inner (
-            id,
-            first_name,
-            last_name,
-            school_class,
-            profile:profiles!inner (
-              school_city
-            )
+          *,
+          children (
+            *,
+            profile:profiles(*)
           )
         `)
         .eq('status', 'confirmed')
-        .eq('children.profile.id', user.id)
+        .in('child_id', childrenIds)
         .order('reservation_date', { ascending: true });
       
       if (error) {
