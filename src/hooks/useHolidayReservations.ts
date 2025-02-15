@@ -27,7 +27,7 @@ export const useHolidayReservations = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
-      const { data: rawReservations, error } = await supabase
+      const { data, error } = await supabase
         .from("holiday_reservations")
         .select(`
           *,
@@ -45,40 +45,36 @@ export const useHolidayReservations = () => {
         throw error;
       }
 
-      if (!rawReservations) return [];
+      if (!data) return [];
 
-      console.log("Raw reservations:", rawReservations);
+      console.log("Raw reservations:", data);
 
-      // Construction explicite du type attendu avec vérification du type
-      const typedReservations: HolidayReservationWithChild[] = (rawReservations as DatabaseHolidayReservation[]).map(reservation => ({
-        id: reservation.id,
-        child_id: reservation.child_id,
-        period_id: reservation.period_id,
-        reservation_date: reservation.reservation_date,
-        reservation_number: reservation.reservation_number,
-        without_meal: reservation.without_meal ?? false,
-        early_dropoff: reservation.early_dropoff ?? false,
-        status: reservation.status,
-        created_at: reservation.created_at,
-        updated_at: reservation.updated_at,
-        children: {
-          id: reservation.children.id,
-          first_name: reservation.children.first_name,
-          last_name: reservation.children.last_name,
-          school_class: reservation.children.school_class,
-          profile: {
-            school_city: reservation.children.profile.school_city
-          }
+      // Transformation des données avec vérification de type
+      const transformedData = data.map(reservation => {
+        const transformedReservation = { ...reservation };
+        
+        if (transformedReservation.children) {
+          transformedReservation.children = {
+            id: transformedReservation.children.id,
+            first_name: transformedReservation.children.first_name,
+            last_name: transformedReservation.children.last_name,
+            school_class: transformedReservation.children.school_class,
+            profile: {
+              school_city: transformedReservation.children.profile?.school_city || ""
+            }
+          };
         }
-      }));
+        
+        return transformedReservation as HolidayReservationWithChild;
+      });
 
-      console.log("Transformed reservations:", typedReservations);
-      return typedReservations;
+      console.log("Transformed reservations:", transformedData);
+      return transformedData;
     },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     staleTime: 30000, // Considérer les données comme périmées après 30 secondes
-    cacheTime: 3600000, // Garder les données en cache pendant 1 heure
+    gcTime: 3600000, // Remplace cacheTime qui est déprécié
     retry: 3, // Réessayer 3 fois en cas d'échec
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponentiel
   });
