@@ -14,24 +14,6 @@ export const useHolidayReservations = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Première requête pour obtenir les enfants et leurs school_city
-      const { data: userChildren } = await supabase
-        .from("children")
-        .select(`
-          id,
-          profile:profiles!inner (
-            school_city
-          )
-        `)
-        .eq('profile_id', user.id);
-
-      if (!userChildren || userChildren.length === 0) {
-        return [];
-      }
-
-      const childrenIds = userChildren.map(child => child.id);
-
-      // Deuxième requête pour obtenir les réservations
       const { data: rawReservations, error } = await supabase
         .from("holiday_reservations")
         .select(`
@@ -56,7 +38,7 @@ export const useHolidayReservations = () => {
           )
         `)
         .eq('status', 'confirmed')
-        .in('child_id', childrenIds)
+        .eq('children.profile.id', user.id)
         .order('reservation_date', { ascending: true });
       
       if (error) {
@@ -96,9 +78,10 @@ export const useHolidayReservations = () => {
     },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true
+    refetchInterval: 1000, // Rafraîchir toutes les secondes
   });
 
+  // Configuration de la souscription en temps réel
   useEffect(() => {
     console.log("Setting up realtime subscription for holiday reservations");
     
@@ -113,10 +96,8 @@ export const useHolidayReservations = () => {
         },
         (payload) => {
           console.log('Changement détecté dans les réservations:', payload);
-          // Invalider la query immédiatement
-          queryClient.invalidateQueries({ 
-            queryKey: ["holiday_reservations"]
-          });
+          // Forcer un refetch immédiat
+          refetch();
         }
       )
       .subscribe((status) => {
@@ -127,7 +108,7 @@ export const useHolidayReservations = () => {
       console.log("Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [refetch]);
 
   return { reservations, isError, error, refetch };
 };
