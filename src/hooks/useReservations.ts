@@ -39,11 +39,11 @@ export const useReservations = () => {
   const { data: wednesdayReservations, refetch: refetchReservations } = useQuery({
     queryKey: ["wednesday_reservations"],
     queryFn: async () => {
-      console.log("Fetching wednesday reservations...");
+      console.log("Récupération des réservations du mercredi...");
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user?.id) {
-        console.log("No session found");
+        console.log("Aucune session trouvée");
         return [];
       }
 
@@ -57,6 +57,7 @@ export const useReservations = () => {
       if (!userChildren?.length) return [];
 
       const childrenIds = userChildren.map(child => child.id);
+      console.log("IDs des enfants trouvés:", childrenIds);
 
       // Ensuite, récupérer les réservations pour ces enfants
       const { data, error } = await supabase
@@ -91,20 +92,46 @@ export const useReservations = () => {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error("Error fetching reservations:", error);
+        console.error("Erreur lors de la récupération des réservations:", error);
         throw error;
       }
 
+      console.log("Réservations brutes reçues:", JSON.stringify(data, null, 2));
+
       // Transformer les données pour correspondre au type WednesdayReservationWithChild
-      return data.map(reservation => ({
-        ...reservation,
-        children: {
-          ...reservation.children,
-          profile: {
-            school_city: reservation.children.profiles?.school_city || ''
-          }
+      const transformedReservations = data.map(reservation => {
+        if (!reservation.children?.profiles) {
+          console.warn("Données manquantes pour la réservation:", reservation.id);
+          return null;
         }
-      })) as WednesdayReservationWithChild[];
+
+        const transformed: WednesdayReservationWithChild = {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          wednesday_id: reservation.wednesday_id,
+          without_meal: reservation.without_meal || false,
+          early_dropoff: reservation.early_dropoff || false,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
+          children: {
+            id: reservation.children.id,
+            first_name: reservation.children.first_name,
+            last_name: reservation.children.last_name,
+            school_class: reservation.children.school_class,
+            profile: {
+              school_city: reservation.children.profiles.school_city
+            }
+          },
+          available_wednesdays: reservation.available_wednesdays
+        };
+
+        console.log("Réservation transformée:", JSON.stringify(transformed, null, 2));
+        return transformed;
+      }).filter((r): r is WednesdayReservationWithChild => r !== null);
+
+      console.log("Nombre de réservations transformées:", transformedReservations.length);
+      return transformedReservations;
     },
     staleTime: 30000,
     gcTime: 3600000,
