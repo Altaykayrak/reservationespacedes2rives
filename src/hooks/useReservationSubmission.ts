@@ -124,7 +124,6 @@ export const useReservationSubmission = (
 
       await refetchReservations();
       resetForm();
-      window.location.reload();
 
     } catch (error: any) {
       console.error("Erreur lors de la création des réservations:", error);
