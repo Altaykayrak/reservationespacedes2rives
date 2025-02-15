@@ -49,7 +49,7 @@ export const useHolidayReservations = () => {
 
       if (!rawReservations) return [];
 
-      return rawReservations.map((reservation) => ({
+      return rawReservations.map((reservation: any) => ({
         id: reservation.id,
         child_id: reservation.child_id,
         period_id: reservation.period_id,
@@ -69,7 +69,7 @@ export const useHolidayReservations = () => {
             school_city: reservation.children.profile?.school_city || ''
           }
         }
-      })) as unknown as HolidayReservationWithChild[];
+      })) as HolidayReservationWithChild[];
     },
   });
 
