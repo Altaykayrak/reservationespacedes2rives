@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { HolidayReservationWithChild } from "@/types/reservations";
-import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export const useHolidayReservations = () => {
   const queryClient = useQueryClient();
@@ -11,7 +10,7 @@ export const useHolidayReservations = () => {
   const { data: reservations, isError, error, refetch } = useQuery({
     queryKey: ["holiday_reservations"],
     queryFn: async () => {
-      console.log("A. Début de la récupération des réservations");
+      console.log("A. Début de la récupération des réservations de vacances");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log("B. Aucun utilisateur connecté");
@@ -42,16 +41,7 @@ export const useHolidayReservations = () => {
       const { data: reservationsData, error: reservationsError } = await supabase
         .from("holiday_reservations")
         .select(`
-          id,
-          child_id,
-          period_id,
-          reservation_date,
-          reservation_number,
-          without_meal,
-          early_dropoff,
-          status,
-          created_at,
-          updated_at,
+          *,
           children:children (
             id,
             first_name,
@@ -65,7 +55,7 @@ export const useHolidayReservations = () => {
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
         .order('reservation_date', { ascending: true });
-      
+
       if (reservationsError) {
         console.error("G. Erreur lors de la récupération des réservations:", reservationsError);
         throw reservationsError;
@@ -76,16 +66,12 @@ export const useHolidayReservations = () => {
         return [];
       }
 
-      console.log("I. Réservations brutes reçues:", reservationsData);
+      console.log("I. Réservations brutes reçues:", JSON.stringify(reservationsData, null, 2));
 
-      const transformedReservations: HolidayReservationWithChild[] = reservationsData.map(reservation => {
+      const transformedReservations = reservationsData.map(reservation => {
         console.log("Traitement de la réservation:", reservation.id);
-        if (!reservation.children || !reservation.children.profile) {
-          console.warn("Données manquantes pour la réservation:", reservation.id);
-          return null;
-        }
-
-        const transformed: HolidayReservationWithChild = {
+        
+        const transformedReservation: HolidayReservationWithChild = {
           id: reservation.id,
           child_id: reservation.child_id,
           period_id: reservation.period_id,
@@ -106,12 +92,12 @@ export const useHolidayReservations = () => {
             }
           }
         };
-        console.log("Réservation transformée:", transformed);
-        return transformed;
-      }).filter((r): r is HolidayReservationWithChild => r !== null);
+        
+        console.log("Réservation transformée:", JSON.stringify(transformedReservation, null, 2));
+        return transformedReservation;
+      });
 
-      console.log("J. Réservations transformées:", transformedReservations);
-
+      console.log("J. Nombre de réservations transformées:", transformedReservations.length);
       return transformedReservations;
     },
   });
