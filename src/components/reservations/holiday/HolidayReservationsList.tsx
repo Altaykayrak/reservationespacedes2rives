@@ -19,6 +19,10 @@ export const HolidayReservationsList = () => {
   const { reservations, isError, error, refetch } = useHolidayReservations();
   const { isTeenClass } = useSchoolClassCategories();
 
+  console.log("1. Réservations reçues du hook:", reservations);
+  console.log("2. Est-ce une erreur ?", isError);
+  if (error) console.log("3. Erreur détectée:", error);
+
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
     if (errorMessage.includes("Not authenticated")) {
@@ -46,12 +50,20 @@ export const HolidayReservationsList = () => {
   }
 
   if (!reservations || reservations.length === 0) {
+    console.log("4. Aucune réservation trouvée");
     return <EmptyReservations />;
   }
 
+  console.log("5. Nombre de réservations avant filtrage:", reservations.length);
+
   const filteredReservations = reservations.map(reservation => {
+    console.log("6. Traitement de la réservation:", reservation);
+    console.log("7. Données de l'enfant:", reservation.children);
+    
     const childData = reservation.children;
-    return {
+    console.log("8. Structure de childData:", childData);
+    
+    const transformedReservation = {
       ...reservation,
       children: {
         id: childData.id,
@@ -59,14 +71,20 @@ export const HolidayReservationsList = () => {
         last_name: childData.last_name,
         school_class: childData.school_class,
         profile: {
-          school_city: childData.profiles?.school_city || ''
+          school_city: childData.profile?.school_city || ''
         }
       }
     } as HolidayReservationWithChild;
+
+    console.log("9. Réservation transformée:", transformedReservation);
+    return transformedReservation;
   }).filter(reservation => {
     const isTeen = isTeenClass(reservation.children.school_class);
+    console.log("10. Classe:", reservation.children.school_class, "Est ado ?", isTeen);
     return isTeenPage ? isTeen : !isTeen;
   });
+
+  console.log("11. Nombre de réservations après filtrage:", filteredReservations.length);
 
   if (filteredReservations.length === 0) {
     return (
@@ -90,6 +108,8 @@ export const HolidayReservationsList = () => {
     acc[childId].reservations.push(reservation);
     return acc;
   }, {} as GroupedReservations);
+
+  console.log("12. Réservations groupées par enfant:", reservationsByChild);
 
   return (
     <div className="space-y-4">
