@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -192,16 +193,25 @@ export const HolidayReservationsList = () => {
         throw periodsError;
       }
 
-      const { data: holidayReservations, error } = await supabase
+      const { data, error } = await supabase
         .from("holiday_reservations")
         .select(`
-          *,
-          children (
+          id,
+          child_id,
+          period_id,
+          reservation_date,
+          reservation_number,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          children:children (
             id,
             first_name,
             last_name,
             school_class,
-            profiles (
+            profiles:profiles (
               school_city
             )
           )
@@ -215,10 +225,10 @@ export const HolidayReservationsList = () => {
         throw error;
       }
 
-      if (!holidayReservations) return [];
+      if (!data) return [];
 
-      // Cast explicite pour s'assurer que les données correspondent au type attendu
-      return transformReservations(holidayReservations as RawReservationType[], availablePeriods);
+      // Utilisation d'une assertion de type pour garantir que data correspond à RawReservationType[]
+      return transformReservations(data as unknown as RawReservationType[], availablePeriods);
     },
   });
 
