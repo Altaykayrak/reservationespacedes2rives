@@ -114,6 +114,29 @@ export const HolidayReservationsList = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
+      type ReservationResponse = {
+        id: string;
+        child_id: string;
+        period_id: string;
+        reservation_date: string;
+        reservation_number: string;
+        without_meal: boolean;
+        early_dropoff: boolean;
+        status: string;
+        created_at: string;
+        updated_at: string;
+        children: {
+          id: string;
+          first_name: string;
+          last_name: string;
+          school_class: string;
+          profiles: {
+            school_city: string;
+          };
+        };
+        available_holiday_periods: Tables<"available_holiday_periods">;
+      };
+
       const { data, error } = await supabase
         .from("holiday_reservations")
         .select(`
@@ -127,24 +150,16 @@ export const HolidayReservationsList = () => {
           status,
           created_at,
           updated_at,
-          children:children (
+          children (
             id,
             first_name,
             last_name,
             school_class,
-            profiles:profiles (
+            profiles (
               school_city
             )
           ),
-          available_holiday_periods:available_holiday_periods (
-            id,
-            name,
-            start_date,
-            end_date,
-            max_participants_kindergarten,
-            max_participants_primary,
-            max_participants_teen
-          )
+          available_holiday_periods (*)
         `)
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
@@ -157,7 +172,7 @@ export const HolidayReservationsList = () => {
 
       if (!data) return [];
 
-      return data.map((reservation: any): HolidayReservationWithChild => ({
+      return (data as ReservationResponse[]).map((reservation): HolidayReservationWithChild => ({
         id: reservation.id,
         child_id: reservation.child_id,
         period_id: reservation.period_id,
@@ -178,7 +193,7 @@ export const HolidayReservationsList = () => {
           }
         },
         available_holiday_periods: reservation.available_holiday_periods
-      })) as HolidayReservationWithChild[];
+      }));
     },
   });
 
