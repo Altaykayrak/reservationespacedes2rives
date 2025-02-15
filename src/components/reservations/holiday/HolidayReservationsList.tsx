@@ -114,42 +114,10 @@ export const HolidayReservationsList = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
-      type ReservationResponse = {
-        id: string;
-        child_id: string;
-        period_id: string;
-        reservation_date: string;
-        reservation_number: string;
-        without_meal: boolean;
-        early_dropoff: boolean;
-        status: string;
-        created_at: string;
-        updated_at: string;
-        children: {
-          id: string;
-          first_name: string;
-          last_name: string;
-          school_class: string;
-          profiles: {
-            school_city: string;
-          };
-        };
-        available_holiday_periods: Tables<"available_holiday_periods">;
-      };
-
-      const { data, error } = await supabase
+      const { data: holidayReservations, error } = await supabase
         .from("holiday_reservations")
         .select(`
-          id,
-          child_id,
-          period_id,
-          reservation_date,
-          reservation_number,
-          without_meal,
-          early_dropoff,
-          status,
-          created_at,
-          updated_at,
+          *,
           children (
             id,
             first_name,
@@ -159,7 +127,7 @@ export const HolidayReservationsList = () => {
               school_city
             )
           ),
-          available_holiday_periods (*)
+          available_holiday_periods!inner (*)
         `)
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
@@ -170,30 +138,37 @@ export const HolidayReservationsList = () => {
         throw error;
       }
 
-      if (!data) return [];
+      if (!holidayReservations) return [];
 
-      return (data as ReservationResponse[]).map((reservation): HolidayReservationWithChild => ({
-        id: reservation.id,
-        child_id: reservation.child_id,
-        period_id: reservation.period_id,
-        reservation_date: reservation.reservation_date,
-        reservation_number: reservation.reservation_number,
-        without_meal: reservation.without_meal,
-        early_dropoff: reservation.early_dropoff,
-        status: reservation.status,
-        created_at: reservation.created_at,
-        updated_at: reservation.updated_at,
-        children: {
-          id: reservation.children.id,
-          first_name: reservation.children.first_name,
-          last_name: reservation.children.last_name,
-          school_class: reservation.children.school_class,
-          profile: {
-            school_city: reservation.children.profiles.school_city
-          }
-        },
-        available_holiday_periods: reservation.available_holiday_periods
-      }));
+      return holidayReservations.map(reservation => {
+        if (!reservation.available_holiday_periods) {
+          console.error('Missing available_holiday_periods for reservation:', reservation);
+          throw new Error('Missing available_holiday_periods data');
+        }
+
+        return {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          period_id: reservation.period_id,
+          reservation_date: reservation.reservation_date,
+          reservation_number: reservation.reservation_number,
+          without_meal: reservation.without_meal,
+          early_dropoff: reservation.early_dropoff,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
+          children: {
+            id: reservation.children.id,
+            first_name: reservation.children.first_name,
+            last_name: reservation.children.last_name,
+            school_class: reservation.children.school_class,
+            profile: {
+              school_city: reservation.children.profiles.school_city
+            }
+          },
+          available_holiday_periods: reservation.available_holiday_periods
+        } satisfies HolidayReservationWithChild;
+      });
     },
   });
 
