@@ -39,7 +39,7 @@ export const useHolidayReservations = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
-      const { data, error: reservationsError } = await supabase
+      const { data: reservationsData, error: reservationsError } = await supabase
         .from("holiday_reservations")
         .select(`
           id,
@@ -52,12 +52,12 @@ export const useHolidayReservations = () => {
           status,
           created_at,
           updated_at,
-          children:children!inner (
+          children:children (
             id,
             first_name,
             last_name,
             school_class,
-            profile:profiles!inner (
+            profile:profiles (
               school_city
             )
           )
@@ -71,26 +71,53 @@ export const useHolidayReservations = () => {
         throw reservationsError;
       }
 
-      if (!data) {
+      if (!reservationsData) {
         console.log("H. Aucune réservation trouvée");
         return [];
       }
 
-      console.log("I. Réservations brutes reçues:", data);
-      
-      // Si nous avons des données, affichons la première réservation en détail
-      if (data.length > 0) {
-        console.log("J. Exemple détaillé de la première réservation:", JSON.stringify(data[0], null, 2));
-      }
+      console.log("I. Réservations brutes reçues:", reservationsData);
 
-      return data as HolidayReservationWithChild[];
+      const transformedReservations: HolidayReservationWithChild[] = reservationsData.map(reservation => {
+        console.log("Traitement de la réservation:", reservation.id);
+        if (!reservation.children || !reservation.children.profile) {
+          console.warn("Données manquantes pour la réservation:", reservation.id);
+          return null;
+        }
+
+        const transformed: HolidayReservationWithChild = {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          period_id: reservation.period_id,
+          reservation_date: reservation.reservation_date,
+          reservation_number: reservation.reservation_number,
+          without_meal: reservation.without_meal || false,
+          early_dropoff: reservation.early_dropoff || false,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
+          children: {
+            id: reservation.children.id,
+            first_name: reservation.children.first_name,
+            last_name: reservation.children.last_name,
+            school_class: reservation.children.school_class,
+            profile: {
+              school_city: reservation.children.profile.school_city
+            }
+          }
+        };
+        console.log("Réservation transformée:", transformed);
+        return transformed;
+      }).filter((r): r is HolidayReservationWithChild => r !== null);
+
+      console.log("J. Réservations transformées:", transformedReservations);
+
+      return transformedReservations;
     },
   });
 
-  // Configuration de la souscription en temps réel
   useEffect(() => {
-    console.log("K. Mise en place de la souscription en temps réel");
-    
+    console.log("K. Configuration de la souscription en temps réel");
     const channel = supabase
       .channel('holiday-reservations-changes')
       .on(
@@ -101,7 +128,7 @@ export const useHolidayReservations = () => {
           table: 'holiday_reservations'
         },
         (payload) => {
-          console.log('L. Changement détecté dans les réservations:', payload);
+          console.log('L. Changement détecté:', payload);
           queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
         }
       )
