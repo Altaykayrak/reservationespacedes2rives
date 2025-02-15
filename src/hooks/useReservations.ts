@@ -36,7 +36,7 @@ export const useReservations = () => {
     gcTime: 3600000,
   });
 
-  const { data: wednesdayReservations, refetch: refetchReservations } = useQuery({
+  const { data: wednesdayReservations = [], refetch: refetchReservations } = useQuery({
     queryKey: ["wednesday_reservations"],
     queryFn: async () => {
       console.log("Récupération des réservations du mercredi...");
@@ -63,15 +63,8 @@ export const useReservations = () => {
       const { data, error } = await supabase
         .from('wednesday_reservations')
         .select(`
-          id,
-          child_id,
-          wednesday_id,
-          without_meal,
-          early_dropoff,
-          status,
-          created_at,
-          updated_at,
-          children!wednesday_reservations_child_id_fkey (
+          *,
+          children (
             id,
             first_name,
             last_name,
@@ -80,7 +73,7 @@ export const useReservations = () => {
               school_city
             )
           ),
-          available_wednesdays!wednesday_reservations_wednesday_id_fkey (
+          available_wednesdays (
             id,
             date,
             max_participants_kindergarten,
@@ -88,23 +81,17 @@ export const useReservations = () => {
           )
         `)
         .in('child_id', childrenIds)
-        .eq('status', 'confirmed')
-        .order('created_at', { ascending: true });
+        .eq('status', 'confirmed');
 
       if (error) {
         console.error("Erreur lors de la récupération des réservations:", error);
         throw error;
       }
 
-      console.log("Réservations brutes reçues:", JSON.stringify(data, null, 2));
+      console.log("Réservations brutes reçues:", data);
 
       // Transformer les données pour correspondre au type WednesdayReservationWithChild
       const transformedReservations = data.map(reservation => {
-        if (!reservation.children?.profiles) {
-          console.warn("Données manquantes pour la réservation:", reservation.id);
-          return null;
-        }
-
         const transformed: WednesdayReservationWithChild = {
           id: reservation.id,
           child_id: reservation.child_id,
@@ -126,9 +113,8 @@ export const useReservations = () => {
           available_wednesdays: reservation.available_wednesdays
         };
 
-        console.log("Réservation transformée:", JSON.stringify(transformed, null, 2));
         return transformed;
-      }).filter((r): r is WednesdayReservationWithChild => r !== null);
+      });
 
       console.log("Nombre de réservations transformées:", transformedReservations.length);
       return transformedReservations;
