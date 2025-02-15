@@ -65,16 +65,16 @@ export const useReservations = () => {
           status,
           created_at,
           updated_at,
-          children!wednesday_reservations_child_id_fkey (
+          children (
             id,
             first_name,
             last_name,
             school_class,
-            profiles!inner (
+            profiles (
               school_city
             )
           ),
-          available_wednesdays!fk_wednesday_id (
+          available_wednesdays (
             id,
             date,
             max_participants_kindergarten,
@@ -93,7 +93,7 @@ export const useReservations = () => {
         children: {
           ...reservation.children,
           profile: {
-            school_city: reservation.children.profiles.school_city
+            school_city: reservation.children.profiles?.school_city || ''
           }
         }
       })) as WednesdayReservationWithChild[];
