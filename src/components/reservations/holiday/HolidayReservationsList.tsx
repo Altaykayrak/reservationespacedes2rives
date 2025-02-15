@@ -49,7 +49,15 @@ export const HolidayReservationsList = () => {
     return <EmptyReservations />;
   }
 
-  const filteredReservations = reservations.filter(reservation => {
+  const filteredReservations = reservations.map(reservation => ({
+    ...reservation,
+    children: {
+      ...reservation.children,
+      profile: {
+        school_city: reservation.children.profiles?.school_city || ''
+      }
+    }
+  })).filter(reservation => {
     const isTeen = isTeenClass(reservation.children.school_class);
     return isTeenPage ? isTeen : !isTeen;
   });
