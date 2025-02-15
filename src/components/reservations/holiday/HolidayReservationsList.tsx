@@ -124,7 +124,6 @@ export const HolidayReservationsList = () => {
             first_name,
             last_name,
             school_class,
-            profile_id,
             profiles (
               school_city
             )
@@ -168,7 +167,6 @@ export const HolidayReservationsList = () => {
   });
 
   useEffect(() => {
-    // Écouter les changements en temps réel pour les réservations
     const channel = supabase
       .channel('holiday-reservations-changes')
       .on(
@@ -180,7 +178,6 @@ export const HolidayReservationsList = () => {
         },
         (payload) => {
           console.log('Changement détecté dans les réservations:', payload);
-          // Invalider plusieurs queries pour forcer leur mise à jour
           queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
           queryClient.invalidateQueries({ queryKey: ["spots_left"] });
         }
@@ -230,7 +227,6 @@ export const HolidayReservationsList = () => {
     );
   };
 
-  // Filtrer les réservations selon la page et la catégorie d'âge
   const filteredReservations = reservations.filter(reservation => {
     const isTeen = isTeenClass(reservation.children.school_class);
     return isTeenPage ? isTeen : !isTeen;
@@ -247,11 +243,6 @@ export const HolidayReservationsList = () => {
   }
 
   const reservationsByChild = filteredReservations.reduce((acc, reservation) => {
-    if (!reservation.children) {
-      console.warn('Reservation without child data:', reservation);
-      return acc;
-    }
-    
     const childId = reservation.child_id;
     if (!acc[childId]) {
       acc[childId] = {
