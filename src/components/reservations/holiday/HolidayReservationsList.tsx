@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -33,6 +34,18 @@ type RawReservationType = {
   };
 };
 
+const transformChild = (rawChild: RawReservationType['children']) => {
+  return {
+    id: rawChild.id,
+    first_name: rawChild.first_name,
+    last_name: rawChild.last_name,
+    school_class: rawChild.school_class,
+    profile: {
+      school_city: rawChild.profiles?.school_city || ''
+    }
+  };
+};
+
 const transformReservations = (
   reservations: RawReservationType[],
   availablePeriods?: Tables<"available_holiday_periods">[]
@@ -44,7 +57,7 @@ const transformReservations = (
       console.warn(`No matching holiday period found for reservation ${reservation.id}`);
     }
 
-    const transformedReservation: HolidayReservationWithChild = {
+    return {
       id: reservation.id,
       child_id: reservation.child_id,
       period_id: reservation.period_id,
@@ -55,19 +68,9 @@ const transformReservations = (
       status: reservation.status,
       created_at: reservation.created_at,
       updated_at: reservation.updated_at,
-      children: {
-        id: reservation.children.id,
-        first_name: reservation.children.first_name,
-        last_name: reservation.children.last_name,
-        school_class: reservation.children.school_class,
-        profile: {
-          school_city: reservation.children.profiles.school_city
-        }
-      },
-      available_holiday_periods: period // Maintenant optionnel dans le type
+      children: transformChild(reservation.children),
+      available_holiday_periods: period
     };
-
-    return transformedReservation;
   });
 };
 
@@ -209,7 +212,6 @@ export const HolidayReservationsList = () => {
 
       if (!holidayReservations) return [];
 
-      // Transformation des données avec la fonction dédiée
       return transformReservations(holidayReservations, availablePeriods);
     },
   });
