@@ -74,7 +74,12 @@ export const useHolidayReservations = () => {
 
       if (!data) return [];
 
-      console.log("Raw reservations:", data);
+      // Log de la première réservation brute pour voir sa structure
+      console.log("Raw reservation example:", data[0]);
+      if (data[0]) {
+        console.log("Raw children data:", data[0].children);
+        console.log("Raw profiles data:", data[0].children?.profiles);
+      }
 
       const transformedData = data.map(reservation => {
         if (!reservation.children?.profiles) {
@@ -105,6 +110,12 @@ export const useHolidayReservations = () => {
           }
         };
 
+        // Log de la transformation pour la première réservation
+        if (reservation.id === data[0]?.id) {
+          console.log("Transformed children structure:", transformedReservation.children);
+          console.log("Transformed profile structure:", transformedReservation.children.profile);
+        }
+
         // Validation du type avec le type guard
         if (!isValidReservationData(transformedReservation)) {
           console.error('Invalid reservation data structure:', transformedReservation);
@@ -114,7 +125,12 @@ export const useHolidayReservations = () => {
         return transformedReservation;
       }).filter((reservation): reservation is HolidayReservationWithChild => reservation !== null);
 
-      console.log("Transformed reservations:", transformedData);
+      // Log du résultat final pour la première réservation
+      if (transformedData[0]) {
+        console.log("Final transformed reservation children:", transformedData[0].children);
+        console.log("Final transformed reservation profile:", transformedData[0].children.profile);
+      }
+
       return transformedData;
     },
     refetchOnMount: true,
