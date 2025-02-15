@@ -2,7 +2,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
-import { HolidayReservationWithChild } from "@/types/reservations";
+import { DatabaseHolidayReservation, HolidayReservationWithChild } from "@/types/reservations";
 
 export const useHolidayReservations = () => {
   const queryClient = useQueryClient();
@@ -49,7 +49,7 @@ export const useHolidayReservations = () => {
       console.log("Raw reservations:", rawReservations);
 
       // Construction explicite du type attendu avec vérification du type
-      const typedReservations: HolidayReservationWithChild[] = rawReservations.map(reservation => ({
+      const typedReservations: HolidayReservationWithChild[] = (rawReservations as DatabaseHolidayReservation[]).map(reservation => ({
         id: reservation.id,
         child_id: reservation.child_id,
         period_id: reservation.period_id,
