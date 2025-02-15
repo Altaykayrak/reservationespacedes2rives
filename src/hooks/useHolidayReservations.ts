@@ -15,7 +15,6 @@ export const useHolidayReservations = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Première requête pour obtenir les enfants de l'utilisateur
       const { data: userChildren } = await supabase
         .from("children")
         .select("id")
@@ -40,12 +39,12 @@ export const useHolidayReservations = () => {
           status,
           created_at,
           updated_at,
-          children (
+          children:children!inner (
             id,
             first_name,
             last_name,
             school_class,
-            profile:profiles (
+            profiles:profiles!inner (
               school_city
             )
           )
@@ -64,26 +63,34 @@ export const useHolidayReservations = () => {
       console.log("Raw reservations:", data);
 
       const transformedData = data.map(reservation => {
-        if (!reservation.children) {
-          console.warn('Missing children data for reservation:', reservation.id);
+        if (!reservation.children || !reservation.children.profiles) {
+          console.warn('Missing children or profiles data for reservation:', reservation.id);
           return null;
         }
 
-        // S'assurer que nous avons un profil, même vide
-        const profile = reservation.children.profile || { school_city: "" };
-
-        return {
-          ...reservation,
+        const transformedReservation: HolidayReservationWithChild = {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          period_id: reservation.period_id,
+          reservation_date: reservation.reservation_date,
+          reservation_number: reservation.reservation_number,
+          without_meal: reservation.without_meal ?? false,
+          early_dropoff: reservation.early_dropoff ?? false,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
           children: {
             id: reservation.children.id,
             first_name: reservation.children.first_name,
             last_name: reservation.children.last_name,
             school_class: reservation.children.school_class,
             profile: {
-              school_city: profile.school_city
+              school_city: reservation.children.profiles.school_city
             }
           }
-        } as HolidayReservationWithChild;
+        };
+
+        return transformedReservation;
       }).filter((reservation): reservation is HolidayReservationWithChild => reservation !== null);
 
       console.log("Transformed reservations:", transformedData);
