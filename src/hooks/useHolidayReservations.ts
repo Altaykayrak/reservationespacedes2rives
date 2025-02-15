@@ -59,8 +59,8 @@ export const useHolidayReservations = () => {
             first_name: transformedReservation.children.first_name,
             last_name: transformedReservation.children.last_name,
             school_class: transformedReservation.children.school_class,
-            profile: {
-              school_city: transformedReservation.children.profile?.school_city || ""
+            profile: transformedReservation.children.profile || {
+              school_city: ""
             }
           };
         }
@@ -74,7 +74,7 @@ export const useHolidayReservations = () => {
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     staleTime: 30000, // Considérer les données comme périmées après 30 secondes
-    gcTime: 3600000, // Remplace cacheTime qui est déprécié
+    gcTime: 60000 * 5, // 5 minutes
     retry: 3, // Réessayer 3 fois en cas d'échec
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponentiel
   });
