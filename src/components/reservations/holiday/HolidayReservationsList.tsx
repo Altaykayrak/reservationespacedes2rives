@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -151,7 +152,7 @@ export const HolidayReservationsList = () => {
 
       if (!rawReservations) return [];
 
-      return rawReservations.map((reservation: any) => ({
+      return rawReservations.map((reservation) => ({
         id: reservation.id,
         child_id: reservation.child_id,
         period_id: reservation.period_id,
@@ -171,7 +172,7 @@ export const HolidayReservationsList = () => {
             school_city: reservation.children.profile?.school_city || ''
           }
         }
-      }));
+      })) as HolidayReservationWithChild[];
     },
   });
 
