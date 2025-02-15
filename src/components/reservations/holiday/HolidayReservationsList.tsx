@@ -49,7 +49,7 @@ export const HolidayReservationsList = () => {
     return <EmptyReservations />;
   }
 
-  const filteredReservations = reservations.filter(reservation => {
+  const filteredReservations = (reservations as HolidayReservationWithChild[]).filter(reservation => {
     const isTeen = isTeenClass(reservation.children.school_class);
     return isTeenPage ? isTeen : !isTeen;
   });
@@ -94,7 +94,7 @@ export const HolidayReservationsList = () => {
             childName={data.childName}
             schoolClass={data.schoolClass}
             reservations={data.reservations}
-            onUpdate={() => refetch()}
+            onUpdate={refetch}
           />
         ))}
       </div>
