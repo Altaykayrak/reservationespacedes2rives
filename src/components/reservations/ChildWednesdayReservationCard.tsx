@@ -19,12 +19,12 @@ export const ChildWednesdayReservationCard = ({
   onUpdate,
 }: ChildWednesdayReservationCardProps) => {
   return (
-    <Card className="p-4 space-y-4">
+    <Card className="p-3 space-y-2">
       <div>
-        <h3 className="font-semibold text-lg">{childName}</h3>
-        <p className="text-sm text-gray-600">{schoolClass}</p>
+        <h3 className="font-semibold text-sm">{childName}</h3>
+        <p className="text-xs text-gray-600">{schoolClass}</p>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {reservations
           .sort((a, b) => {
             const dateA = new Date(a.available_wednesdays?.date || "");
@@ -34,9 +34,9 @@ export const ChildWednesdayReservationCard = ({
           .map((reservation) => (
             <div
               key={reservation.id}
-              className="p-3 bg-gray-50 rounded-lg space-y-2"
+              className="p-2 bg-gray-50 rounded-lg space-y-1"
             >
-              <p className="font-medium">
+              <p className="text-sm font-medium">
                 {reservation.available_wednesdays?.date
                   ? format(new Date(reservation.available_wednesdays.date), "EEEE d MMMM yyyy", {
                       locale: fr,
