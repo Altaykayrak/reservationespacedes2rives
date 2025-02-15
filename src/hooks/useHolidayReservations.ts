@@ -88,7 +88,7 @@ export const useHolidayReservations = () => {
         }
 
         // Transformation explicite des données
-        const transformedReservation = {
+        const transformedReservation: HolidayReservationWithChild = {
           id: reservation.id,
           child_id: reservation.child_id,
           period_id: reservation.period_id,
@@ -123,15 +123,20 @@ export const useHolidayReservations = () => {
         }
 
         return transformedReservation;
-      }).filter((reservation): reservation is HolidayReservationWithChild => reservation !== null);
+      });
+
+      // Utiliser le type guard pour filtrer et assurer le type
+      const validatedData = transformedData.filter((item): item is HolidayReservationWithChild => 
+        item !== null && isValidReservationData(item)
+      );
 
       // Log du résultat final pour la première réservation
-      if (transformedData[0]) {
-        console.log("Final transformed reservation children:", transformedData[0].children);
-        console.log("Final transformed reservation profile:", transformedData[0].children.profile);
+      if (validatedData[0]) {
+        console.log("Final transformed reservation children:", validatedData[0].children);
+        console.log("Final transformed reservation profile:", validatedData[0].children.profile);
       }
 
-      return transformedData;
+      return validatedData;
     },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
