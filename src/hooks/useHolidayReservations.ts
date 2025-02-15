@@ -30,10 +30,24 @@ export const useHolidayReservations = () => {
       const { data, error } = await supabase
         .from("holiday_reservations")
         .select(`
-          *,
+          id,
+          child_id,
+          period_id,
+          reservation_date,
+          reservation_number,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
           children (
-            *,
-            profile:profiles(*)
+            id,
+            first_name,
+            last_name,
+            school_class,
+            profile:profiles (
+              school_city
+            )
           )
         `)
         .eq('status', 'confirmed')
@@ -49,31 +63,24 @@ export const useHolidayReservations = () => {
 
       console.log("Raw reservations:", data);
 
-      // Transformation des données avec vérification de type
       const transformedData = data.map(reservation => {
-        if (!reservation.children || !reservation.children.profile) {
-          console.warn('Missing children or profile data for reservation:', reservation.id);
+        if (!reservation.children) {
+          console.warn('Missing children data for reservation:', reservation.id);
           return null;
         }
 
+        // S'assurer que nous avons un profil, même vide
+        const profile = reservation.children.profile || { school_city: "" };
+
         return {
-          id: reservation.id,
-          child_id: reservation.child_id,
-          period_id: reservation.period_id,
-          reservation_date: reservation.reservation_date,
-          reservation_number: reservation.reservation_number,
-          without_meal: reservation.without_meal ?? false,
-          early_dropoff: reservation.early_dropoff ?? false,
-          status: reservation.status,
-          created_at: reservation.created_at,
-          updated_at: reservation.updated_at,
+          ...reservation,
           children: {
             id: reservation.children.id,
             first_name: reservation.children.first_name,
             last_name: reservation.children.last_name,
             school_class: reservation.children.school_class,
             profile: {
-              school_city: reservation.children.profile.school_city || ""
+              school_city: profile.school_city
             }
           }
         } as HolidayReservationWithChild;
@@ -84,10 +91,10 @@ export const useHolidayReservations = () => {
     },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    staleTime: 30000, // Considérer les données comme périmées après 30 secondes
-    gcTime: 60000 * 5, // 5 minutes
-    retry: 3, // Réessayer 3 fois en cas d'échec
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponentiel
+    staleTime: 30000,
+    gcTime: 60000 * 5,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Configuration de la souscription en temps réel
@@ -139,7 +146,6 @@ export const useHolidayReservations = () => {
     isError, 
     error, 
     refetch,
-    // Ajouter une fonction de rafraîchissement explicite
     forceRefresh: () => queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] })
   };
 };
