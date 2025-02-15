@@ -19,6 +19,16 @@ export const ChildWednesdayReservationCard = ({
   reservations,
   onUpdate,
 }: ChildWednesdayReservationCardProps) => {
+  const sortReservations = (reservations: WednesdayReservationWithChild[]) => {
+    return [...reservations].sort((a, b) => {
+      const dateA = a.available_wednesdays?.date;
+      const dateB = b.available_wednesdays?.date;
+      
+      if (!dateA || !dateB) return 0;
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    });
+  };
+
   return (
     <Card className="bg-white rounded-lg overflow-hidden">
       <div className="p-4 bg-gray-50/50">
@@ -36,34 +46,33 @@ export const ChildWednesdayReservationCard = ({
         </div>
       </div>
       <div className="divide-y divide-gray-100">
-        {reservations
-          .sort((a, b) => 
-            new Date(a.available_wednesdays?.date || "").getTime() - 
-            new Date(b.available_wednesdays?.date || "").getTime()
-          )
-          .map((reservation) => (
-            <div key={reservation.id} className="p-4">
-              <div className="text-sm font-medium text-gray-900">
-                {reservation.available_wednesdays?.date
-                  ? format(new Date(reservation.available_wednesdays.date), "EEEE d MMMM yyyy", {
-                      locale: fr,
-                    })
-                  : "Date inconnue"}
-              </div>
-              <div className="mt-2 flex gap-2">
-                {reservation.without_meal && (
-                  <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700">
-                    Sans repas
-                  </span>
-                )}
-                {reservation.early_dropoff && (
-                  <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                    Accueil avant 8h30
-                  </span>
-                )}
-              </div>
+        {sortReservations(reservations).map((reservation) => (
+          <div key={reservation.id} className="p-4">
+            <div className="text-sm font-medium text-gray-900">
+              {reservation.available_wednesdays?.date ? (
+                format(
+                  new Date(`${reservation.available_wednesdays.date}T00:00:00`),
+                  "EEEE d MMMM yyyy",
+                  { locale: fr }
+                )
+              ) : (
+                "Date inconnue"
+              )}
             </div>
-          ))}
+            <div className="mt-2 flex gap-2">
+              {reservation.without_meal && (
+                <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700">
+                  Sans repas
+                </span>
+              )}
+              {reservation.early_dropoff && (
+                <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                  Accueil avant 8h30
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </Card>
   );
