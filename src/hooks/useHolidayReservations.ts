@@ -42,12 +42,12 @@ export const useHolidayReservations = () => {
         .from("holiday_reservations")
         .select(`
           *,
-          children:children (
+          children!inner (
             id,
             first_name,
             last_name,
             school_class,
-            profile:profiles (
+            profile:profiles!inner (
               school_city
             )
           )
@@ -71,6 +71,11 @@ export const useHolidayReservations = () => {
       const transformedReservations = reservationsData.map(reservation => {
         console.log("Traitement de la réservation:", reservation.id);
         
+        if (!reservation.children?.profile) {
+          console.error("Données enfant ou profil manquantes pour la réservation:", reservation.id);
+          return null;
+        }
+
         const transformedReservation: HolidayReservationWithChild = {
           id: reservation.id,
           child_id: reservation.child_id,
@@ -95,7 +100,7 @@ export const useHolidayReservations = () => {
         
         console.log("Réservation transformée:", JSON.stringify(transformedReservation, null, 2));
         return transformedReservation;
-      });
+      }).filter((r): r is HolidayReservationWithChild => r !== null);
 
       console.log("J. Nombre de réservations transformées:", transformedReservations.length);
       return transformedReservations;
