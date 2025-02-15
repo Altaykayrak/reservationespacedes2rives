@@ -98,6 +98,18 @@ export const HolidayReservationsList = () => {
     },
   });
 
+  const { data: availablePeriods } = useQuery({
+    queryKey: ["available_holiday_periods"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("*");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: reservations, isError, error, refetch } = useQuery({
     queryKey: ["holiday_reservations"],
     queryFn: async () => {
@@ -127,8 +139,7 @@ export const HolidayReservationsList = () => {
             profiles (
               school_city
             )
-          ),
-          available_holiday_periods:available_holiday_periods (*)
+          )
         `)
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
@@ -141,28 +152,31 @@ export const HolidayReservationsList = () => {
 
       if (!rawReservations) return [];
 
-      return rawReservations.map((reservation: any): HolidayReservationWithChild => ({
-        id: reservation.id,
-        child_id: reservation.child_id,
-        period_id: reservation.period_id,
-        reservation_date: reservation.reservation_date,
-        reservation_number: reservation.reservation_number,
-        without_meal: reservation.without_meal,
-        early_dropoff: reservation.early_dropoff,
-        status: reservation.status,
-        created_at: reservation.created_at,
-        updated_at: reservation.updated_at,
-        children: {
-          id: reservation.children.id,
-          first_name: reservation.children.first_name,
-          last_name: reservation.children.last_name,
-          school_class: reservation.children.school_class,
-          profile: {
-            school_city: reservation.children.profiles?.school_city || ''
-          }
-        },
-        available_holiday_periods: reservation.available_holiday_periods
-      }));
+      return rawReservations.map((reservation: any): HolidayReservationWithChild => {
+        const period = availablePeriods?.find(p => p.id === reservation.period_id);
+        return {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          period_id: reservation.period_id,
+          reservation_date: reservation.reservation_date,
+          reservation_number: reservation.reservation_number,
+          without_meal: reservation.without_meal,
+          early_dropoff: reservation.early_dropoff,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
+          children: {
+            id: reservation.children.id,
+            first_name: reservation.children.first_name,
+            last_name: reservation.children.last_name,
+            school_class: reservation.children.school_class,
+            profile: {
+              school_city: reservation.children.profiles?.school_city || ''
+            }
+          },
+          available_holiday_periods: period || {} as Tables<"available_holiday_periods">
+        };
+      });
     },
   });
 
