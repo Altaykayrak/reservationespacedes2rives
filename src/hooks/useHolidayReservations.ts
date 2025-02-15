@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { DatabaseHolidayReservation, HolidayReservationWithChild } from "@/types/reservations";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export const useHolidayReservations = () => {
   const queryClient = useQueryClient();
@@ -76,37 +77,62 @@ export const useHolidayReservations = () => {
     },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchInterval: 1000, // Rafraîchir toutes les secondes
+    staleTime: 30000, // Considérer les données comme périmées après 30 secondes
+    cacheTime: 3600000, // Garder les données en cache pendant 1 heure
+    retry: 3, // Réessayer 3 fois en cas d'échec
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponentiel
   });
 
   // Configuration de la souscription en temps réel
   useEffect(() => {
     console.log("Setting up realtime subscription for holiday reservations");
     
+    const handleRealtimeChanges = (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
+      console.log('Change detected in holiday reservations:', payload);
+      
+      // Invalider le cache et forcer un refetch
+      queryClient.invalidateQueries({
+        queryKey: ["holiday_reservations"],
+      });
+    };
+    
     const channel = supabase
       .channel('holiday-reservations-changes')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // Écouter tous les types d'événements
           schema: 'public',
           table: 'holiday_reservations'
         },
-        (payload) => {
-          console.log('Changement détecté dans les réservations:', payload);
-          // Forcer un refetch immédiat
-          refetch();
-        }
+        handleRealtimeChanges
       )
       .subscribe((status) => {
         console.log("Subscription status:", status);
+        if (status === 'SUBSCRIBED') {
+          console.log("Successfully subscribed to holiday reservations changes");
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error("Error subscribing to holiday reservations changes");
+          // Réessayer de se connecter après un délai
+          setTimeout(() => {
+            channel.subscribe();
+          }, 5000);
+        }
       });
 
+    // Cleanup function
     return () => {
       console.log("Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
-  }, [refetch]);
+  }, [queryClient]); // Dépendance uniquement sur queryClient puisque nous utilisons invalidateQueries
 
-  return { reservations, isError, error, refetch };
+  return { 
+    reservations, 
+    isError, 
+    error, 
+    refetch,
+    // Ajouter une fonction de rafraîchissement explicite
+    forceRefresh: () => queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] })
+  };
 };
