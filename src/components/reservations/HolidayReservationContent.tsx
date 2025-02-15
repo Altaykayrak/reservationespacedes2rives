@@ -6,8 +6,11 @@ import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./HolidayDateSelector";
 import { Toaster } from "@/components/ui/toaster";
+import { useState } from "react";
 
 export const HolidayReservationContent = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const {
     selectedDates,
     selectedChild,
@@ -22,6 +25,15 @@ export const HolidayReservationContent = () => {
     isDateAlreadyReserved,
     setSelectedDates
   } = useHolidayReservation();
+
+  const onSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await handleSubmit();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!holidayPeriods || holidayPeriods.length === 0) {
     return (
@@ -63,11 +75,11 @@ export const HolidayReservationContent = () => {
           )}
 
           <Button
-            onClick={handleSubmit}
+            onClick={onSubmit}
             className="w-full"
-            disabled={!selectedChild || !selectedPeriod}
+            disabled={!selectedChild || !selectedPeriod || isSubmitting}
           >
-            Confirmer la réservation
+            {isSubmitting ? "Réservation en cours, veuillez patienter..." : "Confirmer la réservation"}
           </Button>
         </div>
       </Card>
