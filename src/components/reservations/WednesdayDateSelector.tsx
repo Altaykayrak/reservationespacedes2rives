@@ -8,7 +8,7 @@ import { fr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "lucide-react";
 import { useAvailableWednesdays } from "@/hooks/useAvailableWednesdays";
-import { WednesdayAvailability } from "./WednesdayAvailability";
+import { Badge } from "@/components/ui/badge";
 import { WednesdayOptions } from "./WednesdayOptions";
 
 interface DateOption {
@@ -51,6 +51,14 @@ export const WednesdayDateSelector = ({
     Boolean(isPrimary)
   );
 
+  const getSpotsBadgeColor = (spots: number) => {
+    if (spots <= 0) return "bg-red-100 text-red-800";
+    if (spots <= 5) return "bg-orange-100 text-orange-800";
+    return "bg-green-100 text-green-800";
+  };
+
+  const getGroupName = (isKinder: boolean) => isKinder ? 'maternelle' : 'primaire';
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-4">
@@ -91,36 +99,54 @@ export const WednesdayDateSelector = ({
             (d) => d.date.getTime() === date.getTime()
           );
           const isReserved = isDateAlreadyReserved(date);
-          const isDisabled = isReserved || wednesday.isFull;
+
+          // Calculer les places restantes en fonction du type d'enfant
+          const spotsLeft = isKindergarten 
+            ? wednesday.max_participants_kindergarten - wednesday.kindergartenReservations
+            : wednesday.max_participants_primary - wednesday.primaryReservations;
+
+          const isDisabled = isReserved || spotsLeft <= 0;
 
           return (
             <div
               key={wednesday.date}
-              className="space-y-1 bg-green-50/30 p-2 rounded-lg hover:bg-green-100/30 transition-colors"
+              className="relative space-y-1 p-2 rounded-lg transition-colors bg-green-50/30 hover:bg-green-100/30"
             >
-              <div className="flex items-center space-x-3">
+              <div className="flex items-start gap-2">
                 <Checkbox
                   id={wednesday.date}
                   checked={!!selectedDateOption}
                   onCheckedChange={() => !isDisabled && handleDateToggle(date)}
                   disabled={isDisabled}
-                  className="border-green-200"
+                  className="mt-1 border-green-200"
                 />
-                <div className="flex flex-col">
-                  <Label
-                    htmlFor={wednesday.date}
-                    className={`flex-1 cursor-pointer font-medium ${
-                      isDisabled ? 'text-gray-500' : 'text-green-900'
-                    }`}
-                  >
-                    {format(date, "EEEE d MMMM yyyy", { locale: fr })}
-                  </Label>
-                  <div className="text-sm space-y-0.5">
-                    <WednesdayAvailability
-                      wednesday={wednesday}
-                      isDisabled={isDisabled}
-                      isReserved={isReserved}
-                    />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label
+                      htmlFor={wednesday.date}
+                      className={`cursor-pointer font-medium ${
+                        isDisabled ? 'text-gray-500' : 'text-green-900'
+                      }`}
+                    >
+                      {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+                    </Label>
+                  </div>
+                  <div className="mt-1">
+                    {isReserved ? (
+                      <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                        Déjà réservé
+                      </Badge>
+                    ) : (
+                      <Badge 
+                        variant="secondary" 
+                        className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
+                      >
+                        {spotsLeft <= 0 
+                          ? `Groupe ${getGroupName(Boolean(isKindergarten))} complet` 
+                          : `${spotsLeft} place${spotsLeft > 1 ? 's' : ''} restante${spotsLeft > 1 ? 's' : ''}`
+                        }
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
