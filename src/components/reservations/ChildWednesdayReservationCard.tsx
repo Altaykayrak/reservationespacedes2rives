@@ -37,13 +37,18 @@ export const ChildWednesdayReservationCard = ({
       </div>
       <div className="divide-y divide-gray-100">
         {reservations
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          .sort((a, b) => 
+            new Date(a.available_wednesdays?.date || "").getTime() - 
+            new Date(b.available_wednesdays?.date || "").getTime()
+          )
           .map((reservation) => (
             <div key={reservation.id} className="p-4">
               <div className="text-sm font-medium text-gray-900">
-                {format(new Date(reservation.date), "EEEE d MMMM yyyy", {
-                  locale: fr,
-                })}
+                {reservation.available_wednesdays?.date
+                  ? format(new Date(reservation.available_wednesdays.date), "EEEE d MMMM yyyy", {
+                      locale: fr,
+                    })
+                  : "Date inconnue"}
               </div>
               <div className="mt-2 flex gap-2">
                 {reservation.without_meal && (
