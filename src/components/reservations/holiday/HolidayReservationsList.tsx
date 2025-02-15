@@ -49,15 +49,21 @@ export const HolidayReservationsList = () => {
     return <EmptyReservations />;
   }
 
-  const filteredReservations = reservations.map(reservation => ({
-    ...reservation,
-    children: {
-      ...reservation.children,
-      profile: {
-        school_city: reservation.children.profiles?.school_city || ''
+  const filteredReservations = reservations.map(reservation => {
+    const childData = reservation.children;
+    return {
+      ...reservation,
+      children: {
+        id: childData.id,
+        first_name: childData.first_name,
+        last_name: childData.last_name,
+        school_class: childData.school_class,
+        profile: {
+          school_city: childData.profiles?.school_city || ''
+        }
       }
-    }
-  })).filter(reservation => {
+    } as HolidayReservationWithChild;
+  }).filter(reservation => {
     const isTeen = isTeenClass(reservation.children.school_class);
     return isTeenPage ? isTeen : !isTeen;
   });
