@@ -100,12 +100,15 @@ export const WednesdayDateSelector = ({
           );
           const isReserved = isDateAlreadyReserved(date);
 
-          // Calculer les places restantes en fonction du type d'enfant
-          const spotsLeft = isKindergarten 
-            ? wednesday.max_participants_kindergarten - wednesday.kindergartenReservations
-            : wednesday.max_participants_primary - wednesday.primaryReservations;
+          // Ne calculer les places restantes que si un enfant est sélectionné
+          let spotsLeft = null;
+          if (isKindergarten) {
+            spotsLeft = wednesday.max_participants_kindergarten - wednesday.kindergartenReservations;
+          } else if (isPrimary) {
+            spotsLeft = wednesday.max_participants_primary - wednesday.primaryReservations;
+          }
 
-          const isDisabled = isReserved || spotsLeft <= 0;
+          const isDisabled = isReserved || (spotsLeft !== null && spotsLeft <= 0);
 
           return (
             <div
@@ -132,11 +135,16 @@ export const WednesdayDateSelector = ({
                     </Label>
                   </div>
                   <div className="mt-1">
-                    {isReserved ? (
+                    {!childInfo && (
+                      <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                        Sélectionnez un enfant
+                      </Badge>
+                    )}
+                    {childInfo && isReserved ? (
                       <Badge variant="secondary" className="bg-gray-100 text-gray-600">
                         Déjà réservé
                       </Badge>
-                    ) : (
+                    ) : childInfo && spotsLeft !== null && (
                       <Badge 
                         variant="secondary" 
                         className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
