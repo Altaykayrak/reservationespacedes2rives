@@ -5,6 +5,20 @@ import { useEffect } from "react";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
+// Type guard pour valider la structure
+function isValidReservationData(data: any): data is HolidayReservationWithChild {
+  return (
+    data &&
+    typeof data.id === 'string' &&
+    typeof data.child_id === 'string' &&
+    typeof data.period_id === 'string' &&
+    typeof data.children?.first_name === 'string' &&
+    typeof data.children?.last_name === 'string' &&
+    typeof data.children?.school_class === 'string' &&
+    typeof data.children?.profile?.school_city === 'string'
+  );
+}
+
 export const useHolidayReservations = () => {
   const queryClient = useQueryClient();
 
@@ -63,12 +77,13 @@ export const useHolidayReservations = () => {
       console.log("Raw reservations:", data);
 
       const transformedData = data.map(reservation => {
-        if (!reservation.children || !reservation.children.profiles) {
-          console.warn('Missing children or profiles data for reservation:', reservation.id);
+        if (!reservation.children?.profiles) {
+          console.warn('Missing profiles data for reservation:', reservation.id);
           return null;
         }
 
-        const transformedReservation: HolidayReservationWithChild = {
+        // Transformation explicite des données
+        const transformedReservation = {
           id: reservation.id,
           child_id: reservation.child_id,
           period_id: reservation.period_id,
@@ -89,6 +104,12 @@ export const useHolidayReservations = () => {
             }
           }
         };
+
+        // Validation du type avec le type guard
+        if (!isValidReservationData(transformedReservation)) {
+          console.error('Invalid reservation data structure:', transformedReservation);
+          return null;
+        }
 
         return transformedReservation;
       }).filter((reservation): reservation is HolidayReservationWithChild => reservation !== null);
@@ -111,7 +132,6 @@ export const useHolidayReservations = () => {
     const handleRealtimeChanges = (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
       console.log('Change detected in holiday reservations:', payload);
       
-      // Invalider le cache et forcer un refetch
       queryClient.invalidateQueries({
         queryKey: ["holiday_reservations"],
       });
@@ -122,7 +142,7 @@ export const useHolidayReservations = () => {
       .on(
         'postgres_changes',
         {
-          event: '*', // Écouter tous les types d'événements
+          event: '*',
           schema: 'public',
           table: 'holiday_reservations'
         },
@@ -134,19 +154,17 @@ export const useHolidayReservations = () => {
           console.log("Successfully subscribed to holiday reservations changes");
         } else if (status === 'CHANNEL_ERROR') {
           console.error("Error subscribing to holiday reservations changes");
-          // Réessayer de se connecter après un délai
           setTimeout(() => {
             channel.subscribe();
           }, 5000);
         }
       });
 
-    // Cleanup function
     return () => {
       console.log("Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
-  }, [queryClient]); // Dépendance uniquement sur queryClient puisque nous utilisons invalidateQueries
+  }, [queryClient]);
 
   return { 
     reservations, 
