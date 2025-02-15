@@ -21,7 +21,7 @@ export const useReservations = () => {
       console.log("Fetching children...");
       const { data, error } = await supabase
         .from("children")
-        .select("*")
+        .select("*, profiles:children!inner(school_city)")
         .order('created_at', { ascending: true });
       
       if (error) throw error;
@@ -69,7 +69,10 @@ export const useReservations = () => {
             id,
             first_name,
             last_name,
-            school_class
+            school_class,
+            profiles!inner (
+              school_city
+            )
           ),
           available_wednesdays!fk_wednesday_id (
             id,
@@ -83,7 +86,17 @@ export const useReservations = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as WednesdayReservationWithChild[];
+
+      // Transformer les données pour correspondre au type WednesdayReservationWithChild
+      return data.map(reservation => ({
+        ...reservation,
+        children: {
+          ...reservation.children,
+          profile: {
+            school_city: reservation.children.profiles.school_city
+          }
+        }
+      })) as WednesdayReservationWithChild[];
     },
     staleTime: 30000,
     gcTime: 3600000,

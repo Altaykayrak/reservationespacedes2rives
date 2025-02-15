@@ -22,7 +22,13 @@ export type WednesdayReservationWithChild = {
   status: string;
   created_at: string;
   updated_at: string;
-  children: ChildWithProfile;
+  children: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    school_class: string;
+    profile: ChildProfile;
+  };
   available_wednesdays: {
     id: string;
     date: string;
@@ -64,7 +70,14 @@ export type HolidayReservationWithChild = {
   status: string;
   created_at: string;
   updated_at: string;
-  children: ChildWithProfile;
+  children: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    school_class: string;
+    profile: {
+      school_city: string;
+    };
+  };
   available_holiday_periods?: Tables<"available_holiday_periods">;
 };
-
