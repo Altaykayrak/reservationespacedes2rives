@@ -7,6 +7,7 @@ import Index from "./pages/Index"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import Profile from "./pages/Profile"
+import Children from "./pages/Children"
 import { ProtectedRoute } from "./components/ProtectedRoute"
 import AdminLogin from "./pages/AdminLogin"
 import WednesdayReservations from "./pages/WednesdayReservations"
@@ -39,6 +40,11 @@ const router = createBrowserRouter([
   {
     path: "/profile",
     element: <ProtectedRoute><Profile /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/children",
+    element: <ProtectedRoute><Children /></ProtectedRoute>,
     errorElement: <ErrorBoundary />
   },
   {
