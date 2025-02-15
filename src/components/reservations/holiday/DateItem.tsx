@@ -47,7 +47,7 @@ export const DateItem = ({
           table: 'holiday_reservations'
         },
         (payload) => {
-          console.log('Changement détecté dans les réservations:', payload);
+          console.log('Changement détecté dans les places disponibles:', payload);
           queryClient.invalidateQueries({
             queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass]
           });
@@ -78,7 +78,7 @@ export const DateItem = ({
           return null;
         }
 
-        console.log("Spots left response for", childSchoolClass, ":", spotCount);
+        console.log("Spots left for", childSchoolClass, ":", spotCount);
         return spotCount;
       } catch (error) {
         console.error("Error in spots check:", error);

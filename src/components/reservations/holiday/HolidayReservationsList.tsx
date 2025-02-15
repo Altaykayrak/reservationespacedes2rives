@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -9,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { User } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -81,6 +83,7 @@ export const HolidayChildReservationCard = ({
 
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isTeenPage = window.location.pathname === "/teenholiday-reservations";
 
   const { data: schoolClassCategories } = useQuery({
@@ -165,6 +168,7 @@ export const HolidayReservationsList = () => {
   });
 
   useEffect(() => {
+    // Écouter les changements en temps réel pour les réservations
     const channel = supabase
       .channel('holiday-reservations-changes')
       .on(
@@ -175,8 +179,10 @@ export const HolidayReservationsList = () => {
           table: 'holiday_reservations'
         },
         (payload) => {
-          console.log('Changement de réservation de vacances détecté:', payload);
-          refetch();
+          console.log('Changement détecté dans les réservations:', payload);
+          // Invalider plusieurs queries pour forcer leur mise à jour
+          queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
+          queryClient.invalidateQueries({ queryKey: ["spots_left"] });
         }
       )
       .subscribe();
@@ -184,7 +190,7 @@ export const HolidayReservationsList = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refetch]);
+  }, [queryClient]);
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
