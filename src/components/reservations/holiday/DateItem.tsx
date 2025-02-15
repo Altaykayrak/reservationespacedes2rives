@@ -142,7 +142,7 @@ export const DateItem = ({
                 className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
               >
                 {spotsLeft <= 0 
-                  ? `Groupe ${getGroupName(childSchoolClass)} complet` 
+                  ? `Groupe ${getGroupName(childSchoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`
                   : `${spotsLeft} place${spotsLeft > 1 ? 's' : ''} restante${spotsLeft > 1 ? 's' : ''}`
                 }
               </Badge>
