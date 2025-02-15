@@ -68,37 +68,37 @@ export const useHolidayReservations = () => {
 
       console.log("Raw reservations:", rawReservations);
 
-      // Construction explicite du type attendu
-      const typedReservations = rawReservations.map(reservation => {
-        const transformedReservation: HolidayReservationWithChild = {
-          id: reservation.id,
-          child_id: reservation.child_id,
-          period_id: reservation.period_id,
-          reservation_date: reservation.reservation_date,
-          reservation_number: reservation.reservation_number,
-          without_meal: reservation.without_meal ?? false,
-          early_dropoff: reservation.early_dropoff ?? false,
-          status: reservation.status,
-          created_at: reservation.created_at,
-          updated_at: reservation.updated_at,
-          children: {
-            id: reservation.children.id,
-            first_name: reservation.children.first_name,
-            last_name: reservation.children.last_name,
-            school_class: reservation.children.school_class,
-            profile: {
-              school_city: reservation.children.profile?.school_city || ''
-            }
+      // Construction explicite du type attendu avec vérification du type
+      const typedReservations: HolidayReservationWithChild[] = rawReservations.map(reservation => ({
+        id: reservation.id,
+        child_id: reservation.child_id,
+        period_id: reservation.period_id,
+        reservation_date: reservation.reservation_date,
+        reservation_number: reservation.reservation_number,
+        without_meal: reservation.without_meal ?? false,
+        early_dropoff: reservation.early_dropoff ?? false,
+        status: reservation.status,
+        created_at: reservation.created_at,
+        updated_at: reservation.updated_at,
+        children: {
+          id: reservation.children.id,
+          first_name: reservation.children.first_name,
+          last_name: reservation.children.last_name,
+          school_class: reservation.children.school_class,
+          profile: {
+            school_city: reservation.children.profile?.school_city || ''
           }
-        };
-        return transformedReservation;
-      });
+        }
+      }));
 
       console.log("Transformed reservations:", typedReservations);
       return typedReservations;
     },
-    staleTime: 0, // Considérer les données comme immédiatement périmées
-    cacheTime: 0, // Ne pas mettre en cache les données
+    staleTime: 1000, // Données périmées après 1 seconde
+    gcTime: 0, // Pas de mise en cache
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true
   });
 
   useEffect(() => {
@@ -115,11 +115,18 @@ export const useHolidayReservations = () => {
         },
         async (payload) => {
           console.log('Changement détecté dans les réservations:', payload);
-          // Invalider immédiatement les queries
-          await queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
-          await queryClient.invalidateQueries({ queryKey: ["spots_left"] });
-          // Forcer un refetch
-          await refetch();
+          // Invalider et recharger immédiatement les queries
+          await queryClient.invalidateQueries({ 
+            queryKey: ["holiday_reservations"],
+            exact: true,
+            refetchType: 'all'
+          });
+          await queryClient.invalidateQueries({ 
+            queryKey: ["spots_left"],
+            exact: true,
+            refetchType: 'all'
+          });
+          await refetch({ throwOnError: true });
         }
       )
       .subscribe((status) => {
