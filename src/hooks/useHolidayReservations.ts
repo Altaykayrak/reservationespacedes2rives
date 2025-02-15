@@ -37,12 +37,12 @@ export const useHolidayReservations = () => {
           status,
           created_at,
           updated_at,
-          children (
+          children:children!inner (
             id,
             first_name,
             last_name,
             school_class,
-            profile:profiles (
+            profiles!inner (
               school_city
             )
           )
@@ -58,27 +58,32 @@ export const useHolidayReservations = () => {
 
       if (!rawReservations) return [];
 
-      const transformedReservations: HolidayReservationWithChild[] = rawReservations.map((reservation: any) => ({
-        id: reservation.id,
-        child_id: reservation.child_id,
-        period_id: reservation.period_id,
-        reservation_date: reservation.reservation_date,
-        reservation_number: reservation.reservation_number,
-        without_meal: reservation.without_meal,
-        early_dropoff: reservation.early_dropoff,
-        status: reservation.status,
-        created_at: reservation.created_at,
-        updated_at: reservation.updated_at,
-        children: {
-          id: reservation.children.id,
-          first_name: reservation.children.first_name,
-          last_name: reservation.children.last_name,
-          school_class: reservation.children.school_class,
-          profile: {
-            school_city: reservation.children.profile?.school_city || ''
+      const transformedReservations = rawReservations.map((reservation: any) => {
+        // Vérifions la structure des données dans la console
+        console.log('Raw reservation data:', JSON.stringify(reservation, null, 2));
+        
+        return {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          period_id: reservation.period_id,
+          reservation_date: reservation.reservation_date,
+          reservation_number: reservation.reservation_number,
+          without_meal: reservation.without_meal ?? false,
+          early_dropoff: reservation.early_dropoff ?? false,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
+          children: {
+            id: reservation.children.id,
+            first_name: reservation.children.first_name,
+            last_name: reservation.children.last_name,
+            school_class: reservation.children.school_class,
+            profile: {
+              school_city: reservation.children.profiles.school_city
+            }
           }
-        }
-      }));
+        } as HolidayReservationWithChild;
+      });
 
       return transformedReservations;
     },
