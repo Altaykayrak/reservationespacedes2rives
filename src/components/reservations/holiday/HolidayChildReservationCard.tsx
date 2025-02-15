@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { User } from "lucide-react";
@@ -43,7 +44,7 @@ export const HolidayChildReservationCard = ({
             })}
               </span>
               <div className="flex flex-wrap gap-2 mt-1">
-                {reservation.without_meal && <span className="text-xs bg-orange-100 px-2 py-0.5 rounded text-blue-800">
+                {reservation.without_meal && <span className="text-xs bg-orange-100 px-2 py-0.5 rounded text-orange-800">
                     Sans repas
                   </span>}
                 {reservation.early_dropoff && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
