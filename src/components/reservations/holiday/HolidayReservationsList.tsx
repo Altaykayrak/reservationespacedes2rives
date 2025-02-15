@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -114,21 +115,29 @@ export const HolidayReservationsList = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
-      const { data: rawReservations, error } = await supabase
+      const { data, error } = await supabase
         .from("holiday_reservations")
         .select(`
-          *,
-          children (
+          id,
+          child_id,
+          period_id,
+          reservation_date,
+          reservation_number,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          children!inner (
             id,
             first_name,
             last_name,
             school_class,
-            profile_id,
-            profiles (
+            profiles!inner (
               school_city
             )
           ),
-          available_holiday_periods:available_holiday_periods (*)
+          available_holiday_periods!inner (*)
         `)
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
@@ -139,33 +148,30 @@ export const HolidayReservationsList = () => {
         throw error;
       }
 
-      if (!rawReservations) return [];
+      if (!data) return [];
 
-      return rawReservations.map((reservation: any) => {
-        const transformedReservation: HolidayReservationWithChild = {
-          id: reservation.id,
-          child_id: reservation.child_id,
-          period_id: reservation.period_id,
-          reservation_date: reservation.reservation_date,
-          reservation_number: reservation.reservation_number,
-          without_meal: reservation.without_meal,
-          early_dropoff: reservation.early_dropoff,
-          status: reservation.status,
-          created_at: reservation.created_at,
-          updated_at: reservation.updated_at,
-          children: {
-            id: reservation.children.id,
-            first_name: reservation.children.first_name,
-            last_name: reservation.children.last_name,
-            school_class: reservation.children.school_class,
-            profile: {
-              school_city: reservation.children.profiles?.school_city || ''
-            }
-          },
-          available_holiday_periods: reservation.available_holiday_periods || {}
-        };
-        return transformedReservation;
-      });
+      return data.map((reservation): HolidayReservationWithChild => ({
+        id: reservation.id,
+        child_id: reservation.child_id,
+        period_id: reservation.period_id,
+        reservation_date: reservation.reservation_date,
+        reservation_number: reservation.reservation_number,
+        without_meal: reservation.without_meal,
+        early_dropoff: reservation.early_dropoff,
+        status: reservation.status,
+        created_at: reservation.created_at,
+        updated_at: reservation.updated_at,
+        children: {
+          id: reservation.children.id,
+          first_name: reservation.children.first_name,
+          last_name: reservation.children.last_name,
+          school_class: reservation.children.school_class,
+          profile: {
+            school_city: reservation.children.profiles.school_city
+          }
+        },
+        available_holiday_periods: reservation.available_holiday_periods
+      }));
     },
   });
 
