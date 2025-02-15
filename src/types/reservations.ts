@@ -1,11 +1,9 @@
 
-import { Tables } from "@/integrations/supabase/types";
-
-type ChildProfile = {
+export type ChildProfile = {
   school_city: string;
 };
 
-type ChildWithProfile = {
+export type ChildWithProfile = {
   id: string;
   first_name: string;
   last_name: string;

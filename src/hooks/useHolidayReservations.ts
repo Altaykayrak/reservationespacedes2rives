@@ -13,6 +13,7 @@ export const useHolidayReservations = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Première requête pour obtenir les enfants et leurs school_city
       const { data: userChildren } = await supabase
         .from("children")
         .select(`
@@ -29,6 +30,7 @@ export const useHolidayReservations = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
+      // Deuxième requête pour obtenir les réservations
       const { data: rawReservations, error } = await supabase
         .from("holiday_reservations")
         .select(`
@@ -66,27 +68,33 @@ export const useHolidayReservations = () => {
         return acc;
       }, {} as Record<string, string>);
 
-      return rawReservations.map(reservation => ({
-        id: reservation.id,
-        child_id: reservation.child_id,
-        period_id: reservation.period_id,
-        reservation_date: reservation.reservation_date,
-        reservation_number: reservation.reservation_number,
-        without_meal: reservation.without_meal ?? false,
-        early_dropoff: reservation.early_dropoff ?? false,
-        status: reservation.status,
-        created_at: reservation.created_at,
-        updated_at: reservation.updated_at,
-        children: {
-          id: reservation.children.id,
-          first_name: reservation.children.first_name,
-          last_name: reservation.children.last_name,
-          school_class: reservation.children.school_class,
-          profile: {
-            school_city: schoolCityMap[reservation.child_id]
+      // Construction explicite du type attendu
+      const typedReservations = rawReservations.map(reservation => {
+        const transformedReservation: HolidayReservationWithChild = {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          period_id: reservation.period_id,
+          reservation_date: reservation.reservation_date,
+          reservation_number: reservation.reservation_number,
+          without_meal: reservation.without_meal ?? false,
+          early_dropoff: reservation.early_dropoff ?? false,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
+          children: {
+            id: reservation.children.id,
+            first_name: reservation.children.first_name,
+            last_name: reservation.children.last_name,
+            school_class: reservation.children.school_class,
+            profile: {
+              school_city: schoolCityMap[reservation.child_id]
+            }
           }
-        }
-      })) as HolidayReservationWithChild[];
+        };
+        return transformedReservation;
+      });
+
+      return typedReservations;
     },
   });
 
