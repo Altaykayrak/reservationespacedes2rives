@@ -1,4 +1,6 @@
 
+import { Tables } from "@/integrations/supabase/types";
+
 export type ChildProfile = {
   school_city: string;
 };

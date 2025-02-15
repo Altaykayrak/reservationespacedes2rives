@@ -96,9 +96,15 @@ export const useHolidayReservations = () => {
 
       return typedReservations;
     },
+    // Ajout des options pour forcer le rechargement
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   useEffect(() => {
+    console.log("Setting up realtime subscription for holiday reservations");
+    
     const channel = supabase
       .channel('holiday-reservations-changes')
       .on(
@@ -110,16 +116,21 @@ export const useHolidayReservations = () => {
         },
         (payload) => {
           console.log('Changement détecté dans les réservations:', payload);
-          queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
-          queryClient.invalidateQueries({ queryKey: ["spots_left"] });
+          // Forcer un refetch immédiat
+          queryClient.invalidateQueries({ queryKey: ["holiday_reservations"], refetchType: 'active' });
+          queryClient.invalidateQueries({ queryKey: ["spots_left"], refetchType: 'active' });
+          refetch();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Subscription status:", status);
+      });
 
     return () => {
+      console.log("Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, refetch]);
 
   return { reservations, isError, error, refetch };
 };
