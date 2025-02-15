@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyReservations } from "./EmptyReservations";
@@ -12,6 +11,16 @@ import { User } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 
+type RawChildType = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  school_class: string;
+  profiles: {
+    school_city: string;
+  } | null;
+};
+
 type RawReservationType = {
   id: string;
   child_id: string;
@@ -23,18 +32,14 @@ type RawReservationType = {
   status: string;
   created_at: string;
   updated_at: string;
-  children: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    school_class: string;
-    profiles: {
-      school_city: string;
-    };
-  };
+  children: RawChildType;
 };
 
-const transformChild = (rawChild: RawReservationType['children']) => {
+const transformChild = (rawChild: RawChildType) => {
+  if (!rawChild.profiles) {
+    console.warn(`No profiles data found for child ${rawChild.id}`);
+  }
+  
   return {
     id: rawChild.id,
     first_name: rawChild.first_name,
@@ -212,7 +217,8 @@ export const HolidayReservationsList = () => {
 
       if (!holidayReservations) return [];
 
-      return transformReservations(holidayReservations, availablePeriods);
+      // Cast explicite pour s'assurer que les données correspondent au type attendu
+      return transformReservations(holidayReservations as RawReservationType[], availablePeriods);
     },
   });
 
