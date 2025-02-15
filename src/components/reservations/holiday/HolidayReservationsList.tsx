@@ -12,74 +12,6 @@ import { User } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 
-type RawChildType = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  school_class: string;
-  profiles: {
-    school_city: string;
-  } | null;
-};
-
-type RawReservationType = {
-  id: string;
-  child_id: string;
-  period_id: string;
-  reservation_date: string;
-  reservation_number: string;
-  without_meal: boolean;
-  early_dropoff: boolean;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  children: RawChildType;
-};
-
-const transformChild = (rawChild: RawChildType) => {
-  if (!rawChild.profiles) {
-    console.warn(`No profiles data found for child ${rawChild.id}`);
-  }
-  
-  return {
-    id: rawChild.id,
-    first_name: rawChild.first_name,
-    last_name: rawChild.last_name,
-    school_class: rawChild.school_class,
-    profile: {
-      school_city: rawChild.profiles?.school_city || ''
-    }
-  };
-};
-
-const transformReservations = (
-  reservations: RawReservationType[],
-  availablePeriods?: Tables<"available_holiday_periods">[]
-): HolidayReservationWithChild[] => {
-  return reservations.map(reservation => {
-    const period = availablePeriods?.find(p => p.id === reservation.period_id);
-    
-    if (!period) {
-      console.warn(`No matching holiday period found for reservation ${reservation.id}`);
-    }
-
-    return {
-      id: reservation.id,
-      child_id: reservation.child_id,
-      period_id: reservation.period_id,
-      reservation_date: reservation.reservation_date,
-      reservation_number: reservation.reservation_number,
-      without_meal: reservation.without_meal,
-      early_dropoff: reservation.early_dropoff,
-      status: reservation.status,
-      created_at: reservation.created_at,
-      updated_at: reservation.updated_at,
-      children: transformChild(reservation.children),
-      available_holiday_periods: period
-    };
-  });
-};
-
 type GroupedReservations = Record<string, {
   childName: string;
   schoolClass: string;
@@ -93,12 +25,12 @@ interface ChildReservationCardProps {
   onUpdate: () => void;
 }
 
-export function HolidayChildReservationCard({
+export const HolidayChildReservationCard = ({
   childName,
   schoolClass,
   reservations,
   onUpdate,
-}: ChildReservationCardProps) {
+}: ChildReservationCardProps) => {
   return (
     <Card className="overflow-hidden border-gray-100 shadow-sm h-full">
       <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white p-2 md:p-3">
@@ -147,7 +79,7 @@ export function HolidayChildReservationCard({
       </div>
     </Card>
   );
-}
+};
 
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
@@ -183,38 +115,21 @@ export const HolidayReservationsList = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
-      // Récupérer les périodes de vacances disponibles
-      const { data: availablePeriods, error: periodsError } = await supabase
-        .from("available_holiday_periods")
-        .select("*");
-
-      if (periodsError) {
-        console.error("Error fetching available periods:", periodsError);
-        throw periodsError;
-      }
-
-      const { data, error } = await supabase
+      const { data: rawReservations, error } = await supabase
         .from("holiday_reservations")
         .select(`
-          id,
-          child_id,
-          period_id,
-          reservation_date,
-          reservation_number,
-          without_meal,
-          early_dropoff,
-          status,
-          created_at,
-          updated_at,
+          *,
           children:children (
             id,
             first_name,
             last_name,
             school_class,
-            profiles:profiles (
+            profile_id,
+            profiles (
               school_city
             )
-          )
+          ),
+          available_holiday_periods:available_holiday_periods (*)
         `)
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
@@ -225,14 +140,35 @@ export const HolidayReservationsList = () => {
         throw error;
       }
 
-      if (!data) return [];
+      if (!rawReservations) return [];
 
-      // Utilisation d'une assertion de type pour garantir que data correspond à RawReservationType[]
-      return transformReservations(data as unknown as RawReservationType[], availablePeriods);
+      return rawReservations.map((reservation: any): HolidayReservationWithChild => ({
+        id: reservation.id,
+        child_id: reservation.child_id,
+        period_id: reservation.period_id,
+        reservation_date: reservation.reservation_date,
+        reservation_number: reservation.reservation_number,
+        without_meal: reservation.without_meal,
+        early_dropoff: reservation.early_dropoff,
+        status: reservation.status,
+        created_at: reservation.created_at,
+        updated_at: reservation.updated_at,
+        children: {
+          id: reservation.children.id,
+          first_name: reservation.children.first_name,
+          last_name: reservation.children.last_name,
+          school_class: reservation.children.school_class,
+          profile: {
+            school_city: reservation.children.profiles?.school_city || ''
+          }
+        },
+        available_holiday_periods: reservation.available_holiday_periods
+      }));
     },
   });
 
   useEffect(() => {
+    // Écouter les changements en temps réel pour les réservations
     const channel = supabase
       .channel('holiday-reservations-changes')
       .on(
@@ -244,6 +180,7 @@ export const HolidayReservationsList = () => {
         },
         (payload) => {
           console.log('Changement détecté dans les réservations:', payload);
+          // Invalider plusieurs queries pour forcer leur mise à jour
           queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
           queryClient.invalidateQueries({ queryKey: ["spots_left"] });
         }
@@ -293,6 +230,7 @@ export const HolidayReservationsList = () => {
     );
   };
 
+  // Filtrer les réservations selon la page et la catégorie d'âge
   const filteredReservations = reservations.filter(reservation => {
     const isTeen = isTeenClass(reservation.children.school_class);
     return isTeenPage ? isTeen : !isTeen;
