@@ -22,7 +22,6 @@ export const WednesdayReservationsList = () => {
     return <EmptyReservations />;
   }
 
-  // Grouper les réservations par enfant
   const reservationsByChild = wednesdayReservations.reduce((acc, reservation) => {
     const childId = reservation.child_id;
     if (!acc[childId]) {
@@ -37,16 +36,17 @@ export const WednesdayReservationsList = () => {
   }, {} as GroupedReservations);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
-        <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">
           Vos mercredis réservés (sous réserve de règlement)
         </h2>
-        <p className="text-sm text-red-600 mb-4">
+        <p className="text-sm text-red-600">
           Pour toute modification de vos réservations (ajout ou suppression de journées), merci de contacter l'accueil.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(reservationsByChild).map(([childId, data]) => (
           <ChildWednesdayReservationCard
             key={childId}
