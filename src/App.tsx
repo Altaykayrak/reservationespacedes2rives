@@ -6,6 +6,7 @@ import ErrorBoundary from "@/components/ErrorBoundary"
 import Index from "./pages/Index"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
+import Profile from "./pages/Profile"
 import { ProtectedRoute } from "./components/ProtectedRoute"
 import AdminLogin from "./pages/AdminLogin"
 import WednesdayReservations from "./pages/WednesdayReservations"
@@ -33,6 +34,11 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: <Register />,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/profile",
+    element: <ProtectedRoute><Profile /></ProtectedRoute>,
     errorElement: <ErrorBoundary />
   },
   {
