@@ -24,12 +24,18 @@ export const WednesdayReservationsList = () => {
 
   const reservationsByChild = wednesdayReservations.reduce((acc, reservation) => {
     const childId = reservation.child_id;
-    if (!reservation.children) return acc;
+    const child = reservation.children as { 
+      first_name: string; 
+      last_name: string; 
+      school_class: string;
+    };
+    
+    if (!child) return acc;
     
     if (!acc[childId]) {
       acc[childId] = {
-        childName: `${reservation.children.first_name} ${reservation.children.last_name}`,
-        schoolClass: reservation.children.school_class,
+        childName: `${child.first_name} ${child.last_name}`,
+        schoolClass: child.school_class,
         reservations: [],
       };
     }

@@ -1,35 +1,8 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { WednesdayReservationWithChild } from "@/types/reservations";
 import { useWednesdayReservationSubmission } from "./useWednesdayReservationSubmission";
-
-interface WednesdayReservationResponse {
-  id: string;
-  child_id: string;
-  wednesday_id: string;
-  without_meal: boolean;
-  early_dropoff: boolean;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  children: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    school_class: string;
-    profile: {
-      school_city: string;
-    };
-  };
-  available_wednesdays: {
-    id: string;
-    date: string;
-    max_participants_kindergarten: number;
-    max_participants_primary: number;
-  };
-}
 
 export const useReservations = () => {
   const queryClient = useQueryClient();
@@ -85,7 +58,7 @@ export const useReservations = () => {
       console.log("IDs des enfants trouvés:", childrenIds);
 
       const { data, error } = await supabase
-        .from('wednesday_reservations_with_children')
+        .from('wednesday_reservations')
         .select(`
           id,
           child_id,
@@ -95,8 +68,16 @@ export const useReservations = () => {
           status,
           created_at,
           updated_at,
-          children,
-          available_wednesdays!fk_wednesday_id(
+          children (
+            id,
+            first_name,
+            last_name,
+            school_class,
+            profile: profiles!children_profile_id_fkey (
+              school_city
+            )
+          ),
+          available_wednesdays!fk_wednesday_id (
             id,
             date,
             max_participants_kindergarten,
@@ -112,7 +93,7 @@ export const useReservations = () => {
       }
 
       console.log("Réservations brutes reçues:", data);
-      return data;
+      return data as WednesdayReservationWithChild[];
     },
     staleTime: 30000,
     gcTime: 3600000,
