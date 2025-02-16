@@ -9,8 +9,8 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       if (!selectedChild) return [];
       console.log("Fetching reservations for child:", selectedChild);
       const { data, error } = await supabase
-        .from("holiday_reservations")
-        .select("*, children(*)")
+        .from("holiday_reservations_with_children")
+        .select("*")
         .eq("child_id", selectedChild)
         .eq("status", "confirmed");
       
