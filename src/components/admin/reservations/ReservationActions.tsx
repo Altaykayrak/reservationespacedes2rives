@@ -20,20 +20,41 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
       setIsSubmitting(true);
       const table = reservationToDelete.type === 'wednesday' ? 'wednesday_reservations' : 'holiday_reservations';
 
-      const { error } = await supabase
+      // Vérifions d'abord si la réservation existe
+      const { data: existingReservation, error: checkError } = await supabase
+        .from(table)
+        .select('*')
+        .eq('id', reservationToDelete.id)
+        .single();
+
+      if (checkError) {
+        console.error('Error checking reservation:', checkError);
+        throw checkError;
+      }
+
+      if (!existingReservation) {
+        console.error('Reservation not found:', reservationToDelete.id);
+        throw new Error('Réservation non trouvée');
+      }
+
+      console.log('Found reservation to delete:', existingReservation);
+
+      // Procédons à la suppression
+      const { error: deleteError } = await supabase
         .from(table)
         .delete()
         .eq('id', reservationToDelete.id);
 
-      if (error) {
-        console.error('Error deleting reservation:', error);
-        throw error;
+      if (deleteError) {
+        console.error('Error deleting reservation:', deleteError);
+        throw deleteError;
       }
 
+      console.log('Successfully deleted reservation');
       toast.success("Réservation supprimée avec succès");
       await refetchReservations();
     } catch (error) {
-      console.error('Error deleting reservation:', error);
+      console.error('Error in delete process:', error);
       toast.error("Une erreur est survenue lors de la suppression de la réservation");
     } finally {
       setIsSubmitting(false);
