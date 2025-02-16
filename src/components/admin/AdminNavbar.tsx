@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNav } from "@/components/ui/nav/MobileNav";
+import { Logo } from "@/components/ui/nav/Logo";
 
 export const AdminNavbar = () => {
   const location = useLocation();
@@ -43,15 +44,18 @@ export const AdminNavbar = () => {
   return (
     <nav className="bg-gray-100 p-4">
       <div className="container mx-auto flex items-center justify-between">
+        <Logo />
         {isMobile ? (
-          <MobileNav 
-            menuItems={links}
-            isAuthenticated={true}
-            onLogout={handleLogout}
-          />
+          <div className="flex justify-start">
+            <MobileNav 
+              menuItems={links}
+              isAuthenticated={true}
+              onLogout={handleLogout}
+            />
+          </div>
         ) : (
           <>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 mx-auto">
               {links.map((link) => (
                 <Link
                   key={link.href}
@@ -70,7 +74,7 @@ export const AdminNavbar = () => {
             <Button 
               variant="outline" 
               onClick={handleLogout}
-              className="ml-auto"
+              className="ml-4"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
