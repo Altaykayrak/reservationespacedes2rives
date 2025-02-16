@@ -22,8 +22,8 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       return data || [];
     },
     enabled: !!selectedChild,
-    staleTime: 0, // Désactive le cache pour toujours avoir les données fraîches
-    cacheTime: 0  // Désactive complètement le cache
+    gcTime: 0,      // Nouveau nom pour cacheTime
+    staleTime: 0    // Désactive le cache pour toujours avoir les données fraîches
   });
 
   const isDateAlreadyReserved = (date: Date) => {
