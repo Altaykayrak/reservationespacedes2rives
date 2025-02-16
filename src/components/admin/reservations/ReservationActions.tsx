@@ -9,7 +9,7 @@ interface ReservationActionsProps {
 }
 
 export const useReservationActions = ({ refetchReservations }: ReservationActionsProps) => {
-  const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
+  const [reservationToDelete, setReservationToDelete] = useState<{ id: string, type: 'wednesday' | 'holiday' } | null>(null);
   const [editingReservation, setEditingReservation] = useState<WednesdayReservationWithChild | HolidayReservationWithChild | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -17,15 +17,14 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
     if (!reservationToDelete) return;
 
     try {
-      const isWednesdayReservation = 'wednesday_id' in (editingReservation || {});
-      const table = isWednesdayReservation ? 'wednesday_reservations' : 'holiday_reservations';
+      const table = reservationToDelete.type === 'wednesday' ? 'wednesday_reservations' : 'holiday_reservations';
 
-      console.log(`Deleting reservation ${reservationToDelete} from table ${table}`);
+      console.log(`Deleting reservation ${reservationToDelete.id} from table ${table}`);
 
       const { error } = await supabase
         .from(table)
         .delete()
-        .eq('id', reservationToDelete);
+        .eq('id', reservationToDelete.id);
 
       if (error) {
         console.error('Error deleting reservation:', error);
@@ -83,4 +82,3 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
     handleUpdate
   };
 };
-
