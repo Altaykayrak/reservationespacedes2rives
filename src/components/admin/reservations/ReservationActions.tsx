@@ -17,26 +17,30 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
     if (!reservationToDelete) return;
 
     try {
+      setIsSubmitting(true);
       const table = reservationToDelete.type === 'wednesday' ? 'wednesday_reservations' : 'holiday_reservations';
 
-      console.log(`Deleting reservation ${reservationToDelete.id} from table ${table}`);
+      console.log(`Attempting to delete reservation ${reservationToDelete.id} from table ${table}`);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from(table)
         .delete()
-        .eq('id', reservationToDelete.id);
+        .eq('id', reservationToDelete.id)
+        .select();
 
       if (error) {
         console.error('Error deleting reservation:', error);
         throw error;
       }
 
+      console.log('Delete operation successful:', data);
       toast.success("Réservation supprimée avec succès");
       await refetchReservations();
     } catch (error) {
       console.error('Error deleting reservation:', error);
       toast.error("Une erreur est survenue lors de la suppression de la réservation");
     } finally {
+      setIsSubmitting(false);
       setReservationToDelete(null);
     }
   };
