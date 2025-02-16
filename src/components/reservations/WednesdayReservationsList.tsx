@@ -24,6 +24,8 @@ export const WednesdayReservationsList = () => {
 
   const reservationsByChild = wednesdayReservations.reduce((acc, reservation) => {
     const childId = reservation.child_id;
+    if (!reservation.children) return acc;
+    
     if (!acc[childId]) {
       acc[childId] = {
         childName: `${reservation.children.first_name} ${reservation.children.last_name}`,
