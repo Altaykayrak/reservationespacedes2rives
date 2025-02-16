@@ -4,6 +4,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { HolidayReservationWithChild } from "@/types/reservations";
 
+interface HolidayReservationResponse {
+  id: string;
+  child_id: string;
+  period_id: string;
+  reservation_date: string;
+  reservation_number: string;
+  without_meal: boolean;
+  early_dropoff: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  children: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    school_class: string;
+    profile: {
+      school_city: string;
+    };
+  };
+}
+
 export const useHolidayReservations = () => {
   const queryClient = useQueryClient();
 
@@ -68,7 +90,9 @@ export const useHolidayReservations = () => {
 
       console.log("I. Réservations brutes reçues:", JSON.stringify(reservationsData, null, 2));
 
-      const transformedReservations = reservationsData.map(reservation => {
+      // Cast the data to the correct type and transform
+      const typedData = reservationsData as unknown as HolidayReservationResponse[];
+      const transformedReservations = typedData.map(reservation => {
         console.log("Traitement de la réservation:", reservation.id);
         
         if (!reservation.children?.profile) {
