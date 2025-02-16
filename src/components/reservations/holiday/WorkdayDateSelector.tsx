@@ -37,7 +37,11 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
 
   while (currentDate <= endDate) {
     if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-      dates.push(new Date(currentDate));
+      // Créer une nouvelle instance de Date pour chaque jour
+      const dateToAdd = new Date(currentDate);
+      // Normaliser l'heure pour la comparaison
+      dateToAdd.setHours(0, 0, 0, 0);
+      dates.push(dateToAdd);
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
@@ -56,12 +60,16 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
       <div className="space-y-1">
         {dates.map((date) => {
           const selectedDateOption = selectedDates.find(
-            (d) => d.date.getTime() === date.getTime()
+            (d) => {
+              const dateToCompare = new Date(d.date);
+              dateToCompare.setHours(0, 0, 0, 0);
+              return dateToCompare.getTime() === date.getTime();
+            }
           );
           
           // Vérifier si la date est déjà réservée
           const isReserved = isDateAlreadyReserved(date);
-          console.log("Date:", date, "isReserved:", isReserved);
+          console.log("Date:", date.toISOString(), "isReserved:", isReserved);
 
           return (
             <DateItem

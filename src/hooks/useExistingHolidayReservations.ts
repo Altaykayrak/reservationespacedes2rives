@@ -10,27 +10,35 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       console.log("Fetching reservations for child:", selectedChild);
       const { data, error } = await supabase
         .from("holiday_reservations")
-        .select("*")
+        .select("*, children(*)")
         .eq("child_id", selectedChild)
         .eq("status", "confirmed");
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching reservations:", error);
+        throw error;
+      }
       console.log("Existing reservations:", data);
       return data || [];
     },
     enabled: !!selectedChild,
+    staleTime: 0, // Désactive le cache pour toujours avoir les données fraîches
+    cacheTime: 0  // Désactive complètement le cache
   });
 
   const isDateAlreadyReserved = (date: Date) => {
     if (!existingReservations) return false;
-    console.log("Checking date:", date, "against reservations:", existingReservations);
+    console.log("Checking date:", date.toISOString(), "against reservations:", existingReservations);
     
     const result = existingReservations.some(reservation => {
       const reservationDate = new Date(reservation.reservation_date);
-      const isSameDate = 
-        reservationDate.getFullYear() === date.getFullYear() &&
-        reservationDate.getMonth() === date.getMonth() &&
-        reservationDate.getDate() === date.getDate();
+      const dateToCheck = new Date(date);
+      
+      // Normaliser les dates pour la comparaison
+      dateToCheck.setHours(0, 0, 0, 0);
+      reservationDate.setHours(0, 0, 0, 0);
+      
+      const isSameDate = dateToCheck.getTime() === reservationDate.getTime();
       
       if (isSameDate) {
         console.log("Found matching reservation:", reservation);
@@ -38,9 +46,13 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       return isSameDate;
     });
 
-    console.log("Is date reserved?", result);
+    console.log("Is date reserved?", result, "for date:", date.toISOString());
     return result;
   };
 
-  return { existingReservations, refetchReservations, isDateAlreadyReserved };
+  return { 
+    existingReservations, 
+    refetchReservations, 
+    isDateAlreadyReserved 
+  };
 };
