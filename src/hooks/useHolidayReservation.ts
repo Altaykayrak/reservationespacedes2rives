@@ -22,7 +22,7 @@ export const useHolidayReservation = () => {
   const { holidayPeriods } = useHolidayPeriods();
 
   // Récupération des réservations existantes depuis Supabase
-  const { data: existingReservations } = useQuery({
+  const { data: existingReservations, refetch: refetchReservations } = useQuery({
     queryKey: ["existing_holiday_reservations", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return [];
@@ -131,6 +131,7 @@ export const useHolidayReservation = () => {
     selectedDates,
     holidayPeriods,
     isDateAlreadyReserved,
+    refetchReservations,
     resetForm
   );
 
