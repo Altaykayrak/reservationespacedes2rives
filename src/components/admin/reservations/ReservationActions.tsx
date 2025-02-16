@@ -14,26 +14,22 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDelete = async () => {
-    if (!reservationToDelete) return;
+    if (!reservationToDelete || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
       const table = reservationToDelete.type === 'wednesday' ? 'wednesday_reservations' : 'holiday_reservations';
 
-      console.log(`Attempting to delete reservation ${reservationToDelete.id} from table ${table}`);
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from(table)
         .delete()
-        .eq('id', reservationToDelete.id)
-        .select();
+        .eq('id', reservationToDelete.id);
 
       if (error) {
         console.error('Error deleting reservation:', error);
         throw error;
       }
 
-      console.log('Delete operation successful:', data);
       toast.success("Réservation supprimée avec succès");
       await refetchReservations();
     } catch (error) {
@@ -46,7 +42,7 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
   };
 
   const handleUpdate = async () => {
-    if (!editingReservation) return;
+    if (!editingReservation || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
