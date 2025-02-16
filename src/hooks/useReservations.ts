@@ -5,6 +5,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { WednesdayReservationWithChild } from "@/types/reservations";
 import { useWednesdayReservationSubmission } from "./useWednesdayReservationSubmission";
 
+interface WednesdayReservationResponse {
+  id: string;
+  child_id: string;
+  wednesday_id: string;
+  without_meal: boolean;
+  early_dropoff: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  children: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    school_class: string;
+    profile: {
+      school_city: string;
+    };
+  };
+  available_wednesdays: {
+    id: string;
+    date: string;
+    max_participants_kindergarten: number;
+    max_participants_primary: number;
+  };
+}
+
 export const useReservations = () => {
   const queryClient = useQueryClient();
   const isSubmitting = useIsMutating() > 0;
@@ -47,7 +73,6 @@ export const useReservations = () => {
         return [];
       }
 
-      // D'abord, récupérer les IDs des enfants de l'utilisateur
       const { data: userChildren, error: childrenError } = await supabase
         .from('children')
         .select('id')
@@ -59,7 +84,6 @@ export const useReservations = () => {
       const childrenIds = userChildren.map(child => child.id);
       console.log("IDs des enfants trouvés:", childrenIds);
 
-      // Ensuite, récupérer les réservations pour ces enfants depuis la vue
       const { data, error } = await supabase
         .from('wednesday_reservations_with_children')
         .select(`
@@ -84,8 +108,9 @@ export const useReservations = () => {
 
       console.log("Réservations brutes reçues:", data);
 
-      // Transformer les données pour correspondre au type WednesdayReservationWithChild
-      const transformedReservations = data.map(reservation => ({
+      // Cast the data to the correct type and transform
+      const typedData = data as unknown as WednesdayReservationResponse[];
+      const transformedReservations = typedData.map(reservation => ({
         id: reservation.id,
         child_id: reservation.child_id,
         wednesday_id: reservation.wednesday_id,
@@ -100,7 +125,7 @@ export const useReservations = () => {
           last_name: reservation.children.last_name,
           school_class: reservation.children.school_class,
           profile: {
-            school_city: reservation.children.profile?.school_city || ''
+            school_city: reservation.children.profile.school_city
           }
         },
         available_wednesdays: reservation.available_wednesdays
