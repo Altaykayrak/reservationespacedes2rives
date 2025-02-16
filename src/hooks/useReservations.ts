@@ -59,26 +59,20 @@ export const useReservations = () => {
       const childrenIds = userChildren.map(child => child.id);
       console.log("IDs des enfants trouvés:", childrenIds);
 
-      // Ensuite, récupérer les réservations pour ces enfants
+      // Ensuite, récupérer les réservations pour ces enfants depuis la vue
       const { data, error } = await supabase
-        .from('wednesday_reservations')
+        .from('wednesday_reservations_with_children')
         .select(`
-          *,
-          children (
-            id,
-            first_name,
-            last_name,
-            school_class,
-            profiles!children_profile_id_fkey (
-              school_city
-            )
-          ),
-          available_wednesdays!fk_wednesday_id (
-            id,
-            date,
-            max_participants_kindergarten,
-            max_participants_primary
-          )
+          id,
+          child_id,
+          wednesday_id,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          children,
+          available_wednesdays!fk_wednesday_id(*)
         `)
         .in('child_id', childrenIds)
         .eq('status', 'confirmed');
@@ -91,30 +85,26 @@ export const useReservations = () => {
       console.log("Réservations brutes reçues:", data);
 
       // Transformer les données pour correspondre au type WednesdayReservationWithChild
-      const transformedReservations = data.map(reservation => {
-        const transformed: WednesdayReservationWithChild = {
-          id: reservation.id,
-          child_id: reservation.child_id,
-          wednesday_id: reservation.wednesday_id,
-          without_meal: reservation.without_meal || false,
-          early_dropoff: reservation.early_dropoff || false,
-          status: reservation.status,
-          created_at: reservation.created_at,
-          updated_at: reservation.updated_at,
-          children: {
-            id: reservation.children.id,
-            first_name: reservation.children.first_name,
-            last_name: reservation.children.last_name,
-            school_class: reservation.children.school_class,
-            profile: {
-              school_city: reservation.children.profiles.school_city
-            }
-          },
-          available_wednesdays: reservation.available_wednesdays
-        };
-
-        return transformed;
-      });
+      const transformedReservations = data.map(reservation => ({
+        id: reservation.id,
+        child_id: reservation.child_id,
+        wednesday_id: reservation.wednesday_id,
+        without_meal: reservation.without_meal || false,
+        early_dropoff: reservation.early_dropoff || false,
+        status: reservation.status,
+        created_at: reservation.created_at,
+        updated_at: reservation.updated_at,
+        children: {
+          id: reservation.children.id,
+          first_name: reservation.children.first_name,
+          last_name: reservation.children.last_name,
+          school_class: reservation.children.school_class,
+          profile: {
+            school_city: reservation.children.profile?.school_city || ''
+          }
+        },
+        available_wednesdays: reservation.available_wednesdays
+      }));
 
       console.log("Nombre de réservations transformées:", transformedReservations.length);
       return transformedReservations;
