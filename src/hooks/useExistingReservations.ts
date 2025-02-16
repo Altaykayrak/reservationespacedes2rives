@@ -19,7 +19,7 @@ export const useExistingReservations = (selectedChild: string) => {
           created_at,
           updated_at,
           children,
-          available_wednesdays:wednesday_id(
+          available_wednesdays!fk_wednesday_id (
             id,
             date,
             max_participants_kindergarten,
