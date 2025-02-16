@@ -30,43 +30,41 @@ export const ChildWednesdayReservationCard = ({
   };
 
   return (
-    <Card className="bg-white rounded-lg overflow-hidden">
-      <div className="p-4 bg-gray-50/50">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-            <User className="h-4 w-4 text-blue-600" />
+    <Card className="overflow-hidden border-gray-100 shadow-sm h-full">
+      <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white p-2 md:p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 md:h-7 md:w-7 items-center justify-center rounded-full bg-primary/10">
+              <User className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-xs md:text-sm font-medium text-gray-800">{childName}</h3>
+              <p className="text-[10px] md:text-xs text-muted-foreground">{schoolClass}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-medium text-gray-900">{childName}</h3>
-            <p className="text-sm text-gray-500">{schoolClass}</p>
-          </div>
-          <Badge className="ml-auto bg-blue-100 text-blue-700 hover:bg-blue-200">
+          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 text-[8px] md:text-[10px]">
             {reservations.length} réservation{reservations.length > 1 ? 's' : ''}
           </Badge>
         </div>
       </div>
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-gray-50 bg-white">
         {sortReservations(reservations).map((reservation) => (
-          <div key={reservation.id} className="p-4">
-            <div className="text-sm font-medium text-gray-900">
-              {reservation.available_wednesdays?.date ? (
-                format(
-                  new Date(`${reservation.available_wednesdays.date}T00:00:00`),
-                  "EEEE d MMMM yyyy",
-                  { locale: fr }
-                )
-              ) : (
-                "Date inconnue"
+          <div key={reservation.id} className="flex flex-col p-3 transition-colors hover:bg-gray-50">
+            <span className="text-sm font-medium text-gray-800">
+              {format(
+                new Date(`${reservation.available_wednesdays.date}T00:00:00`),
+                "EEEE d MMMM yyyy",
+                { locale: fr }
               )}
-            </div>
-            <div className="mt-2 flex gap-2">
+            </span>
+            <div className="flex flex-wrap gap-2 mt-1">
               {reservation.without_meal && (
-                <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700">
+                <span className="text-xs bg-orange-100 px-2 py-0.5 rounded text-orange-800">
                   Sans repas
                 </span>
               )}
               {reservation.early_dropoff && (
-                <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
                   Accueil avant 8h30
                 </span>
               )}
