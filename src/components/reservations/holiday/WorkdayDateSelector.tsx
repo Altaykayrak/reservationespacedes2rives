@@ -58,7 +58,10 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
           const selectedDateOption = selectedDates.find(
             (d) => d.date.getTime() === date.getTime()
           );
+          
+          // Vérifier si la date est déjà réservée
           const isReserved = isDateAlreadyReserved(date);
+          console.log("Date:", date, "isReserved:", isReserved);
 
           return (
             <DateItem
