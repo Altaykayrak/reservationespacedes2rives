@@ -61,19 +61,8 @@ export const useHolidayReservations = () => {
       const childrenIds = userChildren.map(child => child.id);
 
       const { data: reservationsData, error: reservationsError } = await supabase
-        .from("holiday_reservations")
-        .select(`
-          *,
-          children!inner (
-            id,
-            first_name,
-            last_name,
-            school_class,
-            profile:profiles!inner (
-              school_city
-            )
-          )
-        `)
+        .from("holiday_reservations_with_children")
+        .select('*')
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
         .order('reservation_date', { ascending: true });
@@ -95,8 +84,8 @@ export const useHolidayReservations = () => {
       const transformedReservations = typedData.map(reservation => {
         console.log("Traitement de la réservation:", reservation.id);
         
-        if (!reservation.children?.profile) {
-          console.error("Données enfant ou profil manquantes pour la réservation:", reservation.id);
+        if (!reservation.children) {
+          console.error("Données enfant manquantes pour la réservation:", reservation.id);
           return null;
         }
 
@@ -117,7 +106,7 @@ export const useHolidayReservations = () => {
             last_name: reservation.children.last_name,
             school_class: reservation.children.school_class,
             profile: {
-              school_city: reservation.children.profile.school_city
+              school_city: reservation.children.profile?.school_city || ''
             }
           }
         };
