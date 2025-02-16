@@ -20,7 +20,7 @@ export const useHolidayReservation = () => {
 
   const { children } = useChildrenData();
   const { holidayPeriods } = useHolidayPeriods();
-  const { isDateAlreadyReserved, refetchReservations } = useExistingHolidayReservations(selectedChild);
+  const { existingReservations, isDateAlreadyReserved, refetchReservations } = useExistingHolidayReservations(selectedChild);
 
   const { data: childInfo } = useQuery({
     queryKey: ["child", selectedChild],
@@ -106,6 +106,11 @@ export const useHolidayReservation = () => {
     
     // N'empêcher la modification manuelle que pour les ados sur la page teen
     if (isTeenClass && isTeenPage) return;
+    
+    // Vérifier si la date est déjà réservée
+    if (isDateAlreadyReserved(date)) {
+      return;
+    }
     
     const existingDate = selectedDates.find(d => d.date.getTime() === date.getTime());
     if (existingDate) {
