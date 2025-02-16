@@ -33,12 +33,13 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
     console.log("Checking date:", date.toISOString(), "against reservations:", existingReservations);
     
     const result = existingReservations.some(reservation => {
+      // Récupérer la date de réservation et la transformer en date locale
       const reservationDate = new Date(reservation.reservation_date);
       const dateToCheck = new Date(date);
       
-      // Normaliser les dates pour la comparaison en UTC
-      dateToCheck.setUTCHours(0, 0, 0, 0);
-      reservationDate.setUTCHours(0, 0, 0, 0);
+      // Normaliser les dates pour la comparaison en local
+      dateToCheck.setHours(0, 0, 0, 0);
+      reservationDate.setHours(0, 0, 0, 0);
       
       const isSameDate = dateToCheck.getTime() === reservationDate.getTime();
       
