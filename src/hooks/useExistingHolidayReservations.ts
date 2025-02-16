@@ -18,12 +18,14 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
         console.error("Error fetching reservations:", error);
         throw error;
       }
-      console.log("Existing reservations:", data);
+      console.log("Raw existing reservations:", data);
       return data || [];
     },
     enabled: !!selectedChild,
-    gcTime: 0,      // Nouveau nom pour cacheTime
-    staleTime: 0    // Désactive le cache pour toujours avoir les données fraîches
+    gcTime: 0,      // Désactive le garbage collection
+    staleTime: 0,   // Désactive le cache pour toujours avoir les données fraîches
+    refetchOnMount: true, // Force le rechargement à chaque montage
+    refetchOnWindowFocus: true // Recharge quand la fenêtre reprend le focus
   });
 
   const isDateAlreadyReserved = (date: Date) => {
@@ -34,9 +36,9 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       const reservationDate = new Date(reservation.reservation_date);
       const dateToCheck = new Date(date);
       
-      // Normaliser les dates pour la comparaison
-      dateToCheck.setHours(0, 0, 0, 0);
-      reservationDate.setHours(0, 0, 0, 0);
+      // Normaliser les dates pour la comparaison en UTC
+      dateToCheck.setUTCHours(0, 0, 0, 0);
+      reservationDate.setUTCHours(0, 0, 0, 0);
       
       const isSameDate = dateToCheck.getTime() === reservationDate.getTime();
       
@@ -49,6 +51,9 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
     console.log("Is date reserved?", result, "for date:", date.toISOString());
     return result;
   };
+
+  // Ajout d'un effet de log pour déboguer
+  console.log("Current existingReservations:", existingReservations);
 
   return { 
     existingReservations, 
