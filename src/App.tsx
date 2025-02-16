@@ -18,8 +18,7 @@ import AdminWednesdays from "./pages/admin/AdminWednesdays"
 import AdminHolidays from "./pages/admin/AdminHolidays"
 import AdminReservations from "./pages/admin/AdminReservations"
 import AdminAuthorizedEmails from "./pages/admin/AdminAuthorizedEmails"
-
-import "./App.css"
+import HolidayProgram from "./pages/HolidayProgram"
 
 const router = createBrowserRouter([
   {
@@ -60,6 +59,11 @@ const router = createBrowserRouter([
   {
     path: "/teenholiday-reservations",
     element: <ProtectedRoute><TeenHolidayReservations /></ProtectedRoute>,
+    errorElement: <ErrorBoundary />
+  },
+  {
+    path: "/holiday-program",
+    element: <HolidayProgram />,
     errorElement: <ErrorBoundary />
   },
   {
