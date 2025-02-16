@@ -20,7 +20,41 @@ export const useHolidayReservation = () => {
 
   const { children } = useChildrenData();
   const { holidayPeriods } = useHolidayPeriods();
-  const { isDateAlreadyReserved, refetchReservations } = useExistingReservations(selectedChild);
+
+  // Récupération des réservations existantes depuis Supabase
+  const { data: existingReservations } = useQuery({
+    queryKey: ["existing_holiday_reservations", selectedChild],
+    queryFn: async () => {
+      if (!selectedChild) return [];
+      
+      const { data, error } = await supabase
+        .from("holiday_reservations")
+        .select("*")
+        .eq("child_id", selectedChild)
+        .eq("status", "confirmed");
+      
+      if (error) {
+        console.error("Erreur lors de la récupération des réservations:", error);
+        throw error;
+      }
+      
+      return data || [];
+    },
+    enabled: !!selectedChild,
+  });
+
+  const isDateAlreadyReserved = (date: Date) => {
+    if (!existingReservations) return false;
+    
+    return existingReservations.some(reservation => {
+      const reservationDate = new Date(reservation.reservation_date);
+      return (
+        reservationDate.getFullYear() === date.getFullYear() &&
+        reservationDate.getMonth() === date.getMonth() &&
+        reservationDate.getDate() === date.getDate()
+      );
+    });
+  };
 
   const { data: childInfo } = useQuery({
     queryKey: ["child", selectedChild],
@@ -97,7 +131,6 @@ export const useHolidayReservation = () => {
     selectedDates,
     holidayPeriods,
     isDateAlreadyReserved,
-    refetchReservations,
     resetForm
   );
 
