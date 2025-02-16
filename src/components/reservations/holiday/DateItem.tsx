@@ -130,8 +130,8 @@ export const DateItem = ({
               {format(date, "EEEE d MMMM yyyy", { locale: fr })}
             </Label>
             {isReserved && (
-              <Badge variant="outline" className="ml-2">
-                Déjà réservée
+              <Badge variant="outline" className="text-[10px] md:text-xs">
+                Déjà réservé
               </Badge>
             )}
           </div>
@@ -139,7 +139,7 @@ export const DateItem = ({
             {!isLoading && spotsLeft !== null && !isReserved && (
               <Badge 
                 variant="secondary" 
-                className={`${getSpotsBadgeColor(spotsLeft)} border-none`}
+                className={`${getSpotsBadgeColor(spotsLeft)} border-none text-[10px] md:text-xs`}
               >
                 {spotsLeft <= 0 
                   ? `Groupe ${getGroupName(childSchoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`
