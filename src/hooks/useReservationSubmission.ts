@@ -111,6 +111,7 @@ export const useReservationSubmission = (
             reservation_date: format(dateOption.date, "yyyy-MM-dd"),
             without_meal: dateOption.withoutMeal,
             early_dropoff: dateOption.earlyDropoff,
+            status: 'confirmed',
             reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
           });
 
