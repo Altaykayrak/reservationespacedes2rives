@@ -1,14 +1,12 @@
+
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Trash2 } from "lucide-react"
 import { Child } from "@/types/profile"
 
 interface ChildrenTableProps {
   children: Child[]
-  onDelete: (child: Child) => void
 }
 
-export function ChildrenTable({ children, onDelete }: ChildrenTableProps) {
+export function ChildrenTable({ children }: ChildrenTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -16,7 +14,6 @@ export function ChildrenTable({ children, onDelete }: ChildrenTableProps) {
           <TableHead className="text-left">Nom</TableHead>
           <TableHead className="text-left">Prénom</TableHead>
           <TableHead className="text-left">Classe</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -29,23 +26,12 @@ export function ChildrenTable({ children, onDelete }: ChildrenTableProps) {
               <TableCell className="text-left">{child.last_name}</TableCell>
               <TableCell className="text-left">{child.first_name}</TableCell>
               <TableCell className="text-left">{child.school_class}</TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(child)}
-                  className="h-8 w-8 text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Supprimer</span>
-                </Button>
-              </TableCell>
             </TableRow>
           ))
         ) : (
           <TableRow>
             <TableCell 
-              colSpan={4} 
+              colSpan={3} 
               className="text-center h-32 text-muted-foreground"
             >
               Aucun enfant enregistré

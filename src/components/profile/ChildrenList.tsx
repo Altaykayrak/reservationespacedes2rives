@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { UserPlus } from "lucide-react"
@@ -5,10 +6,7 @@ import { Child } from "@/types/profile"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useState } from "react"
 import { AddChildForm } from "./AddChildForm"
-import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
-import { DeleteChildDialog } from "./DeleteChildDialog"
 import { ChildrenTable } from "./ChildrenTable"
 
 interface ChildrenListProps {
@@ -17,34 +15,7 @@ interface ChildrenListProps {
 
 export function ChildrenList({ children }: ChildrenListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [selectedChild, setSelectedChild] = useState<Child | null>(null)
   const queryClient = useQueryClient()
-
-  const handleDelete = (child: Child) => {
-    setSelectedChild(child)
-    setShowDeleteDialog(true)
-  }
-
-  const confirmDelete = async () => {
-    if (!selectedChild) return
-
-    try {
-      const { error } = await supabase
-        .from('children')
-        .delete()
-        .eq('id', selectedChild.id)
-
-      if (error) throw error
-
-      toast.success("Enfant supprimé avec succès")
-      queryClient.invalidateQueries({ queryKey: ['children'] })
-      setShowDeleteDialog(false)
-    } catch (error) {
-      console.error('Error deleting child:', error)
-      toast.error("Erreur lors de la suppression de l'enfant")
-    }
-  }
 
   return (
     <div className="mt-8 space-y-4">
@@ -62,10 +33,7 @@ export function ChildrenList({ children }: ChildrenListProps) {
       </div>
       <Card className="overflow-hidden border-0 shadow-sm">
         <div className="overflow-x-auto">
-          <ChildrenTable 
-            children={children} 
-            onDelete={handleDelete}
-          />
+          <ChildrenTable children={children} />
         </div>
       </Card>
 
@@ -77,13 +45,6 @@ export function ChildrenList({ children }: ChildrenListProps) {
           <AddChildForm onSuccess={() => setShowAddDialog(false)} />
         </DialogContent>
       </Dialog>
-
-      <DeleteChildDialog 
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onConfirm={confirmDelete}
-        child={selectedChild}
-      />
     </div>
   )
 }
