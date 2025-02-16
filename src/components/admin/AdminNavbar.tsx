@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileNav } from "@/components/ui/nav/MobileNav";
 
 export const AdminNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const links = [
     { href: "/admin", label: "Tableau de bord" },
@@ -39,31 +42,41 @@ export const AdminNavbar = () => {
 
   return (
     <nav className="bg-gray-100 p-4">
-      <div className="container mx-auto flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex flex-wrap gap-4">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              to={link.href}
-              className={cn(
-                "px-4 py-2 rounded-md transition-colors",
-                location.pathname === link.href
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-gray-200"
-              )}
+      <div className="container mx-auto flex items-center justify-between">
+        {isMobile ? (
+          <MobileNav 
+            menuItems={links}
+            isAuthenticated={true}
+            onLogout={handleLogout}
+          />
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-4">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={cn(
+                    "px-4 py-2 rounded-md transition-colors",
+                    location.pathname === link.href
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-gray-200"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="ml-auto"
             >
-              {link.label}
-            </Link>
-          ))}
-        </div>
-        <Button 
-          variant="outline" 
-          onClick={handleLogout}
-          className="ml-auto"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Déconnexion
-        </Button>
+              <LogOut className="mr-2 h-4 w-4" />
+              Déconnexion
+            </Button>
+          </>
+        )}
       </div>
     </nav>
   );
