@@ -96,7 +96,12 @@ export const useReservations = () => {
           created_at,
           updated_at,
           children,
-          available_wednesdays!fk_wednesday_id(*)
+          available_wednesdays!fk_wednesday_id(
+            id,
+            date,
+            max_participants_kindergarten,
+            max_participants_primary
+          )
         `)
         .in('child_id', childrenIds)
         .eq('status', 'confirmed');
@@ -107,32 +112,7 @@ export const useReservations = () => {
       }
 
       console.log("Réservations brutes reçues:", data);
-
-      // Cast the data to the correct type and transform
-      const typedData = data as unknown as WednesdayReservationResponse[];
-      const transformedReservations = typedData.map(reservation => ({
-        id: reservation.id,
-        child_id: reservation.child_id,
-        wednesday_id: reservation.wednesday_id,
-        without_meal: reservation.without_meal || false,
-        early_dropoff: reservation.early_dropoff || false,
-        status: reservation.status,
-        created_at: reservation.created_at,
-        updated_at: reservation.updated_at,
-        children: {
-          id: reservation.children.id,
-          first_name: reservation.children.first_name,
-          last_name: reservation.children.last_name,
-          school_class: reservation.children.school_class,
-          profile: {
-            school_city: reservation.children.profile.school_city
-          }
-        },
-        available_wednesdays: reservation.available_wednesdays
-      }));
-
-      console.log("Nombre de réservations transformées:", transformedReservations.length);
-      return transformedReservations;
+      return data;
     },
     staleTime: 30000,
     gcTime: 3600000,
