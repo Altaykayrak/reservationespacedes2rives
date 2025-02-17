@@ -155,7 +155,7 @@ export const AdminReservationsContent = ({
     if (!reservations) return;
     
     const rows = reservations.map(r => ({
-      date: format(new Date(('available_wednesdays' in r) ? r.available_wednesdays.date : r.reservation_date), 'dd/MM/yyyy'),
+      date: getReservationDate(r),
       nom: r.children?.last_name,
       prenom: r.children?.first_name,
       classe: r.children?.school_class,
@@ -173,7 +173,8 @@ export const AdminReservationsContent = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `reservations_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`;
+    const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
+    a.download = `reservations_${timestamp}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
