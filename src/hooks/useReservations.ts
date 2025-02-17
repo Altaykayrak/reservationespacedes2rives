@@ -76,8 +76,7 @@ export const useReservations = () => {
             max_participants_primary
           )
         `)
-        .eq('status', 'confirmed')
-        .filter('children->profile->school_city', 'eq', 'not.is.null');
+        .eq('status', 'confirmed');
 
       console.log("Réservations depuis la vue:", reservations);
       if (reservationsError) {
