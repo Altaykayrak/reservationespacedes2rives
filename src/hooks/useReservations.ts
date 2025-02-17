@@ -79,7 +79,7 @@ export const useReservations = () => {
               school_city
             )
           ),
-          available_wednesdays:wednesday_id (
+          available_wednesdays!wednesday_id (
             id,
             date,
             max_participants_kindergarten,
@@ -94,8 +94,23 @@ export const useReservations = () => {
         throw error;
       }
 
-      console.log("Réservations brutes reçues:", data);
-      return data as WednesdayReservationWithChild[];
+      // Transformer les données pour correspondre au type WednesdayReservationWithChild
+      const transformedData = data.map(reservation => ({
+        id: reservation.id,
+        child_id: reservation.child_id,
+        wednesday_id: reservation.wednesday_id,
+        without_meal: reservation.without_meal,
+        early_dropoff: reservation.early_dropoff,
+        status: reservation.status,
+        created_at: reservation.created_at,
+        updated_at: reservation.updated_at,
+        reservation_number: reservation.reservation_number,
+        children: reservation.children,
+        available_wednesdays: reservation.available_wednesdays
+      }));
+
+      console.log("Réservations transformées:", transformedData);
+      return transformedData as WednesdayReservationWithChild[];
     },
     staleTime: 30000,
     gcTime: 3600000,
