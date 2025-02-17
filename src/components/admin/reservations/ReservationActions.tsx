@@ -18,44 +18,44 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
 
     try {
       setIsSubmitting(true);
+      console.log("Tentative de suppression de la réservation:", reservationToDelete);
+
       const table = reservationToDelete.type === 'wednesday' ? 'wednesday_reservations' : 'holiday_reservations';
 
-      // Vérifions d'abord si la réservation existe
+      // Vérifions d'abord si la réservation existe toujours
       const { data: existingReservation, error: checkError } = await supabase
         .from(table)
-        .select('*')
+        .select('id')
         .eq('id', reservationToDelete.id)
-        .single();
+        .maybeSingle();
 
       if (checkError) {
-        console.error('Error checking reservation:', checkError);
+        console.error('Erreur lors de la vérification de la réservation:', checkError);
         throw checkError;
       }
 
       if (!existingReservation) {
-        console.error('Reservation not found:', reservationToDelete.id);
-        throw new Error('Réservation non trouvée');
+        console.error('Réservation non trouvée:', reservationToDelete.id);
+        throw new Error('Réservation non trouvée ou déjà supprimée');
       }
-
-      console.log('Found reservation to delete:', existingReservation);
 
       // Procédons à la suppression
       const { error: deleteError } = await supabase
         .from(table)
         .delete()
-        .eq('id', reservationToDelete.id);
+        .match({ id: reservationToDelete.id });
 
       if (deleteError) {
-        console.error('Error deleting reservation:', deleteError);
+        console.error('Erreur lors de la suppression:', deleteError);
         throw deleteError;
       }
 
-      console.log('Successfully deleted reservation');
+      console.log('Réservation supprimée avec succès');
       toast.success("Réservation supprimée avec succès");
       await refetchReservations();
     } catch (error) {
-      console.error('Error in delete process:', error);
-      toast.error("Une erreur est survenue lors de la suppression de la réservation");
+      console.error('Erreur dans le processus de suppression:', error);
+      toast.error(error instanceof Error ? error.message : "Une erreur est survenue lors de la suppression de la réservation");
     } finally {
       setIsSubmitting(false);
       setReservationToDelete(null);
@@ -86,7 +86,7 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
       await refetchReservations();
       setEditingReservation(null);
     } catch (error) {
-      console.error("Error updating reservation:", error);
+      console.error("Erreur lors de la mise à jour:", error);
       toast.error("Une erreur est survenue lors de la modification de la réservation");
     } finally {
       setIsSubmitting(false);
