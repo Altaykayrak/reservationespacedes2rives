@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,23 +76,51 @@ export const useReservations = () => {
       console.log("Toutes les réservations dans la table:", allReservations);
       if (allReservationsError) console.error("Erreur lors de la vérification de toutes les réservations:", allReservationsError);
 
-      // Première requête pour vérifier la jointure children
-      const { data: testChildren, error: testChildrenError } = await supabase
-        .from('children')
+      // Vérifier les réservations juste avec le filtre d'enfants
+      const { data: reservationsWithChildFilter, error: childFilterError } = await supabase
+        .from('wednesday_reservations')
         .select('*')
-        .in('id', childrenIds);
+        .in('child_id', childrenIds);
 
-      console.log("Test des enfants:", testChildren);
-      if (testChildrenError) console.error("Erreur test enfants:", testChildrenError);
+      console.log("Réservations avec filtre enfants uniquement:", reservationsWithChildFilter);
+      if (childFilterError) console.error("Erreur filtre enfants:", childFilterError);
 
-      // Essayons d'utiliser la vue wednesday_reservations_with_children
+      // Vérifier les réservations juste avec le filtre de status
+      const { data: reservationsWithStatusFilter, error: statusFilterError } = await supabase
+        .from('wednesday_reservations')
+        .select('*')
+        .eq('status', 'confirmed');
+
+      console.log("Réservations avec filtre status uniquement:", reservationsWithStatusFilter);
+      if (statusFilterError) console.error("Erreur filtre status:", statusFilterError);
+
+      // Requête finale avec tous les filtres
       const { data: reservations, error: reservationsError } = await supabase
-        .from('wednesday_reservations_with_children')
-        .select('*')
+        .from('wednesday_reservations')
+        .select(`
+          id,
+          child_id,
+          wednesday_id,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          reservation_number,
+          children:child_id (
+            id,
+            first_name,
+            last_name,
+            school_class,
+            profile:children_profile_id_fkey (
+              school_city
+            )
+          )
+        `)
         .in('child_id', childrenIds)
         .eq('status', 'confirmed');
 
-      console.log("Réservations avec filtre d'enfants et status:", reservations);
+      console.log("Réservations avec tous les filtres:", reservations);
       if (reservationsError) {
         console.error("Erreur lors de la récupération des réservations:", reservationsError);
         throw reservationsError;
