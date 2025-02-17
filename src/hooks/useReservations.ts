@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,30 +59,17 @@ export const useReservations = () => {
       console.log("IDs des enfants trouvés:", childrenIds);
 
       const { data, error } = await supabase
-        .from('wednesday_reservations')
+        .from('wednesday_reservations_with_children')
         .select(`
-          id,
-          child_id,
-          wednesday_id,
-          without_meal,
-          early_dropoff,
-          status,
-          created_at,
-          updated_at,
-          children (
+          *,
+          children:child_id (
             id,
             first_name,
             last_name,
             school_class,
-            profile: profiles!children_profile_id_fkey (
+            profile:children_profile_id_fkey (
               school_city
             )
-          ),
-          available_wednesdays!fk_wednesday_id (
-            id,
-            date,
-            max_participants_kindergarten,
-            max_participants_primary
           )
         `)
         .in('child_id', childrenIds)
