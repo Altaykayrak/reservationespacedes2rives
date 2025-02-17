@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +40,7 @@ export const useReservations = () => {
     queryFn: async () => {
       console.log("Récupération des réservations du mercredi...");
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("État de la session:", session);
       
       if (!session?.user?.id) {
         console.log("Aucune session trouvée");
@@ -84,28 +84,10 @@ export const useReservations = () => {
       console.log("Test des enfants:", testChildren);
       if (testChildrenError) console.error("Erreur test enfants:", testChildrenError);
 
+      // Essayons d'utiliser la vue wednesday_reservations_with_children
       const { data: reservations, error: reservationsError } = await supabase
-        .from('wednesday_reservations')
-        .select(`
-          id,
-          child_id,
-          wednesday_id,
-          without_meal,
-          early_dropoff,
-          status,
-          created_at,
-          updated_at,
-          reservation_number,
-          children:child_id (
-            id,
-            first_name,
-            last_name,
-            school_class,
-            profile:children_profile_id_fkey (
-              school_city
-            )
-          )
-        `)
+        .from('wednesday_reservations_with_children')
+        .select('*')
         .in('child_id', childrenIds)
         .eq('status', 'confirmed');
 
@@ -127,6 +109,7 @@ export const useReservations = () => {
         .select('*')
         .in('id', wednesdayIds);
 
+      console.log("Mercredis associés:", wednesdays);
       if (wednesdaysError) {
         console.error("Erreur lors de la récupération des mercredis:", wednesdaysError);
         throw wednesdaysError;
