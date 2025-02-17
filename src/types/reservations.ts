@@ -1,4 +1,3 @@
-
 import { Tables } from "@/integrations/supabase/types";
 
 export type ChildProfile = {
@@ -22,14 +21,9 @@ export type WednesdayReservationWithChild = {
   status: string;
   created_at: string;
   updated_at: string;
-  children: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    school_class: string;
-    profile: ChildProfile;
-  };
-  available_wednesdays: {
+  reservation_number: string;
+  children: ChildWithProfile;
+  available_wednesdays?: {
     id: string;
     date: string;
     max_participants_kindergarten: number;

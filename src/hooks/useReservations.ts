@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { WednesdayReservationWithChild } from "@/types/reservations";
+import { WednesdayReservationWithChild, ChildWithProfile } from "@/types/reservations";
 import { useWednesdayReservationSubmission } from "./useWednesdayReservationSubmission";
 
 export const useReservations = () => {
@@ -109,18 +109,20 @@ export const useReservations = () => {
         throw wednesdaysError;
       }
 
-      // Combiner les données
+      // S'assurer que les données sont au bon format
       const transformedData = reservations.map(reservation => {
         const wednesday = wednesdays?.find(w => w.id === reservation.wednesday_id);
+        const childData = reservation.children as unknown as ChildWithProfile;
+        
         return {
           ...reservation,
-          children: reservation.children,
+          children: childData,
           available_wednesdays: wednesday
-        };
+        } as WednesdayReservationWithChild;
       });
 
       console.log("Données finales transformées:", transformedData);
-      return transformedData as WednesdayReservationWithChild[];
+      return transformedData;
     },
     staleTime: 30000,
     gcTime: 3600000,
