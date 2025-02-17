@@ -47,18 +47,36 @@ export const useReservations = () => {
         return [];
       }
 
+      console.log("Session trouvée pour l'utilisateur:", session.user.id);
+
       const { data: userChildren, error: childrenError } = await supabase
         .from('children')
         .select('id')
         .eq('profile_id', session.user.id);
 
-      if (childrenError) throw childrenError;
-      if (!userChildren?.length) return [];
+      if (childrenError) {
+        console.error("Erreur lors de la récupération des enfants:", childrenError);
+        throw childrenError;
+      }
+      
+      if (!userChildren?.length) {
+        console.log("Aucun enfant trouvé pour l'utilisateur");
+        return [];
+      }
 
       const childrenIds = userChildren.map(child => child.id);
       console.log("IDs des enfants trouvés:", childrenIds);
 
-      const { data, error } = await supabase
+      // Première requête pour vérifier la jointure children
+      const { data: testChildren, error: testChildrenError } = await supabase
+        .from('children')
+        .select('*')
+        .in('id', childrenIds);
+
+      console.log("Test des enfants:", testChildren);
+      if (testChildrenError) console.error("Erreur test enfants:", testChildrenError);
+
+      const { data: reservations, error: reservationsError } = await supabase
         .from('wednesday_reservations')
         .select(`
           id,
@@ -78,38 +96,44 @@ export const useReservations = () => {
             profile:children_profile_id_fkey (
               school_city
             )
-          ),
-          available_wednesdays!wednesday_id (
-            id,
-            date,
-            max_participants_kindergarten,
-            max_participants_primary
           )
         `)
         .in('child_id', childrenIds)
         .eq('status', 'confirmed');
 
-      if (error) {
-        console.error("Erreur lors de la récupération des réservations:", error);
-        throw error;
+      console.log("Réservations avant jointure mercredi:", reservations);
+      if (reservationsError) {
+        console.error("Erreur lors de la récupération des réservations:", reservationsError);
+        throw reservationsError;
       }
 
-      // Transformer les données pour correspondre au type WednesdayReservationWithChild
-      const transformedData = data.map(reservation => ({
-        id: reservation.id,
-        child_id: reservation.child_id,
-        wednesday_id: reservation.wednesday_id,
-        without_meal: reservation.without_meal,
-        early_dropoff: reservation.early_dropoff,
-        status: reservation.status,
-        created_at: reservation.created_at,
-        updated_at: reservation.updated_at,
-        reservation_number: reservation.reservation_number,
-        children: reservation.children,
-        available_wednesdays: reservation.available_wednesdays
-      }));
+      if (!reservations?.length) {
+        console.log("Aucune réservation trouvée");
+        return [];
+      }
 
-      console.log("Réservations transformées:", transformedData);
+      // Récupérer les mercredis associés séparément
+      const wednesdayIds = reservations.map(r => r.wednesday_id);
+      const { data: wednesdays, error: wednesdaysError } = await supabase
+        .from('available_wednesdays')
+        .select('*')
+        .in('id', wednesdayIds);
+
+      if (wednesdaysError) {
+        console.error("Erreur lors de la récupération des mercredis:", wednesdaysError);
+        throw wednesdaysError;
+      }
+
+      // Combiner les données
+      const transformedData = reservations.map(reservation => {
+        const wednesday = wednesdays?.find(w => w.id === reservation.wednesday_id);
+        return {
+          ...reservation,
+          available_wednesdays: wednesday
+        };
+      });
+
+      console.log("Réservations finales transformées:", transformedData);
       return transformedData as WednesdayReservationWithChild[];
     },
     staleTime: 30000,
