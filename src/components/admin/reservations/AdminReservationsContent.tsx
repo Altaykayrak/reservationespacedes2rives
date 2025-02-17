@@ -111,7 +111,11 @@ export const AdminReservationsContent = ({
       }
 
       const date = format(
-        new Date('wednesday_id' in r ? r.available_wednesdays.date : r.reservation_date),
+        new Date(
+          'available_wednesdays' in r 
+            ? r.available_wednesdays.date 
+            : (r as HolidayReservationWithChild).reservation_date
+        ),
         'dd/MM/yyyy'
       );
 
@@ -137,7 +141,6 @@ export const AdminReservationsContent = ({
     doc.line(15, y - 3, 195, y - 3);
 
     // Lignes verticales du tableau
-    const tableHeight = y - 35;
     headers.forEach(header => {
       doc.line(header.x, 30, header.x, y - 3);
     });

@@ -37,6 +37,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             status,
             created_at,
             updated_at,
+            reservation_number,
             children,
             available_wednesdays!wednesday_reservations_wednesday_id_fkey (*)
           `)
@@ -74,66 +75,39 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
         console.log("Fetched wednesday reservations:", wednesdayData);
         console.log("Fetched holiday reservations:", holidayData);
 
-        // Transform the data to match the expected types
-        const transformedWednesdayData = wednesdayData?.map(reservation => {
-          const baseReservation: BaseReservation = {
-            id: reservation.id,
-            child_id: reservation.child_id,
-            status: reservation.status,
-            without_meal: reservation.without_meal,
-            early_dropoff: reservation.early_dropoff,
-            created_at: reservation.created_at,
-            updated_at: reservation.updated_at
-          };
+        // Transform the wednesday reservations data
+        const transformedWednesdayData = wednesdayData?.map(reservation => ({
+          ...reservation,
+          children: {
+            id: (reservation.children as any).id,
+            first_name: (reservation.children as any).first_name,
+            last_name: (reservation.children as any).last_name,
+            school_class: (reservation.children as any).school_class,
+            profile: {
+              school_city: (reservation.children as any).school_city || ''
+            }
+          },
+          available_wednesdays: reservation.available_wednesdays
+        })) as WednesdayReservationWithChild[];
 
-          return {
-            ...baseReservation,
-            wednesday_id: reservation.wednesday_id,
-            children: {
-              id: (reservation.children as any).id,
-              first_name: (reservation.children as any).first_name,
-              last_name: (reservation.children as any).last_name,
-              school_class: (reservation.children as any).school_class,
-              profile: {
-                school_city: (reservation.children as any).school_city || ''
-              }
-            },
-            available_wednesdays: reservation.available_wednesdays
-          };
-        }) || [];
-
-        const transformedHolidayData = holidayData?.map(reservation => {
-          const baseReservation: BaseReservation = {
-            id: reservation.id,
-            child_id: reservation.child_id,
-            status: reservation.status,
-            without_meal: reservation.without_meal,
-            early_dropoff: reservation.early_dropoff,
-            created_at: reservation.created_at,
-            updated_at: reservation.updated_at
-          };
-
-          return {
-            ...baseReservation,
-            period_id: reservation.period_id,
-            reservation_date: reservation.reservation_date,
-            reservation_number: reservation.reservation_number,
-            children: {
-              id: (reservation.children as any).id,
-              first_name: (reservation.children as any).first_name,
-              last_name: (reservation.children as any).last_name,
-              school_class: (reservation.children as any).school_class,
-              profile: {
-                school_city: (reservation.children as any).school_city || ''
-              }
-            },
-            available_holiday_periods: reservation.available_holiday_periods
-          };
-        }) || [];
+        // Transform the holiday reservations data
+        const transformedHolidayData = holidayData?.map(reservation => ({
+          ...reservation,
+          children: {
+            id: (reservation.children as any).id,
+            first_name: (reservation.children as any).first_name,
+            last_name: (reservation.children as any).last_name,
+            school_class: (reservation.children as any).school_class,
+            profile: {
+              school_city: (reservation.children as any).school_city || ''
+            }
+          },
+          available_holiday_periods: reservation.available_holiday_periods
+        })) as HolidayReservationWithChild[];
 
         return {
-          wednesdayReservations: transformedWednesdayData as WednesdayReservationWithChild[],
-          holidayReservations: transformedHolidayData as HolidayReservationWithChild[]
+          wednesdayReservations: transformedWednesdayData,
+          holidayReservations: transformedHolidayData
         };
       } catch (error) {
         console.error("Error in query function:", error);
