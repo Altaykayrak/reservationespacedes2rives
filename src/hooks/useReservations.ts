@@ -55,21 +55,7 @@ export const useReservations = () => {
         return [];
       }
 
-      // Récupérer d'abord les IDs des enfants de l'utilisateur
-      const { data: userChildren } = await supabase
-        .from('children')
-        .select('id')
-        .eq('profile_id', session.user.id);
-
-      if (!userChildren?.length) {
-        console.log("Aucun enfant trouvé pour cet utilisateur");
-        return [];
-      }
-
-      const childrenIds = userChildren.map(child => child.id);
-      console.log("IDs des enfants de l'utilisateur:", childrenIds);
-
-      // Utiliser les IDs des enfants pour filtrer les réservations
+      // Récupérer les réservations pour l'utilisateur connecté
       const { data: reservations, error: reservationsError } = await supabase
         .from('wednesday_reservations_with_children')
         .select(`
@@ -90,8 +76,8 @@ export const useReservations = () => {
             max_participants_primary
           )
         `)
-        .in('child_id', childrenIds)
-        .eq('status', 'confirmed');
+        .eq('status', 'confirmed')
+        .filter('children->profile->school_city', 'not.is.null');
 
       console.log("Réservations depuis la vue:", reservations);
       if (reservationsError) {
@@ -99,13 +85,14 @@ export const useReservations = () => {
         throw reservationsError;
       }
 
-      if (!reservations?.length) {
-        console.log("Aucune réservation trouvée");
-        return [];
-      }
+      // Filtrer les réservations pour ne garder que celles des enfants de l'utilisateur
+      const filteredReservations = reservations?.filter(reservation => {
+        const childData = reservation.children as unknown as ChildWithProfile;
+        return children?.some(child => child.id === childData.id);
+      }) || [];
 
       // Transformer les données pour correspondre au type attendu
-      const transformedData = reservations.map(reservation => {
+      const transformedData = filteredReservations.map(reservation => {
         const childData = reservation.children as unknown as ChildWithProfile;
         
         return {
