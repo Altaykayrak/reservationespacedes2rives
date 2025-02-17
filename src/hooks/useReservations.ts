@@ -67,6 +67,14 @@ export const useReservations = () => {
       const childrenIds = userChildren.map(child => child.id);
       console.log("IDs des enfants trouvés:", childrenIds);
 
+      // Vérifier toutes les réservations sans filtre d'abord
+      const { data: allReservations, error: allReservationsError } = await supabase
+        .from('wednesday_reservations')
+        .select('*');
+
+      console.log("Toutes les réservations dans la table:", allReservations);
+      if (allReservationsError) console.error("Erreur lors de la vérification de toutes les réservations:", allReservationsError);
+
       // Première requête pour vérifier la jointure children
       const { data: testChildren, error: testChildrenError } = await supabase
         .from('children')
@@ -101,7 +109,7 @@ export const useReservations = () => {
         .in('child_id', childrenIds)
         .eq('status', 'confirmed');
 
-      console.log("Réservations avant jointure mercredi:", reservations);
+      console.log("Réservations avec filtre d'enfants et status:", reservations);
       if (reservationsError) {
         console.error("Erreur lors de la récupération des réservations:", reservationsError);
         throw reservationsError;
