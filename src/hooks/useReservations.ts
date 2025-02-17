@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,12 @@ export const useReservations = () => {
     queryKey: ["children"],
     queryFn: async () => {
       console.log("Fetching children...");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        console.log("No session found");
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("children")
         .select(`
@@ -26,6 +33,7 @@ export const useReservations = () => {
             school_city
           )
         `)
+        .eq('profile_id', session.user.id)
         .order('created_at', { ascending: true });
       
       if (error) throw error;
@@ -47,7 +55,21 @@ export const useReservations = () => {
         return [];
       }
 
-      // Utiliser directement la vue avec le profile_id
+      // Récupérer d'abord les IDs des enfants de l'utilisateur
+      const { data: userChildren } = await supabase
+        .from('children')
+        .select('id')
+        .eq('profile_id', session.user.id);
+
+      if (!userChildren?.length) {
+        console.log("Aucun enfant trouvé pour cet utilisateur");
+        return [];
+      }
+
+      const childrenIds = userChildren.map(child => child.id);
+      console.log("IDs des enfants de l'utilisateur:", childrenIds);
+
+      // Utiliser les IDs des enfants pour filtrer les réservations
       const { data: reservations, error: reservationsError } = await supabase
         .from('wednesday_reservations_with_children')
         .select(`
@@ -68,6 +90,7 @@ export const useReservations = () => {
             max_participants_primary
           )
         `)
+        .in('child_id', childrenIds)
         .eq('status', 'confirmed');
 
       console.log("Réservations depuis la vue:", reservations);
