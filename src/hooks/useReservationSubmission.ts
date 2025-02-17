@@ -69,13 +69,30 @@ export const useReservationSubmission = (
 
     try {
       for (const dateOption of selectedDates) {
+        const dateStr = format(dateOption.date, "yyyy-MM-dd");
+        console.log("Recherche de la période pour la date:", dateStr);
+        
         const period = holidayPeriods?.find(period => {
           const startDate = new Date(period.start_date);
           const endDate = new Date(period.end_date);
-          return dateOption.date >= startDate && dateOption.date <= endDate;
+          const currentDate = new Date(dateStr);
+          // Normaliser les dates pour la comparaison
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          currentDate.setHours(0, 0, 0, 0);
+          
+          const isInPeriod = currentDate >= startDate && currentDate <= endDate;
+          console.log(`Vérification période ${period.id}:`, {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            currentDate: currentDate.toISOString(),
+            isInPeriod
+          });
+          return isInPeriod;
         });
 
         if (!period) {
+          console.error("Périodes disponibles:", holidayPeriods);
           throw new Error(`Période non trouvée pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
         }
 
@@ -84,7 +101,7 @@ export const useReservationSubmission = (
           .select()
           .eq("child_id", selectedChild)
           .eq("period_id", period.id)
-          .eq("reservation_date", format(dateOption.date, "yyyy-MM-dd"))
+          .eq("reservation_date", dateStr)
           .maybeSingle();
 
         if (checkError) {
@@ -97,10 +114,15 @@ export const useReservationSubmission = (
       }
 
       for (const dateOption of selectedDates) {
+        const dateStr = format(dateOption.date, "yyyy-MM-dd");
         const period = holidayPeriods?.find(period => {
           const startDate = new Date(period.start_date);
           const endDate = new Date(period.end_date);
-          return dateOption.date >= startDate && dateOption.date <= endDate;
+          const currentDate = new Date(dateStr);
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          currentDate.setHours(0, 0, 0, 0);
+          return currentDate >= startDate && currentDate <= endDate;
         });
 
         const { error: reservationError } = await supabase
@@ -108,7 +130,7 @@ export const useReservationSubmission = (
           .insert({
             child_id: selectedChild,
             period_id: period!.id,
-            reservation_date: format(dateOption.date, "yyyy-MM-dd"),
+            reservation_date: dateStr,
             without_meal: dateOption.withoutMeal,
             early_dropoff: dateOption.earlyDropoff,
             status: 'confirmed',
