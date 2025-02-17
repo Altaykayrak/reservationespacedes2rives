@@ -22,7 +22,6 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
 
       const table = reservationToDelete.type === 'wednesday' ? 'wednesday_reservations' : 'holiday_reservations';
 
-      // Procéder directement à la suppression
       const { error: deleteError } = await supabase
         .from(table)
         .delete()
@@ -36,15 +35,14 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
       console.log('Réservation supprimée avec succès');
       toast.success("Réservation supprimée avec succès");
       
-      // S'assurer que l'état est réinitialisé avant de rafraîchir les données
-      setReservationToDelete(null);
       await refetchReservations();
-      
     } catch (error) {
       console.error('Erreur dans le processus de suppression:', error);
       toast.error(error instanceof Error ? error.message : "Une erreur est survenue lors de la suppression de la réservation");
     } finally {
+      // Réinitialiser les états APRÈS toutes les opérations
       setIsSubmitting(false);
+      setReservationToDelete(null);
     }
   };
 
@@ -68,14 +66,15 @@ export const useReservationActions = ({ refetchReservations }: ReservationAction
 
       if (error) throw error;
 
-      toast.success("Réservation mise à jour avec succès");
-      setEditingReservation(null);
       await refetchReservations();
+      toast.success("Réservation mise à jour avec succès");
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
       toast.error("Une erreur est survenue lors de la modification de la réservation");
     } finally {
+      // Réinitialiser les états APRÈS toutes les opérations
       setIsSubmitting(false);
+      setEditingReservation(null);
     }
   };
 
