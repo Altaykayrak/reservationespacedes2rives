@@ -19,6 +19,9 @@ export function useAuth() {
         
         if (error) {
           console.error("Erreur lors de la récupération de la session:", error);
+          // En cas d'erreur de session, on déconnecte l'utilisateur
+          await supabase.auth.signOut();
+          setUser(null);
           return;
         }
 
@@ -31,6 +34,9 @@ export function useAuth() {
         }
       } catch (error) {
         console.error("Erreur d'initialisation de l'auth:", error);
+        // En cas d'erreur, on déconnecte l'utilisateur
+        await supabase.auth.signOut();
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -44,12 +50,17 @@ export function useAuth() {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Changement d'état d'authentification:", event, session?.user);
       
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
         setUser(null);
-        navigate('/login');
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (session?.user) {
-          setUser(session.user);
+        // Rediriger vers la page de connexion uniquement si nous ne sommes pas déjà sur /login
+        if (window.location.pathname !== '/login') {
+          navigate('/login');
+        }
+      } else if (session?.user) {
+        setUser(session.user);
+        // Si l'utilisateur est sur /login et qu'il est authentifié, le rediriger vers /profile
+        if (window.location.pathname === '/login') {
+          navigate('/profile');
         }
       }
 
@@ -67,6 +78,8 @@ export function useAuth() {
       if (error) throw error;
       
       setUser(null);
+      // Vider le localStorage pour s'assurer qu'il n'y a pas de données résiduelles
+      localStorage.clear();
       navigate('/login');
       toast({
         title: "Déconnexion réussie",
