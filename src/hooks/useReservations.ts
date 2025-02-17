@@ -76,23 +76,50 @@ export const useReservations = () => {
       console.log("Toutes les réservations dans la table:", allReservations);
       if (allReservationsError) console.error("Erreur lors de la vérification de toutes les réservations:", allReservationsError);
 
+      // Afficher quelques exemples de child_id des réservations
+      if (allReservations && allReservations.length > 0) {
+        console.log("Exemples de child_id des réservations:", 
+          allReservations.slice(0, 5).map(r => r.child_id)
+        );
+      }
+
+      // Vérifier si les IDs des enfants sont au bon format
+      console.log("Format des IDs des enfants:", {
+        firstChildId: childrenIds[0],
+        firstChildIdType: typeof childrenIds[0],
+        exampleReservationChildId: allReservations?.[0]?.child_id,
+        exampleReservationChildIdType: typeof allReservations?.[0]?.child_id
+      });
+
       // Vérifier les réservations juste avec le filtre d'enfants
       const { data: reservationsWithChildFilter, error: childFilterError } = await supabase
         .from('wednesday_reservations')
-        .select('*')
+        .select(`
+          id,
+          child_id,
+          wednesday_id,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          reservation_number
+        `)
         .in('child_id', childrenIds);
 
       console.log("Réservations avec filtre enfants uniquement:", reservationsWithChildFilter);
       if (childFilterError) console.error("Erreur filtre enfants:", childFilterError);
 
-      // Vérifier les réservations juste avec le filtre de status
-      const { data: reservationsWithStatusFilter, error: statusFilterError } = await supabase
-        .from('wednesday_reservations')
-        .select('*')
-        .eq('status', 'confirmed');
-
-      console.log("Réservations avec filtre status uniquement:", reservationsWithStatusFilter);
-      if (statusFilterError) console.error("Erreur filtre status:", statusFilterError);
+      // Vérifier un enfant spécifique
+      if (childrenIds[0]) {
+        const { data: singleChildRes, error: singleChildError } = await supabase
+          .from('wednesday_reservations')
+          .select('*')
+          .eq('child_id', childrenIds[0]);
+        
+        console.log(`Réservations pour l'enfant ${childrenIds[0]}:`, singleChildRes);
+        if (singleChildError) console.error("Erreur recherche enfant spécifique:", singleChildError);
+      }
 
       // Requête finale avec tous les filtres
       const { data: reservations, error: reservationsError } = await supabase
@@ -138,7 +165,6 @@ export const useReservations = () => {
         .select('*')
         .in('id', wednesdayIds);
 
-      console.log("Mercredis associés:", wednesdays);
       if (wednesdaysError) {
         console.error("Erreur lors de la récupération des mercredis:", wednesdaysError);
         throw wednesdaysError;
@@ -153,7 +179,6 @@ export const useReservations = () => {
         };
       });
 
-      console.log("Réservations finales transformées:", transformedData);
       return transformedData as WednesdayReservationWithChild[];
     },
     staleTime: 30000,
