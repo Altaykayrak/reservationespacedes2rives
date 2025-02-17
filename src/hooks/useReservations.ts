@@ -77,7 +77,7 @@ export const useReservations = () => {
           )
         `)
         .eq('status', 'confirmed')
-        .filter('children->profile->school_city', 'not.is.null');
+        .filter('children->profile->school_city', 'eq', 'not.is.null');
 
       console.log("Réservations depuis la vue:", reservations);
       if (reservationsError) {

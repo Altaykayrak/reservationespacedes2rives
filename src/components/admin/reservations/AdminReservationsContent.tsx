@@ -50,6 +50,14 @@ export const AdminReservationsContent = ({
     handleUpdate
   } = useReservationActions({ refetchReservations });
 
+  const getReservationDate = (reservation: WednesdayReservationWithChild | HolidayReservationWithChild) => {
+    if ('wednesday_id' in reservation) {
+      return format(new Date(reservation.available_wednesdays.date), 'dd/MM/yyyy');
+    } else {
+      return format(new Date(reservation.reservation_date), 'dd/MM/yyyy');
+    }
+  };
+
   const exportToPDF = (reservations: (WednesdayReservationWithChild | HolidayReservationWithChild)[] | null) => {
     if (!reservations) return;
     
@@ -110,14 +118,7 @@ export const AdminReservationsContent = ({
         y = 20;
       }
 
-      const date = format(
-        new Date(
-          'available_wednesdays' in r 
-            ? r.available_wednesdays.date 
-            : (r as HolidayReservationWithChild).reservation_date
-        ),
-        'dd/MM/yyyy'
-      );
+      const date = getReservationDate(r);
 
       // Lignes du tableau
       doc.line(15, y - 3, 195, y - 3);
