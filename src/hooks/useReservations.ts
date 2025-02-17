@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,27 +47,7 @@ export const useReservations = () => {
         return [];
       }
 
-      console.log("Session trouvée pour l'utilisateur:", session.user.id);
-
-      const { data: userChildren, error: childrenError } = await supabase
-        .from('children')
-        .select('id')
-        .eq('profile_id', session.user.id);
-
-      if (childrenError) {
-        console.error("Erreur lors de la récupération des enfants:", childrenError);
-        throw childrenError;
-      }
-      
-      if (!userChildren?.length) {
-        console.log("Aucun enfant trouvé pour l'utilisateur");
-        return [];
-      }
-
-      const childrenIds = userChildren.map(child => child.id);
-      console.log("IDs des enfants trouvés:", childrenIds);
-
-      // Utiliser la vue wednesday_reservations_with_children
+      // Utiliser directement la vue avec le profile_id
       const { data: reservations, error: reservationsError } = await supabase
         .from('wednesday_reservations_with_children')
         .select(`
@@ -81,9 +60,14 @@ export const useReservations = () => {
           created_at,
           updated_at,
           reservation_number,
-          children
+          children,
+          available_wednesdays!fk_wednesday_id (
+            id,
+            date,
+            max_participants_kindergarten,
+            max_participants_primary
+          )
         `)
-        .in('child_id', childrenIds)
         .eq('status', 'confirmed');
 
       console.log("Réservations depuis la vue:", reservations);
@@ -97,27 +81,14 @@ export const useReservations = () => {
         return [];
       }
 
-      // Récupérer les mercredis associés séparément
-      const wednesdayIds = reservations.map(r => r.wednesday_id);
-      const { data: wednesdays, error: wednesdaysError } = await supabase
-        .from('available_wednesdays')
-        .select('*')
-        .in('id', wednesdayIds);
-
-      if (wednesdaysError) {
-        console.error("Erreur lors de la récupération des mercredis:", wednesdaysError);
-        throw wednesdaysError;
-      }
-
-      // S'assurer que les données sont au bon format
+      // Transformer les données pour correspondre au type attendu
       const transformedData = reservations.map(reservation => {
-        const wednesday = wednesdays?.find(w => w.id === reservation.wednesday_id);
         const childData = reservation.children as unknown as ChildWithProfile;
         
         return {
           ...reservation,
           children: childData,
-          available_wednesdays: wednesday
+          available_wednesdays: reservation.available_wednesdays
         } as WednesdayReservationWithChild;
       });
 
