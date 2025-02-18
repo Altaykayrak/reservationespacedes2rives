@@ -60,23 +60,36 @@ export const DateItem = ({
     };
   }, [queryClient, periodId, date, childSchoolClass]);
 
-  // Fonction de normalisation des classes
+  // Fonction de normalisation des classes selon les valeurs attendues par la DB
   const normalizeSchoolClass = (rawClass: string): string | null => {
     if (!rawClass) return null;
     
-    const normalizedClass = rawClass.trim().toUpperCase();
+    // Conversion en majuscules et suppression des espaces
+    const cleanedClass = rawClass.trim().toUpperCase();
     
-    // Classes maternelles
-    if (["PS", "MS", "GS", "PETITE SECTION", "MOYENNE SECTION", "GRANDE SECTION"].includes(normalizedClass)) {
-      return normalizedClass.length > 2 ? normalizedClass.substring(0, 2) : normalizedClass;
+    // Mapping des noms complets vers les abréviations
+    const fullNameMapping: { [key: string]: string } = {
+      "PETITE SECTION": "PS",
+      "MOYENNE SECTION": "MS",
+      "GRANDE SECTION": "GS"
+    };
+
+    // Si c'est un nom complet, on le convertit d'abord
+    if (fullNameMapping[cleanedClass]) {
+      return fullNameMapping[cleanedClass];
+    }
+
+    // Validation des classes maternelles
+    if (["PS", "MS", "GS"].includes(cleanedClass)) {
+      return cleanedClass;
     }
     
-    // Classes primaires
-    if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) {
-      return normalizedClass;
+    // Validation des classes primaires
+    if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(cleanedClass)) {
+      return cleanedClass;
     }
     
-    // Classes collège/lycée
+    // Mapping spécifique pour les classes ado
     const teenClassMapping: { [key: string]: string } = {
       "6EME": "6ème",
       "5EME": "5ème",
@@ -86,8 +99,8 @@ export const DateItem = ({
       "PREMIERE": "Première",
       "TERMINALE": "Terminale"
     };
-    
-    return teenClassMapping[normalizedClass] || null;
+
+    return teenClassMapping[cleanedClass] || null;
   };
 
   const { data: spotsLeft, isLoading, isError } = useQuery({
