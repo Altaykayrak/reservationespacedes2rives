@@ -68,11 +68,18 @@ export const DateItem = ({
         return null;
       }
 
+      // Nettoyage et normalisation de la classe scolaire
+      const normalizedClass = childSchoolClass.trim();
+      if (!normalizedClass) {
+        console.log("Classe scolaire vide après normalisation");
+        return null;
+      }
+
       const formattedDate = format(date, 'yyyy-MM-dd');
       console.log("Vérification des places pour:", {
         periodId,
         date: formattedDate,
-        childSchoolClass
+        childSchoolClass: normalizedClass
       });
 
       try {
@@ -80,7 +87,7 @@ export const DateItem = ({
           .rpc('check_holiday_spots_available', {
             period_id: periodId,
             reservation_date: formattedDate,
-            child_school_class: childSchoolClass.trim(),
+            child_school_class: normalizedClass,
           });
 
         if (error) {
@@ -88,16 +95,16 @@ export const DateItem = ({
           return null;
         }
 
-        console.log("Places restantes pour", childSchoolClass, ":", spotCount);
+        console.log("Places restantes pour", normalizedClass, ":", spotCount);
         return spotCount;
       } catch (error) {
         console.error("Erreur lors de la vérification des places:", error);
         return null;
       }
     },
-    enabled: Boolean(periodId) && Boolean(childSchoolClass),
+    enabled: Boolean(periodId) && Boolean(childSchoolClass?.trim()),
     staleTime: 1000 * 60, // 1 minute
-    cacheTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 5, // 5 minutes (remplacement de cacheTime)
   });
 
   const getSpotsBadgeColor = (spots: number | null) => {
