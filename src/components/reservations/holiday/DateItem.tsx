@@ -74,40 +74,38 @@ export const DateItem = ({
         return null;
       }
 
+      const cleanedClass = childSchoolClass.trim();
       const formattedDate = format(date, 'yyyy-MM-dd');
+      
       console.log("Appel à check_holiday_spots_available avec:", {
         period_id: periodId,
         reservation_date: formattedDate,
-        child_school_class: childSchoolClass.trim()
+        child_school_class: cleanedClass
       });
 
-      try {
-        const { data: spotCount, error } = await supabase
-          .rpc('check_holiday_spots_available', {
-            period_id: periodId,
-            reservation_date: formattedDate,
-            child_school_class: childSchoolClass.trim()
-          });
+      const { data: spotCount, error } = await supabase
+        .rpc('check_holiday_spots_available', {
+          period_id: periodId,
+          reservation_date: formattedDate,
+          child_school_class: String(cleanedClass)
+        });
 
-        if (error) {
-          console.error("Erreur avec les paramètres:", {
-            period_id: periodId,
-            reservation_date: formattedDate,
-            child_school_class: childSchoolClass.trim()
-          });
-          console.error("Erreur retournée:", error);
-          return null;
-        }
-
-        console.log("Résultat de la requête:", spotCount);
-        return spotCount;
-      } catch (error) {
-        console.error("Erreur lors de la vérification des places:", error);
-        return null;
+      if (error) {
+        console.error("Erreur avec les paramètres:", {
+          period_id: periodId,
+          reservation_date: formattedDate,
+          child_school_class: cleanedClass
+        });
+        console.error("Erreur retournée:", error);
+        throw error;
       }
+
+      console.log("Résultat de la requête:", spotCount);
+      return spotCount;
     },
     enabled: Boolean(periodId) && Boolean(childSchoolClass?.trim()),
-    retry: false,
+    retry: 1,
+    retryDelay: 1000,
     staleTime: 1000 * 60,
     gcTime: 1000 * 60 * 5,
   });
