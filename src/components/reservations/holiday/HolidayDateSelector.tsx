@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
@@ -6,6 +5,7 @@ import { HolidayPeriodProvider } from "./HolidayPeriodContext";
 import { useHolidayClassification } from "./hooks/useHolidayClassification";
 import { TeenClassDateSelector } from "./TeenClassDateSelector";
 import { WorkdayDateSelector } from "./WorkdayDateSelector";
+import { EmptyHolidayState } from "./EmptyHolidayState";
 
 interface DateOption {
   date: Date;
@@ -48,7 +48,7 @@ export const HolidayDateSelector = ({
   });
 
   // Récupérer les informations de l'enfant, y compris la classe
-  const { data: childInfo } = useQuery({
+  const { data: childInfo, isError: isChildInfoError } = useQuery({
     queryKey: ["child", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return null;
@@ -63,6 +63,11 @@ export const HolidayDateSelector = ({
       if (error) {
         console.error("Erreur lors de la récupération des informations de l'enfant:", error);
         throw error;
+      }
+      
+      if (!data?.school_class) {
+        console.error("La classe scolaire est manquante pour l'enfant:", selectedChild);
+        throw new Error("La classe scolaire est manquante");
       }
       
       console.log("Informations de l'enfant récupérées:", data);
@@ -104,9 +109,22 @@ export const HolidayDateSelector = ({
     }
   }, [selectedChild, isTeenClass, holidayPeriod, setSelectedDates]);
 
-  if (!holidayPeriod || !selectedChild || !childInfo) {
-    console.log("Données manquantes:", { holidayPeriod, selectedChild, childInfo });
-    return null;
+  if (!holidayPeriod || !selectedChild) {
+    return (
+      <EmptyHolidayState 
+        message="Sélection requise"
+        subtitle="Veuillez sélectionner une période et un enfant."
+      />
+    );
+  }
+
+  if (!childInfo || isChildInfoError || !childInfo.school_class) {
+    return (
+      <EmptyHolidayState 
+        message="Information manquante"
+        subtitle="La classe de l'enfant n'est pas définie. Veuillez contacter l'administration."
+      />
+    );
   }
 
   return (
