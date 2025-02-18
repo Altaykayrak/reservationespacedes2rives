@@ -22,67 +22,13 @@ interface DateItemProps {
   childSchoolClass: string;
 }
 
-const VALID_SCHOOL_CLASSES = ['PS', 'MS', 'GS', 'CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', 'Seconde', 'Première', 'Terminale'] as const;
-
-const normalizeSchoolClass = (schoolClass: string): string | null => {
-  if (!schoolClass?.trim()) {
-    console.error("Classe scolaire manquante ou vide");
-    return null;
-  }
-  
-  // Nettoyer et mettre en majuscules
-  const upperCleaned = schoolClass.trim().toUpperCase();
-  
-  // Mappage des noms complets et variations vers les formats acceptés
-  const classMap: Record<string, string> = {
-    'PETITE SECTION': 'PS',
-    'MOYENNE SECTION': 'MS',
-    'GRANDE SECTION': 'GS',
-    'PS': 'PS',
-    'MS': 'MS',
-    'GS': 'GS',
-    'CP': 'CP',
-    'CE1': 'CE1',
-    'CE2': 'CE2',
-    'CM1': 'CM1',
-    'CM2': 'CM2',
-    '6EME': '6ème',
-    '6IEME': '6ème',
-    '6E': '6ème',
-    '5EME': '5ème',
-    '5IEME': '5ème',
-    '5E': '5ème',
-    '4EME': '4ème',
-    '4IEME': '4ème',
-    '4E': '4ème',
-    '3EME': '3ème',
-    '3IEME': '3ème',
-    '3E': '3ème',
-    'SECONDE': 'Seconde',
-    '2NDE': 'Seconde',
-    'PREMIERE': 'Première',
-    '1ERE': 'Première',
-    'TERMINALE': 'Terminale',
-    'TERM': 'Terminale'
-  };
-
-  // Obtenir la classe normalisée
-  const normalizedClass = classMap[upperCleaned];
-  
-  if (!normalizedClass) {
-    console.error(`Classe non reconnue: ${schoolClass}, valeur originale: ${upperCleaned}`);
-    return null;
-  }
-  
-  // Vérifier si la classe normalisée est valide
-  if (!VALID_SCHOOL_CLASSES.includes(normalizedClass as any)) {
-    console.error(`Classe non valide: ${schoolClass} -> ${normalizedClass}`);
-    return null;
-  }
-  
-  console.log(`Classe normalisée avec succès: ${schoolClass} -> ${normalizedClass}`);
-  return normalizedClass;
-};
+const VALID_SCHOOL_CLASSES = [
+  'PS', 'MS', 'GS',
+  'Petite Section', 'Moyenne Section', 'Grande Section',
+  'CP', 'CE1', 'CE2', 'CM1', 'CM2',
+  '6ème', '5ème', '4ème', '3ème',
+  'Seconde', 'Première', 'Terminale'
+] as const;
 
 export const DateItem = ({
   date,
@@ -136,32 +82,27 @@ export const DateItem = ({
         return null;
       }
 
-      const normalizedClass = normalizeSchoolClass(childSchoolClass);
       const formattedDate = format(date, 'yyyy-MM-dd');
       
+      // On utilise directement la classe sans normalisation
       console.log("Appel à check_holiday_spots_available avec:", {
         period_id: periodId,
         reservation_date: formattedDate,
-        child_school_class: normalizedClass
+        child_school_class: childSchoolClass.trim()
       });
-
-      if (!normalizedClass) {
-        console.error("Classe normalisée invalide pour:", childSchoolClass);
-        return null;
-      }
 
       const { data: spotCount, error } = await supabase
         .rpc('check_holiday_spots_available', {
           period_id: periodId,
           reservation_date: formattedDate,
-          child_school_class: normalizedClass
+          child_school_class: childSchoolClass.trim()
         });
 
       if (error) {
         console.error("Erreur avec les paramètres:", {
           period_id: periodId,
           reservation_date: formattedDate,
-          child_school_class: normalizedClass
+          child_school_class: childSchoolClass.trim()
         });
         console.error("Erreur retournée:", error);
         throw error;
