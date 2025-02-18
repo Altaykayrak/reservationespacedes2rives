@@ -63,16 +63,26 @@ export const DateItem = ({
   const { data: spotsLeft, isLoading, isError } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
-      // Validation stricte des paramètres requis
-      if (!childSchoolClass || !periodId) {
-        console.log("Paramètres manquants:", { childSchoolClass, periodId });
+      // Validation plus stricte des classes autorisées
+      const validKindergartenClasses = ["PS", "MS", "GS", "PETITE SECTION", "MOYENNE SECTION", "GRANDE SECTION"];
+      const validPrimaryClasses = ["CP", "CE1", "CE2", "CM1", "CM2"];
+      const validTeenClasses = ["6ème", "5ème", "4ème", "3ème", "SECONDE", "PREMIÈRE", "TERMINALE"];
+      
+      const normalizedClass = childSchoolClass.trim().toUpperCase();
+      
+      if (!normalizedClass) {
+        console.error("Classe scolaire vide");
         return null;
       }
 
-      // Nettoyage et validation de la classe scolaire
-      const normalizedClass = childSchoolClass.trim();
-      if (!normalizedClass) {
-        console.log("Classe scolaire vide après normalisation");
+      const isValidClass = [
+        ...validKindergartenClasses,
+        ...validPrimaryClasses,
+        ...validTeenClasses
+      ].map(c => c.toUpperCase()).includes(normalizedClass);
+
+      if (!isValidClass) {
+        console.error("Classe scolaire invalide:", normalizedClass);
         return null;
       }
 
@@ -93,20 +103,20 @@ export const DateItem = ({
 
         if (error) {
           console.error("Erreur lors de la vérification des places:", error);
-          throw error;
+          return null; // On retourne null au lieu de throw pour éviter les erreurs UI
         }
 
         console.log("Places restantes pour", normalizedClass, ":", spotCount);
         return spotCount;
       } catch (error) {
         console.error("Erreur lors de la vérification des places:", error);
-        throw error;
+        return null; // On retourne null au lieu de throw pour éviter les erreurs UI
       }
     },
     enabled: Boolean(periodId) && Boolean(childSchoolClass?.trim()),
-    retry: false, // Ne pas réessayer en cas d'erreur car cela pourrait indiquer une classe invalide
-    staleTime: 1000 * 60, // 1 minute
-    gcTime: 1000 * 60 * 5, // 5 minutes
+    retry: false,
+    staleTime: 1000 * 60,
+    gcTime: 1000 * 60 * 5,
   });
 
   const getSpotsBadgeColor = (spots: number | null) => {
@@ -128,7 +138,7 @@ export const DateItem = ({
   const isDisabled = isReserved || isTeenClass || (spotsLeft !== null && spotsLeft <= 0);
 
   const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
-    if (spots === null) return "Erreur lors de la vérification des places";
+    if (spots === null) return "Vérification des places impossible";
     if (spots <= 0) return `Groupe ${getGroupName(schoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
     return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
   };
@@ -164,7 +174,7 @@ export const DateItem = ({
             )}
           </div>
           <div className="mt-1 flex flex-wrap gap-2">
-            {!isLoading && !isError && spotsLeft !== null && !isReserved && childSchoolClass && (
+            {!isLoading && childSchoolClass?.trim() && (
               <Badge 
                 variant="secondary" 
                 className={`${getSpotsBadgeColor(spotsLeft)} border-none text-[10px] md:text-xs`}
