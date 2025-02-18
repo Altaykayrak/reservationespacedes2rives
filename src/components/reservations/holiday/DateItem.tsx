@@ -22,6 +22,55 @@ interface DateItemProps {
   childSchoolClass: string;
 }
 
+const normalizeSchoolClass = (schoolClass: string): string => {
+  // Nettoyer d'abord la chaîne
+  const cleaned = schoolClass.trim();
+  
+  // Convertir les noms complets en abréviations
+  const fullNameMap: Record<string, string> = {
+    'PETITE SECTION': 'PS',
+    'MOYENNE SECTION': 'MS',
+    'GRANDE SECTION': 'GS',
+  };
+
+  // Vérifier d'abord les noms complets
+  const upperCleaned = cleaned.toUpperCase();
+  if (fullNameMap[upperCleaned]) {
+    return fullNameMap[upperCleaned];
+  }
+
+  // Liste des classes valides
+  const validClasses = [
+    'PS', 'MS', 'GS',                           // Maternelle
+    'CP', 'CE1', 'CE2', 'CM1', 'CM2',          // Primaire
+    '6ème', '5ème', '4ème', '3ème',            // Collège
+    'Seconde', 'Première', 'Terminale'          // Lycée
+  ];
+
+  // Si la classe est déjà dans le format correct
+  if (validClasses.includes(cleaned)) {
+    return cleaned;
+  }
+
+  // Pour les classes qui peuvent avoir des variations d'écriture
+  const alternativeMap: Record<string, string> = {
+    'CP': 'CP',
+    'CE1': 'CE1',
+    'CE2': 'CE2',
+    'CM1': 'CM1',
+    'CM2': 'CM2',
+    '6EME': '6ème',
+    '5EME': '5ème',
+    '4EME': '4ème',
+    '3EME': '3ème',
+    'SECONDE': 'Seconde',
+    'PREMIERE': 'Première',
+    'TERMINALE': 'Terminale'
+  };
+
+  return alternativeMap[upperCleaned] || cleaned;
+};
+
 export const DateItem = ({
   date,
   isSelected,
@@ -74,27 +123,27 @@ export const DateItem = ({
         return null;
       }
 
-      const cleanedClass = childSchoolClass.trim();
+      const normalizedClass = normalizeSchoolClass(childSchoolClass);
       const formattedDate = format(date, 'yyyy-MM-dd');
       
       console.log("Appel à check_holiday_spots_available avec:", {
         period_id: periodId,
         reservation_date: formattedDate,
-        child_school_class: cleanedClass
+        child_school_class: normalizedClass
       });
 
       const { data: spotCount, error } = await supabase
         .rpc('check_holiday_spots_available', {
           period_id: periodId,
           reservation_date: formattedDate,
-          child_school_class: String(cleanedClass)
+          child_school_class: normalizedClass
         });
 
       if (error) {
         console.error("Erreur avec les paramètres:", {
           period_id: periodId,
           reservation_date: formattedDate,
-          child_school_class: cleanedClass
+          child_school_class: normalizedClass
         });
         console.error("Erreur retournée:", error);
         throw error;
