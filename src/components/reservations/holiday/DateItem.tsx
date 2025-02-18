@@ -63,32 +63,41 @@ export const DateItem = ({
   const { data: spotsLeft, isLoading } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
-      if (!childSchoolClass) {
-        console.log("Pas de classe scolaire définie, skip de la vérification des places");
+      if (!childSchoolClass || !periodId) {
+        console.log("Classe scolaire ou période non définie:", { childSchoolClass, periodId });
         return null;
       }
+
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      console.log("Vérification des places pour:", {
+        periodId,
+        date: formattedDate,
+        childSchoolClass
+      });
 
       try {
         const { data: spotCount, error } = await supabase
           .rpc('check_holiday_spots_available', {
             period_id: periodId,
-            reservation_date: format(date, 'yyyy-MM-dd'),
-            child_school_class: childSchoolClass,
+            reservation_date: formattedDate,
+            child_school_class: childSchoolClass.trim(),
           });
 
         if (error) {
-          console.error("Error checking spots available:", error);
+          console.error("Erreur lors de la vérification des places:", error);
           return null;
         }
 
-        console.log("Spots left for", childSchoolClass, ":", spotCount);
+        console.log("Places restantes pour", childSchoolClass, ":", spotCount);
         return spotCount;
       } catch (error) {
-        console.error("Error in spots check:", error);
+        console.error("Erreur lors de la vérification des places:", error);
         return null;
       }
     },
     enabled: Boolean(periodId) && Boolean(childSchoolClass),
+    staleTime: 1000 * 60, // 1 minute
+    cacheTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const getSpotsBadgeColor = (spots: number | null) => {
@@ -99,9 +108,10 @@ export const DateItem = ({
   };
 
   const getGroupName = (schoolClass: string) => {
-    if (["PS", "MS", "GS", "Petite Section", "Moyenne Section", "Grande Section"].includes(schoolClass)) 
+    const normalizedClass = schoolClass.trim().toUpperCase();
+    if (["PS", "MS", "GS", "PETITE SECTION", "MOYENNE SECTION", "GRANDE SECTION"].includes(normalizedClass)) 
       return 'maternelle';
-    if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass)) 
+    if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) 
       return 'primaire';
     return 'adolescent';
   };
