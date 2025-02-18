@@ -30,6 +30,10 @@ const VALID_SCHOOL_CLASSES = [
   'Seconde', 'Première', 'Terminale'
 ] as const;
 
+const isValidSchoolClass = (schoolClass: string): boolean => {
+  return VALID_SCHOOL_CLASSES.includes(schoolClass as any);
+};
+
 export const DateItem = ({
   date,
   isSelected,
@@ -74,8 +78,8 @@ export const DateItem = ({
     queryFn: async () => {
       const trimmedClass = childSchoolClass?.trim();
       
-      if (!trimmedClass) {
-        console.error("Classe scolaire manquante");
+      if (!trimmedClass || !isValidSchoolClass(trimmedClass)) {
+        console.error("Classe scolaire invalide ou manquante:", trimmedClass);
         return null;
       }
 
@@ -117,7 +121,7 @@ export const DateItem = ({
         throw error;
       }
     },
-    enabled: Boolean(periodId) && Boolean(childSchoolClass?.trim()),
+    enabled: Boolean(periodId) && Boolean(childSchoolClass?.trim()) && isValidSchoolClass(childSchoolClass?.trim() || ''),
     retry: 1,
     retryDelay: 1000,
     staleTime: 1000 * 60,
