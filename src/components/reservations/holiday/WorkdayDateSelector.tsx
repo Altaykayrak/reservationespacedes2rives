@@ -21,11 +21,21 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
 }) => {
   const { holidayPeriod, childInfo } = useHolidayPeriodContext();
 
+  // Validation que childInfo et school_class sont présents
   if (!holidayPeriod) {
     return (
       <EmptyHolidayState 
         message="Sélectionnez une période"
         subtitle="Veuillez d'abord sélectionner une période de vacances."
+      />
+    );
+  }
+
+  if (!childInfo?.school_class) {
+    return (
+      <EmptyHolidayState 
+        message="Information manquante"
+        subtitle="La classe de l'enfant n'est pas définie."
       />
     );
   }
@@ -83,7 +93,7 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
               onOptionChange={(option, value) => handleOptionChange(date, option, value)}
               isTeenClass={false}
               periodId={periodId}
-              childSchoolClass={childInfo?.school_class || ''}
+              childSchoolClass={childInfo.school_class}
             />
           );
         })}
