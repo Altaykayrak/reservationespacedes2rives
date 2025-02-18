@@ -1,8 +1,8 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DateItem } from "./DateItem";
-import { EmptyHolidayState } from "./EmptyHolidayState";
-import { useHolidayPeriodContext } from "./HolidayPeriodContext";
+import { DateItem } from "@/components/reservations/holiday/DateItem";
+import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
+import { useHolidayPeriodContext } from "@/components/reservations/holiday/HolidayPeriodContext";
 
 interface WorkdayDateSelectorProps {
   selectedDates: { date: Date; withoutMeal: boolean; earlyDropoff: boolean }[];
@@ -40,16 +40,28 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
     );
   }
 
-  // Validation stricte des classes autorisées
+  // Mapping des classes en format standardisé
+  const classMapping: { [key: string]: string } = {
+    "PETITE SECTION": "PS",
+    "MOYENNE SECTION": "MS",
+    "GRANDE SECTION": "GS",
+    "SECONDE": "2NDE",
+    "PREMIÈRE": "1ÈRE",
+    "TERMINALE": "TERM"
+  };
+
+  // Standardisation de la classe
+  let normalizedClass = childInfo.school_class.trim().toUpperCase();
+  normalizedClass = classMapping[normalizedClass] || normalizedClass;
+
+  // Validation des classes autorisées
   const validClasses = [
     "PS", "MS", "GS", 
     "CP", "CE1", "CE2", "CM1", "CM2",
-    "6ème", "5ème", "4ème", "3ème",
-    "SECONDE", "PREMIÈRE", "TERMINALE",
-    "PETITE SECTION", "MOYENNE SECTION", "GRANDE SECTION"
+    "6ÈME", "5ÈME", "4ÈME", "3ÈME",
+    "2NDE", "1ÈRE", "TERM"
   ];
 
-  const normalizedClass = childInfo.school_class.trim().toUpperCase();
   if (!validClasses.includes(normalizedClass)) {
     console.error("Classe invalide:", normalizedClass);
     return (
@@ -95,7 +107,6 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
             }
           );
           
-          // Vérifier si la date est déjà réservée
           const isReserved = isDateAlreadyReserved(date);
 
           return (
