@@ -34,8 +34,7 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
-  console.log("DateItem - Received childSchoolClass:", childSchoolClass);
-  console.log("DateItem - childSchoolClass type:", typeof childSchoolClass);
+  console.log("DateItem - Props:", { childSchoolClass, periodId, date: date.toISOString() });
   
   const queryClient = useQueryClient();
 
@@ -50,7 +49,6 @@ export const DateItem = ({
           table: 'holiday_reservations'
         },
         (payload) => {
-          console.log('Changement détecté dans les places disponibles:', payload);
           queryClient.invalidateQueries({
             queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass]
           });
@@ -63,100 +61,48 @@ export const DateItem = ({
     };
   }, [queryClient, periodId, date, childSchoolClass]);
 
-  const normalizeSchoolClass = (rawClass: string): string | null => {
-    console.log("normalizeSchoolClass - Input:", rawClass);
-    
-    if (!rawClass?.trim()) {
-      console.log("normalizeSchoolClass - Empty or null input");
-      return null;
-    }
-    
-    const cleanedClass = rawClass.trim();
-    console.log("normalizeSchoolClass - Cleaned class:", cleanedClass);
-    
-    // Classes maternelles
-    if (cleanedClass.toUpperCase() === "PETITE SECTION") {
-      console.log("normalizeSchoolClass - Converted PS");
-      return "PS";
-    }
-    if (cleanedClass.toUpperCase() === "MOYENNE SECTION") {
-      console.log("normalizeSchoolClass - Converted MS");
-      return "MS";
-    }
-    if (cleanedClass.toUpperCase() === "GRANDE SECTION") {
-      console.log("normalizeSchoolClass - Converted GS");
-      return "GS";
-    }
-
-    // Abréviations maternelles
-    if (["PS", "MS", "GS"].includes(cleanedClass.toUpperCase())) {
-      const result = cleanedClass.toUpperCase();
-      console.log("normalizeSchoolClass - Using abbreviation:", result);
-      return result;
-    }
-
-    // Classes primaires
-    if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(cleanedClass)) {
-      console.log("normalizeSchoolClass - Primary class:", cleanedClass);
-      return cleanedClass;
-    }
-
-    // Classes collège/lycée exactes
-    if (["6ème", "5ème", "4ème", "3ème", "Seconde", "Première", "Terminale"].includes(cleanedClass)) {
-      console.log("normalizeSchoolClass - Exact teen class:", cleanedClass);
-      return cleanedClass;
-    }
-
-    // Conversion des formats alternatifs pour collège/lycée
-    const teenClassMapping: { [key: string]: string } = {
-      "6EME": "6ème",
-      "5EME": "5ème",
-      "4EME": "4ème",
-      "3EME": "3ème",
-      "SECONDE": "Seconde",
-      "PREMIERE": "Première",
-      "TERMINALE": "Terminale"
-    };
-
-    const mappedClass = teenClassMapping[cleanedClass.toUpperCase()];
-    console.log("normalizeSchoolClass - Mapped teen class:", mappedClass);
-    return mappedClass || null;
-  };
-
   const { data: spotsLeft, isLoading, isError } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
-      console.log("queryFn - Starting with childSchoolClass:", childSchoolClass);
-      const normalizedClass = normalizeSchoolClass(childSchoolClass);
-      
-      if (!normalizedClass) {
-        console.error("queryFn - Classe scolaire invalide:", childSchoolClass);
+      if (!childSchoolClass?.trim()) {
+        console.error("Classe scolaire manquante");
         return null;
       }
 
-      console.log("queryFn - Vérification des places pour:", {
-        periodId,
-        date: format(date, 'yyyy-MM-dd'),
-        childSchoolClass: normalizedClass
+      if (!periodId) {
+        console.error("Period ID manquant");
+        return null;
+      }
+
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      console.log("Appel à check_holiday_spots_available avec:", {
+        period_id: periodId,
+        reservation_date: formattedDate,
+        child_school_class: childSchoolClass.trim()
       });
 
       try {
         const { data: spotCount, error } = await supabase
           .rpc('check_holiday_spots_available', {
             period_id: periodId,
-            reservation_date: format(date, 'yyyy-MM-dd'),
-            child_school_class: normalizedClass,
+            reservation_date: formattedDate,
+            child_school_class: childSchoolClass.trim()
           });
 
         if (error) {
-          console.error("queryFn - Erreur lors de la vérification des places:", error);
+          console.error("Erreur avec les paramètres:", {
+            period_id: periodId,
+            reservation_date: formattedDate,
+            child_school_class: childSchoolClass.trim()
+          });
+          console.error("Erreur retournée:", error);
           return null;
         }
 
-        console.log("queryFn - Places restantes pour", normalizedClass, ":", spotCount);
+        console.log("Résultat de la requête:", spotCount);
         return spotCount;
       } catch (error) {
-        console.error("queryFn - Erreur lors de la vérification des places:", error);
+        console.error("Erreur lors de la vérification des places:", error);
         return null;
       }
     },
