@@ -72,7 +72,9 @@ export const DateItem = ({
   const { data: spotsLeft, isLoading, isError } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
-      if (!childSchoolClass?.trim()) {
+      const trimmedClass = childSchoolClass?.trim();
+      
+      if (!trimmedClass) {
         console.error("Classe scolaire manquante");
         return null;
       }
@@ -84,32 +86,36 @@ export const DateItem = ({
 
       const formattedDate = format(date, 'yyyy-MM-dd');
       
-      // On utilise directement la classe sans normalisation
       console.log("Appel à check_holiday_spots_available avec:", {
         period_id: periodId,
         reservation_date: formattedDate,
-        child_school_class: childSchoolClass.trim()
+        child_school_class: trimmedClass
       });
 
-      const { data: spotCount, error } = await supabase
-        .rpc('check_holiday_spots_available', {
-          period_id: periodId,
-          reservation_date: formattedDate,
-          child_school_class: childSchoolClass.trim()
-        });
+      try {
+        const { data: spotCount, error } = await supabase
+          .rpc('check_holiday_spots_available', {
+            period_id: periodId,
+            reservation_date: formattedDate,
+            child_school_class: trimmedClass
+          });
 
-      if (error) {
-        console.error("Erreur avec les paramètres:", {
-          period_id: periodId,
-          reservation_date: formattedDate,
-          child_school_class: childSchoolClass.trim()
-        });
-        console.error("Erreur retournée:", error);
+        if (error) {
+          console.error("Erreur avec les paramètres:", {
+            period_id: periodId,
+            reservation_date: formattedDate,
+            child_school_class: trimmedClass
+          });
+          console.error("Erreur retournée:", error);
+          throw error;
+        }
+
+        console.log("Résultat de la requête:", spotCount);
+        return spotCount;
+      } catch (error) {
+        console.error("Erreur lors de la vérification des places:", error);
         throw error;
       }
-
-      console.log("Résultat de la requête:", spotCount);
-      return spotCount;
     },
     enabled: Boolean(periodId) && Boolean(childSchoolClass?.trim()),
     retry: 1,
