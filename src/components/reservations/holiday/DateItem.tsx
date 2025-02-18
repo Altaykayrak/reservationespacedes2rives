@@ -23,52 +23,54 @@ interface DateItemProps {
 }
 
 const normalizeSchoolClass = (schoolClass: string): string => {
-  // Nettoyer d'abord la chaîne
-  const cleaned = schoolClass.trim();
+  if (!schoolClass) return '';
   
-  // Convertir les noms complets en abréviations
-  const fullNameMap: Record<string, string> = {
+  // Nettoyer et mettre en majuscules
+  const upperCleaned = schoolClass.trim().toUpperCase();
+  
+  // Mappage des noms complets et variations vers les formats acceptés
+  const classMap: Record<string, string> = {
     'PETITE SECTION': 'PS',
     'MOYENNE SECTION': 'MS',
     'GRANDE SECTION': 'GS',
-  };
-
-  // Vérifier d'abord les noms complets
-  const upperCleaned = cleaned.toUpperCase();
-  if (fullNameMap[upperCleaned]) {
-    return fullNameMap[upperCleaned];
-  }
-
-  // Liste des classes valides
-  const validClasses = [
-    'PS', 'MS', 'GS',                           // Maternelle
-    'CP', 'CE1', 'CE2', 'CM1', 'CM2',          // Primaire
-    '6ème', '5ème', '4ème', '3ème',            // Collège
-    'Seconde', 'Première', 'Terminale'          // Lycée
-  ];
-
-  // Si la classe est déjà dans le format correct
-  if (validClasses.includes(cleaned)) {
-    return cleaned;
-  }
-
-  // Pour les classes qui peuvent avoir des variations d'écriture
-  const alternativeMap: Record<string, string> = {
+    'PS': 'PS',
+    'MS': 'MS',
+    'GS': 'GS',
     'CP': 'CP',
     'CE1': 'CE1',
     'CE2': 'CE2',
     'CM1': 'CM1',
     'CM2': 'CM2',
     '6EME': '6ème',
+    '6IEME': '6ème',
+    '6E': '6ème',
     '5EME': '5ème',
+    '5IEME': '5ème',
+    '5E': '5ème',
     '4EME': '4ème',
+    '4IEME': '4ème',
+    '4E': '4ème',
     '3EME': '3ème',
+    '3IEME': '3ème',
+    '3E': '3ème',
     'SECONDE': 'Seconde',
+    '2NDE': 'Seconde',
     'PREMIERE': 'Première',
-    'TERMINALE': 'Terminale'
+    '1ERE': 'Première',
+    'TERMINALE': 'Terminale',
+    'TERM': 'Terminale'
   };
 
-  return alternativeMap[upperCleaned] || cleaned;
+  // Retourner la valeur mappée ou la valeur d'origine si pas de mapping
+  const normalizedClass = classMap[upperCleaned];
+  
+  if (!normalizedClass) {
+    console.warn(`Classe non reconnue: ${schoolClass}, valeur originale: ${upperCleaned}`);
+    return schoolClass.trim();
+  }
+  
+  console.log(`Classe normalisée: ${schoolClass} -> ${normalizedClass}`);
+  return normalizedClass;
 };
 
 export const DateItem = ({
@@ -131,6 +133,11 @@ export const DateItem = ({
         reservation_date: formattedDate,
         child_school_class: normalizedClass
       });
+
+      if (!normalizedClass) {
+        console.error("Classe normalisée invalide pour:", childSchoolClass);
+        return null;
+      }
 
       const { data: spotCount, error } = await supabase
         .rpc('check_holiday_spots_available', {
