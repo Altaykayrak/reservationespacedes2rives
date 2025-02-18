@@ -21,7 +21,6 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
 }) => {
   const { holidayPeriod, childInfo } = useHolidayPeriodContext();
 
-  // Validation plus stricte des données requises
   if (!holidayPeriod) {
     return (
       <EmptyHolidayState 
@@ -40,7 +39,22 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
     );
   }
 
-  // Mapping des classes en format standardisé
+  const rawClass = childInfo.school_class.trim();
+  
+  // Si la classe est déjà dans le format attendu, on la garde telle quelle
+  const validClasses = [
+    "PS", "MS", "GS", 
+    "CP", "CE1", "CE2", "CM1", "CM2",
+    "6ème", "5ème", "4ème", "3ème",
+    "Seconde", "Première", "Terminale"
+  ];
+
+  if (validClasses.includes(rawClass)) {
+    console.log("Classe déjà dans le bon format:", rawClass);
+    return renderContent(rawClass);
+  }
+
+  // Sinon on essaie de la normaliser
   const classMapping: { [key: string]: string } = {
     "PETITE SECTION": "PS",
     "MOYENNE SECTION": "MS",
@@ -54,20 +68,10 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
     "3EME": "3ème"
   };
 
-  // Standardisation de la classe
-  let normalizedClass = childInfo.school_class.trim().toUpperCase();
-  normalizedClass = classMapping[normalizedClass] || childInfo.school_class.trim();
-
-  // Validation des classes autorisées
-  const validClasses = [
-    "PS", "MS", "GS", 
-    "CP", "CE1", "CE2", "CM1", "CM2",
-    "6ème", "5ème", "4ème", "3ème",
-    "Seconde", "Première", "Terminale"
-  ];
-
-  if (!validClasses.includes(normalizedClass)) {
-    console.error("Classe invalide:", normalizedClass, "Original:", childInfo.school_class);
+  const normalizedClass = classMapping[rawClass.toUpperCase()];
+  
+  if (!normalizedClass) {
+    console.error("Classe non reconnue:", rawClass);
     return (
       <EmptyHolidayState 
         message="Classe non reconnue"
@@ -76,60 +80,64 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
     );
   }
 
-  const dates: Date[] = [];
-  const startDate = new Date(holidayPeriod.start_date);
-  const endDate = new Date(holidayPeriod.end_date);
-  const currentDate = new Date(startDate);
+  return renderContent(normalizedClass);
 
-  while (currentDate <= endDate) {
-    if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-      const dateToAdd = new Date(currentDate);
-      dateToAdd.setHours(0, 0, 0, 0);
-      dates.push(dateToAdd);
+  function renderContent(schoolClass: string) {
+    const dates: Date[] = [];
+    const startDate = new Date(holidayPeriod.start_date);
+    const endDate = new Date(holidayPeriod.end_date);
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+        const dateToAdd = new Date(currentDate);
+        dateToAdd.setHours(0, 0, 0, 0);
+        dates.push(dateToAdd);
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
     }
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
 
-  if (dates.length === 0) {
+    if (dates.length === 0) {
+      return (
+        <EmptyHolidayState 
+          message="Aucune date disponible"
+          subtitle="Il n'y a pas de dates disponibles pour cette période."
+        />
+      );
+    }
+
     return (
-      <EmptyHolidayState 
-        message="Aucune date disponible"
-        subtitle="Il n'y a pas de dates disponibles pour cette période."
-      />
+      <ScrollArea className="h-[300px] pr-3">
+        <div className="space-y-1">
+          {dates.map((date) => {
+            const selectedDateOption = selectedDates.find(
+              (d) => {
+                const dateToCompare = new Date(d.date);
+                dateToCompare.setHours(0, 0, 0, 0);
+                return dateToCompare.getTime() === date.getTime();
+              }
+            );
+            
+            const isReserved = isDateAlreadyReserved(date);
+
+            return (
+              <DateItem
+                key={date.toISOString()}
+                date={date}
+                isSelected={!!selectedDateOption}
+                isReserved={isReserved}
+                withoutMeal={selectedDateOption?.withoutMeal || false}
+                earlyDropoff={selectedDateOption?.earlyDropoff || false}
+                onDateToggle={() => handleDateToggle(date)}
+                onOptionChange={(option, value) => handleOptionChange(date, option, value)}
+                isTeenClass={false}
+                periodId={periodId}
+                childSchoolClass={schoolClass}
+              />
+            );
+          })}
+        </div>
+      </ScrollArea>
     );
   }
-
-  return (
-    <ScrollArea className="h-[300px] pr-3">
-      <div className="space-y-1">
-        {dates.map((date) => {
-          const selectedDateOption = selectedDates.find(
-            (d) => {
-              const dateToCompare = new Date(d.date);
-              dateToCompare.setHours(0, 0, 0, 0);
-              return dateToCompare.getTime() === date.getTime();
-            }
-          );
-          
-          const isReserved = isDateAlreadyReserved(date);
-
-          return (
-            <DateItem
-              key={date.toISOString()}
-              date={date}
-              isSelected={!!selectedDateOption}
-              isReserved={isReserved}
-              withoutMeal={selectedDateOption?.withoutMeal || false}
-              earlyDropoff={selectedDateOption?.earlyDropoff || false}
-              onDateToggle={() => handleDateToggle(date)}
-              onOptionChange={(option, value) => handleOptionChange(date, option, value)}
-              isTeenClass={false}
-              periodId={periodId}
-              childSchoolClass={normalizedClass}
-            />
-          );
-        })}
-      </div>
-    </ScrollArea>
-  );
 };
