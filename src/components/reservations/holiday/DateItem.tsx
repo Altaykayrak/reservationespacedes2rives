@@ -63,7 +63,10 @@ export const DateItem = ({
   const { data: spotsLeft, isLoading } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
-      if (!childSchoolClass) return null;
+      if (!childSchoolClass) {
+        console.log("Pas de classe scolaire définie, skip de la vérification des places");
+        return null;
+      }
 
       try {
         const { data: spotCount, error } = await supabase
@@ -85,7 +88,7 @@ export const DateItem = ({
         return null;
       }
     },
-    enabled: !!periodId && !!childSchoolClass,
+    enabled: Boolean(periodId) && Boolean(childSchoolClass),
   });
 
   const getSpotsBadgeColor = (spots: number | null) => {
@@ -136,7 +139,7 @@ export const DateItem = ({
             )}
           </div>
           <div className="mt-1 flex flex-wrap gap-2">
-            {!isLoading && spotsLeft !== null && !isReserved && (
+            {!isLoading && spotsLeft !== null && !isReserved && childSchoolClass && (
               <Badge 
                 variant="secondary" 
                 className={`${getSpotsBadgeColor(spotsLeft)} border-none text-[10px] md:text-xs`}
