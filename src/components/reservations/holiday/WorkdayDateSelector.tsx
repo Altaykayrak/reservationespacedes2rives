@@ -21,7 +21,7 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
 }) => {
   const { holidayPeriod, childInfo } = useHolidayPeriodContext();
 
-  // Validation que childInfo et school_class sont présents
+  // Validation plus stricte des données requises
   if (!holidayPeriod) {
     return (
       <EmptyHolidayState 
@@ -35,7 +35,27 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
     return (
       <EmptyHolidayState 
         message="Information manquante"
-        subtitle="La classe de l'enfant n'est pas définie."
+        subtitle="La classe de l'enfant n'est pas définie correctement."
+      />
+    );
+  }
+
+  // Validation stricte des classes autorisées
+  const validClasses = [
+    "PS", "MS", "GS", 
+    "CP", "CE1", "CE2", "CM1", "CM2",
+    "6ème", "5ème", "4ème", "3ème",
+    "SECONDE", "PREMIÈRE", "TERMINALE",
+    "PETITE SECTION", "MOYENNE SECTION", "GRANDE SECTION"
+  ];
+
+  const normalizedClass = childInfo.school_class.trim().toUpperCase();
+  if (!validClasses.includes(normalizedClass)) {
+    console.error("Classe invalide:", normalizedClass);
+    return (
+      <EmptyHolidayState 
+        message="Classe non reconnue"
+        subtitle="La classe spécifiée n'est pas dans la liste des classes valides."
       />
     );
   }
@@ -47,9 +67,7 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
 
   while (currentDate <= endDate) {
     if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-      // Créer une nouvelle instance de Date pour chaque jour
       const dateToAdd = new Date(currentDate);
-      // Normaliser l'heure pour la comparaison
       dateToAdd.setHours(0, 0, 0, 0);
       dates.push(dateToAdd);
     }
@@ -79,7 +97,6 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
           
           // Vérifier si la date est déjà réservée
           const isReserved = isDateAlreadyReserved(date);
-          console.log("Date:", date.toISOString(), "isReserved:", isReserved);
 
           return (
             <DateItem
@@ -93,7 +110,7 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
               onOptionChange={(option, value) => handleOptionChange(date, option, value)}
               isTeenClass={false}
               periodId={periodId}
-              childSchoolClass={childInfo.school_class}
+              childSchoolClass={normalizedClass}
             />
           );
         })}
