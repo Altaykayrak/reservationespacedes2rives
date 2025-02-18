@@ -60,36 +60,49 @@ export const DateItem = ({
     };
   }, [queryClient, periodId, date, childSchoolClass]);
 
+  // Fonction de normalisation des classes
+  const normalizeSchoolClass = (rawClass: string): string | null => {
+    if (!rawClass) return null;
+    
+    const normalizedClass = rawClass.trim().toUpperCase();
+    
+    // Classes maternelles
+    if (["PS", "MS", "GS", "PETITE SECTION", "MOYENNE SECTION", "GRANDE SECTION"].includes(normalizedClass)) {
+      return normalizedClass.length > 2 ? normalizedClass.substring(0, 2) : normalizedClass;
+    }
+    
+    // Classes primaires
+    if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) {
+      return normalizedClass;
+    }
+    
+    // Classes collège/lycée
+    const teenClassMapping: { [key: string]: string } = {
+      "6EME": "6ème",
+      "5EME": "5ème",
+      "4EME": "4ème",
+      "3EME": "3ème",
+      "SECONDE": "Seconde",
+      "PREMIERE": "Première",
+      "TERMINALE": "Terminale"
+    };
+    
+    return teenClassMapping[normalizedClass] || null;
+  };
+
   const { data: spotsLeft, isLoading, isError } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
-      // Validation plus stricte des classes autorisées
-      const validKindergartenClasses = ["PS", "MS", "GS", "PETITE SECTION", "MOYENNE SECTION", "GRANDE SECTION"];
-      const validPrimaryClasses = ["CP", "CE1", "CE2", "CM1", "CM2"];
-      const validTeenClasses = ["6ème", "5ème", "4ème", "3ème", "SECONDE", "PREMIÈRE", "TERMINALE"];
-      
-      const normalizedClass = childSchoolClass.trim().toUpperCase();
+      const normalizedClass = normalizeSchoolClass(childSchoolClass);
       
       if (!normalizedClass) {
-        console.error("Classe scolaire vide");
+        console.error("Classe scolaire invalide:", childSchoolClass);
         return null;
       }
 
-      const isValidClass = [
-        ...validKindergartenClasses,
-        ...validPrimaryClasses,
-        ...validTeenClasses
-      ].map(c => c.toUpperCase()).includes(normalizedClass);
-
-      if (!isValidClass) {
-        console.error("Classe scolaire invalide:", normalizedClass);
-        return null;
-      }
-
-      const formattedDate = format(date, 'yyyy-MM-dd');
       console.log("Vérification des places pour:", {
         periodId,
-        date: formattedDate,
+        date: format(date, 'yyyy-MM-dd'),
         childSchoolClass: normalizedClass
       });
 
@@ -97,20 +110,20 @@ export const DateItem = ({
         const { data: spotCount, error } = await supabase
           .rpc('check_holiday_spots_available', {
             period_id: periodId,
-            reservation_date: formattedDate,
+            reservation_date: format(date, 'yyyy-MM-dd'),
             child_school_class: normalizedClass,
           });
 
         if (error) {
           console.error("Erreur lors de la vérification des places:", error);
-          return null; // On retourne null au lieu de throw pour éviter les erreurs UI
+          return null;
         }
 
         console.log("Places restantes pour", normalizedClass, ":", spotCount);
         return spotCount;
       } catch (error) {
         console.error("Erreur lors de la vérification des places:", error);
-        return null; // On retourne null au lieu de throw pour éviter les erreurs UI
+        return null;
       }
     },
     enabled: Boolean(periodId) && Boolean(childSchoolClass?.trim()),
