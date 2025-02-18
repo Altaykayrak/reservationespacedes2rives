@@ -1,19 +1,19 @@
 
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNav } from "@/components/ui/nav/MobileNav";
 import { Logo } from "@/components/ui/nav/Logo";
+import { useAuth } from "@/hooks/useAuth";
 
 export const AdminNavbar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { signOut } = useAuth();
 
   const links = [
     { href: "/admin", label: "Tableau de bord" },
@@ -25,12 +25,11 @@ export const AdminNavbar = () => {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await signOut();
       toast({
         title: "Déconnexion réussie",
         description: "Vous avez été déconnecté avec succès.",
       });
-      navigate('/admin-login');
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
       toast({
