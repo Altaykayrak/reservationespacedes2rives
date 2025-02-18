@@ -22,8 +22,13 @@ interface DateItemProps {
   childSchoolClass: string;
 }
 
-const normalizeSchoolClass = (schoolClass: string): string => {
-  if (!schoolClass) return '';
+const VALID_SCHOOL_CLASSES = ['PS', 'MS', 'GS', 'CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', 'Seconde', 'Première', 'Terminale'] as const;
+
+const normalizeSchoolClass = (schoolClass: string): string | null => {
+  if (!schoolClass?.trim()) {
+    console.error("Classe scolaire manquante ou vide");
+    return null;
+  }
   
   // Nettoyer et mettre en majuscules
   const upperCleaned = schoolClass.trim().toUpperCase();
@@ -61,15 +66,16 @@ const normalizeSchoolClass = (schoolClass: string): string => {
     'TERM': 'Terminale'
   };
 
-  // Retourner la valeur mappée ou la valeur d'origine si pas de mapping
+  // Obtenir la classe normalisée
   const normalizedClass = classMap[upperCleaned];
   
-  if (!normalizedClass) {
-    console.warn(`Classe non reconnue: ${schoolClass}, valeur originale: ${upperCleaned}`);
-    return schoolClass.trim();
+  // Vérifier si la classe normalisée est valide
+  if (!normalizedClass || !VALID_SCHOOL_CLASSES.includes(normalizedClass as any)) {
+    console.error(`Classe non valide: ${schoolClass} -> ${normalizedClass}`);
+    return null;
   }
   
-  console.log(`Classe normalisée: ${schoolClass} -> ${normalizedClass}`);
+  console.log(`Classe normalisée avec succès: ${schoolClass} -> ${normalizedClass}`);
   return normalizedClass;
 };
 
