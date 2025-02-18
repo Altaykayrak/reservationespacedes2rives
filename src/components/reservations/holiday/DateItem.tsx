@@ -22,16 +22,22 @@ interface DateItemProps {
   childSchoolClass: string;
 }
 
-const VALID_SCHOOL_CLASSES = [
-  'PS', 'MS', 'GS',
-  'Petite Section', 'Moyenne Section', 'Grande Section',
-  'CP', 'CE1', 'CE2', 'CM1', 'CM2',
-  '6ème', '5ème', '4ème', '3ème',
-  'Seconde', 'Première', 'Terminale'
-] as const;
+const normalizeSchoolClass = (schoolClass: string): string => {
+  const classMap: { [key: string]: string } = {
+    "PETITE SECTION": "PS",
+    "MOYENNE SECTION": "MS",
+    "GRANDE SECTION": "GS",
+    "6EME": "6ème",
+    "5EME": "5ème",
+    "4EME": "4ème",
+    "3EME": "3ème",
+    "SECONDE": "Seconde",
+    "PREMIERE": "Première",
+    "TERMINALE": "Terminale"
+  };
 
-const isValidSchoolClass = (schoolClass: string): boolean => {
-  return VALID_SCHOOL_CLASSES.includes(schoolClass as any);
+  const normalizedClass = schoolClass.trim().toUpperCase();
+  return classMap[normalizedClass] || schoolClass.trim();
 };
 
 export const DateItem = ({
@@ -49,6 +55,7 @@ export const DateItem = ({
   console.log("DateItem - Props:", { childSchoolClass, periodId, date: date.toISOString() });
   
   const queryClient = useQueryClient();
+  const normalizedClass = normalizeSchoolClass(childSchoolClass);
 
   useEffect(() => {
     const channel = supabase
@@ -62,7 +69,7 @@ export const DateItem = ({
         },
         (payload) => {
           queryClient.invalidateQueries({
-            queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass]
+            queryKey: ["spots_left", periodId, date.toISOString(), normalizedClass]
           });
         }
       )
@@ -71,15 +78,13 @@ export const DateItem = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, periodId, date, childSchoolClass]);
+  }, [queryClient, periodId, date, normalizedClass]);
 
-  const { data: spotsLeft, isLoading, isError } = useQuery({
-    queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
+  const { data: spotsLeft, isLoading } = useQuery({
+    queryKey: ["spots_left", periodId, date.toISOString(), normalizedClass],
     queryFn: async () => {
-      const trimmedClass = childSchoolClass?.trim();
-      
-      if (!trimmedClass || !isValidSchoolClass(trimmedClass)) {
-        console.error("Classe scolaire invalide ou manquante:", trimmedClass);
+      if (!normalizedClass) {
+        console.error("Classe scolaire manquante");
         return null;
       }
 
@@ -93,7 +98,7 @@ export const DateItem = ({
       console.log("Appel à check_holiday_spots_available avec:", {
         period_id: periodId,
         reservation_date: formattedDate,
-        child_school_class: trimmedClass
+        child_school_class: normalizedClass
       });
 
       try {
@@ -101,14 +106,14 @@ export const DateItem = ({
           .rpc('check_holiday_spots_available', {
             period_id: periodId,
             reservation_date: formattedDate,
-            child_school_class: trimmedClass
+            child_school_class: normalizedClass
           });
 
         if (error) {
           console.error("Erreur avec les paramètres:", {
             period_id: periodId,
             reservation_date: formattedDate,
-            child_school_class: trimmedClass
+            child_school_class: normalizedClass
           });
           console.error("Erreur retournée:", error);
           throw error;
@@ -121,7 +126,7 @@ export const DateItem = ({
         throw error;
       }
     },
-    enabled: Boolean(periodId) && Boolean(childSchoolClass?.trim()) && isValidSchoolClass(childSchoolClass?.trim() || ''),
+    enabled: Boolean(periodId) && Boolean(normalizedClass),
     retry: 1,
     retryDelay: 1000,
     staleTime: 1000 * 60,
@@ -136,8 +141,8 @@ export const DateItem = ({
   };
 
   const getGroupName = (schoolClass: string) => {
-    const normalizedClass = schoolClass.trim().toUpperCase();
-    if (["PS", "MS", "GS", "PETITE SECTION", "MOYENNE SECTION", "GRANDE SECTION"].includes(normalizedClass)) 
+    const normalizedClass = normalizeSchoolClass(schoolClass);
+    if (["PS", "MS", "GS"].includes(normalizedClass)) 
       return 'maternelle';
     if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) 
       return 'primaire';
@@ -183,12 +188,12 @@ export const DateItem = ({
             )}
           </div>
           <div className="mt-1 flex flex-wrap gap-2">
-            {!isLoading && childSchoolClass?.trim() && (
+            {!isLoading && normalizedClass && (
               <Badge 
                 variant="secondary" 
                 className={`${getSpotsBadgeColor(spotsLeft)} border-none text-[10px] md:text-xs`}
               >
-                {getSpotsBadgeText(spotsLeft, childSchoolClass)}
+                {getSpotsBadgeText(spotsLeft, normalizedClass)}
               </Badge>
             )}
           </div>
