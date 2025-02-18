@@ -25,17 +25,25 @@ export const useHolidayReservation = () => {
   const { data: childInfo } = useQuery({
     queryKey: ["child", selectedChild],
     queryFn: async () => {
-      if (!selectedChild) return null;
+      if (!selectedChild) {
+        console.log("Pas d'enfant sélectionné");
+        return null;
+      }
+      console.log("Récupération des informations de l'enfant:", selectedChild);
       const { data, error } = await supabase
         .from("children")
         .select("school_class")
         .eq("id", selectedChild)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erreur lors de la récupération des informations de l'enfant:", error);
+        throw error;
+      }
+      console.log("Informations de l'enfant récupérées:", data);
       return data;
     },
-    enabled: Boolean(selectedChild),
+    enabled: Boolean(selectedChild)
   });
 
   const { data: schoolClassCategories } = useQuery({
@@ -146,6 +154,7 @@ export const useHolidayReservation = () => {
     handleOptionChange,
     handleSubmit: submitReservation,
     isDateAlreadyReserved,
-    isTeenClass
+    isTeenClass,
+    childInfo  // On expose maintenant childInfo
   };
 };
