@@ -45,25 +45,29 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
     "PETITE SECTION": "PS",
     "MOYENNE SECTION": "MS",
     "GRANDE SECTION": "GS",
-    "SECONDE": "2NDE",
-    "PREMIÈRE": "1ÈRE",
-    "TERMINALE": "TERM"
+    "SECONDE": "Seconde",
+    "PREMIÈRE": "Première",
+    "TERMINALE": "Terminale",
+    "6EME": "6ème",
+    "5EME": "5ème",
+    "4EME": "4ème",
+    "3EME": "3ème"
   };
 
   // Standardisation de la classe
   let normalizedClass = childInfo.school_class.trim().toUpperCase();
-  normalizedClass = classMapping[normalizedClass] || normalizedClass;
+  normalizedClass = classMapping[normalizedClass] || childInfo.school_class.trim();
 
   // Validation des classes autorisées
   const validClasses = [
     "PS", "MS", "GS", 
     "CP", "CE1", "CE2", "CM1", "CM2",
-    "6ÈME", "5ÈME", "4ÈME", "3ÈME",
-    "2NDE", "1ÈRE", "TERM"
+    "6ème", "5ème", "4ème", "3ème",
+    "Seconde", "Première", "Terminale"
   ];
 
   if (!validClasses.includes(normalizedClass)) {
-    console.error("Classe invalide:", normalizedClass);
+    console.error("Classe invalide:", normalizedClass, "Original:", childInfo.school_class);
     return (
       <EmptyHolidayState 
         message="Classe non reconnue"
