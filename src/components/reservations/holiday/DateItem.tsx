@@ -69,8 +69,13 @@ const normalizeSchoolClass = (schoolClass: string): string | null => {
   // Obtenir la classe normalisée
   const normalizedClass = classMap[upperCleaned];
   
+  if (!normalizedClass) {
+    console.error(`Classe non reconnue: ${schoolClass}, valeur originale: ${upperCleaned}`);
+    return null;
+  }
+  
   // Vérifier si la classe normalisée est valide
-  if (!normalizedClass || !VALID_SCHOOL_CLASSES.includes(normalizedClass as any)) {
+  if (!VALID_SCHOOL_CLASSES.includes(normalizedClass as any)) {
     console.error(`Classe non valide: ${schoolClass} -> ${normalizedClass}`);
     return null;
   }
