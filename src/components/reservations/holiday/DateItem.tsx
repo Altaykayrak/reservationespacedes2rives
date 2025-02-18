@@ -1,3 +1,4 @@
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
@@ -33,6 +34,9 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
+  console.log("DateItem - Received childSchoolClass:", childSchoolClass);
+  console.log("DateItem - childSchoolClass type:", typeof childSchoolClass);
+  
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -60,26 +64,50 @@ export const DateItem = ({
   }, [queryClient, periodId, date, childSchoolClass]);
 
   const normalizeSchoolClass = (rawClass: string): string | null => {
-    if (!rawClass?.trim()) return null;
+    console.log("normalizeSchoolClass - Input:", rawClass);
+    
+    if (!rawClass?.trim()) {
+      console.log("normalizeSchoolClass - Empty or null input");
+      return null;
+    }
     
     const cleanedClass = rawClass.trim();
+    console.log("normalizeSchoolClass - Cleaned class:", cleanedClass);
     
-    if (cleanedClass.toUpperCase() === "PETITE SECTION") return "PS";
-    if (cleanedClass.toUpperCase() === "MOYENNE SECTION") return "MS";
-    if (cleanedClass.toUpperCase() === "GRANDE SECTION") return "GS";
+    // Classes maternelles
+    if (cleanedClass.toUpperCase() === "PETITE SECTION") {
+      console.log("normalizeSchoolClass - Converted PS");
+      return "PS";
+    }
+    if (cleanedClass.toUpperCase() === "MOYENNE SECTION") {
+      console.log("normalizeSchoolClass - Converted MS");
+      return "MS";
+    }
+    if (cleanedClass.toUpperCase() === "GRANDE SECTION") {
+      console.log("normalizeSchoolClass - Converted GS");
+      return "GS";
+    }
 
+    // Abréviations maternelles
     if (["PS", "MS", "GS"].includes(cleanedClass.toUpperCase())) {
-      return cleanedClass.toUpperCase();
+      const result = cleanedClass.toUpperCase();
+      console.log("normalizeSchoolClass - Using abbreviation:", result);
+      return result;
     }
 
+    // Classes primaires
     if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(cleanedClass)) {
+      console.log("normalizeSchoolClass - Primary class:", cleanedClass);
       return cleanedClass;
     }
 
+    // Classes collège/lycée exactes
     if (["6ème", "5ème", "4ème", "3ème", "Seconde", "Première", "Terminale"].includes(cleanedClass)) {
+      console.log("normalizeSchoolClass - Exact teen class:", cleanedClass);
       return cleanedClass;
     }
 
+    // Conversion des formats alternatifs pour collège/lycée
     const teenClassMapping: { [key: string]: string } = {
       "6EME": "6ème",
       "5EME": "5ème",
@@ -90,20 +118,23 @@ export const DateItem = ({
       "TERMINALE": "Terminale"
     };
 
-    return teenClassMapping[cleanedClass.toUpperCase()] || null;
+    const mappedClass = teenClassMapping[cleanedClass.toUpperCase()];
+    console.log("normalizeSchoolClass - Mapped teen class:", mappedClass);
+    return mappedClass || null;
   };
 
   const { data: spotsLeft, isLoading, isError } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
+      console.log("queryFn - Starting with childSchoolClass:", childSchoolClass);
       const normalizedClass = normalizeSchoolClass(childSchoolClass);
       
       if (!normalizedClass) {
-        console.error("Classe scolaire invalide:", childSchoolClass);
+        console.error("queryFn - Classe scolaire invalide:", childSchoolClass);
         return null;
       }
 
-      console.log("Vérification des places pour:", {
+      console.log("queryFn - Vérification des places pour:", {
         periodId,
         date: format(date, 'yyyy-MM-dd'),
         childSchoolClass: normalizedClass
@@ -118,14 +149,14 @@ export const DateItem = ({
           });
 
         if (error) {
-          console.error("Erreur lors de la vérification des places:", error);
+          console.error("queryFn - Erreur lors de la vérification des places:", error);
           return null;
         }
 
-        console.log("Places restantes pour", normalizedClass, ":", spotCount);
+        console.log("queryFn - Places restantes pour", normalizedClass, ":", spotCount);
         return spotCount;
       } catch (error) {
-        console.error("Erreur lors de la vérification des places:", error);
+        console.error("queryFn - Erreur lors de la vérification des places:", error);
         return null;
       }
     },
