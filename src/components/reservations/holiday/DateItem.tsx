@@ -1,4 +1,3 @@
-
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
@@ -60,36 +59,27 @@ export const DateItem = ({
     };
   }, [queryClient, periodId, date, childSchoolClass]);
 
-  // Fonction de normalisation des classes selon les valeurs attendues par la DB
   const normalizeSchoolClass = (rawClass: string): string | null => {
-    if (!rawClass) return null;
+    if (!rawClass?.trim()) return null;
     
-    // Conversion en majuscules et suppression des espaces
-    const cleanedClass = rawClass.trim().toUpperCase();
+    const cleanedClass = rawClass.trim();
     
-    // Mapping des noms complets vers les abréviations
-    const fullNameMapping: { [key: string]: string } = {
-      "PETITE SECTION": "PS",
-      "MOYENNE SECTION": "MS",
-      "GRANDE SECTION": "GS"
-    };
+    if (cleanedClass.toUpperCase() === "PETITE SECTION") return "PS";
+    if (cleanedClass.toUpperCase() === "MOYENNE SECTION") return "MS";
+    if (cleanedClass.toUpperCase() === "GRANDE SECTION") return "GS";
 
-    // Si c'est un nom complet, on le convertit d'abord
-    if (fullNameMapping[cleanedClass]) {
-      return fullNameMapping[cleanedClass];
+    if (["PS", "MS", "GS"].includes(cleanedClass.toUpperCase())) {
+      return cleanedClass.toUpperCase();
     }
 
-    // Validation des classes maternelles
-    if (["PS", "MS", "GS"].includes(cleanedClass)) {
-      return cleanedClass;
-    }
-    
-    // Validation des classes primaires
     if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(cleanedClass)) {
       return cleanedClass;
     }
-    
-    // Mapping spécifique pour les classes ado
+
+    if (["6ème", "5ème", "4ème", "3ème", "Seconde", "Première", "Terminale"].includes(cleanedClass)) {
+      return cleanedClass;
+    }
+
     const teenClassMapping: { [key: string]: string } = {
       "6EME": "6ème",
       "5EME": "5ème",
@@ -100,7 +90,7 @@ export const DateItem = ({
       "TERMINALE": "Terminale"
     };
 
-    return teenClassMapping[cleanedClass] || null;
+    return teenClassMapping[cleanedClass.toUpperCase()] || null;
   };
 
   const { data: spotsLeft, isLoading, isError } = useQuery({
