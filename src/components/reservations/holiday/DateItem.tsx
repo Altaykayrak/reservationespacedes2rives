@@ -60,15 +60,16 @@ export const DateItem = ({
     };
   }, [queryClient, periodId, date, childSchoolClass]);
 
-  const { data: spotsLeft, isLoading } = useQuery({
+  const { data: spotsLeft, isLoading, isError } = useQuery({
     queryKey: ["spots_left", periodId, date.toISOString(), childSchoolClass],
     queryFn: async () => {
+      // Validation stricte des paramètres requis
       if (!childSchoolClass || !periodId) {
-        console.log("Classe scolaire ou période non définie:", { childSchoolClass, periodId });
+        console.log("Paramètres manquants:", { childSchoolClass, periodId });
         return null;
       }
 
-      // Nettoyage et normalisation de la classe scolaire
+      // Nettoyage et validation de la classe scolaire
       const normalizedClass = childSchoolClass.trim();
       if (!normalizedClass) {
         console.log("Classe scolaire vide après normalisation");
@@ -92,19 +93,20 @@ export const DateItem = ({
 
         if (error) {
           console.error("Erreur lors de la vérification des places:", error);
-          return null;
+          throw error;
         }
 
         console.log("Places restantes pour", normalizedClass, ":", spotCount);
         return spotCount;
       } catch (error) {
         console.error("Erreur lors de la vérification des places:", error);
-        return null;
+        throw error;
       }
     },
     enabled: Boolean(periodId) && Boolean(childSchoolClass?.trim()),
+    retry: false, // Ne pas réessayer en cas d'erreur car cela pourrait indiquer une classe invalide
     staleTime: 1000 * 60, // 1 minute
-    gcTime: 1000 * 60 * 5, // 5 minutes (remplacement de cacheTime)
+    gcTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const getSpotsBadgeColor = (spots: number | null) => {
@@ -124,6 +126,12 @@ export const DateItem = ({
   };
 
   const isDisabled = isReserved || isTeenClass || (spotsLeft !== null && spotsLeft <= 0);
+
+  const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
+    if (spots === null) return "Erreur lors de la vérification des places";
+    if (spots <= 0) return `Groupe ${getGroupName(schoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
+    return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
+  };
 
   return (
     <div 
@@ -156,15 +164,12 @@ export const DateItem = ({
             )}
           </div>
           <div className="mt-1 flex flex-wrap gap-2">
-            {!isLoading && spotsLeft !== null && !isReserved && childSchoolClass && (
+            {!isLoading && !isError && spotsLeft !== null && !isReserved && childSchoolClass && (
               <Badge 
                 variant="secondary" 
                 className={`${getSpotsBadgeColor(spotsLeft)} border-none text-[10px] md:text-xs`}
               >
-                {spotsLeft <= 0 
-                  ? `Groupe ${getGroupName(childSchoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`
-                  : `${spotsLeft} place${spotsLeft > 1 ? 's' : ''} restante${spotsLeft > 1 ? 's' : ''}`
-                }
+                {getSpotsBadgeText(spotsLeft, childSchoolClass)}
               </Badge>
             )}
           </div>
