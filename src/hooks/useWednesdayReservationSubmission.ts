@@ -76,22 +76,25 @@ export const useWednesdayReservationSubmission = (
             wednesday_id: wednesday.id,
             without_meal: dateOption.withoutMeal,
             early_dropoff: dateOption.earlyDropoff,
+            status: 'confirmed',
             reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
           });
 
         if (reservationError) throw reservationError;
       }
 
+      toast({
+        title: "Succès",
+        description: selectedDates.length > 1 
+          ? "Les réservations ont été créées avec succès"
+          : "La réservation a été créée avec succès",
+      });
+
       // Forcer la mise à jour des données après les réservations
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["available_wednesdays"] }),
         refetchReservations()
       ]);
-
-      toast({
-        title: "Succès",
-        description: "Les réservations ont été créées avec succès.",
-      });
 
       resetForm();
 
