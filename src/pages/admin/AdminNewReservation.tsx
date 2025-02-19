@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,13 @@ import { fr } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
+type Child = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  school_class: string;
+};
+
 const AdminNewReservation = () => {
   const { data: isAdmin } = useAdminAuth();
   const { toast } = useToast();
@@ -22,7 +29,11 @@ const AdminNewReservation = () => {
   const [earlyDropoff, setEarlyDropoff] = useState(false);
   const [withoutMeal, setWithoutMeal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [children, setChildren] = useState<any[]>([]);
+  const [children, setChildren] = useState<Child[]>([]);
+
+  useEffect(() => {
+    fetchChildren();
+  }, []);
 
   // Charger la liste des enfants
   const fetchChildren = async () => {
@@ -62,12 +73,22 @@ const AdminNewReservation = () => {
 
     try {
       if (reservationType === "wednesday") {
-        // Créer la réservation pour le mercredi
+        // Obtenir d'abord l'ID du mercredi
+        const { data: wednesdayData, error: wednesdayError } = await supabase
+          .from('available_wednesdays')
+          .select('id')
+          .eq('date', format(selectedDates[0], 'yyyy-MM-dd'))
+          .single();
+
+        if (wednesdayError || !wednesdayData) {
+          throw new Error("Mercredi non trouvé");
+        }
+
         const { error } = await supabase
           .from('wednesday_reservations')
           .insert({
             child_id: selectedChild,
-            wednesday_id: selectedDates[0],
+            wednesday_id: wednesdayData.id,
             early_dropoff: earlyDropoff,
             without_meal: withoutMeal,
             status: 'confirmed',
@@ -76,13 +97,25 @@ const AdminNewReservation = () => {
 
         if (error) throw error;
       } else {
+        // Obtenir d'abord l'ID de la période de vacances
+        const { data: periodData, error: periodError } = await supabase
+          .from('available_holiday_periods')
+          .select('id')
+          .lte('start_date', format(selectedDates[0], 'yyyy-MM-dd'))
+          .gte('end_date', format(selectedDates[selectedDates.length - 1], 'yyyy-MM-dd'))
+          .single();
+
+        if (periodError || !periodData) {
+          throw new Error("Période de vacances non trouvée");
+        }
+
         // Créer les réservations pour les vacances
         for (const date of selectedDates) {
           const { error } = await supabase
             .from('holiday_reservations')
             .insert({
               child_id: selectedChild,
-              period_id: "period_id", // À remplacer par l'ID de la période
+              period_id: periodData.id,
               reservation_date: format(date, 'yyyy-MM-dd'),
               early_dropoff: earlyDropoff,
               without_meal: withoutMeal,
