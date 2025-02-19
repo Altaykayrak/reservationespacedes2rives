@@ -1,6 +1,5 @@
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminPage } from "@/pages/admin/AdminPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminWednesdays from "@/pages/admin/AdminWednesdays";
@@ -17,11 +16,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: (
-      <ProtectedRoute>
-        <AdminPage />
-      </ProtectedRoute>
-    ),
+    element: <AdminPage />,
     children: [
       {
         path: "",
