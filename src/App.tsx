@@ -17,7 +17,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: <AdminPage />,
+    element: (
+      <ProtectedRoute>
+        <AdminPage />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "",
@@ -37,11 +41,7 @@ const router = createBrowserRouter([
       },
       {
         path: "children",
-        element: (
-          <ProtectedRoute>
-            <AdminChildren />
-          </ProtectedRoute>
-        ),
+        element: <AdminChildren />,
       },
       {
         path: "authorized-emails",
