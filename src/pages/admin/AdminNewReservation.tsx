@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
@@ -11,6 +12,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type Child = {
   id: string;
@@ -20,6 +23,15 @@ type Child = {
 };
 
 type Group = "all" | "maternelle" | "primaire" | "ado";
+
+type Wednesday = {
+  id: string;
+  date: string;
+  max_participants_kindergarten: number;
+  max_participants_primary: number;
+  remaining_spots_kindergarten?: number;
+  remaining_spots_primary?: number;
+};
 
 const AdminNewReservation = () => {
   const { data: isAdmin } = useAdminAuth();
@@ -32,10 +44,55 @@ const AdminNewReservation = () => {
   const [withoutMeal, setWithoutMeal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [children, setChildren] = useState<Child[]>([]);
+  const [availableWednesdays, setAvailableWednesdays] = useState<Wednesday[]>([]);
+  const [selectedWednesday, setSelectedWednesday] = useState<string>("");
 
   useEffect(() => {
     fetchChildren();
-  }, []);
+    if (reservationType === "wednesday") {
+      fetchAvailableWednesdays();
+    }
+  }, [reservationType]);
+
+  const fetchAvailableWednesdays = async () => {
+    const { data, error } = await supabase
+      .from('available_wednesdays')
+      .select('*')
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date');
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les mercredis disponibles",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Pour chaque mercredi, calculer le nombre de places restantes
+    const wednesdaysWithSpots = await Promise.all(data.map(async (wednesday) => {
+      const { data: spotsCounts } = await supabase
+        .rpc('check_wednesday_spots_remaining', {
+          wednesday_id: wednesday.id,
+          child_school_class: 'PS' // Pour maternelle
+        });
+
+      const { data: spotsPrimary } = await supabase
+        .rpc('check_wednesday_spots_remaining', {
+          wednesday_id: wednesday.id,
+          child_school_class: 'CP' // Pour primaire
+        });
+
+      return {
+        ...wednesday,
+        remaining_spots_kindergarten: spotsCounts,
+        remaining_spots_primary: spotsPrimary
+      };
+    }));
+
+    setAvailableWednesdays(wednesdaysWithSpots);
+  };
 
   const getGroupFromSchoolClass = (schoolClass: string): Group => {
     const maternelleClasses = ["PS", "MS", "GS"];
@@ -53,14 +110,10 @@ const AdminNewReservation = () => {
       selectedGroup === "all" || getGroupFromSchoolClass(child.school_class) === selectedGroup
     )
     .sort((a, b) => {
-      // D'abord comparer les noms de famille
       const lastNameComparison = a.last_name.localeCompare(b.last_name);
-      
-      // Si les noms sont identiques, comparer les prénoms
       if (lastNameComparison === 0) {
         return a.first_name.localeCompare(b.first_name);
       }
-      
       return lastNameComparison;
     });
 
@@ -86,11 +139,20 @@ const AdminNewReservation = () => {
     setChildren(data || []);
   };
 
+  const handleWednesdaySelect = (wednesdayId: string) => {
+    setSelectedWednesday(wednesdayId);
+    const wednesday = availableWednesdays.find(w => w.id === wednesdayId);
+    if (wednesday) {
+      setSelectedDates([new Date(wednesday.date)]);
+    }
+  };
+
   const handleCreateReservation = async () => {
-    if (!selectedChild || selectedDates.length === 0) {
+    if (!selectedChild || (reservationType === "wednesday" && !selectedWednesday) || 
+        (reservationType === "holiday" && selectedDates.length === 0)) {
       toast({
         title: "Erreur",
-        description: "Veuillez sélectionner un enfant et au moins une date",
+        description: "Veuillez sélectionner un enfant et une date",
         variant: "destructive",
       });
       return;
@@ -100,22 +162,11 @@ const AdminNewReservation = () => {
 
     try {
       if (reservationType === "wednesday") {
-        // Obtenir d'abord l'ID du mercredi
-        const { data: wednesdayData, error: wednesdayError } = await supabase
-          .from('available_wednesdays')
-          .select('id')
-          .eq('date', format(selectedDates[0], 'yyyy-MM-dd'))
-          .single();
-
-        if (wednesdayError || !wednesdayData) {
-          throw new Error("Mercredi non trouvé");
-        }
-
         const { error } = await supabase
           .from('wednesday_reservations')
           .insert({
             child_id: selectedChild,
-            wednesday_id: wednesdayData.id,
+            wednesday_id: selectedWednesday,
             early_dropoff: earlyDropoff,
             without_meal: withoutMeal,
             status: 'confirmed',
@@ -159,7 +210,6 @@ const AdminNewReservation = () => {
         description: "La réservation a été créée avec succès",
       });
 
-      // Rediriger vers la liste des réservations
       window.location.href = '/admin/reservations';
     } catch (error) {
       console.error('Error creating reservation:', error);
@@ -203,7 +253,11 @@ const AdminNewReservation = () => {
                   <Label>Type de réservation</Label>
                   <Select 
                     value={reservationType}
-                    onValueChange={(value: "wednesday" | "holiday") => setReservationType(value)}
+                    onValueChange={(value: "wednesday" | "holiday") => {
+                      setReservationType(value);
+                      setSelectedDates([]);
+                      setSelectedWednesday("");
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionnez le type de réservation" />
@@ -221,7 +275,7 @@ const AdminNewReservation = () => {
                     value={selectedGroup}
                     onValueChange={(value: Group) => {
                       setSelectedGroup(value);
-                      setSelectedChild(""); // Réinitialiser l'enfant sélectionné lors du changement de groupe
+                      setSelectedChild("");
                     }}
                   >
                     <SelectTrigger>
@@ -252,16 +306,46 @@ const AdminNewReservation = () => {
                   </Select>
                 </div>
 
-                <div>
-                  <Label>Dates de réservation</Label>
-                  <Calendar
-                    mode="multiple"
-                    selected={selectedDates}
-                    onSelect={(dates) => setSelectedDates(dates || [])}
-                    className="rounded-md border"
-                    locale={fr}
-                  />
-                </div>
+                {reservationType === "wednesday" ? (
+                  <div className="space-y-4">
+                    <Label>Mercredis disponibles</Label>
+                    <RadioGroup value={selectedWednesday} onValueChange={handleWednesdaySelect}>
+                      <div className="grid gap-4">
+                        {availableWednesdays.map((wednesday) => (
+                          <div key={wednesday.id} className="flex items-center space-x-2 p-4 border rounded-lg">
+                            <RadioGroupItem value={wednesday.id} id={wednesday.id} />
+                            <Label htmlFor={wednesday.id} className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <span>
+                                  {format(new Date(wednesday.date), 'EEEE d MMMM yyyy', { locale: fr })}
+                                </span>
+                                <div className="flex gap-2">
+                                  <Badge variant="outline">
+                                    Maternelle: {wednesday.remaining_spots_kindergarten} places
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    Primaire: {wednesday.remaining_spots_primary} places
+                                  </Badge>
+                                </div>
+                              </div>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </RadioGroup>
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Dates de réservation</Label>
+                    <Calendar
+                      mode="multiple"
+                      selected={selectedDates}
+                      onSelect={(dates) => setSelectedDates(dates || [])}
+                      className="rounded-md border"
+                      locale={fr}
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
@@ -285,7 +369,7 @@ const AdminNewReservation = () => {
 
                 <Button 
                   onClick={handleCreateReservation} 
-                  disabled={loading || !selectedChild || selectedDates.length === 0}
+                  disabled={loading || !selectedChild || (reservationType === "wednesday" ? !selectedWednesday : selectedDates.length === 0)}
                   className="w-full"
                 >
                   {loading ? "Création en cours..." : "Créer la réservation"}
