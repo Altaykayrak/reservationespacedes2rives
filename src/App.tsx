@@ -1,111 +1,91 @@
-
-import { createBrowserRouter, RouterProvider } from "react-router-dom"
-import { Toaster } from "@/components/ui/sonner"
-import { Toaster as ShadcnToaster } from "@/components/ui/toaster"
-import ErrorBoundary from "@/components/ErrorBoundary"
-import Index from "./pages/Index"
-import Login from "./pages/Login"
-import Register from "./pages/Register"
-import Profile from "./pages/Profile"
-import Children from "./pages/Children"
-import { ProtectedRoute } from "./components/ProtectedRoute"
-import AdminLogin from "./pages/AdminLogin"
-import WednesdayReservations from "./pages/WednesdayReservations"
-import HolidayReservations from "./pages/HolidayReservations"
-import TeenHolidayReservations from "./pages/TeenHolidayReservations"
-import AdminDashboard from "./pages/admin/AdminDashboard"
-import AdminWednesdays from "./pages/admin/AdminWednesdays"
-import AdminHolidays from "./pages/admin/AdminHolidays"
-import AdminReservations from "./pages/admin/AdminReservations"
-import AdminAuthorizedEmails from "./pages/admin/AdminAuthorizedEmails"
-import HolidayProgram from "./pages/HolidayProgram"
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import LoginPage from "@/pages/LoginPage";
+import ProfilePage from "@/pages/ProfilePage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import RequestResetPasswordPage from "@/pages/RequestResetPasswordPage";
+import CGUPage from "@/pages/CGUPage";
+import HomePage from "@/pages/HomePage";
+import AdminPage from "@/pages/admin/AdminPage";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminWednesdays from "@/pages/admin/AdminWednesdays";
+import AdminHolidays from "@/pages/admin/AdminHolidays";
+import AdminReservations from "@/pages/admin/AdminReservations";
+import AdminChildren from "@/pages/admin/AdminChildren";
+import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
+import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Index />,
-    errorElement: <ErrorBoundary />
-  },
-  {
     path: "/login",
-    element: <Login />,
-    errorElement: <ErrorBoundary />
-  },
-  {
-    path: "/register",
-    element: <Register />,
-    errorElement: <ErrorBoundary />
+    element: <LoginPage />,
   },
   {
     path: "/profile",
-    element: <ProtectedRoute><Profile /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
+    element: (
+      <ProtectedRoute>
+        <ProfilePage />
+      </ProtectedRoute>
+    ),
   },
   {
-    path: "/children",
-    element: <ProtectedRoute><Children /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
+    path: "/reset-password",
+    element: <ResetPasswordPage />,
   },
   {
-    path: "/wednesday-reservations",
-    element: <ProtectedRoute><WednesdayReservations /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
+    path: "/request-reset-password",
+    element: <RequestResetPasswordPage />,
   },
   {
-    path: "/holiday-reservations",
-    element: <ProtectedRoute><HolidayReservations /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
+    path: "/cgu",
+    element: <CGUPage />,
   },
   {
-    path: "/teenholiday-reservations",
-    element: <ProtectedRoute><TeenHolidayReservations /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
-  },
-  {
-    path: "/holiday-program",
-    element: <HolidayProgram />,
-    errorElement: <ErrorBoundary />
-  },
-  {
-    path: "/admin-login",
-    element: <AdminLogin />,
-    errorElement: <ErrorBoundary />
+    path: "/",
+    element: <HomePage />,
   },
   {
     path: "/admin",
-    element: <ProtectedRoute><AdminDashboard /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
+    element: <AdminPage />,
+    children: [
+      {
+        path: "",
+        element: <AdminDashboard />,
+      },
+      {
+        path: "wednesdays",
+        element: <AdminWednesdays />,
+      },
+      {
+        path: "holidays",
+        element: <AdminHolidays />,
+      },
+      {
+        path: "reservations",
+        element: <AdminReservations />,
+      },
+      {
+        path: "children",
+        element: (
+          <ProtectedRoute>
+            <AdminChildren />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "authorized-emails",
+        element: <AdminAuthorizedEmails />,
+      },
+    ],
   },
   {
-    path: "/admin/wednesdays",
-    element: <ProtectedRoute><AdminWednesdays /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
+    path: "/admin-login",
+    element: <AdminLoginPage />,
   },
-  {
-    path: "/admin/holidays",
-    element: <ProtectedRoute><AdminHolidays /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
-  },
-  {
-    path: "/admin/reservations",
-    element: <ProtectedRoute><AdminReservations /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
-  },
-  {
-    path: "/admin/authorized-emails",
-    element: <ProtectedRoute><AdminAuthorizedEmails /></ProtectedRoute>,
-    errorElement: <ErrorBoundary />
-  }
-])
+]);
 
 function App() {
-  return (
-    <>
-      <RouterProvider router={router} />
-      <Toaster />
-      <ShadcnToaster />
-    </>
-  )
+  return <RouterProvider router={router} />;
 }
 
-export default App
+export default App;
