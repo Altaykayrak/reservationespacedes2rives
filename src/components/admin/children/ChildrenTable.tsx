@@ -2,8 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Child } from "@/types/profile";
-import { Link } from "react-router-dom";
-import { Edit, PencilIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon, Trash2Icon } from "lucide-react";
 
 interface ChildrenTableProps {
   children: Child[];
@@ -50,15 +49,6 @@ export const ChildrenTable = ({ children, onEdit, onDelete }: ChildrenTableProps
                     onClick={() => onDelete(child)}
                   >
                     <Trash2Icon className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                  >
-                    <Link to={`/admin/children/${child.id}/reservations`}>
-                      Réservations
-                    </Link>
                   </Button>
                 </div>
               </TableCell>
