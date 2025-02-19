@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
@@ -49,11 +48,22 @@ const AdminNewReservation = () => {
     return "all";
   };
 
-  const filteredChildren = children.filter(child => 
-    selectedGroup === "all" || getGroupFromSchoolClass(child.school_class) === selectedGroup
-  );
+  const filteredChildren = children
+    .filter(child => 
+      selectedGroup === "all" || getGroupFromSchoolClass(child.school_class) === selectedGroup
+    )
+    .sort((a, b) => {
+      // D'abord comparer les noms de famille
+      const lastNameComparison = a.last_name.localeCompare(b.last_name);
+      
+      // Si les noms sont identiques, comparer les prénoms
+      if (lastNameComparison === 0) {
+        return a.first_name.localeCompare(b.first_name);
+      }
+      
+      return lastNameComparison;
+    });
 
-  // Charger la liste des enfants
   const fetchChildren = async () => {
     const { data, error } = await supabase
       .from('children')
@@ -76,7 +86,6 @@ const AdminNewReservation = () => {
     setChildren(data || []);
   };
 
-  // Créer une réservation
   const handleCreateReservation = async () => {
     if (!selectedChild || selectedDates.length === 0) {
       toast({
