@@ -9,6 +9,7 @@ import AdminChildren from "@/pages/admin/AdminChildren";
 import AdminChildReservations from "@/pages/admin/AdminChildReservations";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
+import AdminNewReservation from "@/pages/admin/AdminNewReservation";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
       {
         path: "reservations",
         element: <AdminReservations />,
+      },
+      {
+        path: "reservations/new",
+        element: <AdminNewReservation />,
       },
       {
         path: "children",
