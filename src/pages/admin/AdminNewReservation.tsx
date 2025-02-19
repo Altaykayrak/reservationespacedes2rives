@@ -20,12 +20,15 @@ type Child = {
   school_class: string;
 };
 
+type Group = "all" | "maternelle" | "primaire" | "ado";
+
 const AdminNewReservation = () => {
   const { data: isAdmin } = useAdminAuth();
   const { toast } = useToast();
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [reservationType, setReservationType] = useState<"wednesday" | "holiday">("wednesday");
+  const [selectedGroup, setSelectedGroup] = useState<Group>("all");
   const [earlyDropoff, setEarlyDropoff] = useState(false);
   const [withoutMeal, setWithoutMeal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,6 +37,21 @@ const AdminNewReservation = () => {
   useEffect(() => {
     fetchChildren();
   }, []);
+
+  const getGroupFromSchoolClass = (schoolClass: string): Group => {
+    const maternelleClasses = ["PS", "MS", "GS"];
+    const primaireClasses = ["CP", "CE1", "CE2", "CM1", "CM2"];
+    const adoClasses = ["6EME", "5EME", "4EME", "3EME"];
+
+    if (maternelleClasses.includes(schoolClass.toUpperCase())) return "maternelle";
+    if (primaireClasses.includes(schoolClass.toUpperCase())) return "primaire";
+    if (adoClasses.includes(schoolClass.toUpperCase())) return "ado";
+    return "all";
+  };
+
+  const filteredChildren = children.filter(child => 
+    selectedGroup === "all" || getGroupFromSchoolClass(child.school_class) === selectedGroup
+  );
 
   // Charger la liste des enfants
   const fetchChildren = async () => {
@@ -189,13 +207,34 @@ const AdminNewReservation = () => {
                 </div>
 
                 <div>
+                  <Label>Groupe</Label>
+                  <Select 
+                    value={selectedGroup}
+                    onValueChange={(value: Group) => {
+                      setSelectedGroup(value);
+                      setSelectedChild(""); // Réinitialiser l'enfant sélectionné lors du changement de groupe
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez un groupe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les groupes</SelectItem>
+                      <SelectItem value="maternelle">Maternelle</SelectItem>
+                      <SelectItem value="primaire">Primaire</SelectItem>
+                      <SelectItem value="ado">Adolescent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
                   <Label>Enfant</Label>
                   <Select value={selectedChild} onValueChange={setSelectedChild}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionnez un enfant" />
                     </SelectTrigger>
                     <SelectContent>
-                      {children.map((child) => (
+                      {filteredChildren.map((child) => (
                         <SelectItem key={child.id} value={child.id}>
                           {child.first_name} {child.last_name} ({child.school_class})
                         </SelectItem>
