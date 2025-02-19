@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CalendarPlus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminChildReservations = () => {
   const { childId } = useParams();
   const { data: isAdmin } = useAdminAuth();
   const { data, isLoading } = useAdminReservations(isAdmin);
+  const { toast } = useToast();
 
   const childWednesdayReservations = data?.wednesdayReservations?.filter(
     (reservation) => reservation.child_id === childId
@@ -21,6 +24,8 @@ const AdminChildReservations = () => {
   const childHolidayReservations = data?.holidayReservations?.filter(
     (reservation) => reservation.child_id === childId
   );
+
+  const childData = childWednesdayReservations?.[0]?.children || childHolidayReservations?.[0]?.children;
 
   if (isLoading) {
     return (
@@ -33,15 +38,63 @@ const AdminChildReservations = () => {
     );
   }
 
-  const childName = childWednesdayReservations?.[0]?.children.first_name || 
-                   childHolidayReservations?.[0]?.children.first_name || 
-                   "Enfant";
+  const redirectToReservations = async (type: "wednesday" | "holiday") => {
+    try {
+      if (!childData?.school_class) {
+        toast({
+          title: "Erreur",
+          description: "La classe de l'enfant n'est pas définie",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Vérifier les places disponibles
+      if (type === "wednesday") {
+        const { data: availableWednesdays } = await supabase
+          .from('available_wednesdays')
+          .select('*')
+          .gt('date', new Date().toISOString());
+
+        if (!availableWednesdays?.length) {
+          toast({
+            title: "Information",
+            description: "Aucun mercredi n'est disponible à la réservation",
+          });
+          return;
+        }
+      } else {
+        const { data: availableHolidays } = await supabase
+          .from('available_holiday_periods')
+          .select('*')
+          .gt('end_date', new Date().toISOString());
+
+        if (!availableHolidays?.length) {
+          toast({
+            title: "Information",
+            description: "Aucune période de vacances n'est disponible à la réservation",
+          });
+          return;
+        }
+      }
+
+      // Rediriger vers la page de réservation avec les paramètres
+      window.location.href = `/admin/reservations?type=${type}&childId=${childId}`;
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la vérification des disponibilités",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div>
       <AdminNavbar />
       <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Réservations de {childName}</h1>
+        <h1 className="text-3xl font-bold mb-8">Réservations de {childData?.first_name || "Enfant"}</h1>
 
         <div className="grid gap-8">
           <Card>
@@ -50,11 +103,9 @@ const AdminChildReservations = () => {
                 <CardTitle>Réservations des mercredis</CardTitle>
                 <CardDescription>Liste des mercredis réservés</CardDescription>
               </div>
-              <Button asChild>
-                <Link to={`/admin/reservations?type=wednesday&childId=${childId}`}>
-                  <CalendarPlus className="mr-2 h-4 w-4" />
-                  Ajouter une réservation
-                </Link>
+              <Button onClick={() => redirectToReservations("wednesday")}>
+                <CalendarPlus className="mr-2 h-4 w-4" />
+                Ajouter une réservation
               </Button>
             </CardHeader>
             <CardContent>
@@ -84,11 +135,9 @@ const AdminChildReservations = () => {
                 <CardTitle>Réservations des vacances</CardTitle>
                 <CardDescription>Liste des jours de vacances réservés</CardDescription>
               </div>
-              <Button asChild>
-                <Link to={`/admin/reservations?type=holiday&childId=${childId}`}>
-                  <CalendarPlus className="mr-2 h-4 w-4" />
-                  Ajouter une réservation
-                </Link>
+              <Button onClick={() => redirectToReservations("holiday")}>
+                <CalendarPlus className="mr-2 h-4 w-4" />
+                Ajouter une réservation
               </Button>
             </CardHeader>
             <CardContent>
