@@ -10,17 +10,17 @@ import AdminChildReservations from "@/pages/admin/AdminChildReservations";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import AdminNewReservation from "@/pages/admin/AdminNewReservation";
-import { Index } from "@/pages/Index";
-import { Login } from "@/pages/Login";
-import { Register } from "@/pages/Register";
-import { Profile } from "@/pages/Profile";
-import { Children } from "@/pages/Children";
-import { WednesdayReservations } from "@/pages/WednesdayReservations";
-import { HolidayReservations } from "@/pages/HolidayReservations";
-import { TeenHolidayReservations } from "@/pages/TeenHolidayReservations";
-import { HolidayProgram } from "@/pages/HolidayProgram";
-import { TermsOfService } from "@/pages/TermsOfService";
-import { ForgotPassword } from "@/pages/ForgotPassword";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Profile from "@/pages/Profile";
+import Children from "@/pages/Children";
+import WednesdayReservations from "@/pages/WednesdayReservations";
+import HolidayReservations from "@/pages/HolidayReservations";
+import TeenHolidayReservations from "@/pages/TeenHolidayReservations";
+import HolidayProgram from "@/pages/HolidayProgram";
+import TermsOfService from "@/pages/TermsOfService";
+import ForgotPassword from "@/pages/ForgotPassword";
 
 const router = createBrowserRouter([
   {
