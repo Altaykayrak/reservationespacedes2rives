@@ -53,10 +53,9 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
       }
 
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("No user found")
 
       if (initialData) {
-        // Update existing child
+        // Mettre à jour l'enfant existant
         const { error } = await supabase
           .from('children')
           .update({
@@ -65,11 +64,20 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
             school_class: values.school_class,
           })
           .eq('id', initialData.id)
+          .select()
 
-        if (error) throw error
+        if (error) {
+          console.error('Erreur lors de la mise à jour :', error)
+          throw error
+        }
+
+        // Forcer le rafraîchissement des données
+        await queryClient.invalidateQueries({ queryKey: ['children'] })
         toast.success("Enfant modifié avec succès")
       } else {
-        // Create new child
+        // Créer un nouvel enfant
+        if (!user) throw new Error("No user found")
+
         const { error } = await supabase
           .from('children')
           .insert([
@@ -80,12 +88,14 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
               school_class: values.school_class,
             }
           ])
+          .select()
 
         if (error) throw error
         toast.success("Enfant ajouté avec succès")
       }
 
-      queryClient.invalidateQueries({ queryKey: ['children'] })
+      // Forcer le rafraîchissement des données
+      await queryClient.invalidateQueries({ queryKey: ['children'] })
       onSuccess()
     } catch (error) {
       console.error('Error saving child:', error)
