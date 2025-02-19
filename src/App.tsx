@@ -8,8 +8,13 @@ import AdminHolidays from "@/pages/admin/AdminHolidays";
 import AdminReservations from "@/pages/admin/AdminReservations";
 import AdminChildren from "@/pages/admin/AdminChildren";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
+import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 
 const router = createBrowserRouter([
+  {
+    path: "/admin-login",
+    element: <AdminLoginPage />,
+  },
   {
     path: "/admin",
     element: <AdminPage />,
