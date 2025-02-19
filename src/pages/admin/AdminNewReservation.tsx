@@ -245,7 +245,7 @@ const AdminNewReservation = () => {
                     <SelectContent>
                       {filteredChildren.map((child) => (
                         <SelectItem key={child.id} value={child.id}>
-                          {child.first_name} {child.last_name} ({child.school_class})
+                          {child.last_name} {child.first_name} ({child.school_class})
                         </SelectItem>
                       ))}
                     </SelectContent>
