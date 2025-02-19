@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 
@@ -51,11 +51,11 @@ export function AdminPage() {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <AdminNavbar />
-      <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Bienvenue dans l'administration</h1>
-      </div>
+      <main className="container mx-auto p-8">
+        <Outlet />
+      </main>
     </div>
   );
 }
