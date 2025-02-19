@@ -1,40 +1,12 @@
 
-import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, Navigate, Outlet } from "react-router-dom";
+import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
 
 export function AdminPage() {
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { data: isAdmin, isLoading } = useAdminAuth();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          // Check if user is admin using RPC function
-          const { data: isAdmin, error: adminError } = await supabase
-            .rpc('is_admin', { user_id: session.user.id });
-
-          if (adminError) {
-            console.error("Error checking admin role:", adminError);
-            setIsAdmin(false);
-          } else {
-            setIsAdmin(isAdmin);
-          }
-        }
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAdminStatus();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
