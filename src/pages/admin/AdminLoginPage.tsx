@@ -26,13 +26,14 @@ const AdminLoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAdminAuth = async () => {
       try {
+        setIsLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
@@ -42,7 +43,6 @@ const AdminLoginPage = () => {
 
           if (adminError) {
             console.error("Error checking admin status:", adminError);
-            setIsLoading(false);
             return;
           }
 
@@ -51,9 +51,9 @@ const AdminLoginPage = () => {
             navigate("/admin");
           }
         }
-        setIsLoading(false);
       } catch (error) {
         console.error("Error checking authentication:", error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -82,14 +82,12 @@ const AdminLoginPage = () => {
         console.error("Authentication error:", authError);
         setError("Email ou mot de passe incorrect");
         setShowErrorDialog(true);
-        setIsLoading(false);
         return;
       }
 
       if (!authData.user) {
         setError("Utilisateur non trouvé");
         setShowErrorDialog(true);
-        setIsLoading(false);
         return;
       }
 
@@ -102,7 +100,6 @@ const AdminLoginPage = () => {
         setError("Une erreur est survenue lors de la vérification des droits d'accès");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
-        setIsLoading(false);
         return;
       }
 
@@ -110,7 +107,6 @@ const AdminLoginPage = () => {
         setError("Vous n'avez pas les droits d'accès administrateur");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
-        setIsLoading(false);
         return;
       }
 
