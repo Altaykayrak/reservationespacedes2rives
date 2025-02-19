@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 type Child = {
   id: string;
@@ -45,6 +46,8 @@ const AdminNewReservation = () => {
   const [children, setChildren] = useState<Child[]>([]);
   const [availableWednesdays, setAvailableWednesdays] = useState<Wednesday[]>([]);
   const [selectedWednesday, setSelectedWednesday] = useState<string>("");
+  const [showNoSpotsDialog, setShowNoSpotsDialog] = useState(false);
+  const [noSpotsMessage, setNoSpotsMessage] = useState("");
 
   useEffect(() => {
     fetchChildren();
@@ -172,11 +175,8 @@ const AdminNewReservation = () => {
           : selectedWednesdayData.remaining_spots_primary;
 
         if (remainingSpots !== undefined && remainingSpots <= 0) {
-          toast({
-            title: "Erreur",
-            description: `Plus de places disponibles pour le groupe ${isKindergarten ? 'maternelle' : 'primaire'}`,
-            variant: "destructive",
-          });
+          setNoSpotsMessage(`Il n'y a plus de places disponibles pour le groupe ${isKindergarten ? 'maternelle' : 'primaire'} à cette date.`);
+          setShowNoSpotsDialog(true);
           setLoading(false);
           return;
         }
@@ -402,6 +402,22 @@ const AdminNewReservation = () => {
           </Card>
         </div>
       </div>
+
+      <AlertDialog open={showNoSpotsDialog} onOpenChange={setShowNoSpotsDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Plus de places disponibles</AlertDialogTitle>
+            <AlertDialogDescription>
+              {noSpotsMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowNoSpotsDialog(false)}>
+              Fermer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
