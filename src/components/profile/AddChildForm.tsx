@@ -46,6 +46,12 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
 
   const onSubmit = async (values: { first_name: string; last_name: string; school_class: string }) => {
     try {
+      // Vérifier que tous les champs sont remplis
+      if (!values.first_name.trim() || !values.last_name.trim() || !values.school_class) {
+        toast.error("Veuillez remplir tous les champs")
+        return
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("No user found")
 
@@ -54,8 +60,8 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
         const { error } = await supabase
           .from('children')
           .update({
-            first_name: values.first_name,
-            last_name: values.last_name,
+            first_name: values.first_name.trim(),
+            last_name: values.last_name.trim(),
             school_class: values.school_class,
           })
           .eq('id', initialData.id)
@@ -69,8 +75,8 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
           .insert([
             {
               profile_id: user.id,
-              first_name: values.first_name,
-              last_name: values.last_name,
+              first_name: values.first_name.trim(),
+              last_name: values.last_name.trim(),
               school_class: values.school_class,
             }
           ])
@@ -95,7 +101,10 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
         <Label htmlFor="first_name">Prénom</Label>
         <Input
           id="first_name"
-          {...register("first_name", { required: "Le prénom est requis" })}
+          {...register("first_name", { 
+            required: "Le prénom est requis",
+            validate: value => value.trim() !== "" || "Le prénom ne peut pas être vide"
+          })}
         />
         {errors.first_name && (
           <p className="text-sm text-destructive">{errors.first_name.message}</p>
@@ -106,7 +115,10 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
         <Label htmlFor="last_name">Nom</Label>
         <Input
           id="last_name"
-          {...register("last_name", { required: "Le nom est requis" })}
+          {...register("last_name", { 
+            required: "Le nom est requis",
+            validate: value => value.trim() !== "" || "Le nom ne peut pas être vide"
+          })}
         />
         {errors.last_name && (
           <p className="text-sm text-destructive">{errors.last_name.message}</p>
@@ -117,7 +129,10 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
         <Label htmlFor="school_class">Classe</Label>
         <Select 
           value={schoolClass} 
-          onValueChange={(value) => setValue('school_class', value)}
+          onValueChange={(value) => setValue('school_class', value, { 
+            shouldValidate: true,
+            shouldDirty: true 
+          })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Sélectionnez une classe" />
@@ -130,14 +145,14 @@ export function AddChildForm({ onSuccess, initialData }: AddChildFormProps) {
             ))}
           </SelectContent>
         </Select>
-        {errors.school_class && (
-          <p className="text-sm text-destructive">{errors.school_class.message}</p>
+        {!schoolClass && (
+          <p className="text-sm text-destructive">La classe est requise</p>
         )}
       </div>
 
-      <Button type="submit" disabled={isSubmitting}>
+      <Button type="submit" disabled={isSubmitting || !schoolClass}>
         {initialData ? "Modifier" : "Ajouter"}
       </Button>
     </form>
-  )
+  );
 }
