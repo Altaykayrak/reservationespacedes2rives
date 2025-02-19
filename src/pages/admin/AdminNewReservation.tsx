@@ -47,6 +47,7 @@ const AdminNewReservation = () => {
   const [availableWednesdays, setAvailableWednesdays] = useState<Wednesday[]>([]);
   const [selectedWednesday, setSelectedWednesday] = useState<string>("");
   const [showNoSpotsDialog, setShowNoSpotsDialog] = useState(false);
+  const [showExistingReservationDialog, setShowExistingReservationDialog] = useState(false);
   const [noSpotsMessage, setNoSpotsMessage] = useState("");
 
   useEffect(() => {
@@ -148,6 +149,22 @@ const AdminNewReservation = () => {
     }
   };
 
+  const checkExistingReservation = async (childId: string, wednesdayId: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('wednesday_reservations')
+      .select()
+      .eq('child_id', childId)
+      .eq('wednesday_id', wednesdayId)
+      .eq('status', 'confirmed')
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return !!data;
+  };
+
   const handleCreateReservation = async () => {
     if (!selectedChild || (reservationType === "wednesday" && !selectedWednesday) || 
         (reservationType === "holiday" && selectedDates.length === 0)) {
@@ -168,6 +185,13 @@ const AdminNewReservation = () => {
 
         const selectedWednesdayData = availableWednesdays.find(w => w.id === selectedWednesday);
         if (!selectedWednesdayData) throw new Error("Mercredi non trouvé");
+
+        const hasExistingReservation = await checkExistingReservation(selectedChild, selectedWednesday);
+        if (hasExistingReservation) {
+          setShowExistingReservationDialog(true);
+          setLoading(false);
+          return;
+        }
 
         const isKindergarten = ["PS", "MS", "GS"].includes(selectedChildData.school_class.toUpperCase());
         const remainingSpots = isKindergarten 
@@ -413,6 +437,22 @@ const AdminNewReservation = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowNoSpotsDialog(false)}>
+              Fermer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showExistingReservationDialog} onOpenChange={setShowExistingReservationDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Réservation existante</AlertDialogTitle>
+            <AlertDialogDescription>
+              Il existe déjà une réservation à cette date pour cet enfant.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowExistingReservationDialog(false)}>
               Fermer
             </AlertDialogAction>
           </AlertDialogFooter>
