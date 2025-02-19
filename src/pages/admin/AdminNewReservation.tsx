@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
@@ -70,18 +69,17 @@ const AdminNewReservation = () => {
       return;
     }
 
-    // Pour chaque mercredi, calculer le nombre de places restantes
     const wednesdaysWithSpots = await Promise.all(data.map(async (wednesday) => {
       const { data: spotsCounts } = await supabase
         .rpc('check_wednesday_spots_remaining', {
           wednesday_id: wednesday.id,
-          child_school_class: 'PS' // Pour maternelle
+          child_school_class: 'PS'
         });
 
       const { data: spotsPrimary } = await supabase
         .rpc('check_wednesday_spots_remaining', {
           wednesday_id: wednesday.id,
-          child_school_class: 'CP' // Pour primaire
+          child_school_class: 'CP'
         });
 
       return {
@@ -175,7 +173,6 @@ const AdminNewReservation = () => {
 
         if (error) throw error;
       } else {
-        // Obtenir d'abord l'ID de la période de vacances
         const { data: periodData, error: periodError } = await supabase
           .from('available_holiday_periods')
           .select('id')
@@ -187,7 +184,6 @@ const AdminNewReservation = () => {
           throw new Error("Période de vacances non trouvée");
         }
 
-        // Créer les réservations pour les vacances
         for (const date of selectedDates) {
           const { error } = await supabase
             .from('holiday_reservations')
@@ -312,23 +308,47 @@ const AdminNewReservation = () => {
                     <RadioGroup value={selectedWednesday} onValueChange={handleWednesdaySelect}>
                       <div className="grid gap-4">
                         {availableWednesdays.map((wednesday) => (
-                          <div key={wednesday.id} className="flex items-center space-x-2 p-4 border rounded-lg">
-                            <RadioGroupItem value={wednesday.id} id={wednesday.id} />
-                            <Label htmlFor={wednesday.id} className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <span>
-                                  {format(new Date(wednesday.date), 'EEEE d MMMM yyyy', { locale: fr })}
-                                </span>
-                                <div className="flex gap-2">
-                                  <Badge variant="outline">
-                                    Maternelle: {wednesday.remaining_spots_kindergarten} places
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    Primaire: {wednesday.remaining_spots_primary} places
-                                  </Badge>
+                          <div key={wednesday.id} className="border rounded-lg p-4 space-y-4">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value={wednesday.id} id={wednesday.id} />
+                              <Label htmlFor={wednesday.id} className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span>
+                                    {format(new Date(wednesday.date), 'EEEE d MMMM yyyy', { locale: fr })}
+                                  </span>
+                                  <div className="flex gap-2">
+                                    <Badge variant="outline">
+                                      Maternelle: {wednesday.remaining_spots_kindergarten} places
+                                    </Badge>
+                                    <Badge variant="outline">
+                                      Primaire: {wednesday.remaining_spots_primary} places
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </Label>
+                            </div>
+                            
+                            {selectedWednesday === wednesday.id && (
+                              <div className="ml-6 space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`earlyDropoff-${wednesday.id}`}
+                                    checked={earlyDropoff}
+                                    onCheckedChange={(checked) => setEarlyDropoff(checked as boolean)}
+                                  />
+                                  <Label htmlFor={`earlyDropoff-${wednesday.id}`}>Accueil avant 8h30</Label>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`withoutMeal-${wednesday.id}`}
+                                    checked={withoutMeal}
+                                    onCheckedChange={(checked) => setWithoutMeal(checked as boolean)}
+                                  />
+                                  <Label htmlFor={`withoutMeal-${wednesday.id}`}>Sans repas</Label>
                                 </div>
                               </div>
-                            </Label>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -346,26 +366,6 @@ const AdminNewReservation = () => {
                     />
                   </div>
                 )}
-
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="earlyDropoff"
-                      checked={earlyDropoff}
-                      onCheckedChange={(checked) => setEarlyDropoff(checked as boolean)}
-                    />
-                    <Label htmlFor="earlyDropoff">Accueil avant 8h30</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="withoutMeal"
-                      checked={withoutMeal}
-                      onCheckedChange={(checked) => setWithoutMeal(checked as boolean)}
-                    />
-                    <Label htmlFor="withoutMeal">Sans repas</Label>
-                  </div>
-                </div>
 
                 <Button 
                   onClick={handleCreateReservation} 
