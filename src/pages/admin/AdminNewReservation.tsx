@@ -160,6 +160,27 @@ const AdminNewReservation = () => {
 
     try {
       if (reservationType === "wednesday") {
+        const selectedChildData = children.find(child => child.id === selectedChild);
+        if (!selectedChildData) throw new Error("Enfant non trouvé");
+
+        const selectedWednesdayData = availableWednesdays.find(w => w.id === selectedWednesday);
+        if (!selectedWednesdayData) throw new Error("Mercredi non trouvé");
+
+        const isKindergarten = ["PS", "MS", "GS"].includes(selectedChildData.school_class.toUpperCase());
+        const remainingSpots = isKindergarten 
+          ? selectedWednesdayData.remaining_spots_kindergarten 
+          : selectedWednesdayData.remaining_spots_primary;
+
+        if (remainingSpots !== undefined && remainingSpots <= 0) {
+          toast({
+            title: "Erreur",
+            description: `Plus de places disponibles pour le groupe ${isKindergarten ? 'maternelle' : 'primaire'}`,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase
           .from('wednesday_reservations')
           .insert({
