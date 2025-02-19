@@ -8,7 +8,8 @@ export const useChildrenData = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("children")
-        .select("*");
+        .select("*")
+        .order('last_name', { ascending: true });
       
       if (error) throw error;
       return data;

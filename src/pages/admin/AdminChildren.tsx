@@ -11,8 +11,10 @@ import { AddChildForm } from "@/components/profile/AddChildForm";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AdminChildren = () => {
+  const queryClient = useQueryClient();
   const { children, isLoading } = useChildrenData();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClass, setSelectedClass] = useState("all");
@@ -30,6 +32,13 @@ const AdminChildren = () => {
 
     return matchesSearch && matchesClass && matchesGroup;
   });
+
+  const handleSuccessfulEdit = () => {
+    setEditingChild(null);
+    // Invalider explicitement le cache pour forcer un re-fetch
+    queryClient.invalidateQueries({ queryKey: ['children'] });
+    toast.success("Enfant modifié avec succès");
+  };
 
   const handleDeleteChild = async () => {
     if (!deletingChild) return;
@@ -65,6 +74,8 @@ const AdminChildren = () => {
 
       if (error) throw error;
 
+      // Invalider explicitement le cache pour forcer un re-fetch
+      queryClient.invalidateQueries({ queryKey: ['children'] });
       toast.success("Enfant supprimé avec succès");
       setDeletingChild(null);
     } catch (error) {
@@ -106,7 +117,7 @@ const AdminChildren = () => {
             {editingChild && (
               <AddChildForm
                 initialData={editingChild}
-                onSuccess={() => setEditingChild(null)}
+                onSuccess={handleSuccessfulEdit}
               />
             )}
           </DialogContent>
