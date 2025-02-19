@@ -1,11 +1,13 @@
 
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminReservations } from "@/components/admin/reservations/hooks/useAdminReservations";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { CalendarPlus } from "lucide-react";
 
 const AdminChildReservations = () => {
   const { childId } = useParams();
@@ -43,9 +45,17 @@ const AdminChildReservations = () => {
 
         <div className="grid gap-8">
           <Card>
-            <CardHeader>
-              <CardTitle>Réservations des mercredis</CardTitle>
-              <CardDescription>Liste des mercredis réservés</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Réservations des mercredis</CardTitle>
+                <CardDescription>Liste des mercredis réservés</CardDescription>
+              </div>
+              <Button asChild>
+                <Link to={`/admin/reservations?type=wednesday&childId=${childId}`}>
+                  <CalendarPlus className="mr-2 h-4 w-4" />
+                  Ajouter une réservation
+                </Link>
+              </Button>
             </CardHeader>
             <CardContent>
               {childWednesdayReservations?.length === 0 ? (
@@ -69,9 +79,17 @@ const AdminChildReservations = () => {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Réservations des vacances</CardTitle>
-              <CardDescription>Liste des jours de vacances réservés</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Réservations des vacances</CardTitle>
+                <CardDescription>Liste des jours de vacances réservés</CardDescription>
+              </div>
+              <Button asChild>
+                <Link to={`/admin/reservations?type=holiday&childId=${childId}`}>
+                  <CalendarPlus className="mr-2 h-4 w-4" />
+                  Ajouter une réservation
+                </Link>
+              </Button>
             </CardHeader>
             <CardContent>
               {childHolidayReservations?.length === 0 ? (
