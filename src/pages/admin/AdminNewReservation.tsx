@@ -302,7 +302,9 @@ const AdminNewReservation = () => {
                       <SelectItem value="all">Tous les groupes</SelectItem>
                       <SelectItem value="maternelle">Maternelle</SelectItem>
                       <SelectItem value="primaire">Primaire</SelectItem>
-                      <SelectItem value="ado">Adolescent</SelectItem>
+                      {reservationType === "holiday" && (
+                        <SelectItem value="ado">Adolescent</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
