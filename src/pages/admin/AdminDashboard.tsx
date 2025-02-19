@@ -51,6 +51,19 @@ const AdminDashboard = () => {
               <Link to="/admin/reservations">Gérer les réservations</Link>
             </Button>
           </Card>
+
+          <Card className="p-6 flex flex-col h-full">
+            <div className="flex-grow">
+              <div className="flex items-center gap-2 mb-4">
+                <ClipboardList className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">Gestion des enfants</h2>
+              </div>
+              <p className="text-gray-600">Voir et gérer tous les enfants inscrits</p>
+            </div>
+            <Button asChild className="mt-4">
+              <Link to="/admin/children">Gérer les enfants</Link>
+            </Button>
+          </Card>
         </div>
       </div>
     </div>
