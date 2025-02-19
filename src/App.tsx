@@ -10,8 +10,63 @@ import AdminChildReservations from "@/pages/admin/AdminChildReservations";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import AdminNewReservation from "@/pages/admin/AdminNewReservation";
+import { Index } from "@/pages/Index";
+import { Login } from "@/pages/Login";
+import { Register } from "@/pages/Register";
+import { Profile } from "@/pages/Profile";
+import { Children } from "@/pages/Children";
+import { WednesdayReservations } from "@/pages/WednesdayReservations";
+import { HolidayReservations } from "@/pages/HolidayReservations";
+import { TeenHolidayReservations } from "@/pages/TeenHolidayReservations";
+import { HolidayProgram } from "@/pages/HolidayProgram";
+import { TermsOfService } from "@/pages/TermsOfService";
+import { ForgotPassword } from "@/pages/ForgotPassword";
 
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
+  },
+  {
+    path: "/profile",
+    element: <Profile />,
+  },
+  {
+    path: "/children",
+    element: <Children />,
+  },
+  {
+    path: "/wednesday-reservations",
+    element: <WednesdayReservations />,
+  },
+  {
+    path: "/holiday-reservations",
+    element: <HolidayReservations />,
+  },
+  {
+    path: "/teenholiday-reservations",
+    element: <TeenHolidayReservations />,
+  },
+  {
+    path: "/holiday-program",
+    element: <HolidayProgram />,
+  },
+  {
+    path: "/terms-of-service",
+    element: <TermsOfService />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
   {
     path: "/admin-login",
     element: <AdminLoginPage />,
