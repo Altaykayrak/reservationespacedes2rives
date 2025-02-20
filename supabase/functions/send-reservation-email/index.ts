@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Resend } from "npm:resend@0.0.1";
+import { Resend } from "npm:@resend/node@0.16.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -38,7 +38,7 @@ serve(async (req) => {
     console.log("Contenu de l'email:", emailContent);
 
     const emailResult = await resend.emails.send({
-      from: "accueil@supabase.lovable.dev",
+      from: "accueil@resend.dev",
       to: parentEmail,
       subject: `Confirmation de réservation - ${childName}`,
       html: emailContent,
