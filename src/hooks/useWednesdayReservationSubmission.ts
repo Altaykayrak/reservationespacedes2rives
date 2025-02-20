@@ -58,23 +58,6 @@ export const useWednesdayReservationSubmission = (
     }
 
     try {
-      // Récupérer l'utilisateur courant
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!user?.email) throw new Error("Email de l'utilisateur non trouvé");
-
-      // Récupérer les informations de l'enfant
-      const { data: childData, error: childError } = await supabase
-        .from("children")
-        .select(`
-          first_name,
-          last_name
-        `)
-        .eq('id', selectedChild)
-        .single();
-
-      if (childError) throw childError;
-
       for (const dateOption of selectedDates) {
         const { data: wednesday, error: wednesdayError } = await supabase
           .from("available_wednesdays")
@@ -112,37 +95,12 @@ export const useWednesdayReservationSubmission = (
         if (reservationError) throw reservationError;
       }
 
-      // Envoyer l'email de confirmation
-      const emailData = {
-        childName: `${childData.first_name} ${childData.last_name}`,
-        dates: selectedDates.map(d => ({
-          date: format(d.date, "EEEE d MMMM yyyy", { locale: fr }),
-          withoutMeal: d.withoutMeal,
-          earlyDropoff: d.earlyDropoff
-        })),
-        type: 'wednesday' as const,
-        parentEmail: user.email
-      };
-
-      const { error: emailError } = await supabase.functions.invoke('send-reservation-email', {
-        body: emailData
+      toast({
+        title: "Succès",
+        description: selectedDates.length > 1 
+          ? "Les réservations ont été créées avec succès"
+          : "La réservation a été créée avec succès",
       });
-
-      if (emailError) {
-        console.error("Erreur lors de l'envoi de l'email:", emailError);
-        toast({
-          title: "Attention",
-          description: "Les réservations ont été créées mais l'email de confirmation n'a pas pu être envoyé.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Succès",
-          description: selectedDates.length > 1 
-            ? "Les réservations ont été créées avec succès"
-            : "La réservation a été créée avec succès",
-        });
-      }
 
       // Forcer la mise à jour des données après les réservations
       await Promise.all([
