@@ -2,8 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { Resend } from "npm:resend@2.0.0"
 
-// Récupérer la clé API avec le nom exact configuré dans Supabase
-const resendApiKey = Deno.env.get('resendapikey');
+const resendApiKey = Deno.env.get('RESEND_API_KEY');
 if (!resendApiKey) {
   throw new Error('La clé API Resend n\'est pas configurée');
 }
