@@ -23,8 +23,16 @@ export const useReservationQueries = () => {
       const { data, error } = await supabase
         .from("wednesday_reservations")
         .select(`
-          *,
-          children (
+          child_id,
+          created_at,
+          early_dropoff,
+          id,
+          reservation_number,
+          status,
+          updated_at,
+          wednesday_id,
+          without_meal,
+          children:children_id(
             id,
             first_name,
             last_name,
@@ -33,7 +41,7 @@ export const useReservationQueries = () => {
             created_at,
             updated_at
           ),
-          available_wednesdays (
+          available_wednesdays!wednesday_reservations_wednesday_id_fkey(
             id,
             date
           )
@@ -41,7 +49,8 @@ export const useReservationQueries = () => {
         .order('created_at', { ascending: true });
       
       if (error) throw error;
-      return data as (Tables<"wednesday_reservations"> & {
+      
+      return data as unknown as (Tables<"wednesday_reservations"> & {
         children: Pick<Tables<"children">, 
           "id" | 
           "first_name" | 
