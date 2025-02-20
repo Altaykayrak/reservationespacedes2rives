@@ -129,7 +129,7 @@ export const useWednesdayReservationSubmission = (
       });
 
       if (emailError) {
-        console.error('Erreur lors de l\'envoi de l\'email:', emailError);
+        console.error("Erreur lors de l'envoi de l'email:", emailError);
         toast({
           title: "Attention",
           description: "Les réservations ont été créées mais l'email de confirmation n'a pas pu être envoyé.",
