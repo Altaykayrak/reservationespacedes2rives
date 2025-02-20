@@ -6,11 +6,9 @@ import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./HolidayDateSelector";
 import { Toaster } from "@/components/ui/toaster";
-import { useState } from "react";
+import { SuccessReservationDialog } from "./SuccessReservationDialog";
 
 export const HolidayReservationContent = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const {
     selectedDates,
     selectedChild,
@@ -23,27 +21,10 @@ export const HolidayReservationContent = () => {
     handleOptionChange,
     handleSubmit,
     isDateAlreadyReserved,
-    setSelectedDates
+    setSelectedDates,
+    showSuccessDialog,
+    setShowSuccessDialog
   } = useHolidayReservation();
-
-  const onSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      await handleSubmit();
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!holidayPeriods || holidayPeriods.length === 0) {
-    return (
-      <Card className="p-6">
-        <p className="text-center text-gray-500">
-          Aucune période de vacances n'est disponible pour le moment.
-        </p>
-      </Card>
-    );
-  }
 
   return (
     <>
@@ -75,14 +56,20 @@ export const HolidayReservationContent = () => {
           )}
 
           <Button
-            onClick={onSubmit}
+            onClick={handleSubmit}
             className="w-full"
-            disabled={!selectedChild || !selectedPeriod || isSubmitting}
+            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0}
           >
-            {isSubmitting ? "Réservation en cours, veuillez patienter..." : "Confirmer la réservation"}
+            {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
           </Button>
         </div>
       </Card>
+
+      <SuccessReservationDialog 
+        open={showSuccessDialog} 
+        onOpenChange={setShowSuccessDialog}
+      />
+      
       <Toaster />
     </>
   );

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useChildrenData } from "./useChildrenData";
 import { useHolidayPeriods } from "./useHolidayPeriods";
@@ -17,6 +16,7 @@ export const useHolidayReservation = () => {
   const [selectedDates, setSelectedDates] = useState<DateOption[]>([]);
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const { children } = useChildrenData();
   const { holidayPeriods } = useHolidayPeriods();
@@ -63,12 +63,10 @@ export const useHolidayReservation = () => {
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
 
-  // Effet pour réinitialiser les dates lors du changement d'enfant
   useEffect(() => {
     setSelectedDates([]);
   }, [selectedChild]);
 
-  // Effet pour présélectionner les dates uniquement pour les ados sur la page teen
   useEffect(() => {
     const isTeenPage = window.location.pathname === "/teenholiday-reservations";
     
@@ -105,17 +103,18 @@ export const useHolidayReservation = () => {
     selectedDates,
     holidayPeriods,
     isDateAlreadyReserved,
-    refetchReservations,
+    async () => {
+      await refetchReservations();
+      setShowSuccessDialog(true);
+    },
     resetForm
   );
 
   const handleDateToggle = (date: Date) => {
     const isTeenPage = window.location.pathname === "/teenholiday-reservations";
     
-    // N'empêcher la modification manuelle que pour les ados sur la page teen
     if (isTeenClass && isTeenPage) return;
     
-    // Vérifier si la date est déjà réservée
     if (isDateAlreadyReserved(date)) {
       return;
     }
@@ -124,7 +123,6 @@ export const useHolidayReservation = () => {
     if (existingDate) {
       setSelectedDates(selectedDates.filter(d => d.date.getTime() !== date.getTime()));
     } else {
-      // Sur la page normale, même pour les ados, permettre de choisir les options
       setSelectedDates([...selectedDates, { 
         date, 
         withoutMeal: false, 
@@ -155,6 +153,8 @@ export const useHolidayReservation = () => {
     handleSubmit: submitReservation,
     isDateAlreadyReserved,
     isTeenClass,
-    childInfo  // On expose maintenant childInfo
+    childInfo,
+    showSuccessDialog,
+    setShowSuccessDialog
   };
 };
