@@ -23,7 +23,8 @@ export const HolidayReservationContent = () => {
     isDateAlreadyReserved,
     setSelectedDates,
     showSuccessDialog,
-    setShowSuccessDialog
+    setShowSuccessDialog,
+    isSubmitting
   } = useHolidayReservation();
 
   return (
@@ -58,7 +59,7 @@ export const HolidayReservationContent = () => {
           <Button
             onClick={handleSubmit}
             className="w-full"
-            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0}
+            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
           >
             {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
           </Button>

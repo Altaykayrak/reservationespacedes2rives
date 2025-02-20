@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useChildrenData } from "./useChildrenData";
 import { useHolidayPeriods } from "./useHolidayPeriods";
@@ -17,6 +18,7 @@ export const useHolidayReservation = () => {
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { children } = useChildrenData();
   const { holidayPeriods } = useHolidayPeriods();
@@ -98,7 +100,7 @@ export const useHolidayReservation = () => {
     setSelectedPeriod("");
   };
 
-  const { handleSubmit: submitReservation } = useReservationSubmission(
+  const { handleSubmit: submit } = useReservationSubmission(
     selectedChild,
     selectedDates,
     holidayPeriods,
@@ -109,6 +111,15 @@ export const useHolidayReservation = () => {
     },
     resetForm
   );
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await submit();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleDateToggle = (date: Date) => {
     const isTeenPage = window.location.pathname === "/teenholiday-reservations";
@@ -150,11 +161,12 @@ export const useHolidayReservation = () => {
     holidayPeriods,
     handleDateToggle,
     handleOptionChange,
-    handleSubmit: submitReservation,
+    handleSubmit,
     isDateAlreadyReserved,
     isTeenClass,
     childInfo,
     showSuccessDialog,
-    setShowSuccessDialog
+    setShowSuccessDialog,
+    isSubmitting
   };
 };
