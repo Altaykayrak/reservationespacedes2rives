@@ -28,6 +28,9 @@ export const useReservationQueries = () => {
             first_name,
             last_name,
             school_class
+          ),
+          available_wednesdays (
+            date
           )
         `)
         .order('created_at', { ascending: true });
@@ -35,6 +38,7 @@ export const useReservationQueries = () => {
       if (error) throw error;
       return data as (Tables<"wednesday_reservations"> & {
         children: Tables<"children">;
+        available_wednesdays: { date: string };
       })[];
     },
   });
@@ -51,12 +55,18 @@ export const useReservationQueries = () => {
   const isDateReservedForChild = (childId: string, date: Date) => {
     if (!wednesdayReservations) return false;
     
-    // Pour les mercredis, nous cherchons une réservation correspondante
-    return wednesdayReservations.some(
+    const formattedDate = format(date, "yyyy-MM-dd");
+    console.log("Vérification de la réservation pour la date:", formattedDate);
+    console.log("Réservations existantes:", wednesdayReservations);
+    
+    const isReserved = wednesdayReservations.some(
       (reservation) => 
         reservation.child_id === childId &&
-        reservation.wednesday_id === format(date, "yyyy-MM-dd")
+        reservation.available_wednesdays?.date === formattedDate
     );
+
+    console.log("La date est-elle réservée ?", isReserved);
+    return isReserved;
   };
 
   return {
