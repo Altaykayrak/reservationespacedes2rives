@@ -47,10 +47,16 @@ const AdminReservations = () => {
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Gestion des réservations</h1>
-          <Button onClick={() => window.location.href = '/admin/reservations/new'}>
-            <CalendarPlus className="mr-2 h-4 w-4" />
-            Ajouter une réservation
-          </Button>
+          <div className="flex gap-4">
+            <Button onClick={() => window.location.href = '/admin/reservations/new'}>
+              <CalendarPlus className="mr-2 h-4 w-4" />
+              Réserver des mercredis
+            </Button>
+            <Button variant="secondary" onClick={() => window.location.href = '/admin/reservations/new-holiday'}>
+              <CalendarPlus className="mr-2 h-4 w-4" />
+              Réserver des vacances
+            </Button>
+          </div>
         </div>
         <AdminReservationsContent
           wednesdayReservations={data?.wednesdayReservations || null}
