@@ -25,11 +25,16 @@ export const useReservationQueries = () => {
         .select(`
           *,
           children (
+            id,
             first_name,
             last_name,
-            school_class
+            school_class,
+            profile_id,
+            created_at,
+            updated_at
           ),
           available_wednesdays (
+            id,
             date
           )
         `)
@@ -37,8 +42,16 @@ export const useReservationQueries = () => {
       
       if (error) throw error;
       return data as (Tables<"wednesday_reservations"> & {
-        children: Tables<"children">;
-        available_wednesdays: { date: string };
+        children: Pick<Tables<"children">, 
+          "id" | 
+          "first_name" | 
+          "last_name" | 
+          "school_class" | 
+          "profile_id" | 
+          "created_at" | 
+          "updated_at"
+        >;
+        available_wednesdays: Pick<Tables<"available_wednesdays">, "id" | "date">;
       })[];
     },
   });
