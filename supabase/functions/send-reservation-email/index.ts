@@ -38,7 +38,7 @@ serve(async (req) => {
     console.log("Contenu de l'email:", emailContent);
 
     const emailResult = await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: "accueil@e2rives.com",
       to: parentEmail,
       subject: `Confirmation de réservation - ${childName}`,
       html: emailContent,
