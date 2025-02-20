@@ -7,6 +7,7 @@ import { WednesdayDateSelector } from "./WednesdayDateSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CalendarDays } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SuccessReservationDialog } from "./SuccessReservationDialog";
 
 export const WednesdayReservationContent = () => {
   const {
@@ -18,7 +19,8 @@ export const WednesdayReservationContent = () => {
     handleOptionChange,
     handleSubmit,
     isDateReservedForChild,
-    SuccessDialog
+    showSuccessDialog,
+    setShowSuccessDialog
   } = useReservations();
 
   return (
@@ -58,7 +60,10 @@ export const WednesdayReservationContent = () => {
         </div>
       </Card>
 
-      <SuccessDialog />
+      <SuccessReservationDialog 
+        open={showSuccessDialog} 
+        onOpenChange={setShowSuccessDialog}
+      />
     </div>
   );
 };

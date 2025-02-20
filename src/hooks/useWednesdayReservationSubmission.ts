@@ -4,15 +4,6 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 interface DateOption {
@@ -125,26 +116,9 @@ export const useWednesdayReservationSubmission = (
     }
   };
 
-  const SuccessDialog = () => {
-    return (
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Réservation confirmée</DialogTitle>
-            <DialogDescription>
-              Votre réservation a été enregistrée avec succès. 
-              Vous pouvez consulter ci-dessous l'ensemble de vos réservations pour vos enfants.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={() => setShowSuccessDialog(false)}>
-              Fermer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
+  return { 
+    handleSubmit, 
+    showSuccessDialog, 
+    setShowSuccessDialog 
   };
-
-  return { handleSubmit, SuccessDialog };
 };
