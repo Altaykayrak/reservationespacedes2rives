@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,7 +55,6 @@ export const useReservations = () => {
         return [];
       }
 
-      // Récupérer les réservations pour l'utilisateur connecté
       const { data: reservations, error: reservationsError } = await supabase
         .from('wednesday_reservations_with_children')
         .select(`
@@ -84,16 +84,13 @@ export const useReservations = () => {
         throw reservationsError;
       }
 
-      // Filtrer les réservations pour ne garder que celles des enfants de l'utilisateur
       const filteredReservations = reservations?.filter(reservation => {
         const childData = reservation.children as unknown as ChildWithProfile;
         return children?.some(child => child.id === childData.id);
       }) || [];
 
-      // Transformer les données pour correspondre au type attendu
       const transformedData = filteredReservations.map(reservation => {
         const childData = reservation.children as unknown as ChildWithProfile;
-        
         return {
           ...reservation,
           children: childData,
@@ -142,7 +139,7 @@ export const useReservations = () => {
     setSelectedDates([]);
   };
 
-  const { handleSubmit, SuccessDialog } = useWednesdayReservationSubmission(
+  const { handleSubmit, showSuccessDialog, setShowSuccessDialog } = useWednesdayReservationSubmission(
     selectedChild,
     selectedDates,
     (date) => isDateReservedForChild(selectedChild, date),
@@ -163,6 +160,7 @@ export const useReservations = () => {
     resetForm,
     refetchReservations,
     isSubmitting,
-    SuccessDialog
+    showSuccessDialog,
+    setShowSuccessDialog
   };
 };

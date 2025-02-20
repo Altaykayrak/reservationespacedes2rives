@@ -13,8 +13,7 @@ type GroupedReservations = Record<string, {
 }>;
 
 export const WednesdayReservationsList = () => {
-  const navigate = useNavigate();
-  const { wednesdayReservations, refetchReservations, isSubmitting } = useReservations();
+  const { wednesdayReservations, refetchReservations } = useReservations();
 
   console.log("Réservations du mercredi :", wednesdayReservations);
 
