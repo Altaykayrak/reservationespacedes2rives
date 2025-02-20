@@ -59,15 +59,27 @@ export const useWednesdayReservationSubmission = (
 
     try {
       for (const dateOption of selectedDates) {
-        // D'abord, récupérer l'ID du mercredi correspondant à la date
         const { data: wednesday, error: wednesdayError } = await supabase
           .from("available_wednesdays")
           .select("id")
           .eq("date", format(dateOption.date, "yyyy-MM-dd"))
-          .single();
+          .maybeSingle();
 
         if (wednesdayError) throw wednesdayError;
         if (!wednesday) throw new Error(`Mercredi non trouvé pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
+
+        // Vérifier d'abord si une réservation existe déjà
+        const { data: existingReservation } = await supabase
+          .from("wednesday_reservations")
+          .select("id")
+          .eq("child_id", selectedChild)
+          .eq("wednesday_id", wednesday.id)
+          .maybeSingle();
+
+        if (existingReservation) {
+          console.log(`Réservation déjà existante pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
+          continue; // Passer à la date suivante
+        }
 
         const { error: reservationError } = await supabase
           .from("wednesday_reservations")
