@@ -12,6 +12,17 @@ import { useReservationQueries } from "@/hooks/useReservationQueries";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface DateOption {
   date: Date;
@@ -37,6 +48,9 @@ export const AdminReservationForm = ({
   resetForm
 }: AdminReservationFormProps) => {
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
+  const [showReservationAlert, setShowReservationAlert] = useState(false);
+  const [reservedDate, setReservedDate] = useState<Date | null>(null);
+
   const { children, isLoading } = useChildrenData();
   const { isDateReservedForChild, refetchReservations } = useReservationQueries();
   
@@ -47,6 +61,15 @@ export const AdminReservationForm = ({
     refetchReservations,
     resetForm
   );
+
+  const handleDateSelection = (date: Date) => {
+    if (selectedChild && isDateReservedForChild(selectedChild, date)) {
+      setReservedDate(date);
+      setShowReservationAlert(true);
+      return;
+    }
+    handleDateToggle(date);
+  };
 
   const filteredChildren = children?.filter(child => {
     if (selectedGroup === "all") return true;
@@ -105,7 +128,7 @@ export const AdminReservationForm = ({
           <ScrollArea className="h-[400px]">
             <WednesdayDateSelector
               selectedDates={selectedDates}
-              handleDateToggle={handleDateToggle}
+              handleDateToggle={handleDateSelection}
               handleOptionChange={handleOptionChange}
               isDateAlreadyReserved={(date) => isDateReservedForChild(selectedChild, date)}
               selectedChild={selectedChild}
@@ -121,6 +144,22 @@ export const AdminReservationForm = ({
           </Button>
         </div>
       </Card>
+
+      <AlertDialog open={showReservationAlert} onOpenChange={setShowReservationAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Réservation existante</AlertDialogTitle>
+            <AlertDialogDescription>
+              {reservedDate && `Une réservation existe déjà pour le ${format(reservedDate, "EEEE d MMMM yyyy", { locale: fr })}`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowReservationAlert(false)}>
+              D'accord
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
