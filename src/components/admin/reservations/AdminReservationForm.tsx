@@ -20,6 +20,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -63,12 +64,16 @@ export const AdminReservationForm = ({
   );
 
   const handleDateSelection = (date: Date) => {
+    console.log("Date sélectionnée:", date);
+    console.log("Enfant sélectionné:", selectedChild);
     if (selectedChild && isDateReservedForChild(selectedChild, date)) {
+      console.log("Date déjà réservée, affichage de l'alerte");
       setReservedDate(date);
       setShowReservationAlert(true);
-      return;
+    } else {
+      console.log("Date non réservée, ajout à la sélection");
+      handleDateToggle(date);
     }
-    handleDateToggle(date);
   };
 
   const filteredChildren = children?.filter(child => {
@@ -104,7 +109,7 @@ export const AdminReservationForm = ({
               value={selectedGroup}
               onValueChange={(value) => {
                 setSelectedGroup(value);
-                setSelectedChild(""); // Réinitialiser l'enfant sélectionné lors du changement de groupe
+                setSelectedChild("");
               }}
             >
               <SelectTrigger>
@@ -122,7 +127,7 @@ export const AdminReservationForm = ({
             selectedChild={selectedChild}
             setSelectedChild={setSelectedChild}
             children={filteredChildren}
-            setSelectedDates={() => {}} // On n'utilise pas cette prop dans le contexte admin
+            setSelectedDates={() => {}}
           />
 
           <ScrollArea className="h-[400px]">
@@ -145,7 +150,7 @@ export const AdminReservationForm = ({
         </div>
       </Card>
 
-      <AlertDialog open={showReservationAlert} onOpenChange={setShowReservationAlert}>
+      <AlertDialog open={showReservationAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Réservation existante</AlertDialogTitle>
