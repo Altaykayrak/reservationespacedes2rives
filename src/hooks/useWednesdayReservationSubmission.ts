@@ -58,26 +58,22 @@ export const useWednesdayReservationSubmission = (
     }
 
     try {
-      // Récupérer d'abord les informations de l'enfant et du parent
+      // Récupérer l'utilisateur courant
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user?.email) throw new Error("Email de l'utilisateur non trouvé");
+
+      // Récupérer les informations de l'enfant
       const { data: childData, error: childError } = await supabase
         .from("children")
         .select(`
           first_name,
-          last_name,
-          profile:profile_id (
-            id
-          )
+          last_name
         `)
         .eq('id', selectedChild)
         .single();
 
       if (childError) throw childError;
-
-      // Récupérer l'email du parent via auth.user
-      const { data: { user }, error: userError } = await supabase.auth.getUser(childData.profile.id);
-      
-      if (userError) throw userError;
-      if (!user?.email) throw new Error("Email de l'utilisateur non trouvé");
 
       for (const dateOption of selectedDates) {
         const { data: wednesday, error: wednesdayError } = await supabase
