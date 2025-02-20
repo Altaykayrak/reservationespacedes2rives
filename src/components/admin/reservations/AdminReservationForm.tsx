@@ -9,6 +9,9 @@ import { WednesdayDateSelector } from "@/components/reservations/WednesdayDateSe
 import { ChildSelector } from "@/components/reservations/ChildSelector";
 import { useWednesdayReservationSubmission } from "@/hooks/useWednesdayReservationSubmission";
 import { useReservationQueries } from "@/hooks/useReservationQueries";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
+import { Label } from "@/components/ui/label";
 
 interface DateOption {
   date: Date;
@@ -33,6 +36,7 @@ export const AdminReservationForm = ({
   handleOptionChange,
   resetForm
 }: AdminReservationFormProps) => {
+  const [selectedGroup, setSelectedGroup] = useState<string>("");
   const { children, isLoading } = useChildrenData();
   const { isDateReservedForChild, refetchReservations } = useReservationQueries();
   
@@ -43,6 +47,18 @@ export const AdminReservationForm = ({
     refetchReservations,
     resetForm
   );
+
+  const filteredChildren = children?.filter(child => {
+    if (!selectedGroup) return true;
+    const schoolClass = child.school_class.toUpperCase();
+    if (selectedGroup === "maternelle") {
+      return ["PS", "MS", "GS"].includes(schoolClass);
+    }
+    if (selectedGroup === "primaire") {
+      return ["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass);
+    }
+    return true;
+  });
 
   if (isLoading) {
     return <div>Chargement des enfants...</div>;
@@ -59,10 +75,30 @@ export const AdminReservationForm = ({
 
       <Card className="p-6">
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Groupe</Label>
+            <Select
+              value={selectedGroup}
+              onValueChange={(value) => {
+                setSelectedGroup(value);
+                setSelectedChild(""); // Réinitialiser l'enfant sélectionné lors du changement de groupe
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un groupe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Tous les groupes</SelectItem>
+                <SelectItem value="maternelle">Maternelle</SelectItem>
+                <SelectItem value="primaire">Primaire</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <ChildSelector
             selectedChild={selectedChild}
             setSelectedChild={setSelectedChild}
-            children={children}
+            children={filteredChildren}
             setSelectedDates={() => {}} // On n'utilise pas cette prop dans le contexte admin
           />
 
