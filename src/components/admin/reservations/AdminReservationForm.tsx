@@ -13,15 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -49,7 +47,7 @@ export const AdminReservationForm = ({
   resetForm
 }: AdminReservationFormProps) => {
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
-  const [showReservationAlert, setShowReservationAlert] = useState(false);
+  const [showReservationDialog, setShowReservationDialog] = useState(false);
   const [reservedDate, setReservedDate] = useState<Date | null>(null);
 
   const { children, isLoading } = useChildrenData();
@@ -67,9 +65,9 @@ export const AdminReservationForm = ({
     console.log("Date sélectionnée:", date);
     console.log("Enfant sélectionné:", selectedChild);
     if (selectedChild && isDateReservedForChild(selectedChild, date)) {
-      console.log("Date déjà réservée, affichage de l'alerte");
+      console.log("Date déjà réservée, affichage de la popup");
       setReservedDate(date);
-      setShowReservationAlert(true);
+      setShowReservationDialog(true);
     } else {
       console.log("Date non réservée, ajout à la sélection");
       handleDateToggle(date);
@@ -150,21 +148,21 @@ export const AdminReservationForm = ({
         </div>
       </Card>
 
-      <AlertDialog open={showReservationAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Réservation existante</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={showReservationDialog} onOpenChange={setShowReservationDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Date déjà réservée</DialogTitle>
+            <DialogDescription>
               {reservedDate && `Une réservation existe déjà pour le ${format(reservedDate, "EEEE d MMMM yyyy", { locale: fr })}`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowReservationAlert(false)}>
-              D'accord
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button onClick={() => setShowReservationDialog(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
