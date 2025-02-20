@@ -53,22 +53,32 @@ export const ChildSelector = ({
     }
   }, [selectedChild, setSelectedDates]);
 
-  // Filter children based on the current page and class
-  const filteredChildren = children?.filter(child => {
-    const isTeen = isTeenClass(child.school_class);
-    const isPS = child.school_class.toUpperCase().includes("PS");
-    
-    if (isTeenHolidayReservation) {
-      // Pour la page Club Ado, montrer uniquement les adolescents
-      return isTeen;
-    } else if (isHolidayReservation) {
-      // Pour les réservations vacances normales, exclure les ados et PS
-      return !isTeen && !isPS;
-    } else {
-      // Pour les réservations mercredis, exclure les ados et PS
-      return !isTeen && !isPS;
-    }
-  });
+  // Filter and sort children
+  const sortedAndFilteredChildren = children
+    ?.filter(child => {
+      const isTeen = isTeenClass(child.school_class);
+      const isPS = child.school_class.toUpperCase().includes("PS");
+      
+      if (isTeenHolidayReservation) {
+        // Pour la page Club Ado, montrer uniquement les adolescents
+        return isTeen;
+      } else if (isHolidayReservation) {
+        // Pour les réservations vacances normales, exclure les ados et PS
+        return !isTeen && !isPS;
+      } else {
+        // Pour les réservations mercredis, exclure les ados et PS
+        return !isTeen && !isPS;
+      }
+    })
+    ?.sort((a, b) => {
+      // Trier d'abord par nom de famille
+      const lastNameComparison = a.last_name.localeCompare(b.last_name, 'fr');
+      // Si les noms sont identiques, trier par prénom
+      if (lastNameComparison === 0) {
+        return a.first_name.localeCompare(b.first_name, 'fr');
+      }
+      return lastNameComparison;
+    });
 
   return (
     <div>
@@ -80,12 +90,12 @@ export const ChildSelector = ({
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
       >
         <option value="">Choisir un enfant</option>
-        {filteredChildren?.map((child) => (
+        {sortedAndFilteredChildren?.map((child) => (
           <option 
             key={child.id} 
             value={child.id}
           >
-            {child.first_name} {child.last_name} ({child.school_class})
+            {child.last_name} {child.first_name} ({child.school_class})
           </option>
         ))}
       </select>
