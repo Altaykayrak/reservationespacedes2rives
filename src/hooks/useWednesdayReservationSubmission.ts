@@ -125,24 +125,26 @@ export const useWednesdayReservationSubmission = (
     }
   };
 
-  const SuccessDialog = () => (
-    <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Réservation confirmée</DialogTitle>
-          <DialogDescription>
-            Votre réservation a été enregistrée avec succès. 
-            Vous pouvez consulter ci-dessous l'ensemble de vos réservations pour vos enfants.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button onClick={() => setShowSuccessDialog(false)}>
-            Fermer
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+  const SuccessDialog = () => {
+    return (
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Réservation confirmée</DialogTitle>
+            <DialogDescription>
+              Votre réservation a été enregistrée avec succès. 
+              Vous pouvez consulter ci-dessous l'ensemble de vos réservations pour vos enfants.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowSuccessDialog(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   return { handleSubmit, SuccessDialog };
 };
