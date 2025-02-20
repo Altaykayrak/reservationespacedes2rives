@@ -36,7 +36,7 @@ export const AdminReservationForm = ({
   handleOptionChange,
   resetForm
 }: AdminReservationFormProps) => {
-  const [selectedGroup, setSelectedGroup] = useState<string>("");
+  const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const { children, isLoading } = useChildrenData();
   const { isDateReservedForChild, refetchReservations } = useReservationQueries();
   
@@ -49,7 +49,7 @@ export const AdminReservationForm = ({
   );
 
   const filteredChildren = children?.filter(child => {
-    if (!selectedGroup) return true;
+    if (selectedGroup === "all") return true;
     const schoolClass = child.school_class.toUpperCase();
     if (selectedGroup === "maternelle") {
       return ["PS", "MS", "GS"].includes(schoolClass);
@@ -88,7 +88,7 @@ export const AdminReservationForm = ({
                 <SelectValue placeholder="Sélectionner un groupe" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les groupes</SelectItem>
+                <SelectItem value="all">Tous les groupes</SelectItem>
                 <SelectItem value="maternelle">Maternelle</SelectItem>
                 <SelectItem value="primaire">Primaire</SelectItem>
               </SelectContent>
