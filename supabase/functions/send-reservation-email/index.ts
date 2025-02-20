@@ -37,11 +37,19 @@ serve(async (req) => {
     console.log("Tentative d'envoi d'email à:", parentEmail);
     console.log("Contenu de l'email:", emailContent);
 
+    // Pendant la période de test, on envoie toujours à l'adresse de test
+    const testEmail = "altaykayrak@gmail.com";
+    console.log("En mode test - envoi à:", testEmail);
+
     const emailResult = await resend.emails.send({
       from: "onboarding@resend.dev",
-      to: parentEmail,
-      subject: `Confirmation de réservation - ${childName}`,
-      html: emailContent,
+      to: testEmail, // Utilisation de l'adresse de test
+      subject: `[TEST] Confirmation de réservation - ${childName} (pour ${parentEmail})`,
+      html: `
+        <p><strong>Ceci est un email de test</strong></p>
+        <p>Dans la version finale, cet email sera envoyé à : ${parentEmail}</p>
+        ${emailContent}
+      `,
     });
 
     console.log("Résultat de l'envoi d'email:", emailResult);
