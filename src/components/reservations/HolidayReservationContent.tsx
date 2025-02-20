@@ -5,7 +5,6 @@ import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./HolidayDateSelector";
-import { Toaster } from "@/components/ui/toaster";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 
 export const HolidayReservationContent = () => {
@@ -70,8 +69,6 @@ export const HolidayReservationContent = () => {
         open={showSuccessDialog} 
         onOpenChange={setShowSuccessDialog}
       />
-      
-      <Toaster />
     </>
   );
 };
