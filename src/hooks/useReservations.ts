@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -143,7 +142,7 @@ export const useReservations = () => {
     setSelectedDates([]);
   };
 
-  const { handleSubmit } = useWednesdayReservationSubmission(
+  const { handleSubmit, SuccessDialog } = useWednesdayReservationSubmission(
     selectedChild,
     selectedDates,
     (date) => isDateReservedForChild(selectedChild, date),
@@ -164,5 +163,6 @@ export const useReservations = () => {
     resetForm,
     refetchReservations,
     isSubmitting,
+    SuccessDialog
   };
 };

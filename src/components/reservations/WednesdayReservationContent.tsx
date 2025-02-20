@@ -17,7 +17,8 @@ export const WednesdayReservationContent = () => {
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
-    isDateReservedForChild
+    isDateReservedForChild,
+    SuccessDialog
   } = useReservations();
 
   return (
@@ -56,6 +57,8 @@ export const WednesdayReservationContent = () => {
           </Button>
         </div>
       </Card>
+
+      <SuccessDialog />
     </div>
   );
 };
