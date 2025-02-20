@@ -6,6 +6,7 @@ import { useReservationSubmission } from "./useReservationSubmission";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useExistingHolidayReservations } from "./useExistingHolidayReservations";
+import { useToast } from "@/hooks/use-toast";
 
 interface DateOption {
   date: Date;
@@ -17,8 +18,8 @@ export const useHolidayReservation = () => {
   const [selectedDates, setSelectedDates] = useState<DateOption[]>([]);
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const { children } = useChildrenData();
   const { holidayPeriods } = useHolidayPeriods();
@@ -107,7 +108,11 @@ export const useHolidayReservation = () => {
     isDateAlreadyReserved,
     async () => {
       await refetchReservations();
-      setShowSuccessDialog(true);
+      toast({
+        title: "Succès",
+        description: "Les réservations ont été créées avec succès.",
+      });
+      resetForm();
     },
     resetForm
   );
@@ -165,8 +170,6 @@ export const useHolidayReservation = () => {
     isDateAlreadyReserved,
     isTeenClass,
     childInfo,
-    showSuccessDialog,
-    setShowSuccessDialog,
     isSubmitting
   };
 };
