@@ -33,7 +33,7 @@ export const AdminReservationForm = ({
   handleOptionChange,
   resetForm
 }: AdminReservationFormProps) => {
-  const { data: children } = useChildrenData();
+  const { children, isLoading } = useChildrenData();
   const { isDateReservedForChild, refetchReservations } = useReservationQueries();
   
   const { handleSubmit } = useWednesdayReservationSubmission(
@@ -43,6 +43,10 @@ export const AdminReservationForm = ({
     refetchReservations,
     resetForm
   );
+
+  if (isLoading) {
+    return <div>Chargement des enfants...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -58,7 +62,8 @@ export const AdminReservationForm = ({
           <ChildSelector
             selectedChild={selectedChild}
             setSelectedChild={setSelectedChild}
-            children={children || []}
+            children={children}
+            setSelectedDates={() => {}} // On n'utilise pas cette prop dans le contexte admin
           />
 
           <ScrollArea className="h-[400px]">
