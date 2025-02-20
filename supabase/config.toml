@@ -1,3 +1,4 @@
+
 project_id = "dddtybmradplydzymrly"
 
 [api]
@@ -11,6 +12,3 @@ port = 54322
 [studio]
 enabled = true
 port = 54323
-
-[[fetch.endpoints]]
-url = "https://api.resend.com"
