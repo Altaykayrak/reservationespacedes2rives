@@ -64,14 +64,20 @@ export const useWednesdayReservationSubmission = (
         .select(`
           first_name,
           last_name,
-          profiles:profile_id (
-            email
+          profile:profile_id (
+            id
           )
         `)
         .eq('id', selectedChild)
         .single();
 
       if (childError) throw childError;
+
+      // Récupérer l'email du parent via auth.user
+      const { data: { user }, error: userError } = await supabase.auth.getUser(childData.profile.id);
+      
+      if (userError) throw userError;
+      if (!user?.email) throw new Error("Email de l'utilisateur non trouvé");
 
       for (const dateOption of selectedDates) {
         const { data: wednesday, error: wednesdayError } = await supabase
@@ -119,7 +125,7 @@ export const useWednesdayReservationSubmission = (
           earlyDropoff: d.earlyDropoff
         })),
         type: 'wednesday' as const,
-        parentEmail: childData.profiles.email
+        parentEmail: user.email
       };
 
       const { error: emailError } = await supabase.functions.invoke('send-reservation-email', {
@@ -131,7 +137,7 @@ export const useWednesdayReservationSubmission = (
         toast({
           title: "Attention",
           description: "Les réservations ont été créées mais l'email de confirmation n'a pas pu être envoyé.",
-          variant: "warning",
+          variant: "destructive",
         });
       } else {
         toast({
