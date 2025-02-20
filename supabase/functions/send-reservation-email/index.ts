@@ -1,79 +1,80 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const resend = new Resend(RESEND_API_KEY);
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { Resend } from "npm:resend@2.0.0"
+
+const resend = new Resend(Deno.env.get('resendapikey'));
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface EmailRequest {
+interface ReservationEmailData {
   childName: string;
-  reservationDate: string;
-  reservationNumber: string;
+  dates: Array<{
+    date: string;
+    withoutMeal: boolean;
+    earlyDropoff: boolean;
+  }>;
+  type: 'wednesday' | 'holiday';
   parentEmail: string;
-  withoutMeal?: boolean;
-  earlyDropoff?: boolean;
 }
 
-const handler = async (req: Request): Promise<Response> => {
+serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 200
-    });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY is not configured");
-      throw new Error("RESEND_API_KEY is not configured");
-    }
+    const { childName, dates, type, parentEmail }: ReservationEmailData = await req.json();
 
-    const emailRequest: EmailRequest = await req.json();
-    console.log("Received email request:", emailRequest);
-
-    const emailHtml = `
-      <h2>Confirmation de réservation</h2>
-      <p>Votre réservation pour ${emailRequest.childName} a été confirmée.</p>
-      <p><strong>Détails de la réservation :</strong></p>
-      <ul>
-        <li>Date : ${emailRequest.reservationDate}</li>
-        <li>Numéro de réservation : ${emailRequest.reservationNumber}</li>
-        ${emailRequest.withoutMeal ? '<li>Sans repas</li>' : '<li>Avec repas</li>'}
-        ${emailRequest.earlyDropoff ? '<li>Accueil avant 8h30</li>' : ''}
-      </ul>
-    `;
-
-    const data = await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: emailRequest.parentEmail,
-      subject: `Confirmation de réservation - ${emailRequest.childName}`,
-      html: emailHtml,
+    console.log('Sending confirmation email for:', {
+      childName,
+      dates,
+      type,
+      parentEmail
     });
 
-    console.log("Email sent successfully:", data);
+    const datesFormatted = dates.map(d => {
+      const options = [];
+      if (d.withoutMeal) options.push('Sans repas');
+      if (d.earlyDropoff) options.push('Accueil avant 8h30');
+      
+      return `
+        - ${d.date}${options.length > 0 ? ` (${options.join(', ')})` : ''}
+      `;
+    }).join('\n');
 
-    return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const emailResponse = await resend.emails.send({
+      from: 'Centre de Loisirs <contact@centreloisirs.fr>',
+      to: parentEmail,
+      subject: `Confirmation de réservation - ${type === 'wednesday' ? 'Mercredi' : 'Vacances'}`,
+      html: `
+        <h1>Confirmation de votre réservation</h1>
+        <p>Bonjour,</p>
+        <p>Nous confirmons la réservation pour ${childName} aux dates suivantes :</p>
+        <pre>${datesFormatted}</pre>
+        <p>Nous vous remercions de votre confiance.</p>
+        <p>L'équipe du Centre de Loisirs</p>
+      `,
+    });
+
+    console.log('Email sent successfully:', emailResponse);
+
+    return new Response(JSON.stringify(emailResponse), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
+
   } catch (error) {
-    console.error("Error in send-reservation-email function:", error);
+    console.error('Error sending email:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: error instanceof Error ? error.stack : undefined 
-      }),
+      JSON.stringify({ error: error.message }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       }
     );
   }
-};
-
-serve(handler);
+});
