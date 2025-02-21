@@ -7,8 +7,13 @@ import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./HolidayDateSelector";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
+import { Tables } from "@/integrations/supabase/types";
 
-export const HolidayReservationContent = () => {
+interface HolidayReservationContentProps {
+  filteredChildren?: Tables<"children">[] | null;
+}
+
+export const HolidayReservationContent = ({ filteredChildren }: HolidayReservationContentProps) => {
   const {
     selectedDates,
     selectedChild,
@@ -30,43 +35,41 @@ export const HolidayReservationContent = () => {
   } = useHolidayReservation();
 
   return (
-    <>
-      <Card className="p-6">
-        <div className="space-y-6">
-          <ChildSelector
+    <Card className="p-6">
+      <div className="space-y-6">
+        <ChildSelector
+          selectedChild={selectedChild}
+          setSelectedChild={setSelectedChild}
+          children={filteredChildren || children}
+          setSelectedDates={setSelectedDates}
+        />
+
+        <PeriodSelector
+          selectedPeriod={selectedPeriod}
+          setSelectedPeriod={setSelectedPeriod}
+          holidayPeriods={holidayPeriods}
+        />
+
+        {selectedPeriod && (
+          <HolidayDateSelector
+            selectedDates={selectedDates}
+            handleDateToggle={handleDateToggle}
+            handleOptionChange={handleOptionChange}
+            isDateAlreadyReserved={isDateAlreadyReserved}
+            periodId={selectedPeriod}
             selectedChild={selectedChild}
-            setSelectedChild={setSelectedChild}
-            children={children}
             setSelectedDates={setSelectedDates}
           />
+        )}
 
-          <PeriodSelector
-            selectedPeriod={selectedPeriod}
-            setSelectedPeriod={setSelectedPeriod}
-            holidayPeriods={holidayPeriods}
-          />
-
-          {selectedPeriod && (
-            <HolidayDateSelector
-              selectedDates={selectedDates}
-              handleDateToggle={handleDateToggle}
-              handleOptionChange={handleOptionChange}
-              isDateAlreadyReserved={isDateAlreadyReserved}
-              periodId={selectedPeriod}
-              selectedChild={selectedChild}
-              setSelectedDates={setSelectedDates}
-            />
-          )}
-
-          <Button
-            onClick={handleSubmit}
-            className="w-full"
-            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
-          >
-            {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
-          </Button>
-        </div>
-      </Card>
+        <Button
+          onClick={handleSubmit}
+          className="w-full"
+          disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
+        >
+          {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
+        </Button>
+      </div>
 
       <SuccessReservationDialog 
         open={showSuccessDialog} 
@@ -79,6 +82,6 @@ export const HolidayReservationContent = () => {
         schoolClass={noSpotsDialog.schoolClass}
         date={noSpotsDialog.date}
       />
-    </>
+    </Card>
   );
 };

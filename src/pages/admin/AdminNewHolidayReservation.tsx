@@ -3,9 +3,28 @@ import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
 import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
 import { CalendarDays } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { useChildrenData } from "@/hooks/useChildrenData";
 
 const AdminNewHolidayReservation = () => {
   const { data: isAdmin } = useAdminAuth();
+  const [selectedGroup, setSelectedGroup] = useState<string>("all");
+  const { children } = useChildrenData();
+
+  const filteredChildren = children?.filter(child => {
+    if (selectedGroup === "all") return true;
+    const schoolClass = child.school_class.toUpperCase();
+    if (selectedGroup === "maternelle") {
+      return ["PS", "MS", "GS"].includes(schoolClass);
+    }
+    if (selectedGroup === "primaire") {
+      return ["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass);
+    }
+    return true;
+  });
 
   if (!isAdmin) {
     return (
@@ -38,7 +57,31 @@ const AdminNewHolidayReservation = () => {
           </div>
         </div>
 
-        <HolidayReservationContent />
+        <Card className="p-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Sélectionner un groupe</Label>
+              <Select
+                value={selectedGroup}
+                onValueChange={(value) => {
+                  console.log("Groupe sélectionné:", value);
+                  setSelectedGroup(value);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner un groupe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les groupes</SelectItem>
+                  <SelectItem value="maternelle">Maternelle</SelectItem>
+                  <SelectItem value="primaire">Primaire</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </Card>
+
+        <HolidayReservationContent filteredChildren={filteredChildren} />
       </div>
     </div>
   );
