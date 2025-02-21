@@ -76,6 +76,9 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     console.log("showCguAlert a changé :", showCguAlert);
   }, [showCguAlert]);
 
+  // Ajout d'un gestionnaire pour les erreurs de validation
+  console.log("Erreurs de validation:", form.formState.errors);
+
   return (
     <>
       <Form {...form}>
@@ -88,7 +91,15 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
           <SchoolFields form={form} />
           <TermsFields form={form} />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading}
+            onClick={() => {
+              console.log("Bouton cliqué, valeurs du formulaire:", form.getValues());
+              console.log("État de validation:", form.formState.isValid);
+            }}
+          >
             {isLoading ? "Inscription en cours..." : "S'inscrire"}
           </Button>
         </form>
