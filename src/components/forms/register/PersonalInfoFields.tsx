@@ -37,7 +37,7 @@ export const PersonalInfoFields = ({
             <FormControl>
               <Input type="email" {...field} />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-red-700" />
           </FormItem>} />
 
       <FormField control={form.control} name="password" render={({
