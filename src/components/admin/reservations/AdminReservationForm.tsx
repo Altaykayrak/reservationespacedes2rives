@@ -62,14 +62,10 @@ export const AdminReservationForm = ({
   );
 
   const handleDateSelection = (date: Date) => {
-    console.log("Date sélectionnée:", date);
-    console.log("Enfant sélectionné:", selectedChild);
     if (selectedChild && isDateReservedForChild(selectedChild, date)) {
-      console.log("Date déjà réservée, affichage de la popup");
       setReservedDate(date);
       setShowReservationDialog(true);
     } else {
-      console.log("Date non réservée, ajout à la sélection");
       handleDateToggle(date);
     }
   };
