@@ -46,9 +46,7 @@ export const registerSchema = z.object({
     .default(false),
   acceptedCgu: z
     .boolean()
-    .refine((val) => val === true, {
-      message: "Vous devez accepter les conditions générales d'utilisation",
-    }),
+    .default(false),
 });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;

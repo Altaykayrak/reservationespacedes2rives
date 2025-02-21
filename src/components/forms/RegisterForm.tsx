@@ -51,7 +51,7 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     return () => subscription.unsubscribe();
   }, [form]);
 
-  const handleSubmit = async (values: RegisterFormData) => {
+  const handleSubmit = form.handleSubmit(async (values: RegisterFormData) => {
     if (!values.acceptedCgu) {
       setShowCguAlert(true);
       return;
@@ -59,12 +59,12 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     
     localStorage.removeItem('registerFormData');
     await onSubmit(values);
-  };
+  });
 
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <PersonalInfoFields form={form} />
           <SecurityFields form={form} />
           <SchoolFields form={form} />
