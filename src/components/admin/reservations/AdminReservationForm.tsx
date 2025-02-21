@@ -145,7 +145,6 @@ export const AdminReservationForm = ({
             <Select
               value={selectedGroup}
               onValueChange={(value) => {
-                console.log("Groupe sélectionné:", value);
                 setSelectedGroup(value);
                 setSelectedChild("");
               }}
