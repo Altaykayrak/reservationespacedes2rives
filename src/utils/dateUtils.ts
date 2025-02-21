@@ -1,3 +1,4 @@
+
 import { startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -23,7 +24,12 @@ export const getWeeksFromDates = (dates: Date[]) => {
   return Array.from(weekMap.values());
 };
 
-export const validateMinimumDaysPerWeek = (dates: Date[]): boolean => {
+export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = false): boolean => {
+  // Si c'est un admin, on ne vérifie pas le minimum de jours
+  if (isAdmin) {
+    return true;
+  }
+  
   const weeks = getWeeksFromDates(dates);
   return weeks.every(weekDates => weekDates.length >= 3);
 };
@@ -51,7 +57,8 @@ export const validateHolidayReservations = async (
   selectedDates: Date[],
   holidayPeriods: HolidayPeriod[],
   childSchoolClass: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  isAdmin: boolean = false
 ): Promise<ValidationResult> => {
   // 1. Vérifier que toutes les dates sont des jours ouvrables
   const nonWorkingDays = selectedDates.filter(date => !isWorkingDay(date));
@@ -86,13 +93,15 @@ export const validateHolidayReservations = async (
     };
   }
 
-  // 4. Vérifier le nombre minimum de jours par période (3 jours)
-  for (const [periodId, dates] of datesByPeriod.entries()) {
-    if (dates.length < 3) {
-      return {
-        isValid: false,
-        message: "Vous devez sélectionner au minimum 3 jours sur une même période de vacances."
-      };
+  // 4. Vérifier le nombre minimum de jours par période (3 jours) sauf pour les admins
+  if (!isAdmin) {
+    for (const [periodId, dates] of datesByPeriod.entries()) {
+      if (dates.length < 3) {
+        return {
+          isValid: false,
+          message: "Vous devez sélectionner au minimum 3 jours sur une même période de vacances."
+        };
+      }
     }
   }
 
