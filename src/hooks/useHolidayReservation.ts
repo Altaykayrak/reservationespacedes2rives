@@ -64,42 +64,12 @@ export const useHolidayReservation = () => {
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
 
-  useEffect(() => {
-    setSelectedDates([]);
-  }, [selectedChild]);
-
-  useEffect(() => {
-    const isTeenPage = window.location.pathname === "/teenholiday-reservations";
-    
-    if (selectedChild && isTeenClass && selectedPeriod && holidayPeriods && isTeenPage) {
-      const period = holidayPeriods.find(p => p.id === selectedPeriod);
-      if (period) {
-        const dates: DateOption[] = [];
-        const startDate = new Date(period.start_date);
-        const endDate = new Date(period.end_date);
-        const currentDate = new Date(startDate);
-
-        while (currentDate <= endDate) {
-          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-            dates.push({
-              date: new Date(currentDate),
-              withoutMeal: true,
-              earlyDropoff: false
-            });
-          }
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        setSelectedDates(dates);
-      }
-    }
-  }, [selectedChild, isTeenClass, selectedPeriod, holidayPeriods]);
-
   const resetForm = () => {
     setSelectedDates([]);
     setSelectedPeriod("");
   };
 
-  const { handleSubmit: submit } = useReservationSubmission(
+  const { handleSubmit: submit, noSpotsDialog, setNoSpotsDialog } = useReservationSubmission(
     selectedChild,
     selectedDates,
     holidayPeriods,
@@ -167,6 +137,8 @@ export const useHolidayReservation = () => {
     childInfo,
     showSuccessDialog,
     setShowSuccessDialog,
-    isSubmitting
+    isSubmitting,
+    noSpotsDialog,
+    setNoSpotsDialog
   };
 };

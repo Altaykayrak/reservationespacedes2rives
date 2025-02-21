@@ -1,15 +1,21 @@
 
-import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { validateMinimumDaysPerWeek } from "@/utils/dateUtils";
+import { useState } from "react";
 
 interface DateOption {
   date: Date;
   withoutMeal: boolean;
   earlyDropoff: boolean;
+}
+
+interface NoSpotsDialogState {
+  isOpen: boolean;
+  schoolClass: string;
+  date: Date;
 }
 
 export const useReservationSubmission = (
@@ -20,24 +26,20 @@ export const useReservationSubmission = (
   refetchReservations: () => Promise<any>,
   resetForm: () => void
 ) => {
-  const { toast } = useToast();
+  const [noSpotsDialog, setNoSpotsDialog] = useState<NoSpotsDialogState>({
+    isOpen: false,
+    schoolClass: '',
+    date: new Date()
+  });
 
   const handleSubmit = async () => {
     if (!selectedChild) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez sélectionner un enfant.",
-        variant: "destructive",
-      });
+      alert("Veuillez sélectionner un enfant.");
       return;
     }
 
     if (selectedDates.length === 0) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez sélectionner au moins une date.",
-        variant: "destructive",
-      });
+      alert("Veuillez sélectionner au moins une date.");
       return;
     }
 
@@ -50,50 +52,60 @@ export const useReservationSubmission = (
         .map(d => format(d.date, "d MMMM yyyy", { locale: fr }))
         .join(", ");
       
-      toast({
-        title: "Dates déjà réservées",
-        description: `Les dates suivantes sont déjà réservées pour cet enfant : ${datesList}`,
-        variant: "destructive",
-      });
+      alert(`Les dates suivantes sont déjà réservées pour cet enfant : ${datesList}`);
       return;
     }
 
     if (!validateMinimumDaysPerWeek(selectedDates.map(d => d.date))) {
-      toast({
-        title: "Erreur de réservation",
-        description: "Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances.",
-        variant: "destructive",
-      });
+      alert("Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances.");
       return;
     }
 
     try {
+      // Récupérer la classe de l'enfant
+      const { data: childData, error: childError } = await supabase
+        .from("children")
+        .select("school_class")
+        .eq("id", selectedChild)
+        .single();
+
+      if (childError) throw childError;
+
+      // Vérifier les places disponibles pour chaque date
       for (const dateOption of selectedDates) {
         const dateStr = format(dateOption.date, "yyyy-MM-dd");
-        console.log("Recherche de la période pour la date:", dateStr);
         
         const period = holidayPeriods?.find(period => {
           const startDate = new Date(period.start_date);
           const endDate = new Date(period.end_date);
           const currentDate = new Date(dateStr);
-          // Normaliser les dates pour la comparaison
           startDate.setHours(0, 0, 0, 0);
           endDate.setHours(0, 0, 0, 0);
           currentDate.setHours(0, 0, 0, 0);
-          
-          const isInPeriod = currentDate >= startDate && currentDate <= endDate;
-          console.log(`Vérification période ${period.id}:`, {
-            startDate: startDate.toISOString(),
-            endDate: endDate.toISOString(),
-            currentDate: currentDate.toISOString(),
-            isInPeriod
-          });
-          return isInPeriod;
+          return currentDate >= startDate && currentDate <= endDate;
         });
 
         if (!period) {
-          console.error("Périodes disponibles:", holidayPeriods);
           throw new Error(`Période non trouvée pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
+        }
+
+        // Vérifier les places disponibles
+        const { data: spotsLeft, error: spotsError } = await supabase
+          .rpc('check_holiday_spots_available', {
+            period_id: period.id,
+            reservation_date: dateStr,
+            child_school_class: childData.school_class
+          });
+
+        if (spotsError) throw spotsError;
+
+        if (spotsLeft <= 0) {
+          setNoSpotsDialog({
+            isOpen: true,
+            schoolClass: childData.school_class,
+            date: dateOption.date
+          });
+          return;
         }
 
         const { data: existingReservation, error: checkError } = await supabase
@@ -104,15 +116,14 @@ export const useReservationSubmission = (
           .eq("reservation_date", dateStr)
           .maybeSingle();
 
-        if (checkError) {
-          throw checkError;
-        }
+        if (checkError) throw checkError;
 
         if (existingReservation) {
           throw new Error(`Une réservation existe déjà pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
         }
       }
 
+      // Si toutes les vérifications sont passées, créer les réservations
       for (const dateOption of selectedDates) {
         const dateStr = format(dateOption.date, "yyyy-MM-dd");
         const period = holidayPeriods?.find(period => {
@@ -140,23 +151,18 @@ export const useReservationSubmission = (
         if (reservationError) throw reservationError;
       }
 
-      toast({
-        title: "Succès",
-        description: "Les réservations ont été créées avec succès.",
-      });
-
       await refetchReservations();
       resetForm();
 
     } catch (error: any) {
       console.error("Erreur lors de la création des réservations:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue lors de la création des réservations.",
-        variant: "destructive",
-      });
+      alert(error.message || "Une erreur est survenue lors de la création des réservations.");
     }
   };
 
-  return { handleSubmit };
+  return { 
+    handleSubmit,
+    noSpotsDialog,
+    setNoSpotsDialog
+  };
 };

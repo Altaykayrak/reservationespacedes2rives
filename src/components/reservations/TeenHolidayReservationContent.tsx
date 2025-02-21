@@ -6,6 +6,7 @@ import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
 import { TeenClassDateSelector } from "./holiday/TeenClassDateSelector";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
+import { NoSpotsDialog } from "./NoSpotsDialog";
 
 export const TeenHolidayReservationContent = () => {
   const {
@@ -23,7 +24,9 @@ export const TeenHolidayReservationContent = () => {
     setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
-    isSubmitting
+    isSubmitting,
+    noSpotsDialog,
+    setNoSpotsDialog
   } = useHolidayReservation();
 
   return (
@@ -65,6 +68,13 @@ export const TeenHolidayReservationContent = () => {
       <SuccessReservationDialog 
         open={showSuccessDialog} 
         onOpenChange={setShowSuccessDialog}
+      />
+
+      <NoSpotsDialog
+        open={noSpotsDialog.isOpen}
+        onOpenChange={(open) => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })}
+        schoolClass={noSpotsDialog.schoolClass}
+        date={noSpotsDialog.date}
       />
     </>
   );
