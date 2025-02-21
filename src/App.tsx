@@ -10,6 +10,7 @@ import AdminChildReservations from "@/pages/admin/AdminChildReservations";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import AdminNewReservation from "@/pages/admin/AdminNewReservation";
+import AdminNewHolidayReservation from "@/pages/admin/AdminNewHolidayReservation";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -94,6 +95,10 @@ const router = createBrowserRouter([
       {
         path: "reservations/new",
         element: <AdminNewReservation />,
+      },
+      {
+        path: "reservations/new-holiday",
+        element: <AdminNewHolidayReservation />,
       },
       {
         path: "children",
