@@ -8,7 +8,6 @@ import { useChildrenData } from "@/hooks/useChildrenData";
 import { WednesdayDateSelector } from "@/components/reservations/WednesdayDateSelector";
 import { ChildSelector } from "@/components/reservations/ChildSelector";
 import { useWednesdayReservationSubmission } from "@/hooks/useWednesdayReservationSubmission";
-import { useReservationQueries } from "@/hooks/useReservationQueries";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
@@ -22,6 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DateOption {
   date: Date;
@@ -51,24 +52,62 @@ export const AdminReservationForm = ({
   const [reservedDate, setReservedDate] = useState<Date | null>(null);
 
   const { children, isLoading } = useChildrenData();
-  const { isDateReservedForChild, refetchReservations } = useReservationQueries();
-  
-  const { handleSubmit } = useWednesdayReservationSubmission(
-    selectedChild,
-    selectedDates,
-    (date) => isDateReservedForChild(selectedChild, date),
-    refetchReservations,
-    resetForm
-  );
+  const { refetchReservations } = useReservationQueries();
+
+  // Requête pour récupérer les réservations existantes
+  const { data: existingReservations } = useQuery({
+    queryKey: ["wednesday_reservations", selectedChild],
+    queryFn: async () => {
+      if (!selectedChild) return [];
+      
+      const { data, error } = await supabase
+        .from("wednesday_reservations")
+        .select(`
+          id,
+          wednesday_id,
+          child_id,
+          available_wednesdays!fk_wednesday_id (
+            date
+          )
+        `)
+        .eq("child_id", selectedChild)
+        .eq("status", "confirmed");
+
+      if (error) {
+        console.error("Erreur lors de la récupération des réservations:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!selectedChild,
+  });
+
+  const isDateReservedForChild = (date: Date) => {
+    if (!existingReservations) return false;
+    
+    const dateStr = format(date, "yyyy-MM-dd");
+    return existingReservations.some(
+      reservation => reservation.available_wednesdays?.date === dateStr
+    );
+  };
 
   const handleDateSelection = (date: Date) => {
-    if (selectedChild && isDateReservedForChild(selectedChild, date)) {
+    if (selectedChild && isDateReservedForChild(date)) {
       setReservedDate(date);
       setShowReservationDialog(true);
     } else {
       handleDateToggle(date);
     }
   };
+
+  const { handleSubmit } = useWednesdayReservationSubmission(
+    selectedChild,
+    selectedDates,
+    isDateReservedForChild,
+    refetchReservations,
+    resetForm
+  );
 
   const filteredChildren = children?.filter(child => {
     if (selectedGroup === "all") return true;
@@ -132,7 +171,7 @@ export const AdminReservationForm = ({
               selectedDates={selectedDates}
               handleDateToggle={handleDateSelection}
               handleOptionChange={handleOptionChange}
-              isDateAlreadyReserved={(date) => isDateReservedForChild(selectedChild, date)}
+              isDateAlreadyReserved={isDateReservedForChild}
               selectedChild={selectedChild}
             />
           </ScrollArea>
