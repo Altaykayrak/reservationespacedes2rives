@@ -54,14 +54,22 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   }, [form]);
 
   const handleSubmit = async (values: RegisterFormData) => {
+    console.log("Formulaire soumis avec les valeurs:", values);
+    console.log("CGU acceptées ?", values.acceptedCgu);
+    
     if (!values.acceptedCgu) {
+      console.log("CGU non acceptées, affichage de la popup");
       setShowCguAlert(true);
       return;
     }
+    console.log("CGU acceptées, continuation de l'inscription");
+    
     // Nettoyer le localStorage après une soumission réussie
     localStorage.removeItem('registerFormData');
     await onSubmit(values);
   };
+
+  console.log("État actuel de showCguAlert:", showCguAlert);
 
   return (
     <>
