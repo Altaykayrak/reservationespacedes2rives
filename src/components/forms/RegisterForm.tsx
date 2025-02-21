@@ -54,12 +54,14 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   }, [form]);
 
   const handleSubmit = async (values: RegisterFormData) => {
+    console.log("=== DÉBUT DE handleSubmit ===");
     console.log("Formulaire soumis avec les valeurs:", values);
     console.log("CGU acceptées ?", values.acceptedCgu);
     
     if (!values.acceptedCgu) {
-      console.log("CGU non acceptées, affichage de la popup");
+      console.log("CGU non acceptées, tentative d'affichage de la popup");
       setShowCguAlert(true);
+      console.log("showCguAlert défini à true");
       return;
     }
     console.log("CGU acceptées, continuation de l'inscription");
@@ -67,14 +69,20 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     // Nettoyer le localStorage après une soumission réussie
     localStorage.removeItem('registerFormData');
     await onSubmit(values);
+    console.log("=== FIN DE handleSubmit ===");
   };
 
-  console.log("État actuel de showCguAlert:", showCguAlert);
+  useEffect(() => {
+    console.log("showCguAlert a changé :", showCguAlert);
+  }, [showCguAlert]);
 
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit((values) => {
+          console.log("Form onSubmit déclenché");
+          handleSubmit(values);
+        })} className="space-y-4">
           <PersonalInfoFields form={form} />
           <SecurityFields form={form} />
           <SchoolFields form={form} />
