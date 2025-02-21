@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,6 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     },
   });
 
-  // Charger les données sauvegardées au chargement du composant
   useEffect(() => {
     const savedData = localStorage.getItem('registerFormData');
     if (savedData) {
@@ -45,7 +43,6 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     }
   }, [form]);
 
-  // Sauvegarder les données lorsqu'elles changent
   useEffect(() => {
     const subscription = form.watch((data) => {
       localStorage.setItem('registerFormData', JSON.stringify(data));
@@ -54,38 +51,25 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   }, [form]);
 
   const handleSubmit = async (values: RegisterFormData) => {
-    console.log("=== DÉBUT DE handleSubmit ===");
-    console.log("Formulaire soumis avec les valeurs:", values);
-    console.log("CGU acceptées ?", values.acceptedCgu);
-    
     if (!values.acceptedCgu) {
-      console.log("CGU non acceptées, tentative d'affichage de la popup");
       setShowCguAlert(true);
-      console.log("showCguAlert défini à true");
       return;
     }
-    console.log("CGU acceptées, continuation de l'inscription");
     
-    // Nettoyer le localStorage après une soumission réussie
     localStorage.removeItem('registerFormData');
     await onSubmit(values);
-    console.log("=== FIN DE handleSubmit ===");
   };
 
   useEffect(() => {
     console.log("showCguAlert a changé :", showCguAlert);
   }, [showCguAlert]);
 
-  // Ajout d'un gestionnaire pour les erreurs de validation
   console.log("Erreurs de validation:", form.formState.errors);
 
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit((values) => {
-          console.log("Form onSubmit déclenché");
-          handleSubmit(values);
-        })} className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <PersonalInfoFields form={form} />
           <SecurityFields form={form} />
           <SchoolFields form={form} />
@@ -95,10 +79,6 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
             type="submit" 
             className="w-full" 
             disabled={isLoading}
-            onClick={() => {
-              console.log("Bouton cliqué, valeurs du formulaire:", form.getValues());
-              console.log("État de validation:", form.formState.isValid);
-            }}
           >
             {isLoading ? "Inscription en cours..." : "S'inscrire"}
           </Button>
