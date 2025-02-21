@@ -1,35 +1,19 @@
-
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { RegisterFormData } from "@/schemas/registerSchema";
 import { secretQuestions } from "@/constants/registerConstants";
-
 interface SecurityFieldsProps {
   form: UseFormReturn<RegisterFormData>;
 }
-
-export const SecurityFields = ({ form }: SecurityFieldsProps) => {
-  return (
-    <>
-      <FormField
-        control={form.control}
-        name="secretQuestion"
-        render={({ field }) => (
-          <FormItem>
+export const SecurityFields = ({
+  form
+}: SecurityFieldsProps) => {
+  return <>
+      <FormField control={form.control} name="secretQuestion" render={({
+      field
+    }) => <FormItem>
             <FormLabel>Question secrète</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
@@ -38,31 +22,22 @@ export const SecurityFields = ({ form }: SecurityFieldsProps) => {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {secretQuestions.map((question) => (
-                  <SelectItem key={question} value={question}>
+                {secretQuestions.map(question => <SelectItem key={question} value={question}>
                     {question}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
             <FormMessage />
-          </FormItem>
-        )}
-      />
+          </FormItem>} />
 
-      <FormField
-        control={form.control}
-        name="secretAnswer"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Réponse</FormLabel>
+      <FormField control={form.control} name="secretAnswer" render={({
+      field
+    }) => <FormItem>
+            <FormLabel className="bg-slate-50">Réponse</FormLabel>
             <FormControl>
               <Input {...field} />
             </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </>
-  );
+            <FormMessage className="text-red-700" />
+          </FormItem>} />
+    </>;
 };
