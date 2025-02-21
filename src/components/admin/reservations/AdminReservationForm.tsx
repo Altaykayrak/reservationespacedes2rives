@@ -98,15 +98,16 @@ export const AdminReservationForm = ({
       <Card className="p-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Groupe</Label>
+            <Label>Sélectionner un groupe</Label>
             <Select
               value={selectedGroup}
               onValueChange={(value) => {
+                console.log("Groupe sélectionné:", value);
                 setSelectedGroup(value);
                 setSelectedChild("");
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sélectionner un groupe" />
               </SelectTrigger>
               <SelectContent>
@@ -117,12 +118,14 @@ export const AdminReservationForm = ({
             </Select>
           </div>
 
-          <ChildSelector
-            selectedChild={selectedChild}
-            setSelectedChild={setSelectedChild}
-            children={filteredChildren}
-            setSelectedDates={() => {}}
-          />
+          <div className="mt-4">
+            <ChildSelector
+              selectedChild={selectedChild}
+              setSelectedChild={setSelectedChild}
+              children={filteredChildren}
+              setSelectedDates={() => {}}
+            />
+          </div>
 
           <ScrollArea className="h-[400px]">
             <WednesdayDateSelector
