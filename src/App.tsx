@@ -1,5 +1,5 @@
 
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { AdminPage } from "@/pages/admin/AdminPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminWednesdays from "@/pages/admin/AdminWednesdays";
@@ -23,10 +23,29 @@ import HolidayProgram from "@/pages/HolidayProgram";
 import TermsOfService from "@/pages/TermsOfService";
 import ForgotPassword from "@/pages/ForgotPassword";
 
+// Composant pour gérer les erreurs de route
+const ErrorBoundary = () => {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold text-primary">Oops!</h1>
+        <p className="text-lg text-gray-600">Une erreur est survenue.</p>
+        <button
+          onClick={() => window.location.href = '/admin/reservations'}
+          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+        >
+          Retourner aux réservations
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Index />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/login",
@@ -75,6 +94,7 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminPage />,
+    errorElement: <ErrorBoundary />,
     children: [
       {
         path: "",
@@ -113,6 +133,10 @@ const router = createBrowserRouter([
         element: <AdminAuthorizedEmails />,
       },
     ],
+  },
+  {
+    path: "*",
+    element: <Navigate to="/" replace />,
   }
 ]);
 
