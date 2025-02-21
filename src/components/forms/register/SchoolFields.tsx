@@ -43,7 +43,7 @@ export const SchoolFields = ({ form }: SchoolFieldsProps) => {
               ))}
             </SelectContent>
           </Select>
-          <FormMessage />
+          <FormMessage className="text-destructive" />
         </FormItem>
       )}
     />
