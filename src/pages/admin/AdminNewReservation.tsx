@@ -17,10 +17,8 @@ const AdminNewReservation = () => {
     setSelectedDates(prev => {
       const existingDate = prev.find(d => d.date.getTime() === date.getTime());
       if (existingDate) {
-        // Si la date existe déjà, on la retire
         return prev.filter(d => d.date.getTime() !== date.getTime());
       } else {
-        // Sinon, on l'ajoute avec les options par défaut
         return [...prev, { date, withoutMeal: false, earlyDropoff: false }];
       }
     });
@@ -39,6 +37,8 @@ const AdminNewReservation = () => {
     setSelectedChild("");
     setSelectedDates([]);
   };
+
+  console.log("Rendering AdminNewReservation"); // Ajout d'un log pour debug
 
   return (
     <div>

@@ -5,8 +5,10 @@ import { useAdminReservations } from "@/components/admin/reservations/hooks/useA
 import { AdminReservationsContent } from "@/components/admin/reservations/AdminReservationsContent";
 import { Button } from "@/components/ui/button";
 import { CalendarPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const AdminReservations = () => {
+  const navigate = useNavigate();
   const { data: isAdmin } = useAdminAuth();
   const { 
     data, 
@@ -48,11 +50,14 @@ const AdminReservations = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Gestion des réservations</h1>
           <div className="flex gap-4">
-            <Button onClick={() => window.location.href = '/admin/reservations/new'}>
+            <Button onClick={() => navigate('/admin/reservations/new')}>
               <CalendarPlus className="mr-2 h-4 w-4" />
               Réserver des mercredis
             </Button>
-            <Button variant="secondary" onClick={() => window.location.href = '/admin/reservations/new-holiday'}>
+            <Button 
+              variant="secondary" 
+              onClick={() => navigate('/admin/reservations/new-holiday')}
+            >
               <CalendarPlus className="mr-2 h-4 w-4" />
               Réserver des vacances
             </Button>
