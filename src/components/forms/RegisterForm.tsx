@@ -10,6 +10,7 @@ import { SecurityFields } from "./register/SecurityFields";
 import { SchoolFields } from "./register/SchoolFields";
 import { TermsFields } from "./register/TermsFields";
 import { CguAlert } from "./register/CguAlert";
+import { SchoolCityAlert } from "./register/SchoolCityAlert";
 
 interface RegisterFormProps {
   onSubmit: (values: RegisterFormData) => Promise<void>;
@@ -18,6 +19,7 @@ interface RegisterFormProps {
 
 export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   const [showCguAlert, setShowCguAlert] = useState(false);
+  const [showSchoolCityAlert, setShowSchoolCityAlert] = useState(false);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -52,6 +54,11 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   }, [form]);
 
   const handleSubmit = form.handleSubmit(async (values: RegisterFormData) => {
+    if (!values.schoolCity) {
+      setShowSchoolCityAlert(true);
+      return;
+    }
+    
     if (!values.acceptedCgu) {
       setShowCguAlert(true);
       return;
@@ -83,6 +90,11 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
       <CguAlert 
         open={showCguAlert} 
         onOpenChange={setShowCguAlert}
+      />
+      
+      <SchoolCityAlert
+        open={showSchoolCityAlert}
+        onOpenChange={setShowSchoolCityAlert}
       />
     </>
   );
