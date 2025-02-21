@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -59,12 +60,6 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     localStorage.removeItem('registerFormData');
     await onSubmit(values);
   };
-
-  useEffect(() => {
-    console.log("showCguAlert a changé :", showCguAlert);
-  }, [showCguAlert]);
-
-  console.log("Erreurs de validation:", form.formState.errors);
 
   return (
     <>
