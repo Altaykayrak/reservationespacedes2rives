@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DateOption {
@@ -50,9 +50,9 @@ export const AdminReservationForm = ({
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [showReservationDialog, setShowReservationDialog] = useState(false);
   const [reservedDate, setReservedDate] = useState<Date | null>(null);
+  const queryClient = useQueryClient();
 
   const { children, isLoading } = useChildrenData();
-  const { refetchReservations } = useReservationQueries();
 
   // Requête pour récupérer les réservations existantes
   const { data: existingReservations } = useQuery({
@@ -99,6 +99,10 @@ export const AdminReservationForm = ({
     } else {
       handleDateToggle(date);
     }
+  };
+
+  const refetchReservations = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] });
   };
 
   const { handleSubmit } = useWednesdayReservationSubmission(
