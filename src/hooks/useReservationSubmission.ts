@@ -56,7 +56,10 @@ export const useReservationSubmission = (
       return;
     }
 
-    if (!validateMinimumDaysPerWeek(selectedDates.map(d => d.date))) {
+    // Vérifier si nous sommes sur une route admin
+    const isAdminRoute = window.location.pathname.startsWith('/admin/');
+
+    if (!validateMinimumDaysPerWeek(selectedDates.map(d => d.date), isAdminRoute)) {
       alert("Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances.");
       return;
     }
