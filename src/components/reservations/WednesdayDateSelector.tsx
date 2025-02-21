@@ -147,7 +147,7 @@ export const WednesdayDateSelector = ({
                       </Badge>
                     )}
                     {selectedChild && isReserved ? (
-                      <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                      <Badge variant="secondary" className="bg-red-100 text-red-600">
                         Déjà réservé
                       </Badge>
                     ) : selectedChild && spotsLeft !== null && (
