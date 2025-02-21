@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ const Register = () => {
     <AuthLayout
       title="Inscription"
       description="Créez votre compte pour accéder à L'espace des deux rives"
+      subDescription="Remplissez tous les champs avant de valider le formulaire s'il vous plaît"
     >
       <RegisterForm onSubmit={handleSubmit} isLoading={isLoading} />
     </AuthLayout>
