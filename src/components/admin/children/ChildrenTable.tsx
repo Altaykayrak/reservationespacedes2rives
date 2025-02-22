@@ -15,8 +15,8 @@ export const ChildrenTable = ({ children, onEdit, onDelete }: ChildrenTableProps
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Prénom</TableHead>
           <TableHead>Nom</TableHead>
+          <TableHead>Prénom</TableHead>
           <TableHead>Classe</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
@@ -31,8 +31,8 @@ export const ChildrenTable = ({ children, onEdit, onDelete }: ChildrenTableProps
         ) : (
           children.map((child) => (
             <TableRow key={child.id}>
-              <TableCell>{child.first_name}</TableCell>
               <TableCell>{child.last_name}</TableCell>
+              <TableCell>{child.first_name}</TableCell>
               <TableCell>{child.school_class}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">

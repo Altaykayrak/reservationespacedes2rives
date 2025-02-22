@@ -9,7 +9,8 @@ export const useChildrenData = () => {
       const { data, error } = await supabase
         .from("children")
         .select("*")
-        .order('last_name', { ascending: true });
+        .order('last_name', { ascending: true })
+        .order('first_name', { ascending: true });
       
       if (error) throw error;
       return data;
