@@ -9,12 +9,36 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { UseFormReturn } from "react-hook-form";
 import { RegisterFormData } from "@/schemas/registerSchema";
+import { useState, useEffect } from "react";
 
 interface TermsFieldsProps {
   form: UseFormReturn<RegisterFormData>;
 }
 
 export const TermsFields = ({ form }: TermsFieldsProps) => {
+  const [shouldShake, setShouldShake] = useState(false);
+  const acceptedCgu = form.watch("acceptedCgu");
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (shouldShake) {
+      timeout = setTimeout(() => {
+        setShouldShake(false);
+      }, 1000);
+    }
+    return () => clearTimeout(timeout);
+  }, [shouldShake]);
+
+  // S'abonne aux changements du formulaire pour détecter les tentatives de soumission
+  useEffect(() => {
+    const subscription = form.watch((value, { type }) => {
+      if (type === "submit" && !value.acceptedCgu) {
+        setShouldShake(true);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   return (
     <>
       <FormField
@@ -43,7 +67,12 @@ export const TermsFields = ({ form }: TermsFieldsProps) => {
             <FormControl>
               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
             </FormControl>
-            <div className="leading-none">
+            <div 
+              className={`leading-none ${shouldShake && !acceptedCgu ? 'animate-shake text-destructive-foreground' : ''}`}
+              style={{
+                animation: shouldShake && !acceptedCgu ? 'shake 0.5s ease-in-out' : 'none',
+              }}
+            >
               <FormLabel>
                 J'ai pris connaissance{" "}
                 <Link to="/terms-of-service" className="text-primary hover:underline">
