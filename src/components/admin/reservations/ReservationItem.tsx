@@ -1,66 +1,70 @@
 
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Pencil, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
 
 interface ReservationItemProps {
   reservation: WednesdayReservationWithChild | HolidayReservationWithChild;
-  onEdit: (reservation: WednesdayReservationWithChild | HolidayReservationWithChild) => void;
-  onDelete: (id: string) => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 export const ReservationItem = ({
   reservation,
   onEdit,
-  onDelete,
+  onDelete
 }: ReservationItemProps) => {
-  const getReservationDate = () => {
-    if ('wednesday_id' in reservation) {
-      return format(new Date(reservation.available_wednesdays.date), "dd/MM/yyyy", { locale: fr });
-    } else {
-      return format(new Date(reservation.reservation_date), "dd/MM/yyyy", { locale: fr });
-    }
-  };
+  const formattedDate = format(
+    new Date('wednesday_id' in reservation 
+      ? reservation.available_wednesdays.date 
+      : reservation.reservation_date
+    ),
+    "EEEE d MMMM yyyy",
+    { locale: fr }
+  );
 
   return (
-    <div className="flex items-center justify-between px-4 py-1.5 border-b hover:bg-gray-50 transition-colors">
-      <div className="flex items-center gap-2 text-sm">
-        <span className="font-medium">
-          {reservation.children?.last_name} {reservation.children?.first_name}
-        </span>
-        <span className="text-gray-500">
-          ({reservation.children?.school_class})
-        </span>
-        <span className="text-gray-400">•</span>
-        <span>{getReservationDate()}</span>
-        {reservation.without_meal && (
-          <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">
-            Sans repas
-          </Badge>
-        )}
-        {reservation.early_dropoff && (
-          <Badge variant="outline" className="border-blue-500 text-blue-700 bg-blue-50">
-            Accueil avant 8h30
-          </Badge>
-        )}
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white rounded-lg border">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium">
+            {reservation.children.last_name} {reservation.children.first_name}
+          </h3>
+          <Badge variant="outline">{reservation.children.school_class}</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {formattedDate}
+        </p>
+        <div className="flex gap-2">
+          {reservation.early_dropoff && (
+            <Badge variant="secondary">Accueil avant 8h30</Badge>
+          )}
+          {reservation.without_meal && (
+            <Badge variant="secondary">Sans repas</Badge>
+          )}
+        </div>
       </div>
-      <div className="flex gap-1">
-        <button 
-          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-          aria-label="Modifier la réservation"
-          onClick={() => onEdit(reservation)}
+      
+      <div className="flex items-center gap-2 mt-2 sm:mt-0">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onEdit}
         >
-          <Pencil className="h-3.5 w-3.5 text-blue-500" />
-        </button>
-        <button 
-          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-          aria-label="Supprimer la réservation"
-          onClick={() => onDelete(reservation.id)}
+          <Edit className="h-4 w-4 mr-2" />
+          Modifier
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={onDelete}
         >
-          <Trash2 className="h-3.5 w-3.5 text-red-500" />
-        </button>
+          <Trash2 className="h-4 w-4 mr-2" />
+          Supprimer
+        </Button>
       </div>
     </div>
   );
