@@ -18,6 +18,7 @@ interface TermsFieldsProps {
 export const TermsFields = ({ form }: TermsFieldsProps) => {
   const [shouldShake, setShouldShake] = useState(false);
   const acceptedCgu = form.watch("acceptedCgu");
+  const { isSubmitting } = form.formState;
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -29,15 +30,12 @@ export const TermsFields = ({ form }: TermsFieldsProps) => {
     return () => clearTimeout(timeout);
   }, [shouldShake]);
 
-  // S'abonne aux changements du formulaire pour détecter les tentatives de soumission
+  // Surveille l'état de soumission du formulaire
   useEffect(() => {
-    const subscription = form.watch((value, { type }) => {
-      if (type === "submit" && !value.acceptedCgu) {
-        setShouldShake(true);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
+    if (isSubmitting && !acceptedCgu) {
+      setShouldShake(true);
+    }
+  }, [isSubmitting, acceptedCgu]);
 
   return (
     <>
