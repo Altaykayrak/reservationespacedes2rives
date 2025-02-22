@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,7 +55,6 @@ export const useReservationSubmission = (
       return;
     }
 
-    // Vérifier si nous sommes sur une route admin
     const isAdminRoute = window.location.pathname.startsWith('/admin/');
 
     if (!validateMinimumDaysPerWeek(selectedDates.map(d => d.date), isAdminRoute)) {
@@ -65,16 +63,14 @@ export const useReservationSubmission = (
     }
 
     try {
-      // Récupérer la classe de l'enfant
       const { data: childData, error: childError } = await supabase
         .from("children")
-        .select("school_class")
+        .select("first_name, last_name, school_class")
         .eq("id", selectedChild)
         .single();
 
       if (childError) throw childError;
 
-      // Vérifier les places disponibles pour chaque date
       for (const dateOption of selectedDates) {
         const dateStr = format(dateOption.date, "yyyy-MM-dd");
         
@@ -92,7 +88,6 @@ export const useReservationSubmission = (
           throw new Error(`Période non trouvée pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
         }
 
-        // Vérifier les places disponibles
         const { data: spotsLeft, error: spotsError } = await supabase
           .rpc('check_holiday_spots_available', {
             period_id: period.id,
@@ -126,7 +121,6 @@ export const useReservationSubmission = (
         }
       }
 
-      // Si toutes les vérifications sont passées, créer les réservations
       for (const dateOption of selectedDates) {
         const dateStr = format(dateOption.date, "yyyy-MM-dd");
         const period = holidayPeriods?.find(period => {
@@ -153,6 +147,19 @@ export const useReservationSubmission = (
 
         if (reservationError) throw reservationError;
       }
+
+      const childFullName = `${childData.first_name} ${childData.last_name}`;
+      const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
+      
+      await supabase.functions.invoke('send-reservation-email', {
+        body: {
+          childName: childFullName,
+          dates: formattedDates,
+          type: 'holiday',
+          withoutMeal: selectedDates.map(d => d.withoutMeal),
+          earlyDropoff: selectedDates.map(d => d.earlyDropoff)
+        }
+      });
 
       await refetchReservations();
       resetForm();

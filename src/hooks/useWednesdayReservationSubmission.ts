@@ -60,6 +60,15 @@ export const useWednesdayReservationSubmission = (
     }
 
     try {
+      // Récupérer les informations de l'enfant
+      const { data: childData, error: childError } = await supabase
+        .from("children")
+        .select("first_name, last_name")
+        .eq("id", selectedChild)
+        .single();
+
+      if (childError) throw childError;
+
       for (const dateOption of selectedDates) {
         const { data: wednesday, error: wednesdayError } = await supabase
           .from("available_wednesdays")
@@ -70,7 +79,6 @@ export const useWednesdayReservationSubmission = (
         if (wednesdayError) throw wednesdayError;
         if (!wednesday) throw new Error(`Mercredi non trouvé pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
 
-        // Vérifier d'abord si une réservation existe déjà
         const { data: existingReservation } = await supabase
           .from("wednesday_reservations")
           .select("id")
@@ -80,7 +88,7 @@ export const useWednesdayReservationSubmission = (
 
         if (existingReservation) {
           console.log(`Réservation déjà existante pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
-          continue; // Passer à la date suivante
+          continue;
         }
 
         const { error: reservationError } = await supabase
@@ -96,6 +104,20 @@ export const useWednesdayReservationSubmission = (
 
         if (reservationError) throw reservationError;
       }
+
+      // Envoyer l'email de confirmation
+      const childFullName = `${childData.first_name} ${childData.last_name}`;
+      const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
+      
+      await supabase.functions.invoke('send-reservation-email', {
+        body: {
+          childName: childFullName,
+          dates: formattedDates,
+          type: 'wednesday',
+          withoutMeal: selectedDates.map(d => d.withoutMeal),
+          earlyDropoff: selectedDates.map(d => d.earlyDropoff)
+        }
+      });
 
       // Forcer la mise à jour des données après les réservations
       await Promise.all([
