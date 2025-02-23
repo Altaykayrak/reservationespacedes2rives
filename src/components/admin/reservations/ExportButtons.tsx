@@ -113,10 +113,10 @@ export const ExportButtons = ({
     ];
 
     let allTableData: any[] = [];
-    const totals = new Map<string, { withMeal: number; withoutMeal: number }>();
+    const totals = new Map<string, number>();
     
     dates.forEach(date => {
-      totals.set(date, { withMeal: 0, withoutMeal: 0 });
+      totals.set(date, 0);
     });
 
     const sortedClasses = Array.from(childrenByClass.keys()).sort();
@@ -145,14 +145,8 @@ export const ExportButtons = ({
           const status = child.reservations.get(date) || "-";
           row.push(status);
           
-          if (status === "Avec repas" || status === "Sans repas") {
-            const dateTotal = totals.get(date)!;
-            if (status === "Avec repas") {
-              dateTotal.withMeal++;
-            } else {
-              dateTotal.withoutMeal++;
-            }
-            totals.set(date, dateTotal);
+          if (status !== "-") {
+            totals.set(date, totals.get(date)! + 1);
           }
         });
 
@@ -161,14 +155,13 @@ export const ExportButtons = ({
 
       const classTotals = ["Sous-total", "", className];
       dates.forEach(date => {
-        let withMeal = 0;
-        let withoutMeal = 0;
+        let total = 0;
         classData.children.forEach(child => {
-          const status = child.reservations.get(date);
-          if (status === "Avec repas") withMeal++;
-          if (status === "Sans repas") withoutMeal++;
+          if (child.reservations.get(date)) {
+            total++;
+          }
         });
-        classTotals.push(`AR: ${withMeal} / SR: ${withoutMeal}`);
+        classTotals.push(total.toString());
       });
       allTableData.push([...classTotals]);
       
@@ -177,8 +170,7 @@ export const ExportButtons = ({
 
     const globalTotals = ["TOTAL GLOBAL", "", ""];
     dates.forEach(date => {
-      const dateTotal = totals.get(date)!;
-      globalTotals.push(`AR: ${dateTotal.withMeal} / SR: ${dateTotal.withoutMeal}`);
+      globalTotals.push(totals.get(date)!.toString());
     });
     allTableData.push([
       { content: "", colSpan: headers.length, styles: { fillColor: [220, 220, 220] } }
