@@ -1,3 +1,4 @@
+
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,7 +34,7 @@ export const SecurityFields = ({
       <FormField control={form.control} name="secretAnswer" render={({
       field
     }) => <FormItem>
-            <FormLabel className="bg-slate-50">Réponse</FormLabel>
+            <FormLabel className="text-destructive-foreground">Réponse</FormLabel>
             <FormControl>
               <Input {...field} />
             </FormControl>
