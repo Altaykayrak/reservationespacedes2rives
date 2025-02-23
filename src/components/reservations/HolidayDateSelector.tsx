@@ -97,7 +97,7 @@ export const HolidayDateSelector = ({
       childInfo={childInfo} 
       isTeenClass={!!isTeenClass}
     >
-      {window.location.pathname === "/teenholiday-reservations" && isTeenClass ? (
+      {window.location.pathname === "/teenholiday-reservations" || window.location.pathname === "/admin/reservations/new-teen-holiday" && isTeenClass ? (
         <TeenClassDateSelector
           selectedDates={selectedDates}
           isDateAlreadyReserved={isDateAlreadyReserved}
