@@ -4,7 +4,6 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
-
 interface LoginFormProps {
   email: string;
   setEmail: (email: string) => void;
@@ -14,7 +13,6 @@ interface LoginFormProps {
   error: string | null;
   onSubmit: (e: React.FormEvent) => void;
 }
-
 export const LoginForm = ({
   email,
   setEmail,
@@ -22,36 +20,21 @@ export const LoginForm = ({
   setPassword,
   isLoading,
   error,
-  onSubmit,
+  onSubmit
 }: LoginFormProps) => {
-  return (
-    <>
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+  return <>
+      {error && <Alert variant="destructive" className="mb-4">
+          <AlertDescription className="bg-red-700">{error}</AlertDescription>
+        </Alert>}
       
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="exemple@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <Input id="email" type="email" placeholder="exemple@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Mot de passe</Label>
-          <PasswordInput
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <PasswordInput id="password" value={password} onChange={e => setPassword(e.target.value)} required />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Connexion..." : "Se connecter"}
@@ -66,6 +49,5 @@ export const LoginForm = ({
           </Link>
         </div>
       </form>
-    </>
-  );
+    </>;
 };
