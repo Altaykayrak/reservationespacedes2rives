@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { checkAuthorizedEmail, sendPasswordResetEmail } from "@/utils/passwordResetUtils";
 
@@ -8,17 +7,18 @@ interface FormState {
   email: string;
   isLoading: boolean;
   error: string | null;
+  isSuccess: boolean;
 }
 
 const initialFormState: FormState = {
   email: "",
   isLoading: false,
   error: null,
+  isSuccess: false,
 };
 
 export const usePasswordReset = () => {
   const [formState, setFormState] = useState<FormState>(initialFormState);
-  const navigate = useNavigate();
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +43,12 @@ export const usePasswordReset = () => {
       }
 
       await sendPasswordResetEmail(formState.email);
-      toast.success("Un email de réinitialisation a été envoyé");
-      navigate("/login");
+      setFormState(prev => ({
+        ...prev,
+        isLoading: false,
+        isSuccess: true,
+      }));
+      toast.success("Vous allez recevoir un mail afin de réinitialiser votre mot de passe, merci de suivre les instructions");
 
     } catch (error: any) {
       setFormState(prev => ({
@@ -60,6 +64,7 @@ export const usePasswordReset = () => {
       ...prev,
       email,
       error: null,
+      isSuccess: false,
     }));
   };
 

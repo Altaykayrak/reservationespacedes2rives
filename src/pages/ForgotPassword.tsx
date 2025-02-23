@@ -21,6 +21,14 @@ const ForgotPassword = () => {
           </Alert>
         )}
 
+        {formState.isSuccess && (
+          <Alert className="mb-4">
+            <AlertDescription>
+              Vous allez recevoir un mail afin de réinitialiser votre mot de passe, merci de suivre les instructions
+            </AlertDescription>
+          </Alert>
+        )}
+
         <EmailForm
           email={formState.email}
           isLoading={formState.isLoading}
