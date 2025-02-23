@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
@@ -204,39 +205,150 @@ export const ExportButtons = ({
   const handleExcelExport = () => {
     const { dates, childrenByClass } = prepareDataForPdf();
     
-    const excelData = Array.from(childrenByClass.values()).map(child => {
-      const row: any = {
-        "Nom": child.children[0].lastName,
-        "Prénom": child.children[0].firstName,
-        "Classe": child.children[0].schoolClass
+    const headers = [
+      "Nom",
+      "Prénom",
+      "Classe",
+      ...dates.map(date => format(new Date(date), "EEE dd MMM", { locale: fr }))
+    ];
+
+    let excelRows: any[] = [];
+    const totals = new Map<string, number>();
+    
+    dates.forEach(date => {
+      totals.set(date, 0);
+    });
+
+    // Trier les classes
+    const sortedClasses = Array.from(childrenByClass.keys()).sort();
+
+    sortedClasses.forEach(className => {
+      const classData = childrenByClass.get(className)!;
+      
+      // Ajouter l'en-tête de la classe
+      excelRows.push({
+        Nom: `Classe: ${className}`,
+        Prénom: "",
+        Classe: "",
+        ...Object.fromEntries(dates.map(date => [
+          format(new Date(date), "EEE dd MMM", { locale: fr }),
+          ""
+        ]))
+      });
+
+      // Trier les enfants par nom, puis prénom
+      const sortedChildren = classData.children.sort((a, b) => {
+        const lastNameCompare = a.lastName.localeCompare(b.lastName);
+        if (lastNameCompare !== 0) return lastNameCompare;
+        return a.firstName.localeCompare(b.firstName);
+      });
+
+      // Ajouter les données des enfants
+      sortedChildren.forEach(child => {
+        const row: any = {
+          Nom: child.lastName,
+          Prénom: child.firstName,
+          Classe: child.schoolClass
+        };
+
+        dates.forEach(date => {
+          const formattedDate = format(new Date(date), "EEE dd MMM", { locale: fr });
+          const status = child.reservations.get(date) || "-";
+          row[formattedDate] = status;
+          
+          if (status !== "-") {
+            totals.set(date, totals.get(date)! + 1);
+          }
+        });
+
+        excelRows.push(row);
+      });
+
+      // Ajouter les sous-totaux de la classe
+      const classTotals: any = {
+        Nom: "Sous-total",
+        Prénom: "",
+        Classe: className
       };
 
       dates.forEach(date => {
         const formattedDate = format(new Date(date), "EEE dd MMM", { locale: fr });
-        row[formattedDate] = child.children[0].reservations.get(date) || "-";
+        let total = 0;
+        classData.children.forEach(child => {
+          if (child.reservations.get(date)) {
+            total++;
+          }
+        });
+        classTotals[formattedDate] = total;
       });
-
-      return row;
+      excelRows.push(classTotals);
+      
+      // Ajouter une ligne vide entre les classes
+      excelRows.push({
+        Nom: "",
+        Prénom: "",
+        Classe: "",
+        ...Object.fromEntries(dates.map(date => [
+          format(new Date(date), "EEE dd MMM", { locale: fr }),
+          ""
+        ]))
+      });
     });
 
-    excelData.sort((a, b) => {
-      const lastNameCompare = a["Nom"].localeCompare(b["Nom"]);
-      if (lastNameCompare !== 0) return lastNameCompare;
-      return a["Prénom"].localeCompare(b["Prénom"]);
+    // Ajouter une ligne vide avant le total global
+    excelRows.push({
+      Nom: "",
+      Prénom: "",
+      Classe: "",
+      ...Object.fromEntries(dates.map(date => [
+        format(new Date(date), "EEE dd MMM", { locale: fr }),
+        ""
+      ]))
     });
 
-    const ws = XLSX.utils.json_to_sheet(excelData);
+    // Ajouter le total global
+    const globalTotals: any = {
+      Nom: "TOTAL GLOBAL",
+      Prénom: "",
+      Classe: ""
+    };
+
+    dates.forEach(date => {
+      const formattedDate = format(new Date(date), "EEE dd MMM", { locale: fr });
+      globalTotals[formattedDate] = totals.get(date);
+    });
+    excelRows.push(globalTotals);
+
+    // Créer la feuille Excel
+    const ws = XLSX.utils.json_to_sheet(excelRows);
+
+    // Appliquer des styles (couleurs de fond) pour les en-têtes de classe et totaux
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z1000');
+    let currentRow = 0;
+    excelRows.forEach((row, index) => {
+      if (row.Nom.startsWith('Classe:') || row.Nom === 'TOTAL GLOBAL') {
+        for (let col = 0; col <= range.e.c; col++) {
+          const cellRef = XLSX.utils.encode_cell({ r: index, c: col });
+          if (!ws[cellRef]) ws[cellRef] = { v: '', t: 's' };
+          ws[cellRef].s = {
+            fill: { fgColor: { rgb: row.Nom === 'TOTAL GLOBAL' ? 'DDDDDD' : 'CCCCCC' } },
+            font: { bold: true }
+          };
+        }
+      }
+    });
+
+    // Ajuster la largeur des colonnes
+    const colWidths = [
+      { wch: 15 }, // Nom
+      { wch: 15 }, // Prénom
+      { wch: 10 }, // Classe
+      ...dates.map(() => ({ wch: 12 })) // Dates
+    ];
+    ws['!cols'] = colWidths;
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Réservations");
-    
-    const colWidths = [
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 10 },
-      ...dates.map(() => ({ wch: 12 }))
-    ];
-    ws["!cols"] = colWidths;
-
     XLSX.writeFile(wb, "reservations.xlsx");
   };
 
