@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReservationList } from "./ReservationList";
 import { ReservationFilters } from "./ReservationFilters";
+import { ExportButtons } from "./ExportButtons";
 import { useFilteredReservations } from "./hooks/useFilteredReservations";
 import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 import { EditReservationDialog } from "./EditReservationDialog";
@@ -95,18 +96,26 @@ export const AdminReservationsContent = ({
 
   return (
     <div className="space-y-6">
-      <ReservationFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        startDate={startDate}
-        onStartDateChange={setStartDate}
-        endDate={endDate}
-        onEndDateChange={setEndDate}
-        selectedClass={selectedClass}
-        onClassChange={setSelectedClass}
-        selectedGroup={selectedGroup}
-        onGroupChange={setSelectedGroup}
-      />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <ReservationFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          startDate={startDate}
+          onStartDateChange={setStartDate}
+          endDate={endDate}
+          onEndDateChange={setEndDate}
+          selectedClass={selectedClass}
+          onClassChange={setSelectedClass}
+          selectedGroup={selectedGroup}
+          onGroupChange={setSelectedGroup}
+        />
+        <ExportButtons
+          wednesdayReservations={filteredWednesdayReservations}
+          holidayReservations={filteredHolidayReservations}
+          startDate={startDate}
+          endDate={endDate}
+        />
+      </div>
 
       <Tabs defaultValue="wednesday" className="w-full">
         <TabsList className="mb-4">
