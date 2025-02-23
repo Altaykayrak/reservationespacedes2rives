@@ -31,7 +31,7 @@ export const SchoolFields = ({ form }: SchoolFieldsProps) => {
               ))}
             </SelectContent>
           </Select>
-          <FormMessage className="text-red-700" />
+          <FormMessage className="text-destructive-foreground" />
         </FormItem>
       )} 
     />
