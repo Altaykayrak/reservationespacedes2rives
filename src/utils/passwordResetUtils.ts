@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -16,13 +17,10 @@ export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEma
 };
 
 export const fetchSecretQuestion = async (email: string): Promise<{ secret_question: string } | null> => {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user) return null;
-
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("secret_question")
-    .eq("id", user.user?.id)
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
     .maybeSingle();
 
   if (profileError) throw profileError;
@@ -30,13 +28,10 @@ export const fetchSecretQuestion = async (email: string): Promise<{ secret_quest
 };
 
 export const verifySecretAnswer = async (email: string, secretAnswer: string): Promise<boolean> => {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user) return false;
-
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("secret_answer")
-    .eq("id", user.user?.id)
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
     .maybeSingle();
 
   if (profileError || !profile) {
