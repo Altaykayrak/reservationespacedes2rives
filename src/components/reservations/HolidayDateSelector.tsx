@@ -54,8 +54,9 @@ export const HolidayDateSelector = ({
     if (!selectedChild) return;
 
     if (isTeenClass && holidayPeriod) {
-      // On n'applique la présélection que sur la page teen
-      const isTeenPage = window.location.pathname === "/teenholiday-reservations";
+      // On applique la présélection sur la page teen et la page admin teen
+      const isTeenPage = window.location.pathname === "/teenholiday-reservations" || 
+                        window.location.pathname === "/admin/reservations/new-teen-holiday";
       if (isTeenPage) {
         console.log("Sélection des dates pour adolescent");
         const dates: DateOption[] = [];
@@ -83,7 +84,8 @@ export const HolidayDateSelector = ({
 
   // Effet pour réinitialiser les dates lors du changement de période
   useEffect(() => {
-    const isTeenPage = window.location.pathname === "/teenholiday-reservations";
+    const isTeenPage = window.location.pathname === "/teenholiday-reservations" || 
+                      window.location.pathname === "/admin/reservations/new-teen-holiday";
     if (!isTeenClass || !isTeenPage) {
       setSelectedDates([]);
     }
@@ -97,7 +99,8 @@ export const HolidayDateSelector = ({
       childInfo={childInfo} 
       isTeenClass={!!isTeenClass}
     >
-      {window.location.pathname === "/teenholiday-reservations" || window.location.pathname === "/admin/reservations/new-teen-holiday" && isTeenClass ? (
+      {(window.location.pathname === "/teenholiday-reservations" || 
+        window.location.pathname === "/admin/reservations/new-teen-holiday") && isTeenClass ? (
         <TeenClassDateSelector
           selectedDates={selectedDates}
           isDateAlreadyReserved={isDateAlreadyReserved}
