@@ -1,21 +1,17 @@
+
 import { AuthLayout } from "@/components/layouts/AuthLayout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import { EmailForm } from "@/components/auth/EmailForm";
-import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import { usePasswordReset } from "@/hooks/usePasswordReset";
 
 const ForgotPassword = () => {
-  const { formState, handleEmailSubmit, handleSecretAnswerSubmit, handleInputChange } = usePasswordReset();
+  const { formState, handleEmailSubmit, handleInputChange } = usePasswordReset();
 
   return (
     <AuthLayout
       title="Mot de passe oublié"
-      description={
-        formState.secretQuestion
-          ? "Répondez à votre question secrète pour réinitialiser votre mot de passe"
-          : "Entrez votre email pour accéder à votre question secrète"
-      }
+      description="Entrez votre email pour recevoir un lien de réinitialisation"
     >
       {formState.error && (
         <Alert variant="destructive" className="mb-4">
@@ -23,22 +19,12 @@ const ForgotPassword = () => {
         </Alert>
       )}
 
-      {!formState.secretQuestion ? (
-        <EmailForm
-          email={formState.email}
-          isLoading={formState.isLoading}
-          onEmailChange={(email) => handleInputChange("email", email)}
-          onSubmit={handleEmailSubmit}
-        />
-      ) : (
-        <ResetPasswordForm
-          secretQuestion={formState.secretQuestion}
-          secretAnswer={formState.secretAnswer}
-          isLoading={formState.isLoading}
-          onSecretAnswerChange={(answer) => handleInputChange("secretAnswer", answer)}
-          onSubmit={handleSecretAnswerSubmit}
-        />
-      )}
+      <EmailForm
+        email={formState.email}
+        isLoading={formState.isLoading}
+        onEmailChange={(email) => handleInputChange(email)}
+        onSubmit={handleEmailSubmit}
+      />
 
       <div className="text-center text-sm mt-4">
         <Link to="/login" className="text-primary hover:underline">

@@ -1,15 +1,17 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FormState, FormFieldName } from "@/types/passwordReset";
-import { checkAuthorizedEmail, fetchSecretQuestion, verifySecretAnswer } from "@/utils/passwordResetUtils";
+import { checkAuthorizedEmail, sendPasswordResetEmail } from "@/utils/passwordResetUtils";
+
+interface FormState {
+  email: string;
+  isLoading: boolean;
+  error: string | null;
+}
 
 const initialFormState: FormState = {
   email: "",
-  secretAnswer: "",
-  newPassword: "",
-  secretQuestion: null,
   isLoading: false,
   error: null,
 };
@@ -40,85 +42,10 @@ export const usePasswordReset = () => {
         return;
       }
 
-      const secretQuestion = await fetchSecretQuestion(formState.email);
-
-      if (!secretQuestion) {
-        setFormState(prev => ({ 
-          ...prev, 
-          error: "Aucune question secrète trouvée pour cet email",
-          isLoading: false 
-        }));
-        return;
-      }
-
-      setFormState(prev => ({
-        ...prev,
-        secretQuestion,
-        isLoading: false,
-      }));
-
-    } catch (error: any) {
-      setFormState(prev => ({
-        ...prev,
-        error: error.message,
-        isLoading: false,
-      }));
-    }
-  };
-
-  const handleSecretAnswerSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formState.secretAnswer) {
-      setFormState(prev => ({ ...prev, error: "Veuillez répondre à la question secrète" }));
-      return;
-    }
-
-    setFormState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      const isAnswerCorrect = await verifySecretAnswer(formState.email, formState.secretAnswer);
-
-      if (!isAnswerCorrect) {
-        setFormState(prev => ({ 
-          ...prev, 
-          error: "Réponse incorrecte à la question secrète",
-          isLoading: false 
-        }));
-        return;
-      }
-
-      setFormState(prev => ({
-        ...prev,
-        isLoading: false,
-      }));
-
-    } catch (error: any) {
-      setFormState(prev => ({
-        ...prev,
-        error: error.message,
-        isLoading: false,
-      }));
-    }
-  };
-
-  const handlePasswordReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formState.newPassword) {
-      setFormState(prev => ({ ...prev, error: "Veuillez entrer un nouveau mot de passe" }));
-      return;
-    }
-
-    setFormState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(formState.email);
-
-      if (error) throw error;
-
+      await sendPasswordResetEmail(formState.email);
       toast.success("Un email de réinitialisation a été envoyé");
       navigate("/login");
+
     } catch (error: any) {
       setFormState(prev => ({
         ...prev,
@@ -128,10 +55,10 @@ export const usePasswordReset = () => {
     }
   };
 
-  const handleInputChange = (field: FormFieldName, value: string) => {
+  const handleInputChange = (email: string) => {
     setFormState(prev => ({
       ...prev,
-      [field]: value,
+      email,
       error: null,
     }));
   };
@@ -139,8 +66,6 @@ export const usePasswordReset = () => {
   return {
     formState,
     handleEmailSubmit,
-    handleSecretAnswerSubmit,
-    handlePasswordReset,
     handleInputChange,
   };
 };
