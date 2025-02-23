@@ -13,12 +13,12 @@ interface AuthorizedEmail {
 export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEmail | null> => {
   const { data: authorizedEmail, error: authEmailError } = await supabase
     .from("authorized_emails")
-    .select()
+    .select("id, email, email_lower, created_at, updated_at")
     .eq("email", email.trim())
     .maybeSingle();
 
   if (authEmailError) throw authEmailError;
-  return authorizedEmail;
+  return authorizedEmail as AuthorizedEmail | null;
 };
 
 export const fetchSecretQuestion = async (email: string): Promise<string | null> => {
