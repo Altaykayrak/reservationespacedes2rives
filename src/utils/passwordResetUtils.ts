@@ -17,14 +17,14 @@ export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEma
 };
 
 export const fetchSecretQuestion = async (email: string): Promise<{ secret_question: string } | null> => {
-  const { data: userProfile, error: profileError } = await supabase
+  const { data, error: profileError } = await supabase
     .from("profiles")
     .select("secret_question")
     .eq("email", email.trim())
     .maybeSingle();
 
   if (profileError) throw profileError;
-  return userProfile;
+  return data;
 };
 
 export const verifySecretAnswer = async (email: string, secretAnswer: string): Promise<boolean> => {
