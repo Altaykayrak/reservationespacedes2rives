@@ -144,7 +144,7 @@ export function AddChildForm({
               </SelectItem>)}
           </SelectContent>
         </Select>
-        {!schoolClass && <p className="text-sm text-destructive">La classe est requise</p>}
+        {!schoolClass && <p className="text-sm text-destructive-foreground">La classe est requise</p>}
       </div>
 
       <Button type="submit" disabled={isSubmitting || !schoolClass}>
