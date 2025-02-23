@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { AdminPage } from "@/pages/admin/AdminPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -22,8 +21,8 @@ import TeenHolidayReservations from "@/pages/TeenHolidayReservations";
 import HolidayProgram from "@/pages/HolidayProgram";
 import TermsOfService from "@/pages/TermsOfService";
 import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 
-// Composant pour gérer les erreurs de route
 const ErrorBoundary = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -86,6 +85,10 @@ const router = createBrowserRouter([
   {
     path: "/forgot-password",
     element: <ForgotPassword />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
   },
   {
     path: "/admin-login",
