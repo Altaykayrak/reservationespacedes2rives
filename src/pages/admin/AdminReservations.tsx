@@ -4,7 +4,7 @@ import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth
 import { useAdminReservations } from "@/components/admin/reservations/hooks/useAdminReservations";
 import { AdminReservationsContent } from "@/components/admin/reservations/AdminReservationsContent";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const AdminReservations = () => {
@@ -60,6 +60,13 @@ const AdminReservations = () => {
             >
               <CalendarPlus className="mr-2 h-4 w-4" />
               Réserver des vacances
+            </Button>
+            <Button 
+              variant="default"
+              onClick={() => navigate('/admin/reservations/new-teen-holiday')}
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Réserver Club Ado
             </Button>
           </div>
         </div>
