@@ -24,7 +24,7 @@ export const LoginForm = ({
 }: LoginFormProps) => {
   return <>
       {error && <Alert variant="destructive" className="mb-4">
-          <AlertDescription className="bg-red-700">{error}</AlertDescription>
+          <AlertDescription className="bg-slate-50">{error}</AlertDescription>
         </Alert>}
       
       <form onSubmit={onSubmit} className="space-y-4">
