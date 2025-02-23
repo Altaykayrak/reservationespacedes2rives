@@ -1,3 +1,4 @@
+
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { AdminPage } from "@/pages/admin/AdminPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -10,6 +11,7 @@ import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import AdminNewReservation from "@/pages/admin/AdminNewReservation";
 import AdminNewHolidayReservation from "@/pages/admin/AdminNewHolidayReservation";
+import AdminNewTeenHolidayReservation from "@/pages/admin/AdminNewTeenHolidayReservation";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -122,6 +124,10 @@ const router = createBrowserRouter([
       {
         path: "reservations/new-holiday",
         element: <AdminNewHolidayReservation />,
+      },
+      {
+        path: "reservations/new-teen-holiday",
+        element: <AdminNewTeenHolidayReservation />,
       },
       {
         path: "children",
