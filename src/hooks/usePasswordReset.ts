@@ -40,12 +40,12 @@ export const usePasswordReset = () => {
         return;
       }
 
-      const profile = await fetchSecretQuestion(formState.email);
+      const secretQuestion = await fetchSecretQuestion(formState.email);
 
-      if (!profile) {
+      if (!secretQuestion) {
         setFormState(prev => ({ 
           ...prev, 
-          error: "Aucun profil trouvé pour cet email",
+          error: "Aucune question secrète trouvée pour cet email",
           isLoading: false 
         }));
         return;
@@ -53,7 +53,7 @@ export const usePasswordReset = () => {
 
       setFormState(prev => ({
         ...prev,
-        secretQuestion: profile.secret_question,
+        secretQuestion,
         isLoading: false,
       }));
 
