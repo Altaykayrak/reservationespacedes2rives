@@ -21,6 +21,7 @@ export const exportToExcel = (exportData: ExportData) => {
   });
 
   const sortedClasses = Array.from(childrenByClass.keys()).sort();
+  let currentRow = 1; // Pour suivre la position actuelle dans le fichier Excel
 
   sortedClasses.forEach(className => {
     const classData = childrenByClass.get(className)!;
@@ -108,25 +109,68 @@ export const exportToExcel = (exportData: ExportData) => {
 
   const ws = XLSX.utils.json_to_sheet(excelRows);
 
+  // Définir les styles par défaut pour toutes les cellules
+  const defaultStyle = {
+    border: {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } }
+    }
+  };
+
+  // Appliquer les styles aux cellules
   const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z1000');
+  
+  // Style pour l'en-tête
+  for (let col = 0; col <= range.e.c; col++) {
+    const headerCell = XLSX.utils.encode_cell({ r: 0, c: col });
+    ws[headerCell].s = {
+      ...defaultStyle,
+      fill: { fgColor: { rgb: '2980B9' } }, // Bleu similaire au PDF
+      font: { bold: true, color: { rgb: 'FFFFFF' } },
+      alignment: { horizontal: 'center' }
+    };
+  }
+
+  // Style pour le reste des cellules
   excelRows.forEach((row, index) => {
-    if (row.Nom.startsWith('Classe:') || row.Nom === 'TOTAL GLOBAL') {
-      for (let col = 0; col <= range.e.c; col++) {
-        const cellRef = XLSX.utils.encode_cell({ r: index, c: col });
-        if (!ws[cellRef]) ws[cellRef] = { v: '', t: 's' };
+    const rowNum = index;
+    for (let col = 0; col <= range.e.c; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: col });
+      if (!ws[cellRef]) ws[cellRef] = { v: '', t: 's' };
+
+      if (row.Nom === 'TOTAL GLOBAL') {
         ws[cellRef].s = {
-          fill: { fgColor: { rgb: row.Nom === 'TOTAL GLOBAL' ? 'DDDDDD' : 'CCCCCC' } },
+          ...defaultStyle,
+          fill: { fgColor: { rgb: 'DDDDDD' } },
           font: { bold: true }
+        };
+      } else if (row.Nom.startsWith('Classe:')) {
+        ws[cellRef].s = {
+          ...defaultStyle,
+          fill: { fgColor: { rgb: 'CCCCCC' } },
+          font: { bold: true }
+        };
+      } else if (row.Nom === 'Sous-total') {
+        ws[cellRef].s = {
+          ...defaultStyle,
+          font: { bold: true }
+        };
+      } else {
+        ws[cellRef].s = {
+          ...defaultStyle,
+          font: { bold: col <= 1 } // Nom et Prénom en gras
         };
       }
     }
   });
 
   const colWidths = [
-    { wch: 15 },
-    { wch: 15 },
-    { wch: 10 },
-    ...dates.map(() => ({ wch: 12 }))
+    { wch: 15 },  // Nom
+    { wch: 15 },  // Prénom
+    { wch: 10 },  // Classe
+    ...dates.map(() => ({ wch: 12 }))  // Dates
   ];
   ws['!cols'] = colWidths;
 
