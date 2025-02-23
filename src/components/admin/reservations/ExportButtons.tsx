@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
@@ -37,54 +36,66 @@ export const ExportButtons = ({
 
   const prepareDataForPdf = () => {
     const dates = getAllDates();
-    const allChildren = new Map<string, {
-      firstName: string;
-      lastName: string;
-      schoolClass: string;
-      reservations: Map<string, string>;
+    const childrenByClass = new Map<string, {
+      children: {
+        firstName: string;
+        lastName: string;
+        schoolClass: string;
+        reservations: Map<string, string>;
+      }[];
     }>();
 
-    // Traiter les réservations du mercredi
+    const addChildToClass = (
+      child: {
+        first_name: string;
+        last_name: string;
+        school_class: string;
+      },
+      date: string,
+      withoutMeal: boolean
+    ) => {
+      const schoolClass = child.school_class;
+      const classData = childrenByClass.get(schoolClass) || { children: [] };
+      
+      let childData = classData.children.find(
+        c => c.firstName === child.first_name && c.lastName === child.last_name
+      );
+      
+      if (!childData) {
+        childData = {
+          firstName: child.first_name,
+          lastName: child.last_name,
+          schoolClass: child.school_class,
+          reservations: new Map<string, string>()
+        };
+        classData.children.push(childData);
+      }
+      
+      childData.reservations.set(date, withoutMeal ? "Sans repas" : "Avec repas");
+      childrenByClass.set(schoolClass, classData);
+    };
+
     wednesdayReservations?.forEach(res => {
-      const childKey = `${res.children.last_name}-${res.children.first_name}-${res.child_id}`;
-      const child = allChildren.get(childKey) || {
-        firstName: res.children.first_name,
-        lastName: res.children.last_name,
-        schoolClass: res.children.school_class,
-        reservations: new Map<string, string>()
-      };
-
-      child.reservations.set(
+      addChildToClass(
+        res.children,
         res.available_wednesdays.date,
-        res.without_meal ? "Sans repas" : "Avec repas"
+        res.without_meal
       );
-
-      allChildren.set(childKey, child);
     });
 
-    // Traiter les réservations des vacances
     holidayReservations?.forEach(res => {
-      const childKey = `${res.children.last_name}-${res.children.first_name}-${res.child_id}`;
-      const child = allChildren.get(childKey) || {
-        firstName: res.children.first_name,
-        lastName: res.children.last_name,
-        schoolClass: res.children.school_class,
-        reservations: new Map<string, string>()
-      };
-
-      child.reservations.set(
+      addChildToClass(
+        res.children,
         res.reservation_date,
-        res.without_meal ? "Sans repas" : "Avec repas"
+        res.without_meal
       );
-
-      allChildren.set(childKey, child);
     });
 
-    return { dates, allChildren };
+    return { dates, childrenByClass };
   };
 
   const handlePdfExport = () => {
-    const { dates, allChildren } = prepareDataForPdf();
+    const { dates, childrenByClass } = prepareDataForPdf();
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
@@ -94,7 +105,6 @@ export const ExportButtons = ({
     const title = `Réservations du ${startDate || "début"} au ${endDate || "fin"}`;
     doc.text(title, 14, 15);
 
-    // Préparer les en-têtes avec les dates formatées
     const headers = [
       "Nom",
       "Prénom",
@@ -102,32 +112,82 @@ export const ExportButtons = ({
       ...dates.map(date => format(new Date(date), "EEE dd MMM", { locale: fr }))
     ];
 
-    // Préparer les données du tableau
-    const tableData = Array.from(allChildren.values()).map(child => {
-      const row = [
-        child.lastName,
-        child.firstName,
-        child.schoolClass
-      ];
+    let allTableData: any[] = [];
+    const totals = new Map<string, { withMeal: number; withoutMeal: number }>();
+    
+    dates.forEach(date => {
+      totals.set(date, { withMeal: 0, withoutMeal: 0 });
+    });
 
-      // Ajouter les réservations pour chaque date
-      dates.forEach(date => {
-        row.push(child.reservations.get(date) || "-");
+    const sortedClasses = Array.from(childrenByClass.keys()).sort();
+
+    sortedClasses.forEach(className => {
+      const classData = childrenByClass.get(className)!;
+      
+      allTableData.push([
+        { content: `Classe: ${className}`, colSpan: headers.length, styles: { fillColor: [200, 200, 200], fontStyle: 'bold' } }
+      ]);
+
+      const sortedChildren = classData.children.sort((a, b) => {
+        const lastNameCompare = a.lastName.localeCompare(b.lastName);
+        if (lastNameCompare !== 0) return lastNameCompare;
+        return a.firstName.localeCompare(b.firstName);
       });
 
-      return row;
+      sortedChildren.forEach(child => {
+        const row = [
+          child.lastName,
+          child.firstName,
+          child.schoolClass
+        ];
+
+        dates.forEach(date => {
+          const status = child.reservations.get(date) || "-";
+          row.push(status);
+          
+          if (status === "Avec repas" || status === "Sans repas") {
+            const dateTotal = totals.get(date)!;
+            if (status === "Avec repas") {
+              dateTotal.withMeal++;
+            } else {
+              dateTotal.withoutMeal++;
+            }
+            totals.set(date, dateTotal);
+          }
+        });
+
+        allTableData.push(row);
+      });
+
+      const classTotals = ["Sous-total", "", className];
+      dates.forEach(date => {
+        let withMeal = 0;
+        let withoutMeal = 0;
+        classData.children.forEach(child => {
+          const status = child.reservations.get(date);
+          if (status === "Avec repas") withMeal++;
+          if (status === "Sans repas") withoutMeal++;
+        });
+        classTotals.push(`AR: ${withMeal} / SR: ${withoutMeal}`);
+      });
+      allTableData.push([...classTotals]);
+      
+      allTableData.push(Array(headers.length).fill(""));
     });
 
-    // Trier par nom, puis prénom
-    tableData.sort((a, b) => {
-      const lastNameCompare = a[0].localeCompare(b[0]);
-      if (lastNameCompare !== 0) return lastNameCompare;
-      return a[1].localeCompare(b[1]);
+    const globalTotals = ["TOTAL GLOBAL", "", ""];
+    dates.forEach(date => {
+      const dateTotal = totals.get(date)!;
+      globalTotals.push(`AR: ${dateTotal.withMeal} / SR: ${dateTotal.withoutMeal}`);
     });
+    allTableData.push([
+      { content: "", colSpan: headers.length, styles: { fillColor: [220, 220, 220] } }
+    ]);
+    allTableData.push([...globalTotals]);
 
     autoTable(doc, {
       head: [headers],
-      body: tableData,
+      body: allTableData,
       startY: 25,
       styles: {
         fontSize: 8,
@@ -150,25 +210,23 @@ export const ExportButtons = ({
   };
 
   const handleExcelExport = () => {
-    const { dates, allChildren } = prepareDataForPdf();
+    const { dates, childrenByClass } = prepareDataForPdf();
     
-    const excelData = Array.from(allChildren.values()).map(child => {
+    const excelData = Array.from(childrenByClass.values()).map(child => {
       const row: any = {
-        "Nom": child.lastName,
-        "Prénom": child.firstName,
-        "Classe": child.schoolClass
+        "Nom": child.children[0].lastName,
+        "Prénom": child.children[0].firstName,
+        "Classe": child.children[0].schoolClass
       };
 
-      // Ajouter les réservations pour chaque date
       dates.forEach(date => {
         const formattedDate = format(new Date(date), "EEE dd MMM", { locale: fr });
-        row[formattedDate] = child.reservations.get(date) || "-";
+        row[formattedDate] = child.children[0].reservations.get(date) || "-";
       });
 
       return row;
     });
 
-    // Trier par nom, puis prénom
     excelData.sort((a, b) => {
       const lastNameCompare = a["Nom"].localeCompare(b["Nom"]);
       if (lastNameCompare !== 0) return lastNameCompare;
@@ -179,12 +237,11 @@ export const ExportButtons = ({
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Réservations");
     
-    // Ajuster la largeur des colonnes
     const colWidths = [
-      { wch: 15 }, // Nom
-      { wch: 15 }, // Prénom
-      { wch: 10 }, // Classe
-      ...dates.map(() => ({ wch: 12 })) // Dates
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 10 },
+      ...dates.map(() => ({ wch: 12 }))
     ];
     ws["!cols"] = colWidths;
 
