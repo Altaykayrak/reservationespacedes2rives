@@ -1,16 +1,15 @@
+
+import { useQueryClient } from "@tanstack/react-query";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReservationList } from "./ReservationList";
 import { ReservationFilters } from "./ReservationFilters";
+import { useFilteredReservations } from "./hooks/useFilteredReservations";
+import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 import { EditReservationDialog } from "./EditReservationDialog";
 import { DeleteReservationDialog } from "./DeleteReservationDialog";
-import { useFilteredReservations } from "./hooks/useFilteredReservations";
+import { useState } from "react";
 import { useReservationActions } from "./ReservationActions";
-import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { FileText, FileSpreadsheet } from "lucide-react";
-import { format } from "date-fns";
-import { jsPDF } from "jspdf";
-import { fr } from "date-fns/locale";
 
 interface AdminReservationsContentProps {
   wednesdayReservations: WednesdayReservationWithChild[] | null;
@@ -23,21 +22,21 @@ export const AdminReservationsContent = ({
   wednesdayReservations,
   holidayReservations,
   isLoading,
-  refetchReservations
+  refetchReservations,
 }: AdminReservationsContentProps) => {
   const {
     searchQuery,
     setSearchQuery,
-    selectedDate,
-    setSelectedDate,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
     selectedClass,
     setSelectedClass,
     selectedGroup,
     setSelectedGroup,
     filteredWednesdayReservations,
-    filteredHolidayReservations,
-    sortOrder,
-    setSortOrder
+    filteredHolidayReservations
   } = useFilteredReservations(wednesdayReservations, holidayReservations);
 
   const {
@@ -50,281 +49,108 @@ export const AdminReservationsContent = ({
     handleUpdate
   } = useReservationActions({ refetchReservations });
 
-  const getReservationDate = (reservation: WednesdayReservationWithChild | HolidayReservationWithChild) => {
-    if ('wednesday_id' in reservation) {
-      return format(new Date(reservation.available_wednesdays.date), 'dd/MM/yyyy');
-    } else {
-      return format(new Date(reservation.reservation_date), 'dd/MM/yyyy');
-    }
+  const [editingWithoutMeal, setEditingWithoutMeal] = useState(false);
+  const [editingEarlyDropoff, setEditingEarlyDropoff] = useState(false);
+
+  const closeEditDialog = () => {
+    setEditingReservation(null);
+    setEditingWithoutMeal(false);
+    setEditingEarlyDropoff(false);
   };
 
-  const exportToPDF = (reservations: (WednesdayReservationWithChild | HolidayReservationWithChild)[] | null) => {
-    if (!reservations) return;
-    
-    const doc = new jsPDF();
-    doc.setFont("helvetica");
-
-    // Titre
-    doc.setFontSize(16);
-    const title = 'wednesday_id' in (reservations[0] || {}) 
-      ? "Liste des réservations du mercredi" 
-      : "Liste des réservations des vacances";
-    doc.text(title, 15, 15);
-    
-    // Informations sur les filtres
-    doc.setFontSize(10);
-    let y = 30;
-    const filterText = [];
-    if (searchQuery) filterText.push(`Recherche: ${searchQuery}`);
-    if (selectedDate) filterText.push(`Date: ${format(new Date(selectedDate), 'dd/MM/yyyy')}`);
-    if (selectedClass && selectedClass !== 'all') filterText.push(`Classe: ${selectedClass}`);
-    if (selectedGroup && selectedGroup !== 'all') filterText.push(`Groupe: ${selectedGroup}`);
-    
-    if (filterText.length > 0) {
-      doc.text("Filtres appliqués:", 15, 25);
-      filterText.forEach((text) => {
-        doc.text(text, 20, y);
-        y += 5;
-      });
-      y += 5;
-    }
-
-    // En-têtes du tableau
-    doc.setFontSize(11);
-    doc.setTextColor(0);
-    doc.setFillColor(240, 240, 240);
-    
-    const headers = [
-      { text: "Date", x: 15, width: 25 },
-      { text: "Nom", x: 40, width: 30 },
-      { text: "Prénom", x: 70, width: 30 },
-      { text: "Classe", x: 100, width: 20 },
-      { text: "Options", x: 120, width: 75 }
-    ];
-
-    // Dessiner l'en-tête du tableau
-    doc.setFillColor(240, 240, 240);
-    doc.rect(15, y - 5, 180, 7, 'F');
-    headers.forEach(header => {
-      doc.text(header.text, header.x, y);
-    });
-    y += 5;
-
-    // Contenu du tableau
-    doc.setFontSize(10);
-    reservations.forEach((r) => {
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
-      }
-
-      const date = getReservationDate(r);
-
-      // Lignes du tableau
-      doc.line(15, y - 3, 195, y - 3);
-
-      // Données
-      doc.text(date, 15, y);
-      doc.text(r.children.last_name, 40, y);
-      doc.text(r.children.first_name, 70, y);
-      doc.text(r.children.school_class, 100, y);
-
-      // Options
-      const options = [];
-      if (r.early_dropoff) options.push("Accueil avant 8h30");
-      if (r.without_meal) options.push("Sans repas");
-      doc.text(options.join(", "), 120, y);
-
-      y += 7;
-    });
-
-    // Dernière ligne du tableau
-    doc.line(15, y - 3, 195, y - 3);
-
-    // Lignes verticales du tableau
-    headers.forEach(header => {
-      doc.line(header.x, 30, header.x, y - 3);
-    });
-    doc.line(195, 30, 195, y - 3);
-
-    const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
-    doc.save(`reservations_${timestamp}.pdf`);
+  const handleEditClick = (reservation: WednesdayReservationWithChild | HolidayReservationWithChild) => {
+    setEditingReservation(reservation);
+    setEditingWithoutMeal(reservation.without_meal);
+    setEditingEarlyDropoff(reservation.early_dropoff);
   };
 
-  const exportToExcel = (reservations: (WednesdayReservationWithChild | HolidayReservationWithChild)[] | null) => {
-    if (!reservations) return;
-    
-    const rows = reservations.map(r => ({
-      date: getReservationDate(r),
-      nom: r.children?.last_name,
-      prenom: r.children?.first_name,
-      classe: r.children?.school_class,
-      repas: r.without_meal ? "Non" : "Oui",
-      garderie: r.early_dropoff ? "Oui" : "Non",
-      status: r.status
-    }));
-
-    const headers = "Date;Nom;Prénom;Classe;Repas;Garderie;Status\n";
-    const content = headers + rows.map(row => 
-      `${row.date};${row.nom};${row.prenom};${row.classe};${row.repas};${row.garderie};${row.status}`
-    ).join('\n');
-
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
-    a.download = `reservations_${timestamp}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleDeleteClick = (data: { id: string, type: 'wednesday' | 'holiday' }) => {
+    setReservationToDelete(data);
   };
+
+  const handleUpdate_ = async () => {
+    if (!editingReservation) return;
+
+    const updatedReservation = {
+      ...editingReservation,
+      without_meal: editingWithoutMeal,
+      early_dropoff: editingEarlyDropoff,
+    };
+
+    setEditingReservation(updatedReservation);
+    await handleUpdate();
+    closeEditDialog();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des réservations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-8">Gestion des réservations</h1>
+    <div className="space-y-6">
+      <ReservationFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        startDate={startDate}
+        onStartDateChange={setStartDate}
+        endDate={endDate}
+        onEndDateChange={setEndDate}
+        selectedClass={selectedClass}
+        onClassChange={setSelectedClass}
+        selectedGroup={selectedGroup}
+        onGroupChange={setSelectedGroup}
+      />
 
-      <Tabs defaultValue="wednesday" className="space-y-4">
-        <TabsList>
+      <Tabs defaultValue="wednesday" className="w-full">
+        <TabsList className="mb-4">
           <TabsTrigger value="wednesday">Mercredis</TabsTrigger>
           <TabsTrigger value="holiday">Vacances</TabsTrigger>
         </TabsList>
-
-        <ReservationFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          selectedClass={selectedClass}
-          onClassChange={setSelectedClass}
-          selectedGroup={selectedGroup}
-          onGroupChange={setSelectedGroup}
-        />
-
+        
         <TabsContent value="wednesday">
-          <div className="my-4">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-gray-600">
-                  {filteredWednesdayReservations ? (
-                    <p>Total des réservations affichées : <span className="font-semibold">{filteredWednesdayReservations.length}</span></p>
-                  ) : null}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSortOrder(sortOrder === "date" ? "name" : "date")}
-                >
-                  Trier par {sortOrder === "date" ? "nom" : "date"}
-                </Button>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => exportToPDF(filteredWednesdayReservations)}
-                  disabled={!filteredWednesdayReservations?.length}
-                >
-                  <FileText className="mr-2" />
-                  Export PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => exportToExcel(filteredWednesdayReservations)}
-                  disabled={!filteredWednesdayReservations?.length}
-                >
-                  <FileSpreadsheet className="mr-2" />
-                  Export Excel
-                </Button>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div>Chargement des réservations...</div>
-            ) : (
-              <ReservationList
-                reservations={filteredWednesdayReservations}
-                onEdit={setEditingReservation}
-                onDelete={setReservationToDelete}
-              />
-            )}
-          </div>
+          <ScrollArea className="h-[600px] pr-4">
+            <ReservationList
+              reservations={filteredWednesdayReservations}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
+            />
+          </ScrollArea>
         </TabsContent>
 
         <TabsContent value="holiday">
-          <div className="my-4">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-gray-600">
-                  {filteredHolidayReservations ? (
-                    <p>Total des réservations affichées : <span className="font-semibold">{filteredHolidayReservations.length}</span></p>
-                  ) : null}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSortOrder(sortOrder === "date" ? "name" : "date")}
-                >
-                  Trier par {sortOrder === "date" ? "nom" : "date"}
-                </Button>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => exportToPDF(filteredHolidayReservations)}
-                  disabled={!filteredHolidayReservations?.length}
-                >
-                  <FileText className="mr-2" />
-                  Export PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => exportToExcel(filteredHolidayReservations)}
-                  disabled={!filteredHolidayReservations?.length}
-                >
-                  <FileSpreadsheet className="mr-2" />
-                  Export Excel
-                </Button>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div>Chargement des réservations...</div>
-            ) : (
-              <ReservationList
-                reservations={filteredHolidayReservations}
-                onEdit={setEditingReservation}
-                onDelete={setReservationToDelete}
-              />
-            )}
-          </div>
+          <ScrollArea className="h-[600px] pr-4">
+            <ReservationList
+              reservations={filteredHolidayReservations}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
+            />
+          </ScrollArea>
         </TabsContent>
       </Tabs>
-
-      <EditReservationDialog
-        reservation={editingReservation}
-        isOpen={!!editingReservation}
-        onClose={() => setEditingReservation(null)}
-        onUpdate={handleUpdate}
-        isSubmitting={isSubmitting}
-        withoutMeal={editingReservation?.without_meal || false}
-        earlyDropoff={editingReservation?.early_dropoff || false}
-        onWithoutMealChange={(checked) => 
-          setEditingReservation(prev => 
-            prev ? { ...prev, without_meal: checked } : null
-          )
-        }
-        onEarlyDropoffChange={(checked) => 
-          setEditingReservation(prev => 
-            prev ? { ...prev, early_dropoff: checked } : null
-          )
-        }
-      />
 
       <DeleteReservationDialog
         isOpen={!!reservationToDelete}
         onClose={() => setReservationToDelete(null)}
         onConfirm={handleDelete}
+      />
+
+      <EditReservationDialog
+        reservation={editingReservation}
+        isOpen={!!editingReservation}
+        onClose={closeEditDialog}
+        onUpdate={handleUpdate_}
+        isSubmitting={isSubmitting}
+        withoutMeal={editingWithoutMeal}
+        earlyDropoff={editingEarlyDropoff}
+        onWithoutMealChange={setEditingWithoutMeal}
+        onEarlyDropoffChange={setEditingEarlyDropoff}
       />
     </div>
   );
