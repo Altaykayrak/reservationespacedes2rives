@@ -6,8 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface ReservationFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  selectedDate: string;
-  onDateChange: (value: string) => void;
+  startDate: string;
+  onStartDateChange: (value: string) => void;
+  endDate: string;
+  onEndDateChange: (value: string) => void;
   selectedClass: string;
   onClassChange: (value: string) => void;
   selectedGroup: string;
@@ -17,8 +19,10 @@ interface ReservationFiltersProps {
 export const ReservationFilters = ({
   searchQuery,
   onSearchChange,
-  selectedDate,
-  onDateChange,
+  startDate,
+  onStartDateChange,
+  endDate,
+  onEndDateChange,
   selectedClass,
   onClassChange,
   selectedGroup,
@@ -32,13 +36,21 @@ export const ReservationFilters = ({
         onChange={(e) => onSearchChange(e.target.value)}
         className="max-w-sm"
       />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="space-y-2">
-          <Label>Date</Label>
+          <Label>Date début</Label>
           <Input
             type="date"
-            value={selectedDate}
-            onChange={(e) => onDateChange(e.target.value)}
+            value={startDate}
+            onChange={(e) => onStartDateChange(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Date fin</Label>
+          <Input
+            type="date"
+            value={endDate}
+            onChange={(e) => onEndDateChange(e.target.value)}
           />
         </div>
         <div className="space-y-2">

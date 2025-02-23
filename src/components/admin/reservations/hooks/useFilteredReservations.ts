@@ -10,10 +10,11 @@ export const useFilteredReservations = (
   holidayReservations: HolidayReservationWithChild[] | null | undefined
 ) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("name"); // Changed default to "name"
+  const [sortOrder, setSortOrder] = useState<SortOrder>("name");
 
   const sortReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
     reservations: T[] | null | undefined
@@ -22,7 +23,6 @@ export const useFilteredReservations = (
 
     return [...reservations].sort((a, b) => {
       if (sortOrder === "name") {
-        // D'abord comparer les noms de famille
         const lastNameA = a.children?.last_name.toLowerCase() || '';
         const lastNameB = b.children?.last_name.toLowerCase() || '';
         
@@ -30,7 +30,6 @@ export const useFilteredReservations = (
           return lastNameA.localeCompare(lastNameB);
         }
         
-        // Si les noms sont identiques, comparer les prénoms
         const firstNameA = a.children?.first_name.toLowerCase() || '';
         const firstNameB = b.children?.first_name.toLowerCase() || '';
         return firstNameA.localeCompare(firstNameB);
@@ -59,8 +58,12 @@ export const useFilteredReservations = (
       const reservationDateStr = format(new Date(reservationDate), "yyyy-MM-dd");
 
       let dateMatch = true;
-      if (selectedDate) {
-        dateMatch = reservationDateStr === selectedDate;
+      if (startDate && endDate) {
+        dateMatch = reservationDateStr >= startDate && reservationDateStr <= endDate;
+      } else if (startDate) {
+        dateMatch = reservationDateStr >= startDate;
+      } else if (endDate) {
+        dateMatch = reservationDateStr <= endDate;
       }
 
       const classMatch = selectedClass === "all"
@@ -91,8 +94,10 @@ export const useFilteredReservations = (
   return {
     searchQuery,
     setSearchQuery,
-    selectedDate,
-    setSelectedDate,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
     selectedClass,
     setSelectedClass,
     selectedGroup,
