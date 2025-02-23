@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from 'jspdf-autotable';
 import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 
 interface ExportButtonsProps {
@@ -93,7 +93,7 @@ export const ExportButtons = ({
       ];
     });
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: [["Date", "Avec Repas", "Sans Repas", "Total"]],
       body: tableData,
       startY: 25,
