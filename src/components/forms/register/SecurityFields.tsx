@@ -36,7 +36,7 @@ export const SecurityFields = ({
       <FormField control={form.control} name="secretAnswer" render={({
       field
     }) => <FormItem>
-            <FormLabel className="text-destructive-foreground">Réponse</FormLabel>
+            <FormLabel>Réponse</FormLabel>
             <FormControl>
               <Input {...field} />
             </FormControl>
