@@ -1,8 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
 
-type AuthorizedEmail = Tables<"authorized_emails">;
+// Définition explicite des types dont nous avons besoin
+interface AuthorizedEmail {
+  id: string;
+  email: string;
+  email_lower: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEmail | null> => {
   const { data: authorizedEmail, error: authEmailError } = await supabase
