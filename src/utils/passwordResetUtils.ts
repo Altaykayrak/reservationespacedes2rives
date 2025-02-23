@@ -22,10 +22,8 @@ export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEma
 };
 
 export const sendPasswordResetEmail = async (email: string) => {
-  const siteUrl = window.location.origin;
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/reset-password`,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
   
   if (error) throw error;
 };
+
