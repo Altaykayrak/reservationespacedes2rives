@@ -24,7 +24,6 @@ export function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="container mx-auto p-8">
-        <h1 className="text-2xl font-bold mb-6">Administration</h1>
         <Outlet />
       </main>
     </div>
