@@ -21,7 +21,6 @@ export const exportToExcel = (exportData: ExportData) => {
   });
 
   const sortedClasses = Array.from(childrenByClass.keys()).sort();
-  let currentRow = 1; // Pour suivre la position actuelle dans le fichier Excel
 
   sortedClasses.forEach(className => {
     const classData = childrenByClass.get(className)!;
@@ -121,51 +120,69 @@ export const exportToExcel = (exportData: ExportData) => {
 
   // Appliquer les styles aux cellules
   const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z1000');
+
+  // Créer le style de bordure pour toutes les cellules
+  ws['!borders'] = {};
+  for (let row = range.s.r; row <= range.e.r; row++) {
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      ws[cellRef] = ws[cellRef] || { v: '', t: 's' };
+      ws[cellRef].s = {
+        ...defaultStyle
+      };
+    }
+  }
   
   // Style pour l'en-tête
   for (let col = 0; col <= range.e.c; col++) {
     const headerCell = XLSX.utils.encode_cell({ r: 0, c: col });
-    ws[headerCell].s = {
-      ...defaultStyle,
-      fill: { fgColor: { rgb: '2980B9' } }, // Bleu similaire au PDF
-      font: { bold: true, color: { rgb: 'FFFFFF' } },
-      alignment: { horizontal: 'center' }
-    };
+    if (ws[headerCell]) {
+      ws[headerCell].s = {
+        ...defaultStyle,
+        fill: { patternType: 'solid', fgColor: { rgb: '2980B9' } },
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      };
+    }
   }
 
   // Style pour le reste des cellules
   excelRows.forEach((row, index) => {
-    const rowNum = index;
     for (let col = 0; col <= range.e.c; col++) {
-      const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: col });
-      if (!ws[cellRef]) ws[cellRef] = { v: '', t: 's' };
+      const cellRef = XLSX.utils.encode_cell({ r: index, c: col });
+      if (!ws[cellRef]) continue;
 
       if (row.Nom === 'TOTAL GLOBAL') {
         ws[cellRef].s = {
           ...defaultStyle,
-          fill: { fgColor: { rgb: 'DDDDDD' } },
-          font: { bold: true }
+          fill: { patternType: 'solid', fgColor: { rgb: 'DDDDDD' } },
+          font: { bold: true },
+          alignment: { horizontal: 'center', vertical: 'center' }
         };
       } else if (row.Nom.startsWith('Classe:')) {
         ws[cellRef].s = {
           ...defaultStyle,
-          fill: { fgColor: { rgb: 'CCCCCC' } },
-          font: { bold: true }
+          fill: { patternType: 'solid', fgColor: { rgb: 'CCCCCC' } },
+          font: { bold: true },
+          alignment: { horizontal: 'center', vertical: 'center' }
         };
       } else if (row.Nom === 'Sous-total') {
         ws[cellRef].s = {
           ...defaultStyle,
-          font: { bold: true }
+          font: { bold: true },
+          alignment: { horizontal: 'center', vertical: 'center' }
         };
       } else {
         ws[cellRef].s = {
           ...defaultStyle,
-          font: { bold: col <= 1 } // Nom et Prénom en gras
+          font: { bold: col <= 1 }, // Nom et Prénom en gras
+          alignment: { vertical: 'center' }
         };
       }
     }
   });
 
+  // Définir les largeurs de colonnes
   const colWidths = [
     { wch: 15 },  // Nom
     { wch: 15 },  // Prénom
@@ -176,5 +193,16 @@ export const exportToExcel = (exportData: ExportData) => {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Réservations");
-  XLSX.writeFile(wb, "reservations.xlsx");
+
+  // Configuration des propriétés du workbook pour s'assurer que les styles sont appliqués
+  wb.Workbook = {
+    Views: [{ RTL: false }]
+  };
+
+  XLSX.writeFile(wb, "reservations.xlsx", {
+    bookType: 'xlsx',
+    bookSST: false,
+    type: 'binary',
+    cellStyles: true
+  });
 };
