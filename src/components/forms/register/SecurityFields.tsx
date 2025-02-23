@@ -5,9 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { UseFormReturn } from "react-hook-form";
 import { RegisterFormData } from "@/schemas/registerSchema";
 import { secretQuestions } from "@/constants/registerConstants";
+
 interface SecurityFieldsProps {
   form: UseFormReturn<RegisterFormData>;
 }
+
 export const SecurityFields = ({
   form
 }: SecurityFieldsProps) => {
@@ -28,7 +30,7 @@ export const SecurityFields = ({
                   </SelectItem>)}
               </SelectContent>
             </Select>
-            <FormMessage />
+            <FormMessage className="text-destructive-foreground" />
           </FormItem>} />
 
       <FormField control={form.control} name="secretAnswer" render={({
@@ -38,7 +40,7 @@ export const SecurityFields = ({
             <FormControl>
               <Input {...field} />
             </FormControl>
-            <FormMessage className="text-red-700" />
+            <FormMessage className="text-destructive-foreground" />
           </FormItem>} />
     </>;
 };
