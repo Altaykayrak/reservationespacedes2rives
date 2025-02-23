@@ -22,9 +22,13 @@ export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEma
 };
 
 export const sendPasswordResetEmail = async (email: string) => {
+  const baseUrl = "https://reservationespacedes2rives.lovable.app";
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "https://reservationespacedes2rives.lovable.app/reset-password"
+    redirectTo: `${baseUrl}/reset-password`
   });
   
   if (error) throw error;
+  
+  // Log pour debug
+  console.log("Email de réinitialisation envoyé avec redirectTo:", `${baseUrl}/reset-password`);
 };
