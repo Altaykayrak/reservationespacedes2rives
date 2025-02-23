@@ -126,7 +126,7 @@ export function AddChildForm({
         required: "Le nom est requis",
         validate: value => value.trim() !== "" || "Le nom ne peut pas être vide"
       })} />
-        {errors.last_name && <p className="text-sm text-destructive">{errors.last_name.message}</p>}
+        {errors.last_name && <p className="text-sm text-destructive-foreground">{errors.last_name.message}</p>}
       </div>
 
       <div className="space-y-2">
