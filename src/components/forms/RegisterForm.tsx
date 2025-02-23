@@ -6,11 +6,8 @@ import { Form } from "@/components/ui/form";
 import { registerSchema, type RegisterFormData } from "@/schemas/registerSchema";
 import { useState, useEffect } from "react";
 import { PersonalInfoFields } from "./register/PersonalInfoFields";
-import { SecurityFields } from "./register/SecurityFields";
-import { SchoolFields } from "./register/SchoolFields";
 import { TermsFields } from "./register/TermsFields";
 import { CguAlert } from "./register/CguAlert";
-import { SchoolCityAlert } from "./register/SchoolCityAlert";
 
 interface RegisterFormProps {
   onSubmit: (values: RegisterFormData) => Promise<void>;
@@ -19,7 +16,6 @@ interface RegisterFormProps {
 
 export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   const [showCguAlert, setShowCguAlert] = useState(false);
-  const [showSchoolCityAlert, setShowSchoolCityAlert] = useState(false);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -28,9 +24,6 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
       lastName: "",
       email: "",
       password: "",
-      secretQuestion: "",
-      secretAnswer: "",
-      schoolCity: "",
       automaticPayment: false,
       acceptedCgu: false,
     },
@@ -54,11 +47,6 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   }, [form]);
 
   const handleSubmit = form.handleSubmit(async (values: RegisterFormData) => {
-    if (!values.schoolCity) {
-      setShowSchoolCityAlert(true);
-      return;
-    }
-    
     if (!values.acceptedCgu) {
       setShowCguAlert(true);
       return;
@@ -73,8 +61,6 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
       <Form {...form}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <PersonalInfoFields form={form} />
-          <SecurityFields form={form} />
-          <SchoolFields form={form} />
           <TermsFields form={form} />
 
           <Button 
@@ -90,11 +76,6 @@ export const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
       <CguAlert 
         open={showCguAlert} 
         onOpenChange={setShowCguAlert}
-      />
-      
-      <SchoolCityAlert
-        open={showSchoolCityAlert}
-        onOpenChange={setShowSchoolCityAlert}
       />
     </>
   );

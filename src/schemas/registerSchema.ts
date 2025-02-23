@@ -29,18 +29,6 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre")
     .trim()
     .min(1, "Le mot de passe est requis"),
-  secretQuestion: z
-    .string()
-    .trim()
-    .min(1, "La question secrète est requise"),
-  secretAnswer: z
-    .string()
-    .trim()
-    .min(1, "La réponse secrète est requise"),
-  schoolCity: z
-    .string()
-    .trim()
-    .min(1, "La commune de scolarisation est requise"),
   automaticPayment: z
     .boolean()
     .default(false),

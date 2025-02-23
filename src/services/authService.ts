@@ -44,11 +44,8 @@ export const registerUser = async (formData: RegisterFormData) => {
       data: {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        secretQuestion: formData.secretQuestion,
-        secretAnswer: formData.secretAnswer,
-        schoolCity: formData.schoolCity,
         automaticPayment: formData.automaticPayment,
-        acceptedCgu: formData.acceptedCgu, // Added this line to include acceptedCgu
+        acceptedCgu: formData.acceptedCgu,
       },
     },
   });
