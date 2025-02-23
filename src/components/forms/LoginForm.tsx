@@ -1,9 +1,11 @@
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
+
 interface LoginFormProps {
   email: string;
   setEmail: (email: string) => void;
@@ -13,6 +15,7 @@ interface LoginFormProps {
   error: string | null;
   onSubmit: (e: React.FormEvent) => void;
 }
+
 export const LoginForm = ({
   email,
   setEmail,
@@ -24,7 +27,7 @@ export const LoginForm = ({
 }: LoginFormProps) => {
   return <>
       {error && <Alert variant="destructive" className="mb-4">
-          <AlertDescription className="bg-slate-50">{error}</AlertDescription>
+          <AlertDescription className="text-destructive-foreground">{error}</AlertDescription>
         </Alert>}
       
       <form onSubmit={onSubmit} className="space-y-4">
