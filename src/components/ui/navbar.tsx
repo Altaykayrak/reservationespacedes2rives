@@ -32,7 +32,6 @@ export function Navbar() {
     { label: "Accueil", href: "/" },
     { label: "Mon profil", href: "/profile" },
     { label: "Mes enfants", href: "/children" },
-    { label: "Réservations mercredis", href: "/wednesday-reservations" },
     { label: "Réservations vacances", href: "/holiday-reservations" },
     { label: "Réservations Club Ado", href: "/teenholiday-reservations" },
     { label: "Programme vacances", href: "/holiday-program" },

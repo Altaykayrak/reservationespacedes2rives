@@ -17,7 +17,6 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
 import Children from "@/pages/Children";
-import WednesdayReservations from "@/pages/WednesdayReservations";
 import HolidayReservations from "@/pages/HolidayReservations";
 import TeenHolidayReservations from "@/pages/TeenHolidayReservations";
 import HolidayProgram from "@/pages/HolidayProgram";
@@ -66,7 +65,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/wednesday-reservations",
-    element: <WednesdayReservations />,
+    element: <Navigate to="/" replace />,
   },
   {
     path: "/holiday-reservations",
