@@ -270,7 +270,7 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
-          school_city: string
+          school_city: string | null
           secret_answer: string | null
           secret_question: string | null
           updated_at: string
@@ -282,7 +282,7 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
-          school_city: string
+          school_city?: string | null
           secret_answer?: string | null
           secret_question?: string | null
           updated_at?: string
@@ -294,7 +294,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
-          school_city?: string
+          school_city?: string | null
           secret_answer?: string | null
           secret_question?: string | null
           updated_at?: string
