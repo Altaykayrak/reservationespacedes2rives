@@ -23,9 +23,14 @@ export const SuccessReservationDialog = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Réservation confirmée</DialogTitle>
-          <DialogDescription>
-            Votre réservation a été enregistrée avec succès. 
-            Vous pouvez consulter ci-dessous l'ensemble de vos réservations pour vos enfants.
+          <DialogDescription className="space-y-4">
+            <p>
+              Votre réservation a été enregistrée avec succès. 
+              Vous pouvez consulter ci-dessous l'ensemble de vos réservations pour vos enfants.
+            </p>
+            <p className="text-[#ea384c] font-medium">
+              Merci de nous prévenir dès que possible de toute absence de vos enfants afin de pouvoir faire profiter de la place à un enfant qui serait en liste d'attente.
+            </p>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
