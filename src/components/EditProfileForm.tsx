@@ -32,7 +32,6 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
       first_name: initialData.first_name || "",
       last_name: initialData.last_name || "",
       email: initialData.email,
-      school_city: initialData.school_city || "",
       automatic_payment: initialData.automatic_payment || false,
     },
   })
@@ -86,19 +85,6 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input type="email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="school_city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Commune de scolarisation</FormLabel>
-                <FormControl>
-                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -4,7 +4,6 @@ export interface ProfileData {
   first_name: string | null
   last_name: string | null
   email: string
-  school_city: string | null
   automatic_payment: boolean
   accepted_cgu: boolean
   created_at: string

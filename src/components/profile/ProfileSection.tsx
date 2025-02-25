@@ -1,6 +1,7 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Edit, User, Mail, MapPin, CheckSquare, Square } from "lucide-react"
+import { Edit, User, Mail, CheckSquare, Square } from "lucide-react"
 import { ProfileData } from "@/types/profile"
 
 interface ProfileSectionProps {
@@ -45,14 +46,6 @@ export function ProfileSection({ profile, onEdit }: ProfileSectionProps) {
             <div className="text-left">
               <p className="text-sm text-muted-foreground">Email</p>
               <p className="text-lg font-medium">{profile?.email}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-4">
-            <MapPin className="h-5 w-5 text-muted-foreground mt-1" />
-            <div className="text-left">
-              <p className="text-sm text-muted-foreground">Commune de scolarisation</p>
-              <p className="text-lg font-medium">{profile?.school_city || '-'}</p>
             </div>
           </div>
         </div>
