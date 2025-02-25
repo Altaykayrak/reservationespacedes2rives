@@ -68,19 +68,5 @@ export const PersonalInfoFields = ({
           </FormItem>
         )} 
       />
-
-      <FormField 
-        control={form.control} 
-        name="schoolCity" 
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Ville de scolarisation</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage className="text-red-700" />
-          </FormItem>
-        )} 
-      />
     </>;
 };

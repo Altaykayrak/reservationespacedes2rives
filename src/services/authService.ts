@@ -44,7 +44,6 @@ export const registerUser = async (formData: RegisterFormData) => {
       data: {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        schoolCity: formData.schoolCity,
         automaticPayment: formData.automaticPayment,
         acceptedCgu: formData.acceptedCgu,
       },
