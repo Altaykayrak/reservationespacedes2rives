@@ -1,35 +1,22 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
 import { Calendar, Users, Image } from "lucide-react";
-
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       <Navbar />
       
       {/* Hero Section */}
-      <div 
-        className="relative bg-cover text-white py-24"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Betterfront.jpg')`,
-          backgroundPosition: "0% 20%"
-        }}
-      >
+      <div className="relative bg-cover text-white py-24" style={{
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Betterfront.jpg')`,
+      backgroundPosition: "0% 20%"
+    }}>
         <div className="container mx-auto px-4 text-center">
           <div className="mb-8">
-            <img
-              src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png"
-              alt="L'espace des deux rives"
-              className="h-24 mx-auto"
-            />
+            <img src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png" alt="L'espace des deux rives" className="h-24 mx-auto" />
           </div>
-          <h1 className="text-5xl font-bold mb-6">L'espace des deux rives</h1>
-          <p className="text-xl mb-12 max-w-3xl mx-auto">
-            Bienvenue au centre de loisirs de Pîtres et du Manoir-Sur-Seine, votre
-            partenaire de confiance pour l'épanouissement de vos enfants
-          </p>
+          <h1 className="text-5xl font-bold mb-6"></h1>
+          <p className="text-xl mb-12 max-w-3xl mx-auto">Bienvenue au centre de social de Pîtres et du Manoir-Sur-Seine, votre partenaire de confiance pour l'épanouissement de vos enfants</p>
           <div className="space-x-4">
             <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700">
               <Link to="/login">Connexion</Link>
@@ -77,8 +64,6 @@ const Index = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
