@@ -5,8 +5,6 @@ export interface ProfileData {
   last_name: string | null
   email: string
   school_city: string | null
-  secret_question: string | null
-  secret_answer: string | null
   automatic_payment: boolean
   accepted_cgu: boolean
 }

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
@@ -15,26 +16,6 @@ export type ProfileFormData = z.infer<typeof profileFormSchema>
 
 export function useProfileUpdate() {
   const queryClient = useQueryClient()
-
-  const verifySecretAnswer = async (answer: string) => {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("secret_answer")
-      .eq("id", (await supabase.auth.getUser()).data.user?.id)
-      .single()
-
-    if (error) {
-      toast.error("Une erreur est survenue lors de la vérification")
-      return false
-    }
-
-    if (profile.secret_answer.toLowerCase() !== answer.toLowerCase()) {
-      toast.error("Réponse incorrecte")
-      return false
-    }
-
-    return true
-  }
 
   const updateProfile = async (values: ProfileFormData, initialEmail: string, onSuccess?: () => void) => {
     try {
@@ -69,5 +50,5 @@ export function useProfileUpdate() {
     }
   }
 
-  return { updateProfile, verifySecretAnswer }
+  return { updateProfile }
 }
