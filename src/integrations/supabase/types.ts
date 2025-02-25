@@ -271,8 +271,6 @@ export type Database = {
           id: string
           last_name: string | null
           school_city: string | null
-          secret_answer: string | null
-          secret_question: string | null
           updated_at: string
         }
         Insert: {
@@ -283,8 +281,6 @@ export type Database = {
           id: string
           last_name?: string | null
           school_city?: string | null
-          secret_answer?: string | null
-          secret_question?: string | null
           updated_at?: string
         }
         Update: {
@@ -295,8 +291,6 @@ export type Database = {
           id?: string
           last_name?: string | null
           school_city?: string | null
-          secret_answer?: string | null
-          secret_question?: string | null
           updated_at?: string
         }
         Relationships: []
