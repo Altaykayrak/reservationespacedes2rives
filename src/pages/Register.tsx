@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
@@ -26,14 +27,7 @@ const Register = () => {
     setIsLoading(true);
     try {
       await registerUser(values);
-      
-      toast.success(
-        "Inscription réussie ! Vous allez être redirigé vers la page de connexion."
-      );
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      setShowSuccessDialog(true);
     } catch (error: any) {
       console.error("Registration error:", error);
       setErrorMessage(error.message || "Une erreur est survenue lors de l'inscription");
@@ -41,6 +35,11 @@ const Register = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSuccessConfirm = () => {
+    setShowSuccessDialog(false);
+    navigate("/login");
   };
 
   return (
@@ -64,6 +63,22 @@ const Register = () => {
           <AlertDialogFooter>
             <Button onClick={() => setShowErrorDialog(false)}>
               D'accord
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Inscription réussie !</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter pour réserver les vacances pour vos enfants.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button onClick={handleSuccessConfirm}>
+              Aller à la page de connexion
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
