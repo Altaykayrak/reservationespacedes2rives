@@ -7,6 +7,8 @@ export interface ProfileData {
   school_city: string | null
   automatic_payment: boolean
   accepted_cgu: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface Child {

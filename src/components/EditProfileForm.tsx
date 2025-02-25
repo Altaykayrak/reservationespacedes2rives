@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -22,9 +23,8 @@ interface EditProfileFormProps {
 }
 
 export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps) {
-  const { updateProfile, verifySecretAnswer } = useProfileUpdate()
-  const [showSecretQuestion, setShowSecretQuestion] = useState(false)
-  const [secretAnswer, setSecretAnswer] = useState("")
+  const { updateProfile } = useProfileUpdate()
+  const [showEmailDialog, setShowEmailDialog] = useState(false)
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -32,32 +32,20 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
       first_name: initialData.first_name || "",
       last_name: initialData.last_name || "",
       email: initialData.email,
-      school_city: initialData.school_city,
+      school_city: initialData.school_city || "",
       automatic_payment: initialData.automatic_payment || false,
     },
   })
 
   const onSubmit = async (values: ProfileFormData) => {
     if (values.email !== initialData.email) {
-      setShowSecretQuestion(true)
+      setShowEmailDialog(true)
       return
     }
     await updateProfile(values, initialData.email, () => {
       onSuccess()
       window.location.reload()
     })
-  }
-
-  const handleSecretAnswer = async () => {
-    const isValid = await verifySecretAnswer(secretAnswer)
-    if (isValid) {
-      const values = form.getValues()
-      await updateProfile(values, initialData.email, () => {
-        setShowSecretQuestion(false)
-        onSuccess()
-        window.location.reload()
-      })
-    }
   }
 
   return (
@@ -142,27 +130,29 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
         </form>
       </Form>
 
-      <Dialog open={showSecretQuestion} onOpenChange={setShowSecretQuestion}>
+      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Vérification de sécurité</DialogTitle>
+            <DialogTitle>Changer d'email</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Pour changer votre email, veuillez répondre à votre question secrète :
+              Pour changer votre email, un lien de vérification sera envoyé à votre nouvelle adresse.
             </p>
-            <p className="font-medium">{initialData.secret_question}</p>
-            <Input
-              type="text"
-              placeholder="Votre réponse"
-              value={secretAnswer}
-              onChange={(e) => setSecretAnswer(e.target.value)}
-            />
             <div className="flex justify-end gap-4">
-              <Button variant="outline" onClick={() => setShowSecretQuestion(false)}>
+              <Button variant="outline" onClick={() => setShowEmailDialog(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleSecretAnswer}>Valider</Button>
+              <Button onClick={() => {
+                const values = form.getValues()
+                updateProfile(values, initialData.email, () => {
+                  setShowEmailDialog(false)
+                  onSuccess()
+                  window.location.reload()
+                })
+              }}>
+                Confirmer
+              </Button>
             </div>
           </div>
         </DialogContent>
