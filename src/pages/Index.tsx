@@ -31,6 +31,15 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Welcome Text */}
+      <div className="py-8 bg-white">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-black text-xl max-w-4xl mx-auto">
+            Bienvenue sur la plateforme de réservation du centre social de Pîtres et du Manoir-Sur-Seine, votre partenaire de confiance pour l'épanouissement de vos enfants.
+          </p>
+        </div>
+      </div>
+
       {/* Features Section */}
       <div className="py-24 bg-white">
         <div className="container mx-auto px-4">
