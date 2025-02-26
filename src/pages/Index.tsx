@@ -1,9 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
 import { Calendar, Users, Image } from "lucide-react";
-
 const Index = () => {
   return <div className="min-h-screen bg-white">
       <Navbar />
@@ -34,7 +32,7 @@ const Index = () => {
       {/* Welcome Text */}
       <div className="py-8 bg-white">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-black text-xl max-w-4xl mx-auto">
+          <p className="max-w-4xl mx-auto text-base text-center text-gray-600">
             Bienvenue sur la plateforme de réservation du centre social de Pîtres et du Manoir-Sur-Seine, votre partenaire de confiance pour l'épanouissement de vos enfants.
           </p>
         </div>
