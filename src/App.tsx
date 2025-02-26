@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { AdminPage } from "@/pages/admin/AdminPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -6,7 +5,6 @@ import AdminWednesdays from "@/pages/admin/AdminWednesdays";
 import AdminHolidays from "@/pages/admin/AdminHolidays";
 import AdminReservations from "@/pages/admin/AdminReservations";
 import AdminChildren from "@/pages/admin/AdminChildren";
-import AdminChildReservations from "@/pages/admin/AdminChildReservations";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import AdminNewReservation from "@/pages/admin/AdminNewReservation";
@@ -131,10 +129,6 @@ const router = createBrowserRouter([
       {
         path: "children",
         element: <AdminChildren />,
-      },
-      {
-        path: "children/:childId/reservations",
-        element: <AdminChildReservations />,
       },
       {
         path: "authorized-emails",
