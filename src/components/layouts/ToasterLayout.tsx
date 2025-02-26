@@ -1,4 +1,5 @@
 
+import { Toaster } from "sonner";
 import React from 'react';
 
 interface ToasterLayoutProps {
@@ -6,5 +7,10 @@ interface ToasterLayoutProps {
 }
 
 export const ToasterLayout = ({ children }: ToasterLayoutProps) => {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <Toaster position="top-center" />
+    </>
+  );
 };
