@@ -20,7 +20,7 @@ const Index = () => {
           <h1 className="text-5xl font-bold mb-6"></h1>
           <p className="text-xl mb-12 max-w-3xl mx-auto text-red-300">
           </p>
-          <div className="mt-24 space-x-4">
+          <div className="mt-48 space-x-4">
             <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700">
               <Link to="/login">Connexion</Link>
             </Button>
