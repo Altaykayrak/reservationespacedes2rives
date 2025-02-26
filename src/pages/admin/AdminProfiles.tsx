@@ -11,31 +11,38 @@ const AdminProfiles = () => {
 
   useEffect(() => {
     const fetchProfiles = async () => {
+      // First, fetch profiles
       const { data: profilesData, error } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          automatic_payment,
-          updated_at,
-          auth.users!profiles_id_fkey (
-            email
-          )
-        `);
+        .select('*');
 
       if (error) {
         console.error('Error fetching profiles:', error);
         return;
       }
 
-      if (profilesData) {
-        const formattedProfiles = profilesData.map(profile => ({
-          ...profile,
-          email: profile.users?.email || '',
-        }));
-        setProfiles(formattedProfiles);
-      }
+      // Then fetch user emails from auth.users
+      const emails = await Promise.all(
+        profilesData.map(async (profile) => {
+          const { data: userData, error: userError } = await supabase
+            .from('user_roles')
+            .select('email')
+            .eq('user_id', profile.id)
+            .single();
+
+          if (userError) {
+            console.error('Error fetching user email:', userError);
+            return { ...profile, email: '' };
+          }
+
+          return {
+            ...profile,
+            email: userData?.email || ''
+          };
+        })
+      );
+
+      setProfiles(emails);
     };
 
     fetchProfiles();
