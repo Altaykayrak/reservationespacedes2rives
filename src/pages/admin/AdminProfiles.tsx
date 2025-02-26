@@ -6,22 +6,20 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 
+interface ExtendedProfileData extends ProfileData {
+  email?: string;
+}
+
 const AdminProfiles = () => {
-  const [profiles, setProfiles] = useState<ProfileData[]>([]);
+  const [profiles, setProfiles] = useState<ExtendedProfileData[]>([]);
 
   useEffect(() => {
     const fetchProfiles = async () => {
       const { data: profilesData, error } = await supabase
         .from('profiles')
         .select(`
-          id,
-          first_name,
-          last_name,
-          automatic_payment,
-          updated_at,
-          auth.users!profiles_id_fkey (
-            email
-          )
+          *,
+          email:auth.users!profiles_id_fkey(email)
         `);
 
       if (error) {
@@ -32,7 +30,7 @@ const AdminProfiles = () => {
       if (profilesData) {
         const formattedProfiles = profilesData.map(profile => ({
           ...profile,
-          email: profile.users?.email || '',
+          email: profile.email?.[0]?.email || ''
         }));
         setProfiles(formattedProfiles);
       }
@@ -62,7 +60,7 @@ const AdminProfiles = () => {
                 <TableRow key={profile.id}>
                   <TableCell>{profile.last_name || '-'}</TableCell>
                   <TableCell>{profile.first_name || '-'}</TableCell>
-                  <TableCell>{profile.email}</TableCell>
+                  <TableCell>{profile.email || '-'}</TableCell>
                   <TableCell>
                     <Switch 
                       checked={profile.automatic_payment} 
