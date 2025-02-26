@@ -34,8 +34,8 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <AuthLayout title="L'espace des deux rives">
-          <ToasterLayout>
+        <ToasterLayout>
+          <AuthLayout title="L'espace des deux rives">
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
@@ -182,8 +182,8 @@ function App() {
               />
               <Route path="/admin/login" element={<AdminLoginPage />} />
             </Routes>
-          </ToasterLayout>
-        </AuthLayout>
+          </AuthLayout>
+        </ToasterLayout>
       </Router>
     </ErrorBoundary>
   );
