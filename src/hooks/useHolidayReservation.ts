@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useChildrenData } from "./useChildrenData";
 import { useHolidayPeriods } from "./useHolidayPeriods";
@@ -69,7 +70,13 @@ export const useHolidayReservation = () => {
     setSelectedPeriod("");
   };
 
-  const { handleSubmit: submit, noSpotsDialog, setNoSpotsDialog } = useReservationSubmission(
+  const { 
+    handleSubmit: submit, 
+    noSpotsDialog, 
+    setNoSpotsDialog,
+    minimumDaysDialog,
+    setMinimumDaysDialog 
+  } = useReservationSubmission(
     selectedChild,
     selectedDates,
     holidayPeriods,
@@ -139,6 +146,8 @@ export const useHolidayReservation = () => {
     setShowSuccessDialog,
     isSubmitting,
     noSpotsDialog,
-    setNoSpotsDialog
+    setNoSpotsDialog,
+    minimumDaysDialog,
+    setMinimumDaysDialog
   };
 };
