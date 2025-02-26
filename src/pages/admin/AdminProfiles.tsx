@@ -24,11 +24,12 @@ const AdminProfiles = () => {
 
   useEffect(() => {
     const fetchProfiles = async () => {
+      // Modifié pour utiliser une jointure explicite avec user_roles via l'id
       const { data: profilesData, error } = await supabase
         .from('profiles')
         .select(`
           *,
-          user_roles (
+          user_roles!user_roles_user_id_fkey(
             email
           )
         `);
@@ -39,11 +40,11 @@ const AdminProfiles = () => {
       }
 
       if (profilesData) {
-        const formattedProfiles: ProfileData[] = (profilesData as ProfileWithUserRole[]).map(profile => ({
+        const formattedProfiles: ProfileData[] = (profilesData as unknown as ProfileWithUserRole[]).map(profile => ({
           id: profile.id,
           first_name: profile.first_name,
           last_name: profile.last_name,
-          email: profile.user_roles[0]?.email || '',
+          email: profile.user_roles?.[0]?.email || '',
           automatic_payment: profile.automatic_payment,
           accepted_cgu: profile.accepted_cgu,
           created_at: profile.created_at,
