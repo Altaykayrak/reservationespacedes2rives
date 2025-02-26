@@ -1,19 +1,14 @@
 
-import React from 'react';
+import { ReactNode } from "react";
 
 interface AuthLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
   title: string;
   description?: string;
   subDescription?: string;
 }
 
-export const AuthLayout: React.FC<AuthLayoutProps> = ({ 
-  children, 
-  title, 
-  description, 
-  subDescription 
-}) => {
+export const AuthLayout = ({ children, title, description, subDescription }: AuthLayoutProps) => {
   return (
     <div className="min-h-screen bg-secondary flex flex-col items-center justify-start p-4 md:p-0">
       <div 

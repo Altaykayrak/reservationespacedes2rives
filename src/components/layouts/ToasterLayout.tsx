@@ -1,12 +1,11 @@
 
 import { Toaster } from "sonner";
-import React from 'react';
 
-type ToasterLayoutProps = {
+interface ToasterLayoutProps {
   children: React.ReactNode;
-};
+}
 
-export const ToasterLayout: React.FC<ToasterLayoutProps> = ({ children }) => {
+export const ToasterLayout = ({ children }: ToasterLayoutProps) => {
   return (
     <>
       {children}

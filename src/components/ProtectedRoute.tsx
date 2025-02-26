@@ -7,10 +7,9 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin";
 }
 
-export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
@@ -28,7 +27,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
         }
 
         // For admin routes
-        if (requiredRole === 'admin') {
+        if (location.pathname.startsWith('/admin')) {
           if (!session?.user) {
             setIsAuthenticated(false);
             setLoading(false);
@@ -73,7 +72,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
         setIsAuthenticated(false);
         queryClient.clear();
       } else if (event === 'SIGNED_IN' && session) {
-        if (requiredRole === 'admin') {
+        if (location.pathname.startsWith('/admin')) {
           const { data: isAdmin } = await supabase
             .rpc('is_admin', { user_id: session.user.id });
 
@@ -90,7 +89,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     return () => {
       subscription.unsubscribe();
     };
-  }, [location.pathname, toast, queryClient, requiredRole]);
+  }, [location.pathname, toast, queryClient]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">
@@ -111,8 +110,8 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   if (!isAuthenticated) {
-    return requiredRole === 'admin' ? 
-      <Navigate to="/admin/login" replace /> :
+    return location.pathname.startsWith('/admin') ? 
+      <Navigate to="/admin-login" replace /> :
       <Navigate to="/login" replace />;
   }
 
