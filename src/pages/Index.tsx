@@ -14,7 +14,7 @@ const Index = () => {
       backgroundPosition: "0% 20%"
     }}>
         <div className="container mx-auto px-4 text-center">
-          <div className="mb-8">
+          <div className="mt-0">
             <img src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png" alt="L'espace des deux rives" className="h-24 mx-auto" />
           </div>
           <h1 className="text-5xl font-bold mb-6"></h1>
