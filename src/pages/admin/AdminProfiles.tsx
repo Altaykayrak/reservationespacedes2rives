@@ -6,6 +6,19 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 
+interface ProfileWithUserRole {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  automatic_payment: boolean;
+  accepted_cgu: boolean;
+  created_at: string;
+  updated_at: string;
+  user_roles: {
+    email: string;
+  }[];
+}
+
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
 
@@ -15,7 +28,7 @@ const AdminProfiles = () => {
         .from('profiles')
         .select(`
           *,
-          user_roles!profiles_id_fkey (
+          user_roles (
             email
           )
         `);
@@ -26,9 +39,15 @@ const AdminProfiles = () => {
       }
 
       if (profilesData) {
-        const formattedProfiles: ProfileData[] = profilesData.map(profile => ({
-          ...profile,
-          email: profile.user_roles?.[0]?.email || ''
+        const formattedProfiles: ProfileData[] = (profilesData as ProfileWithUserRole[]).map(profile => ({
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          email: profile.user_roles[0]?.email || '',
+          automatic_payment: profile.automatic_payment,
+          accepted_cgu: profile.accepted_cgu,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at
         }));
         setProfiles(formattedProfiles);
       }
