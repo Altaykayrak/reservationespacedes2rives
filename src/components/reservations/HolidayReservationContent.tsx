@@ -7,6 +7,7 @@ import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./HolidayDateSelector";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
+import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 
 interface HolidayReservationContentProps {
@@ -31,7 +32,9 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
     setShowSuccessDialog,
     isSubmitting,
     noSpotsDialog,
-    setNoSpotsDialog
+    setNoSpotsDialog,
+    minimumDaysDialog,
+    setMinimumDaysDialog
   } = useHolidayReservation();
 
   return (
@@ -81,6 +84,11 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
         onOpenChange={(open) => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })}
         schoolClass={noSpotsDialog.schoolClass}
         date={noSpotsDialog.date}
+      />
+
+      <MinimumDaysDialog
+        open={minimumDaysDialog.isOpen}
+        onOpenChange={(open) => setMinimumDaysDialog({ isOpen: open })}
       />
     </Card>
   );

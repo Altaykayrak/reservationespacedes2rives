@@ -1,12 +1,12 @@
+
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface MinimumDaysDialogProps {
   open: boolean;
@@ -18,20 +18,20 @@ export const MinimumDaysDialog = ({
   onOpenChange,
 }: MinimumDaysDialogProps) => {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Nombre de jours insuffisant</AlertDialogTitle>
-          <AlertDialogDescription>
-            Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances pour pouvoir effectuer une réservation.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogAction onClick={() => onOpenChange(false)}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Sélection minimum requise</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances.
+        </div>
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>
             D'accord
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

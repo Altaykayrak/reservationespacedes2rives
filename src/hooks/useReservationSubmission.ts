@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +18,10 @@ interface NoSpotsDialogState {
   date: Date;
 }
 
+interface MinimumDaysDialogState {
+  isOpen: boolean;
+}
+
 export const useReservationSubmission = (
   selectedChild: string,
   selectedDates: DateOption[],
@@ -29,6 +34,10 @@ export const useReservationSubmission = (
     isOpen: false,
     schoolClass: '',
     date: new Date()
+  });
+
+  const [minimumDaysDialog, setMinimumDaysDialog] = useState<MinimumDaysDialogState>({
+    isOpen: false
   });
 
   const handleSubmit = async () => {
@@ -58,7 +67,7 @@ export const useReservationSubmission = (
     const isAdminRoute = window.location.pathname.startsWith('/admin/');
 
     if (!validateMinimumDaysPerWeek(selectedDates.map(d => d.date), isAdminRoute)) {
-      alert("Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances.");
+      setMinimumDaysDialog({ isOpen: true });
       return;
     }
 
@@ -173,6 +182,8 @@ export const useReservationSubmission = (
   return { 
     handleSubmit,
     noSpotsDialog,
-    setNoSpotsDialog
+    setNoSpotsDialog,
+    minimumDaysDialog,
+    setMinimumDaysDialog
   };
 };
