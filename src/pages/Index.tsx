@@ -16,7 +16,8 @@ const Index = () => {
             <img src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png" alt="L'espace des deux rives" className="h-24 mx-auto" />
           </div>
           <h1 className="text-5xl font-bold mb-6"></h1>
-          <p className="text-xl mb-12 max-w-3xl mx-auto">Bienvenue au centre de social de Pîtres et du Manoir-Sur-Seine, votre partenaire de confiance pour l'épanouissement de vos enfants</p>
+          <p className="text-xl mb-12 max-w-3xl mx-auto text-red-300">
+        </p>
           <div className="space-x-4">
             <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700">
               <Link to="/login">Connexion</Link>
