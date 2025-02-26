@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import Index from "@/pages/Index";
@@ -13,7 +14,7 @@ import TermsOfService from "@/pages/TermsOfService";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
-import AdminPage from "@/pages/admin/AdminPage";
+import { AdminPage } from "@/pages/admin/AdminPage";
 import AdminWednesdays from "@/pages/admin/AdminWednesdays";
 import AdminHolidays from "@/pages/admin/AdminHolidays";
 import AdminReservations from "@/pages/admin/AdminReservations";
@@ -24,9 +25,8 @@ import AdminNewHolidayReservation from "@/pages/admin/AdminNewHolidayReservation
 import AdminNewTeenHolidayReservation from "@/pages/admin/AdminNewTeenHolidayReservation";
 import AdminChildReservations from "@/pages/admin/AdminChildReservations";
 import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
-import ProtectedRoute from "@/components/ProtectedRoute";
-
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { ToasterLayout } from "@/components/layouts/ToasterLayout";
 import { AuthLayout } from "@/components/layouts/AuthLayout";
 import "@/App.css";
@@ -35,7 +35,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <AuthLayout>
+        <AuthLayout title="L'espace des deux rives">
           <ToasterLayout>
             <Routes>
               {/* Public Routes */}
