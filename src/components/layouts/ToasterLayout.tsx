@@ -6,7 +6,7 @@ interface ToasterLayoutProps {
   children: React.ReactNode;
 }
 
-export const ToasterLayout = ({ children }: ToasterLayoutProps) => {
+export const ToasterLayout: React.FC<ToasterLayoutProps> = ({ children }) => {
   return (
     <>
       {children}
