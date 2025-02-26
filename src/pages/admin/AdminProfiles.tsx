@@ -6,7 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 
-// Pas besoin d'étendre l'interface ProfileData car elle contient déjà email
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
 
@@ -14,8 +13,12 @@ const AdminProfiles = () => {
     const fetchProfiles = async () => {
       const { data: profilesData, error } = await supabase
         .from('profiles')
-        .select()
-        .eq('role', 'user');
+        .select(`
+          *,
+          user_roles!profiles_id_fkey (
+            email
+          )
+        `);
 
       if (error) {
         console.error('Error fetching profiles:', error);
@@ -23,7 +26,11 @@ const AdminProfiles = () => {
       }
 
       if (profilesData) {
-        setProfiles(profilesData);
+        const formattedProfiles: ProfileData[] = profilesData.map(profile => ({
+          ...profile,
+          email: profile.user_roles?.[0]?.email || ''
+        }));
+        setProfiles(formattedProfiles);
       }
     };
 
