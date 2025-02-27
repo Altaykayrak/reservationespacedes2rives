@@ -109,24 +109,50 @@ const AdminProfiles = () => {
     setError(null);
 
     try {
-      console.log('Début de récupération des profils...');
-      const { data, error: fetchError } = await supabase
-        .from('profiles_with_emails')
+      console.log('Début de récupération des profils directement de la table profiles...');
+      
+      // Récupérer les profils depuis la table profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
         .select('*');
 
-      if (fetchError) {
-        console.error('Erreur Supabase:', fetchError);
-        throw fetchError;
+      if (profilesError) {
+        console.error('Erreur récupération profiles:', profilesError);
+        throw profilesError;
       }
 
-      console.log('Données reçues:', data);
+      console.log('Profils récupérés:', profilesData);
 
-      if (data) {
-        const formattedProfiles: ProfileData[] = data.map(profile => ({
+      // Récupérer les emails depuis la table auth.users
+      // Note: nous utilisons une requête RPC car nous n'avons pas accès direct à auth.users
+      const { data: usersEmails, error: usersError } = await supabase
+        .rpc('get_users_emails');
+
+      if (usersError) {
+        console.error('Erreur récupération emails:', usersError);
+        // On continue avec des emails vides plutôt que d'échouer complètement
+        console.log('Continuation sans emails...');
+      }
+
+      console.log('Données emails récupérées:', usersEmails);
+
+      // Créer un mapping des emails par ID utilisateur
+      const emailsMap = new Map();
+      if (usersEmails && Array.isArray(usersEmails)) {
+        usersEmails.forEach((user: any) => {
+          if (user && user.id && user.email) {
+            emailsMap.set(user.id, user.email);
+          }
+        });
+      }
+
+      // Combiner les données
+      if (profilesData) {
+        const formattedProfiles: ProfileData[] = profilesData.map((profile: any) => ({
           id: profile.id,
           first_name: profile.first_name,
           last_name: profile.last_name,
-          email: profile.email || 'Email inconnu',
+          email: emailsMap.get(profile.id) || 'Email inconnu',
           automatic_payment: profile.automatic_payment,
           accepted_cgu: profile.accepted_cgu,
           is_waiting: profile.is_waiting || false,
@@ -190,35 +216,21 @@ const AdminProfiles = () => {
         console.log('État actuel du profil:', currentProfile);
       }
 
-      // Utilisation de l'API REST directe
-      const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZHR5Ym1yYWRwbHlkenltcmx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MTMyOTYsImV4cCI6MjA1MTA4OTI5Nn0.WMyVzGwkQlg3YZOu-N_rxI1hDuf5lFO_kntzhD3GKLI";
-      
-      // Récupérer le token JWT de la session courante
-      const { data: { session } } = await supabase.auth.getSession();
-      const authToken = session?.access_token || apiKey;
-      
-      const response = await fetch(`https://dddtybmradplydzymrly.supabase.co/rest/v1/profiles?id=eq.${profileId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': apiKey,
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Profile': 'public',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(updates)
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Erreur lors de la mise à jour:', response.status, errorText);
-        toast.error(`Erreur de mise à jour: ${response.status} ${errorText}`);
+      // Mise à jour du profil via l'API Supabase
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', profileId);
+        
+      if (updateError) {
+        console.error('Erreur lors de la mise à jour via Supabase:', updateError);
+        toast.error(`Erreur de mise à jour: ${updateError.message}`);
         // Annuler le changement
         fetchProfiles();
         return;
       }
 
-      console.log('Mise à jour réussie, status:', response.status);
+      console.log('Mise à jour réussie');
 
       // Vérification après mise à jour
       const { data: updatedProfile, error: postFetchError } = await supabase
@@ -236,9 +248,7 @@ const AdminProfiles = () => {
       toast.success('Mise à jour réussie');
 
       // Rafraîchir les données après une mise à jour réussie pour confirmer les changements
-      setTimeout(() => {
-        fetchProfiles();
-      }, 1000); // Attendre 1 seconde avant de rafraîchir
+      fetchProfiles();
 
     } catch (err: any) {
       console.error('Exception lors de la mise à jour:', err);
