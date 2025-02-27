@@ -87,6 +87,10 @@ const AdminProfiles = () => {
           message: `Utilisateur: ${user.id}, Admin: ${isAdmin}, ${testMessage}`
         });
         
+        // Si l'utilisateur est admin, on récupère immédiatement les profiles
+        if (isAdmin) {
+          fetchProfiles();
+        }
       } catch (err: any) {
         console.error('Erreur inattendue:', err);
         setAdminStatus({
@@ -100,10 +104,6 @@ const AdminProfiles = () => {
     checkAdminStatus();
   }, []);
 
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
-
   const fetchProfiles = async () => {
     setLoading(true);
     setError(null);
@@ -111,67 +111,82 @@ const AdminProfiles = () => {
     try {
       console.log('Début de récupération des profils...');
       
-      // Récupérer TOUS les utilisateurs depuis la table auth.users
-      // Nous ne pouvons pas accéder directement à auth.users avec le client JavaScript
-      // Donc nous récupérons directement tous les profils sans filtre
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
-
-      if (profilesError) {
-        console.error('Erreur récupération profiles:', profilesError);
-        throw profilesError;
-      }
-
-      console.log('Profils récupérés:', profilesData);
-
-      // Récupérer les emails et rôles depuis user_roles
-      const { data: userRoles, error: userRolesError } = await supabase
+      // Récupérer directement les données des utilisateurs depuis user_roles
+      // car cette table contient déjà les emails et les rôles
+      const { data: userRolesData, error: userRolesError } = await supabase
         .from('user_roles')
-        .select('user_id, email, role');
+        .select('user_id, email, role')
+        // Ne pas filtrer ici, nous filtrerons côté client
+        .order('created_at', { ascending: false });
 
       if (userRolesError) {
         console.error('Erreur récupération user_roles:', userRolesError);
-        // On continue avec des emails vides plutôt que d'échouer complètement
-        console.log('Continuation sans emails...');
+        throw userRolesError;
       }
 
-      console.log('Données user_roles récupérées:', userRoles);
+      console.log('Données user_roles récupérées:', userRolesData);
 
-      // Créer un mapping des emails et rôles par ID utilisateur
-      const emailsMap = new Map();
-      const rolesMap = new Map();
-      if (userRoles && Array.isArray(userRoles)) {
-        userRoles.forEach((user: any) => {
-          if (user && user.user_id) {
-            if (user.email) emailsMap.set(user.user_id, user.email);
-            if (user.role) rolesMap.set(user.user_id, user.role);
+      // Récupérer les profils pour chaque utilisateur
+      if (userRolesData && userRolesData.length > 0) {
+        // Créer un tableau des ID d'utilisateur
+        const userIds = userRolesData
+          .filter(user => user.role !== 'admin') // Filtrer les admins ici
+          .map(user => user.user_id);
+
+        console.log('IDs des utilisateurs à récupérer:', userIds);
+
+        if (userIds.length === 0) {
+          console.log('Aucun utilisateur non-admin trouvé dans user_roles');
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+
+        // Récupérer tous les profils correspondants
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', userIds); // Utiliser la clause IN pour récupérer plusieurs profils
+
+        if (profilesError) {
+          console.error('Erreur récupération profiles:', profilesError);
+          throw profilesError;
+        }
+
+        console.log('Profils récupérés:', profilesData);
+
+        // Créer une map des emails par ID d'utilisateur
+        const emailMap = new Map();
+        userRolesData.forEach(user => {
+          if (user.user_id && user.email) {
+            emailMap.set(user.user_id, user.email);
           }
         });
-      }
 
-      // Combiner les données et filtrer les admins si nécessaire
-      if (profilesData) {
-        const formattedProfiles: ProfileData[] = profilesData
-          .map((profile: any) => ({
+        // Fusionner les données
+        if (profilesData) {
+          const formattedProfiles: ProfileData[] = profilesData.map(profile => ({
             id: profile.id,
             first_name: profile.first_name,
             last_name: profile.last_name,
-            email: emailsMap.get(profile.id) || 'Email inconnu',
+            email: emailMap.get(profile.id) || 'Email inconnu',
             automatic_payment: profile.automatic_payment,
             accepted_cgu: profile.accepted_cgu,
             is_waiting: profile.is_waiting || false,
             is_closed: profile.is_closed || false,
             created_at: profile.created_at,
-            updated_at: profile.updated_at,
-            // Ajouter le rôle pour filtrage, pas utilisé dans l'interface
-            role: rolesMap.get(profile.id) || 'user'
-          }))
-          // Filtrer pour exclure les admins et ne garder que les utilisateurs normaux
-          .filter((profile: any) => profile.role !== 'admin');
+            updated_at: profile.updated_at
+          }));
 
-        setProfiles(formattedProfiles);
-        console.log('Profils formatés (sans admins):', formattedProfiles.length);
+          console.log(`Nombre de profils formatés: ${formattedProfiles.length}`);
+          setProfiles(formattedProfiles);
+        } else {
+          console.log('Aucun profil trouvé pour les utilisateurs');
+          setProfiles([]);
+        }
+      } else {
+        console.log('Aucun utilisateur trouvé dans user_roles');
+        setProfiles([]);
       }
     } catch (err: any) {
       console.error('Erreur fetchProfiles:', err);
