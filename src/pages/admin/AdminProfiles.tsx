@@ -66,11 +66,11 @@ const AdminProfiles = () => {
           return;
         }
 
-        // Vérifier les droits avec un test simple
+        // Vérifier les droits avec un test simple - modification de cette partie
         const { data: testData, error: testError } = await supabase
           .from('profiles')
-          .select('count(*)')
-          .limit(1);
+          .select('id')  // Sélectionner seulement l'ID au lieu de count(*)
+          .limit(1);     // Limiter à 1 résultat
 
         let testMessage = '';
         if (testError) {
@@ -151,30 +151,31 @@ const AdminProfiles = () => {
       if (processingIds.has(profileId)) return;
       setProcessingIds(prev => new Set(prev).add(profileId));
 
+      console.log('Début de la mise à jour pour le profil:', profileId);
+      console.log('Champ à modifier:', field);
+      console.log('Nouvelle valeur:', value);
+
       const updates = {
         [field]: value,
         ...(field === 'is_waiting' && value ? { is_closed: false } : {}),
         ...(field === 'is_closed' && value ? { is_waiting: false } : {})
       };
 
-      console.log('Envoi de la mise à jour à Supabase:', {
-        profileId,
-        updates
-      });
+      console.log('Données de mise à jour:', updates);
 
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', profileId)
-        .select('*');
+        .select();
 
       if (error) {
-        console.error('Erreur Supabase:', error);
+        console.error('Erreur Supabase lors de la mise à jour:', error);
         toast.error(`Erreur de mise à jour: ${error.message}`);
         return;
       }
 
-      console.log('Réponse Supabase:', data);
+      console.log('Réponse Supabase après mise à jour:', data);
 
       setProfiles(prevProfiles =>
         prevProfiles.map(profile =>
@@ -187,7 +188,7 @@ const AdminProfiles = () => {
       toast.success('Mise à jour réussie');
 
     } catch (err: any) {
-      console.error('Erreur:', err);
+      console.error('Exception lors de la mise à jour:', err);
       toast.error(`Erreur: ${err.message}`);
     } finally {
       setProcessingIds(prev => {
@@ -196,6 +197,7 @@ const AdminProfiles = () => {
         return newSet;
       });
 
+      // Rafraîchir les données après une mise à jour
       fetchProfiles();
     }
   };
@@ -213,14 +215,14 @@ const AdminProfiles = () => {
         </div>
         
         {/* Infos de débogage */}
-        {!adminStatus.isAdmin && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4 mr-2" />
-            <AlertDescription>
-              Votre compte n'a pas les droits d'administrateur nécessaires. Détails: {adminStatus.message}
-            </AlertDescription>
-          </Alert>
-        )}
+        <Alert variant={adminStatus.isAdmin ? "default" : "destructive"} className="mb-4">
+          <AlertCircle className="h-4 w-4 mr-2" />
+          <AlertDescription>
+            {adminStatus.isAdmin 
+              ? `Connecté en tant qu'administrateur (${adminStatus.userId})` 
+              : `Votre compte n'a pas les droits d'administrateur nécessaires. Détails: ${adminStatus.message}`}
+          </AlertDescription>
+        </Alert>
         
         <Card>
           <CardHeader>
