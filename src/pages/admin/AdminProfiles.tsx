@@ -12,6 +12,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+// Constants for Supabase
+const SUPABASE_URL = "https://dddtybmradplydzymrly.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZHR5Ym1yYWRwbHlkenltcmx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MTMyOTYsImV4cCI6MjA1MTA4OTI5Nn0.WMyVzGwkQlg3YZOu-N_rxI1hDuf5lFO_kntzhD3GKLI";
+
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -179,12 +183,12 @@ const AdminProfiles = () => {
 
       // Utiliser PATCH pour mettre à jour la table profiles directement
       // Attention : utilisation de l'API fetch native pour plus de contrôle
-      const response = await fetch(`${supabase.supabaseUrl}/rest/v1/profiles?id=eq.${profileId}`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${profileId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': supabase.supabaseKey,
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Prefer': 'return=minimal'
         },
         body: JSON.stringify(updates)
