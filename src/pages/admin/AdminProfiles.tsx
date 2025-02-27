@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
@@ -14,43 +16,66 @@ const AdminProfiles = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProfiles = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Utilisation de la nouvelle vue profiles_with_emails
-        const { data, error: fetchError } = await supabase
-          .from('profiles_with_emails')
-          .select('*');
-
-        if (fetchError) throw fetchError;
-
-        if (data) {
-          // Transformation des données pour correspondre au type ProfileData
-          const formattedProfiles: ProfileData[] = data.map(profile => ({
-            id: profile.id,
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            email: profile.email || 'Email inconnu',
-            automatic_payment: profile.automatic_payment,
-            accepted_cgu: profile.accepted_cgu,
-            created_at: profile.created_at,
-            updated_at: profile.updated_at
-          }));
-
-          setProfiles(formattedProfiles);
-        }
-      } catch (err: any) {
-        console.error('Error fetching profiles:', err);
-        setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProfiles();
   }, []);
+
+  const fetchProfiles = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('profiles_with_emails')
+        .select('*');
+
+      if (fetchError) throw fetchError;
+
+      if (data) {
+        const formattedProfiles: ProfileData[] = data.map(profile => ({
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          email: profile.email || 'Email inconnu',
+          automatic_payment: profile.automatic_payment,
+          accepted_cgu: profile.accepted_cgu,
+          is_waiting: profile.is_waiting || false,
+          is_closed: profile.is_closed || false,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at
+        }));
+
+        setProfiles(formattedProfiles);
+      }
+    } catch (err: any) {
+      console.error('Error fetching profiles:', err);
+      setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProfileStatus = async (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [field]: value })
+        .eq('id', profileId);
+
+      if (error) throw error;
+
+      // Mise à jour locale de l'état
+      setProfiles(profiles.map(profile => 
+        profile.id === profileId 
+          ? { ...profile, [field]: value }
+          : profile
+      ));
+
+      toast.success('Statut mis à jour avec succès');
+    } catch (err: any) {
+      console.error('Error updating profile status:', err);
+      toast.error('Erreur lors de la mise à jour du statut');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -83,13 +108,15 @@ const AdminProfiles = () => {
                       <TableHead>Prénom</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Prélèvement automatique</TableHead>
+                      <TableHead>En attente</TableHead>
+                      <TableHead>Fermé</TableHead>
                       <TableHead>Date d'inscription</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {profiles.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                           Aucun utilisateur trouvé
                         </TableCell>
                       </TableRow>
@@ -103,6 +130,22 @@ const AdminProfiles = () => {
                             <Switch 
                               checked={profile.automatic_payment} 
                               disabled
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Checkbox
+                              checked={profile.is_waiting}
+                              onCheckedChange={(checked) => {
+                                updateProfileStatus(profile.id, 'is_waiting', checked === true);
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Checkbox
+                              checked={profile.is_closed}
+                              onCheckedChange={(checked) => {
+                                updateProfileStatus(profile.id, 'is_closed', checked === true);
+                              }}
                             />
                           </TableCell>
                           <TableCell>

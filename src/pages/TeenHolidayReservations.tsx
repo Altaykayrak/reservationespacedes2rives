@@ -1,14 +1,75 @@
 
+import { useAuth } from "@/hooks/useAuth";
 import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
 import { HolidayReservationsList } from "@/components/reservations/HolidayReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const TeenHolidayReservations = () => {
+  const { user } = useAuth();
+  const [isWaiting, setIsWaiting] = useState(false);
+  const [isClosed, setIsClosed] = useState(false);
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!user?.id) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_waiting, is_closed')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error checking access:', error);
+        return;
+      }
+
+      setIsWaiting(data.is_waiting);
+      setIsClosed(data.is_closed);
+    };
+
+    checkAccess();
+  }, [user]);
+
+  if (isWaiting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6">
+          <Alert className="mt-8">
+            <AlertTitle>Accès non disponible</AlertTitle>
+            <AlertDescription>
+              Les réservations n'ont pas encore commencé.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
+  if (isClosed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6">
+          <Alert className="mt-8">
+            <AlertTitle>Accès non disponible</AlertTitle>
+            <AlertDescription>
+              Les réservations sont closes.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <Navbar />
-      
       <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
