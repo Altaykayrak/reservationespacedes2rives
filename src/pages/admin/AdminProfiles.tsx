@@ -7,15 +7,98 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [adminStatus, setAdminStatus] = useState<{isAdmin: boolean; userId: string | null; message: string}>({ 
+    isAdmin: false, 
+    userId: null,
+    message: "Vérification des droits d'administrateur..."
+  });
+
+  // Vérification du statut d'administrateur
+  useEffect(() => {
+    async function checkAdminStatus() {
+      try {
+        // Vérifier l'utilisateur connecté
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          console.error('Erreur de récupération utilisateur:', userError);
+          setAdminStatus({
+            isAdmin: false,
+            userId: null,
+            message: `Erreur de récupération utilisateur: ${userError.message}`
+          });
+          return;
+        }
+
+        if (!user) {
+          console.log('Aucun utilisateur connecté');
+          setAdminStatus({
+            isAdmin: false,
+            userId: null,
+            message: "Aucun utilisateur connecté"
+          });
+          return;
+        }
+
+        console.log('Utilisateur connecté:', user.id);
+        
+        // Vérifier si l'utilisateur est admin
+        const { data: isAdmin, error: adminError } = await supabase
+          .rpc('is_admin', { user_id: user.id });
+
+        if (adminError) {
+          console.error('Erreur vérification admin:', adminError);
+          setAdminStatus({
+            isAdmin: false,
+            userId: user.id,
+            message: `Erreur vérification admin: ${adminError.message}`
+          });
+          return;
+        }
+
+        // Vérifier les droits avec un test simple
+        const { data: testData, error: testError } = await supabase
+          .from('profiles')
+          .select('count(*)')
+          .limit(1);
+
+        let testMessage = '';
+        if (testError) {
+          testMessage = `Test d'accès échoué: ${testError.message}`;
+          console.error('Test d\'accès échoué:', testError);
+        } else {
+          testMessage = `Test d'accès réussi, résultat: ${JSON.stringify(testData)}`;
+          console.log('Test d\'accès réussi:', testData);
+        }
+
+        setAdminStatus({
+          isAdmin: isAdmin || false,
+          userId: user.id,
+          message: `Utilisateur: ${user.id}, Admin: ${isAdmin}, ${testMessage}`
+        });
+        
+      } catch (err: any) {
+        console.error('Erreur inattendue:', err);
+        setAdminStatus({
+          isAdmin: false,
+          userId: null,
+          message: `Erreur inattendue: ${err.message}`
+        });
+      }
+    }
+
+    checkAdminStatus();
+  }, []);
 
   useEffect(() => {
     fetchProfiles();
@@ -26,11 +109,17 @@ const AdminProfiles = () => {
     setError(null);
 
     try {
+      console.log('Début de récupération des profils...');
       const { data, error: fetchError } = await supabase
         .from('profiles_with_emails')
         .select('*');
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('Erreur Supabase:', fetchError);
+        throw fetchError;
+      }
+
+      console.log('Données reçues:', data);
 
       if (data) {
         const formattedProfiles: ProfileData[] = data.map(profile => ({
@@ -47,9 +136,10 @@ const AdminProfiles = () => {
         }));
 
         setProfiles(formattedProfiles);
+        console.log('Profils formatés:', formattedProfiles.length);
       }
     } catch (err: any) {
-      console.error('Error fetching profiles:', err);
+      console.error('Erreur fetchProfiles:', err);
       setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
     } finally {
       setLoading(false);
@@ -121,6 +211,16 @@ const AdminProfiles = () => {
             Rafraîchir
           </Button>
         </div>
+        
+        {/* Infos de débogage */}
+        {!adminStatus.isAdmin && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertDescription>
+              Votre compte n'a pas les droits d'administrateur nécessaires. Détails: {adminStatus.message}
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Card>
           <CardHeader>
