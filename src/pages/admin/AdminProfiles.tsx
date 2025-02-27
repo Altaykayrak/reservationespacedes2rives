@@ -58,6 +58,8 @@ const AdminProfiles = () => {
 
   const updateProfileStatus = async (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
     try {
+      setLoading(true);
+      
       // Si on active une case, on désactive l'autre
       const updates: { is_waiting?: boolean; is_closed?: boolean } = {
         [field]: value
@@ -68,12 +70,17 @@ const AdminProfiles = () => {
         updates[field === 'is_waiting' ? 'is_closed' : 'is_waiting'] = false;
       }
 
+      console.log(`Updating profile ${profileId} with:`, updates);
+
       const { error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', profileId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase update error:", error);
+        throw error;
+      }
 
       // Mise à jour locale de l'état
       setProfiles(profiles.map(profile => 
@@ -85,10 +92,21 @@ const AdminProfiles = () => {
           : profile
       ));
 
+      // Lorsque la mise à jour est réussie, ne l'ajoutez pas aux modifications en attente
+      setModifiedProfiles(prev => {
+        // Créer une copie de l'ensemble
+        const newSet = new Set(prev);
+        // Supprimer l'ID s'il était dans les modifications
+        newSet.delete(profileId);
+        return newSet;
+      });
+
       toast.success('Statut mis à jour avec succès');
     } catch (err: any) {
       console.error('Error updating profile status:', err);
-      toast.error('Erreur lors de la mise à jour du statut');
+      toast.error(`Erreur lors de la mise à jour du statut: ${err.message || 'Erreur inconnue'}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -98,16 +116,50 @@ const AdminProfiles = () => {
       return;
     }
 
+    setLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+
     try {
-      setLoading(true);
-      // Ici, vous pourriez implémenter la logique pour sauvegarder en batch
-      // Pour l'instant, affichons simplement un message de succès
+      // Créer un tableau de promesses pour toutes les mises à jour
+      const profilesArray = Array.from(modifiedProfiles);
       
-      toast.success(`${modifiedProfiles.size} modifications enregistrées avec succès`);
+      for (const profileId of profilesArray) {
+        const profile = profiles.find(p => p.id === profileId);
+        if (!profile) continue;
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            is_waiting: profile.is_waiting,
+            is_closed: profile.is_closed
+          })
+          .eq('id', profileId);
+        
+        if (error) {
+          console.error(`Error updating profile ${profileId}:`, error);
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      }
+      
+      if (successCount > 0) {
+        toast.success(`${successCount} modifications enregistrées avec succès`);
+      }
+      
+      if (errorCount > 0) {
+        toast.error(`${errorCount} modifications ont échoué`);
+      }
+      
+      // Rafraîchir les données pour s'assurer que nous avons les dernières versions
+      await fetchProfiles();
+      
+      // Réinitialiser l'ensemble des modifications
       setModifiedProfiles(new Set());
     } catch (err: any) {
       console.error('Error saving changes:', err);
-      toast.error('Erreur lors de la sauvegarde des modifications');
+      toast.error(`Erreur lors de la sauvegarde des modifications: ${err.message || 'Erreur inconnue'}`);
     } finally {
       setLoading(false);
     }
@@ -189,8 +241,8 @@ const AdminProfiles = () => {
                             <Checkbox
                               checked={profile.is_waiting}
                               onCheckedChange={(checked) => {
+                                // Le changement d'état local est géré par updateProfileStatus
                                 updateProfileStatus(profile.id, 'is_waiting', checked === true);
-                                setModifiedProfiles(new Set([...modifiedProfiles, profile.id]));
                               }}
                             />
                           </TableCell>
@@ -198,8 +250,8 @@ const AdminProfiles = () => {
                             <Checkbox
                               checked={profile.is_closed}
                               onCheckedChange={(checked) => {
+                                // Le changement d'état local est géré par updateProfileStatus
                                 updateProfileStatus(profile.id, 'is_closed', checked === true);
-                                setModifiedProfiles(new Set([...modifiedProfiles, profile.id]));
                               }}
                             />
                           </TableCell>
