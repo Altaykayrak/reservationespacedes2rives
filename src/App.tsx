@@ -72,7 +72,7 @@ const ToasterLayout = ({ children }: { children: React.ReactNode }) => {
  */
 const router = createBrowserRouter([
   {
-    element: <ToasterLayout children={<></>} />,
+    element: <ToasterLayout>{null}</ToasterLayout>,
     children: [
       {
         path: "/",
@@ -104,7 +104,7 @@ const router = createBrowserRouter([
       },
       // Auth protected routes
       {
-        element: <ProtectedRoute redirectTo="/login" children={<></>} />,
+        element: <ProtectedRoute redirectTo="/login">{null}</ProtectedRoute>,
         children: [
           {
             path: "/profile",
