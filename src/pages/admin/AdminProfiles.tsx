@@ -155,6 +155,20 @@ const AdminProfiles = () => {
       console.log('Champ à modifier:', field);
       console.log('Nouvelle valeur:', value);
 
+      // Mettre à jour l'interface utilisateur immédiatement pour feedback instantané
+      setProfiles(prevProfiles =>
+        prevProfiles.map(profile =>
+          profile.id === profileId
+            ? { 
+                ...profile, 
+                [field]: value,
+                ...(field === 'is_waiting' && value ? { is_closed: false } : {}),
+                ...(field === 'is_closed' && value ? { is_waiting: false } : {})
+              }
+            : profile
+        )
+      );
+
       const updates = {
         [field]: value,
         ...(field === 'is_waiting' && value ? { is_closed: false } : {}),
@@ -163,42 +177,37 @@ const AdminProfiles = () => {
 
       console.log('Données de mise à jour:', updates);
 
-      const { data, error } = await supabase
+      // Utiliser directement la méthode PATCH de PostgreSQL via Supabase
+      // qui est plus fiable pour les mises à jour
+      const { error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', profileId)
-        .select();
+        .eq('id', profileId);
 
       if (error) {
         console.error('Erreur Supabase lors de la mise à jour:', error);
+        
+        // Annuler le changement dans l'interface en cas d'erreur
+        fetchProfiles();
+        
         toast.error(`Erreur de mise à jour: ${error.message}`);
         return;
       }
-
-      console.log('Réponse Supabase après mise à jour:', data);
-
-      setProfiles(prevProfiles =>
-        prevProfiles.map(profile =>
-          profile.id === profileId
-            ? { ...profile, ...updates }
-            : profile
-        )
-      );
 
       toast.success('Mise à jour réussie');
 
     } catch (err: any) {
       console.error('Exception lors de la mise à jour:', err);
       toast.error(`Erreur: ${err.message}`);
+      
+      // Rafraîchir pour s'assurer que l'interface est synchronisée avec la base de données
+      fetchProfiles();
     } finally {
       setProcessingIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(profileId);
         return newSet;
       });
-
-      // Rafraîchir les données après une mise à jour
-      fetchProfiles();
     }
   };
 
