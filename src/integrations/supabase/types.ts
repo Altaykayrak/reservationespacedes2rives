@@ -153,6 +153,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "children_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_with_emails"
+            referencedColumns: ["id"]
+          },
         ]
       }
       closed_periods: {
@@ -492,6 +499,19 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles_with_emails: {
+        Row: {
+          accepted_cgu: boolean | null
+          automatic_payment: boolean | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          updated_at: string | null
+        }
+        Relationships: []
       }
       wednesday_reservations_with_children: {
         Row: {

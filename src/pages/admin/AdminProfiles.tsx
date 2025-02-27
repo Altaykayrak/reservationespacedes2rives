@@ -19,46 +19,28 @@ const AdminProfiles = () => {
       setError(null);
 
       try {
-        // Récupération des profils utilisateurs
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            first_name,
-            last_name,
-            automatic_payment,
-            accepted_cgu,
-            created_at,
-            updated_at
-          `);
+        // Utilisation de la nouvelle vue profiles_with_emails
+        const { data, error: fetchError } = await supabase
+          .from('profiles_with_emails')
+          .select('*');
 
-        if (profilesError) throw profilesError;
+        if (fetchError) throw fetchError;
 
-        // Récupération des emails depuis user_roles
-        const { data: userRolesData, error: userRolesError } = await supabase
-          .from('user_roles')
-          .select('user_id, email');
-
-        if (userRolesError) throw userRolesError;
-
-        // Création de la jointure manuellement
-        const formattedProfiles: ProfileData[] = profilesData.map(profile => {
-          // Recherche de l'email correspondant dans user_roles
-          const userRole = userRolesData.find(role => role.user_id === profile.id);
-          
-          return {
+        if (data) {
+          // Transformation des données pour correspondre au type ProfileData
+          const formattedProfiles: ProfileData[] = data.map(profile => ({
             id: profile.id,
             first_name: profile.first_name,
             last_name: profile.last_name,
-            email: userRole ? userRole.email : 'Email inconnu',
+            email: profile.email || 'Email inconnu',
             automatic_payment: profile.automatic_payment,
             accepted_cgu: profile.accepted_cgu,
             created_at: profile.created_at,
             updated_at: profile.updated_at
-          };
-        });
+          }));
 
-        setProfiles(formattedProfiles);
+          setProfiles(formattedProfiles);
+        }
       } catch (err: any) {
         console.error('Error fetching profiles:', err);
         setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
