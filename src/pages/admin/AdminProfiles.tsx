@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { Loader2, Save } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -15,8 +15,7 @@ const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [modifiedProfiles, setModifiedProfiles] = useState<Map<string, ProfileData>>(new Map());
-  const [isSaving, setIsSaving] = useState(false);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchProfiles();
@@ -57,85 +56,77 @@ const AdminProfiles = () => {
     }
   };
 
-  const handleCheckboxChange = (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
-    const profileToUpdate = profiles.find(p => p.id === profileId);
-    if (!profileToUpdate) return;
-
-    // Créer une copie du profil avec les changements
-    const updatedProfile = { ...profileToUpdate };
-    
-    // Si on active une case, on désactive l'autre
-    if (field === 'is_waiting') {
-      updatedProfile.is_waiting = value;
-      if (value) updatedProfile.is_closed = false;
-    } else {
-      updatedProfile.is_closed = value;
-      if (value) updatedProfile.is_waiting = false;
-    }
-
-    // Mettre à jour l'état local des profils
-    setProfiles(prevProfiles => 
-      prevProfiles.map(profile => 
-        profile.id === profileId ? updatedProfile : profile
-      )
-    );
-
-    // Ajouter aux profils modifiés
-    setModifiedProfiles(new Map(modifiedProfiles.set(profileId, updatedProfile)));
-  };
-
-  const saveAllChanges = async () => {
-    if (modifiedProfiles.size === 0) {
-      toast.info('Aucune modification à enregistrer');
-      return;
-    }
-
-    setIsSaving(true);
-    let successCount = 0;
-    let errorCount = 0;
-
+  const handleCheckboxChange = async (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
     try {
-      for (const [profileId, profile] of modifiedProfiles.entries()) {
-        console.log(`Tentative de sauvegarde du profil ${profileId}:`, {
-          is_waiting: profile.is_waiting,
-          is_closed: profile.is_closed
-        });
+      // Empêcher les clics multiples sur le même profil
+      if (processingIds.has(profileId)) return;
+      
+      // Ajouter l'ID à la liste des profils en cours de traitement
+      setProcessingIds(prev => new Set(prev).add(profileId));
+
+      // Mettre à jour localement en premier pour une UI réactive
+      setProfiles(prevProfiles => 
+        prevProfiles.map(profile => {
+          if (profile.id !== profileId) return profile;
+          
+          const updatedProfile = { ...profile };
+          
+          if (field === 'is_waiting') {
+            updatedProfile.is_waiting = value;
+            if (value) updatedProfile.is_closed = false;
+          } else {
+            updatedProfile.is_closed = value;
+            if (value) updatedProfile.is_waiting = false;
+          }
+          
+          return updatedProfile;
+        })
+      );
+
+      // Préparation des données pour la mise à jour
+      const updates: Record<string, boolean> = {};
+      
+      // Si on active une case, on désactive l'autre
+      if (field === 'is_waiting') {
+        updates.is_waiting = value;
+        if (value) updates.is_closed = false;
+      } else {
+        updates.is_closed = value;
+        if (value) updates.is_waiting = false;
+      }
+
+      console.log(`Mise à jour directe pour le profil ${profileId}:`, updates);
+
+      // Envoyer la mise à jour à Supabase
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', profileId)
+        .select();
+      
+      if (error) {
+        console.error("Erreur lors de la mise à jour:", error);
+        toast.error(`Erreur lors de la mise à jour: ${error.message}`);
         
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            is_waiting: profile.is_waiting,
-            is_closed: profile.is_closed
-          })
-          .eq('id', profileId);
-        
-        if (error) {
-          console.error(`Erreur lors de la mise à jour du profil ${profileId}:`, error);
-          errorCount++;
-        } else {
-          console.log(`Profil ${profileId} mis à jour avec succès`);
-          successCount++;
-        }
+        // En cas d'erreur, restaurer l'état précédent
+        await fetchProfiles();
+      } else {
+        console.log("Mise à jour réussie:", data);
+        toast.success('Statut mis à jour avec succès');
       }
-      
-      if (successCount > 0) {
-        toast.success(`${successCount} modifications enregistrées avec succès`);
-      }
-      
-      if (errorCount > 0) {
-        toast.error(`${errorCount} modifications ont échoué`);
-      }
-      
-      // Vider les modifications après la sauvegarde
-      setModifiedProfiles(new Map());
-      
-      // Rafraîchir les données
-      await fetchProfiles();
     } catch (err: any) {
-      console.error('Erreur lors de la sauvegarde:', err);
+      console.error('Erreur:', err);
       toast.error(`Erreur: ${err.message || 'Erreur inconnue'}`);
+      
+      // En cas d'erreur, restaurer l'état précédent
+      await fetchProfiles();
     } finally {
-      setIsSaving(false);
+      // Retirer l'ID de la liste des profils en cours de traitement
+      setProcessingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(profileId);
+        return newSet;
+      });
     }
   };
 
@@ -145,25 +136,10 @@ const AdminProfiles = () => {
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
-          <div className="flex gap-2">
-            <Button onClick={fetchProfiles} variant="outline" disabled={loading || isSaving}>
-              <Loader2 className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Rafraîchir
-            </Button>
-            <Button 
-              onClick={saveAllChanges} 
-              disabled={modifiedProfiles.size === 0 || loading || isSaving}
-              className="flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {isSaving ? 'Sauvegarde en cours...' : 'Enregistrer les modifications'}
-              {modifiedProfiles.size > 0 && !isSaving && (
-                <span className="ml-1 bg-primary-foreground text-primary px-2 py-0.5 rounded-full text-xs">
-                  {modifiedProfiles.size}
-                </span>
-              )}
-            </Button>
-          </div>
+          <Button onClick={fetchProfiles} variant="outline" disabled={loading}>
+            <Loader2 className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Rafraîchir
+          </Button>
         </div>
         
         <Card>
@@ -220,7 +196,7 @@ const AdminProfiles = () => {
                           <TableCell>
                             <Checkbox
                               checked={profile.is_waiting}
-                              disabled={isSaving}
+                              disabled={processingIds.has(profile.id)}
                               onCheckedChange={(checked) => {
                                 handleCheckboxChange(profile.id, 'is_waiting', checked === true);
                               }}
@@ -229,7 +205,7 @@ const AdminProfiles = () => {
                           <TableCell>
                             <Checkbox
                               checked={profile.is_closed}
-                              disabled={isSaving}
+                              disabled={processingIds.has(profile.id)}
                               onCheckedChange={(checked) => {
                                 handleCheckboxChange(profile.id, 'is_closed', checked === true);
                               }}
