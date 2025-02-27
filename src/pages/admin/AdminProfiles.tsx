@@ -56,58 +56,29 @@ const AdminProfiles = () => {
     }
   };
 
-  const updateProfileStatus = async (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
-    try {
-      setLoading(true);
-      
-      // Si on active une case, on désactive l'autre
-      const updates: { is_waiting?: boolean; is_closed?: boolean } = {
-        [field]: value
-      };
-      
-      // Si on active une case, on s'assure que l'autre est désactivée
-      if (value) {
-        updates[field === 'is_waiting' ? 'is_closed' : 'is_waiting'] = false;
-      }
-
-      console.log(`Updating profile ${profileId} with:`, updates);
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', profileId);
-
-      if (error) {
-        console.error("Supabase update error:", error);
-        throw error;
-      }
-
-      // Mise à jour locale de l'état
-      setProfiles(profiles.map(profile => 
-        profile.id === profileId 
-          ? { 
-              ...profile, 
-              ...updates
-            }
-          : profile
-      ));
-
-      // Lorsque la mise à jour est réussie, ne l'ajoutez pas aux modifications en attente
-      setModifiedProfiles(prev => {
-        // Créer une copie de l'ensemble
-        const newSet = new Set(prev);
-        // Supprimer l'ID s'il était dans les modifications
-        newSet.delete(profileId);
-        return newSet;
-      });
-
-      toast.success('Statut mis à jour avec succès');
-    } catch (err: any) {
-      console.error('Error updating profile status:', err);
-      toast.error(`Erreur lors de la mise à jour du statut: ${err.message || 'Erreur inconnue'}`);
-    } finally {
-      setLoading(false);
+  const updateProfileLocalStatus = (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
+    // Créez une copie de l'état local avant la mise à jour de la base de données
+    const updates: { is_waiting?: boolean; is_closed?: boolean } = {
+      [field]: value
+    };
+    
+    // Si on active une case, on s'assure que l'autre est désactivée
+    if (value) {
+      updates[field === 'is_waiting' ? 'is_closed' : 'is_waiting'] = false;
     }
+
+    // Mettre à jour l'état local uniquement (pas de requête API)
+    setProfiles(profiles.map(profile => 
+      profile.id === profileId 
+        ? { 
+            ...profile, 
+            ...updates
+          }
+        : profile
+    ));
+
+    // Marquer ce profil comme modifié
+    setModifiedProfiles(prev => new Set([...prev, profileId]));
   };
 
   const saveAllChanges = async () => {
@@ -241,8 +212,7 @@ const AdminProfiles = () => {
                             <Checkbox
                               checked={profile.is_waiting}
                               onCheckedChange={(checked) => {
-                                // Le changement d'état local est géré par updateProfileStatus
-                                updateProfileStatus(profile.id, 'is_waiting', checked === true);
+                                updateProfileLocalStatus(profile.id, 'is_waiting', checked === true);
                               }}
                             />
                           </TableCell>
@@ -250,8 +220,7 @@ const AdminProfiles = () => {
                             <Checkbox
                               checked={profile.is_closed}
                               onCheckedChange={(checked) => {
-                                // Le changement d'état local est géré par updateProfileStatus
-                                updateProfileStatus(profile.id, 'is_closed', checked === true);
+                                updateProfileLocalStatus(profile.id, 'is_closed', checked === true);
                               }}
                             />
                           </TableCell>
