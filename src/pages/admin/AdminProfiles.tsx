@@ -109,9 +109,11 @@ const AdminProfiles = () => {
     setError(null);
 
     try {
-      console.log('Début de récupération des profils directement de la table profiles...');
+      console.log('Début de récupération des profils...');
       
-      // Récupérer les profils depuis la table profiles
+      // Récupérer TOUS les utilisateurs depuis la table auth.users
+      // Nous ne pouvons pas accéder directement à auth.users avec le client JavaScript
+      // Donc nous récupérons directement tous les profils sans filtre
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
@@ -123,7 +125,7 @@ const AdminProfiles = () => {
 
       console.log('Profils récupérés:', profilesData);
 
-      // Récupérer les emails depuis la table user_roles qui contient les emails
+      // Récupérer les emails et rôles depuis user_roles
       const { data: userRoles, error: userRolesError } = await supabase
         .from('user_roles')
         .select('user_id, email, role');
@@ -136,33 +138,40 @@ const AdminProfiles = () => {
 
       console.log('Données user_roles récupérées:', userRoles);
 
-      // Créer un mapping des emails par ID utilisateur
+      // Créer un mapping des emails et rôles par ID utilisateur
       const emailsMap = new Map();
+      const rolesMap = new Map();
       if (userRoles && Array.isArray(userRoles)) {
         userRoles.forEach((user: any) => {
-          if (user && user.user_id && user.email) {
-            emailsMap.set(user.user_id, user.email);
+          if (user && user.user_id) {
+            if (user.email) emailsMap.set(user.user_id, user.email);
+            if (user.role) rolesMap.set(user.user_id, user.role);
           }
         });
       }
 
-      // Combiner les données
+      // Combiner les données et filtrer les admins si nécessaire
       if (profilesData) {
-        const formattedProfiles: ProfileData[] = profilesData.map((profile: any) => ({
-          id: profile.id,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          email: emailsMap.get(profile.id) || 'Email inconnu',
-          automatic_payment: profile.automatic_payment,
-          accepted_cgu: profile.accepted_cgu,
-          is_waiting: profile.is_waiting || false,
-          is_closed: profile.is_closed || false,
-          created_at: profile.created_at,
-          updated_at: profile.updated_at
-        }));
+        const formattedProfiles: ProfileData[] = profilesData
+          .map((profile: any) => ({
+            id: profile.id,
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            email: emailsMap.get(profile.id) || 'Email inconnu',
+            automatic_payment: profile.automatic_payment,
+            accepted_cgu: profile.accepted_cgu,
+            is_waiting: profile.is_waiting || false,
+            is_closed: profile.is_closed || false,
+            created_at: profile.created_at,
+            updated_at: profile.updated_at,
+            // Ajouter le rôle pour filtrage, pas utilisé dans l'interface
+            role: rolesMap.get(profile.id) || 'user'
+          }))
+          // Filtrer pour exclure les admins et ne garder que les utilisateurs normaux
+          .filter((profile: any) => profile.role !== 'admin');
 
         setProfiles(formattedProfiles);
-        console.log('Profils formatés:', formattedProfiles.length);
+        console.log('Profils formatés (sans admins):', formattedProfiles.length);
       }
     } catch (err: any) {
       console.error('Erreur fetchProfiles:', err);
