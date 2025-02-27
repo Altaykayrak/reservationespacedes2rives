@@ -4,6 +4,7 @@ import {
   createBrowserRouter,
   RouterProvider,
   useNavigate,
+  Outlet,
 } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
@@ -52,7 +53,7 @@ const ProtectedRoute = ({
     }
   }, [user, loading, navigate, redirectTo]);
 
-  return user ? <>{children}</> : null;
+  return user ? <>{children || <Outlet />}</> : null;
 };
 
 /**
@@ -61,7 +62,7 @@ const ProtectedRoute = ({
 const ToasterLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <Layout>
-      {children}
+      {children || <Outlet />}
       <Toaster />
     </Layout>
   );
@@ -72,73 +73,75 @@ const ToasterLayout = ({ children }: { children: React.ReactNode }) => {
  */
 const router = createBrowserRouter([
   {
-    element: <ToasterLayout>{null}</ToasterLayout>,
+    path: "/",
+    element: <ToasterLayout />,
     children: [
       {
-        path: "/",
+        index: true,
         element: <Index />,
       },
       {
-        path: "/login",
+        path: "login",
         element: <Login />,
       },
       {
-        path: "/register",
+        path: "register",
         element: <Register />,
       },
       {
-        path: "/forgot-password",
+        path: "forgot-password",
         element: <ForgotPassword />,
       },
       {
-        path: "/reset-password",
+        path: "reset-password",
         element: <ResetPassword />,
       },
       {
-        path: "/terms-of-service",
+        path: "terms-of-service",
         element: <TermsOfService />,
       },
       {
-        path: "/holiday-program",
+        path: "holiday-program",
         element: <HolidayProgram />,
       },
       // Auth protected routes
       {
-        element: <ProtectedRoute redirectTo="/login">{null}</ProtectedRoute>,
+        path: "",
+        element: <ProtectedRoute redirectTo="/login" />,
         children: [
           {
-            path: "/profile",
+            path: "profile",
             element: <Profile />,
           },
           {
-            path: "/children",
+            path: "children",
             element: <Children />,
           },
           {
-            path: "/wednesday-reservations",
+            path: "wednesday-reservations",
             element: <WednesdayReservations />,
           },
           {
-            path: "/holiday-reservations",
+            path: "holiday-reservations",
             element: <HolidayReservations />,
           },
           {
-            path: "/teenholiday-reservations",
+            path: "teenholiday-reservations",
             element: <TeenHolidayReservations />,
           },
         ],
       },
       // Admin routes
       {
-        path: "/admin-login",
+        path: "admin-login",
         element: <AdminLoginPage />,
       },
       {
-        path: "/admin",
+        path: "admin",
         element: <AdminPage />,
         children: [
           {
-            path: "",
+            index: true,
             element: <AdminDashboard />,
           },
           {
