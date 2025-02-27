@@ -109,14 +109,13 @@ const AdminProfiles = () => {
     setError(null);
 
     try {
-      console.log('Début de récupération des profils...');
+      console.log('Début de récupération des données...');
       
       // Récupérer directement les données des utilisateurs depuis user_roles
       // car cette table contient déjà les emails et les rôles
       const { data: userRolesData, error: userRolesError } = await supabase
         .from('user_roles')
-        .select('user_id, email, role')
-        // Ne pas filtrer ici, nous filtrerons côté client
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (userRolesError) {
@@ -126,68 +125,62 @@ const AdminProfiles = () => {
 
       console.log('Données user_roles récupérées:', userRolesData);
 
-      // Récupérer les profils pour chaque utilisateur
-      if (userRolesData && userRolesData.length > 0) {
-        // Créer un tableau des ID d'utilisateur
-        const userIds = userRolesData
-          .filter(user => user.role !== 'admin') // Filtrer les admins ici
-          .map(user => user.user_id);
+      // Filtrer les utilisateurs qui ne sont pas admin
+      const nonAdminUsers = userRolesData.filter(user => user.role !== 'admin');
+      console.log('Utilisateurs non-admin:', nonAdminUsers.length);
 
-        console.log('IDs des utilisateurs à récupérer:', userIds);
-
-        if (userIds.length === 0) {
-          console.log('Aucun utilisateur non-admin trouvé dans user_roles');
-          setProfiles([]);
-          setLoading(false);
-          return;
-        }
-
-        // Récupérer tous les profils correspondants
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('*')
-          .in('id', userIds); // Utiliser la clause IN pour récupérer plusieurs profils
-
-        if (profilesError) {
-          console.error('Erreur récupération profiles:', profilesError);
-          throw profilesError;
-        }
-
-        console.log('Profils récupérés:', profilesData);
-
-        // Créer une map des emails par ID d'utilisateur
-        const emailMap = new Map();
-        userRolesData.forEach(user => {
-          if (user.user_id && user.email) {
-            emailMap.set(user.user_id, user.email);
-          }
-        });
-
-        // Fusionner les données
-        if (profilesData) {
-          const formattedProfiles: ProfileData[] = profilesData.map(profile => ({
-            id: profile.id,
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            email: emailMap.get(profile.id) || 'Email inconnu',
-            automatic_payment: profile.automatic_payment,
-            accepted_cgu: profile.accepted_cgu,
-            is_waiting: profile.is_waiting || false,
-            is_closed: profile.is_closed || false,
-            created_at: profile.created_at,
-            updated_at: profile.updated_at
-          }));
-
-          console.log(`Nombre de profils formatés: ${formattedProfiles.length}`);
-          setProfiles(formattedProfiles);
-        } else {
-          console.log('Aucun profil trouvé pour les utilisateurs');
-          setProfiles([]);
-        }
-      } else {
-        console.log('Aucun utilisateur trouvé dans user_roles');
+      if (nonAdminUsers.length === 0) {
+        console.log('Aucun utilisateur non-admin trouvé');
         setProfiles([]);
+        setLoading(false);
+        return;
       }
+
+      // Créer une liste d'IDs d'utilisateurs
+      const userIds = nonAdminUsers.map(user => user.user_id);
+      console.log('IDs utilisateurs à récupérer:', userIds);
+
+      // Récupérer les profils correspondants pour obtenir d'autres détails
+      // Mais ne pas bloquer si certains n'ont pas de profil complet
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Erreur récupération profiles:', profilesError);
+        // On continue avec les données de base plutôt que d'échouer
+      }
+
+      console.log('Profils récupérés:', profilesData || []);
+
+      // Créer un mapping des profils pour une recherche rapide
+      const profilesMap = new Map();
+      if (profilesData && profilesData.length > 0) {
+        profilesData.forEach(profile => {
+          profilesMap.set(profile.id, profile);
+        });
+      }
+
+      // Créer des objets ProfileData même pour les utilisateurs sans profil complet
+      const formattedProfiles: ProfileData[] = nonAdminUsers.map(user => {
+        const profile = profilesMap.get(user.user_id);
+        return {
+          id: user.user_id,
+          email: user.email || 'Email inconnu',
+          first_name: profile?.first_name || null,
+          last_name: profile?.last_name || null,
+          automatic_payment: profile?.automatic_payment || false,
+          accepted_cgu: profile?.accepted_cgu || false,
+          is_waiting: profile?.is_waiting || false,
+          is_closed: profile?.is_closed || false,
+          created_at: profile?.created_at || user.created_at || new Date().toISOString(),
+          updated_at: profile?.updated_at || user.updated_at || new Date().toISOString()
+        };
+      });
+
+      console.log('Profils formatés:', formattedProfiles);
+      setProfiles(formattedProfiles);
     } catch (err: any) {
       console.error('Erreur fetchProfiles:', err);
       setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
@@ -227,24 +220,44 @@ const AdminProfiles = () => {
 
       console.log('Données de mise à jour:', updates);
 
-      // Vérification avant mise à jour - afficher l'état actuel du profil
-      const { data: currentProfile, error: fetchError } = await supabase
+      // Vérifier si un profil existe déjà pour cet utilisateur
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', profileId)
-        .single();
+        .maybeSingle();
 
       if (fetchError) {
-        console.error('Erreur lors de la récupération du profil actuel:', fetchError);
-      } else {
-        console.log('État actuel du profil:', currentProfile);
+        console.error('Erreur lors de la vérification du profil:', fetchError);
+        toast.error(`Erreur de vérification: ${fetchError.message}`);
+        return;
       }
 
-      // Mise à jour du profil via l'API Supabase
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', profileId);
+      let updateOperation;
+
+      if (existingProfile) {
+        // Mise à jour du profil existant
+        console.log('Mise à jour du profil existant:', profileId);
+        updateOperation = supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', profileId);
+      } else {
+        // Création d'un nouveau profil car il n'en existe pas encore
+        console.log('Création d\'un nouveau profil:', profileId);
+        updateOperation = supabase
+          .from('profiles')
+          .insert({
+            id: profileId,
+            first_name: null,
+            last_name: null,
+            automatic_payment: false,
+            accepted_cgu: false,
+            ...updates
+          });
+      }
+
+      const { error: updateError } = await updateOperation;
         
       if (updateError) {
         console.error('Erreur lors de la mise à jour via Supabase:', updateError);
@@ -255,30 +268,16 @@ const AdminProfiles = () => {
       }
 
       console.log('Mise à jour réussie');
-
-      // Vérification après mise à jour
-      const { data: updatedProfile, error: postFetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .single();
-
-      if (postFetchError) {
-        console.error('Erreur lors de la vérification après mise à jour:', postFetchError);
-      } else {
-        console.log('État du profil après mise à jour:', updatedProfile);
-      }
-
       toast.success('Mise à jour réussie');
 
-      // Rafraîchir les données après une mise à jour réussie pour confirmer les changements
+      // Rafraîchir les données après une mise à jour réussie
       fetchProfiles();
 
     } catch (err: any) {
       console.error('Exception lors de la mise à jour:', err);
       toast.error(`Erreur: ${err.message}`);
       
-      // Rafraîchir pour s'assurer que l'interface est synchronisée avec la base de données
+      // Rafraîchir
       fetchProfiles();
     } finally {
       setProcessingIds(prev => {
