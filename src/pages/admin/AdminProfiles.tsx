@@ -109,90 +109,60 @@ const AdminProfiles = () => {
     setError(null);
 
     try {
-      console.log('Début de récupération des profils...');
+      console.log('Début de récupération des profils directement de la table profiles...');
       
-      // Récupérer TOUS les profils depuis la table profiles_with_emails qui est une vue
-      // Cette vue contient déjà les emails et n'est pas soumise aux mêmes restrictions
+      // Récupérer les profils depuis la table profiles
       const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles_with_emails')
+        .from('profiles')
         .select('*');
 
       if (profilesError) {
-        console.error('Erreur récupération profiles_with_emails:', profilesError);
-        // Si nous ne pouvons pas utiliser la vue, essayons de récupérer directement les profils
-        // et les emails séparément
-        const { data: directProfiles, error: directError } = await supabase
-          .from('profiles')
-          .select('*');
-          
-        if (directError) {
-          console.error('Erreur récupération profiles:', directError);
-          throw directError;
-        }
-        
-        console.log('Profils récupérés directement:', directProfiles);
-        
-        // Récupérer les emails depuis la table user_roles
-        const { data: userRoles, error: userRolesError } = await supabase
-          .from('user_roles')
-          .select('user_id, email, role');
+        console.error('Erreur récupération profiles:', profilesError);
+        throw profilesError;
+      }
 
-        if (userRolesError) {
-          console.error('Erreur récupération user_roles:', userRolesError);
-          // On continue avec des emails vides
-        }
-        
-        console.log('Données user_roles récupérées:', userRoles);
-        
-        // Créer un mapping des emails par ID utilisateur
-        const emailsMap = new Map();
-        if (userRoles && Array.isArray(userRoles)) {
-          userRoles.forEach((user: any) => {
-            if (user && user.user_id && user.email) {
-              emailsMap.set(user.user_id, user.email);
-            }
-          });
-        }
-        
-        // Formater les profils avec les emails
-        if (directProfiles) {
-          const formattedProfiles: ProfileData[] = directProfiles.map((profile: any) => ({
-            id: profile.id,
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            email: emailsMap.get(profile.id) || 'Email inconnu',
-            automatic_payment: profile.automatic_payment,
-            accepted_cgu: profile.accepted_cgu,
-            is_waiting: profile.is_waiting || false,
-            is_closed: profile.is_closed || false,
-            created_at: profile.created_at,
-            updated_at: profile.updated_at
-          }));
+      console.log('Profils récupérés:', profilesData);
 
-          setProfiles(formattedProfiles);
-          console.log('Profils formatés depuis tables séparées:', formattedProfiles.length);
-        }
-      } else {
-        // Si la vue a fonctionné, formater les données directement
-        console.log('Données récupérées depuis la vue:', profilesData);
-        
-        if (profilesData) {
-          const formattedProfiles: ProfileData[] = profilesData.map((profile: any) => ({
-            id: profile.id,
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            email: profile.email || 'Email inconnu',
-            automatic_payment: profile.automatic_payment,
-            accepted_cgu: profile.accepted_cgu,
-            is_waiting: profile.is_waiting || false,
-            is_closed: profile.is_closed || false,
-            created_at: profile.created_at,
-            updated_at: profile.updated_at
-          }));
+      // Récupérer les emails depuis la table user_roles qui contient les emails
+      const { data: userRoles, error: userRolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, email, role');
 
-          setProfiles(formattedProfiles);
-          console.log('Profils formatés depuis la vue:', formattedProfiles.length);
-        }
+      if (userRolesError) {
+        console.error('Erreur récupération user_roles:', userRolesError);
+        // On continue avec des emails vides plutôt que d'échouer complètement
+        console.log('Continuation sans emails...');
+      }
+
+      console.log('Données user_roles récupérées:', userRoles);
+
+      // Créer un mapping des emails par ID utilisateur
+      const emailsMap = new Map();
+      if (userRoles && Array.isArray(userRoles)) {
+        userRoles.forEach((user: any) => {
+          if (user && user.user_id && user.email) {
+            emailsMap.set(user.user_id, user.email);
+          }
+        });
+      }
+
+      // Combiner les données
+      if (profilesData) {
+        const formattedProfiles: ProfileData[] = profilesData.map((profile: any) => ({
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          email: emailsMap.get(profile.id) || 'Email inconnu',
+          automatic_payment: profile.automatic_payment,
+          accepted_cgu: profile.accepted_cgu,
+          is_waiting: profile.is_waiting || false,
+          is_closed: profile.is_closed || false,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at
+        }));
+
+        setProfiles(formattedProfiles);
+        console.log('Profils formatés:', formattedProfiles.length);
       }
     } catch (err: any) {
       console.error('Erreur fetchProfiles:', err);
