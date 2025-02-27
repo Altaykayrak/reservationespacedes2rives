@@ -99,6 +99,8 @@ const AdminProfiles = () => {
         const profile = profiles.find(p => p.id === profileId);
         if (!profile) continue;
         
+        console.log(`Sauvegarde du profil ${profileId} avec is_waiting=${profile.is_waiting}, is_closed=${profile.is_closed}`);
+        
         const { error } = await supabase
           .from('profiles')
           .update({
