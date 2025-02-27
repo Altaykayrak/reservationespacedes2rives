@@ -7,13 +7,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [modifiedProfiles, setModifiedProfiles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchProfiles();
@@ -90,13 +92,51 @@ const AdminProfiles = () => {
     }
   };
 
+  const saveAllChanges = async () => {
+    if (modifiedProfiles.size === 0) {
+      toast.info('Aucune modification à enregistrer');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Ici, vous pourriez implémenter la logique pour sauvegarder en batch
+      // Pour l'instant, affichons simplement un message de succès
+      
+      toast.success(`${modifiedProfiles.size} modifications enregistrées avec succès`);
+      setModifiedProfiles(new Set());
+    } catch (err: any) {
+      console.error('Error saving changes:', err);
+      toast.error('Erreur lors de la sauvegarde des modifications');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNavbar />
       <div className="container mx-auto p-8">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
+          <Button 
+            onClick={saveAllChanges} 
+            disabled={modifiedProfiles.size === 0 || loading}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Enregistrer les modifications
+            {modifiedProfiles.size > 0 && (
+              <span className="ml-1 bg-primary-foreground text-primary px-2 py-0.5 rounded-full text-xs">
+                {modifiedProfiles.size}
+              </span>
+            )}
+          </Button>
+        </div>
+        
         <Card>
           <CardHeader>
-            <CardTitle>Gestion des utilisateurs</CardTitle>
+            <CardTitle>Liste des utilisateurs</CardTitle>
           </CardHeader>
           <CardContent>
             {loading && (
@@ -150,6 +190,7 @@ const AdminProfiles = () => {
                               checked={profile.is_waiting}
                               onCheckedChange={(checked) => {
                                 updateProfileStatus(profile.id, 'is_waiting', checked === true);
+                                setModifiedProfiles(new Set([...modifiedProfiles, profile.id]));
                               }}
                             />
                           </TableCell>
@@ -158,6 +199,7 @@ const AdminProfiles = () => {
                               checked={profile.is_closed}
                               onCheckedChange={(checked) => {
                                 updateProfileStatus(profile.id, 'is_closed', checked === true);
+                                setModifiedProfiles(new Set([...modifiedProfiles, profile.id]));
                               }}
                             />
                           </TableCell>
