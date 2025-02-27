@@ -19,9 +19,8 @@ const AdminProfiles = () => {
       setError(null);
 
       try {
-        // Utiliser la fonction RPC pour récupérer les données des utilisateurs
-        // Cette approche est nécessaire car nous ne pouvons pas accéder directement à auth.users
-        const { data: userData, error: authError } = await supabase
+        // Récupération des profils utilisateurs
+        const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select(`
             id,
@@ -30,25 +29,34 @@ const AdminProfiles = () => {
             automatic_payment,
             accepted_cgu,
             created_at,
-            updated_at,
-            user_roles!inner(
-              email
-            )
+            updated_at
           `);
 
-        if (authError) throw authError;
+        if (profilesError) throw profilesError;
 
-        // Transformer les données
-        const formattedProfiles: ProfileData[] = userData.map(profile => ({
-          id: profile.id,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          email: profile.user_roles[0]?.email || '',
-          automatic_payment: profile.automatic_payment,
-          accepted_cgu: profile.accepted_cgu,
-          created_at: profile.created_at,
-          updated_at: profile.updated_at
-        }));
+        // Récupération des emails depuis user_roles
+        const { data: userRolesData, error: userRolesError } = await supabase
+          .from('user_roles')
+          .select('user_id, email');
+
+        if (userRolesError) throw userRolesError;
+
+        // Création de la jointure manuellement
+        const formattedProfiles: ProfileData[] = profilesData.map(profile => {
+          // Recherche de l'email correspondant dans user_roles
+          const userRole = userRolesData.find(role => role.user_id === profile.id);
+          
+          return {
+            id: profile.id,
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            email: userRole ? userRole.email : 'Email inconnu',
+            automatic_payment: profile.automatic_payment,
+            accepted_cgu: profile.accepted_cgu,
+            created_at: profile.created_at,
+            updated_at: profile.updated_at
+          };
+        });
 
         setProfiles(formattedProfiles);
       } catch (err: any) {
