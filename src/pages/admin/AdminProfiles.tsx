@@ -19,8 +19,9 @@ const AdminProfiles = () => {
       setError(null);
 
       try {
-        // Récupérer les profils avec les email associés
-        const { data: profileData, error: profileError } = await supabase
+        // Utiliser la fonction RPC pour récupérer les données des utilisateurs
+        // Cette approche est nécessaire car nous ne pouvons pas accéder directement à auth.users
+        const { data: userData, error: authError } = await supabase
           .from('profiles')
           .select(`
             id,
@@ -29,34 +30,27 @@ const AdminProfiles = () => {
             automatic_payment,
             accepted_cgu,
             created_at,
-            updated_at
+            updated_at,
+            user_roles!inner(
+              email
+            )
           `);
 
-        if (profileError) throw profileError;
+        if (authError) throw authError;
 
-        // Récupérer les emails des utilisateurs depuis user_roles
-        const { data: userRoles, error: userRolesError } = await supabase
-          .from('user_roles')
-          .select('user_id, email');
+        // Transformer les données
+        const formattedProfiles: ProfileData[] = userData.map(profile => ({
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          email: profile.user_roles[0]?.email || '',
+          automatic_payment: profile.automatic_payment,
+          accepted_cgu: profile.accepted_cgu,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at
+        }));
 
-        if (userRolesError) throw userRolesError;
-
-        // Combiner les données
-        const mergedProfiles: ProfileData[] = profileData.map(profile => {
-          const userRole = userRoles.find(role => role.user_id === profile.id);
-          return {
-            id: profile.id,
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            email: userRole?.email || '',
-            automatic_payment: profile.automatic_payment,
-            accepted_cgu: profile.accepted_cgu,
-            created_at: profile.created_at,
-            updated_at: profile.updated_at
-          };
-        });
-
-        setProfiles(mergedProfiles);
+        setProfiles(formattedProfiles);
       } catch (err: any) {
         console.error('Error fetching profiles:', err);
         setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
