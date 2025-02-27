@@ -123,25 +123,25 @@ const AdminProfiles = () => {
 
       console.log('Profils récupérés:', profilesData);
 
-      // Récupérer les emails depuis la table auth.users
-      // Note: nous utilisons une requête RPC car nous n'avons pas accès direct à auth.users
-      const { data: usersEmails, error: usersError } = await supabase
-        .rpc('get_users_emails');
+      // Récupérer les emails depuis la table user_roles qui contient les emails
+      const { data: userRoles, error: userRolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, email');
 
-      if (usersError) {
-        console.error('Erreur récupération emails:', usersError);
+      if (userRolesError) {
+        console.error('Erreur récupération emails depuis user_roles:', userRolesError);
         // On continue avec des emails vides plutôt que d'échouer complètement
         console.log('Continuation sans emails...');
       }
 
-      console.log('Données emails récupérées:', usersEmails);
+      console.log('Données emails récupérées depuis user_roles:', userRoles);
 
       // Créer un mapping des emails par ID utilisateur
       const emailsMap = new Map();
-      if (usersEmails && Array.isArray(usersEmails)) {
-        usersEmails.forEach((user: any) => {
-          if (user && user.id && user.email) {
-            emailsMap.set(user.id, user.email);
+      if (userRoles && Array.isArray(userRoles)) {
+        userRoles.forEach((user: any) => {
+          if (user && user.user_id && user.email) {
+            emailsMap.set(user.user_id, user.email);
           }
         });
       }
