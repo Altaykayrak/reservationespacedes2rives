@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -58,75 +57,55 @@ const AdminProfiles = () => {
 
   const handleCheckboxChange = async (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
     try {
-      // Empêcher les clics multiples sur le même profil
       if (processingIds.has(profileId)) return;
-      
-      // Ajouter l'ID à la liste des profils en cours de traitement
       setProcessingIds(prev => new Set(prev).add(profileId));
 
-      // Mettre à jour localement en premier pour une UI réactive
-      setProfiles(prevProfiles => 
-        prevProfiles.map(profile => {
-          if (profile.id !== profileId) return profile;
-          
-          const updatedProfile = { ...profile };
-          
-          if (field === 'is_waiting') {
-            updatedProfile.is_waiting = value;
-            if (value) updatedProfile.is_closed = false;
-          } else {
-            updatedProfile.is_closed = value;
-            if (value) updatedProfile.is_waiting = false;
-          }
-          
-          return updatedProfile;
-        })
-      );
+      const updates = {
+        [field]: value,
+        ...(field === 'is_waiting' && value ? { is_closed: false } : {}),
+        ...(field === 'is_closed' && value ? { is_waiting: false } : {})
+      };
 
-      // Préparation des données pour la mise à jour
-      const updates: Record<string, boolean> = {};
-      
-      // Si on active une case, on désactive l'autre
-      if (field === 'is_waiting') {
-        updates.is_waiting = value;
-        if (value) updates.is_closed = false;
-      } else {
-        updates.is_closed = value;
-        if (value) updates.is_waiting = false;
-      }
+      console.log('Envoi de la mise à jour à Supabase:', {
+        profileId,
+        updates
+      });
 
-      console.log(`Mise à jour directe pour le profil ${profileId}:`, updates);
-
-      // Envoyer la mise à jour à Supabase
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', profileId)
-        .select();
-      
+        .select('*');
+
       if (error) {
-        console.error("Erreur lors de la mise à jour:", error);
-        toast.error(`Erreur lors de la mise à jour: ${error.message}`);
-        
-        // En cas d'erreur, restaurer l'état précédent
-        await fetchProfiles();
-      } else {
-        console.log("Mise à jour réussie:", data);
-        toast.success('Statut mis à jour avec succès');
+        console.error('Erreur Supabase:', error);
+        toast.error(`Erreur de mise à jour: ${error.message}`);
+        return;
       }
+
+      console.log('Réponse Supabase:', data);
+
+      setProfiles(prevProfiles =>
+        prevProfiles.map(profile =>
+          profile.id === profileId
+            ? { ...profile, ...updates }
+            : profile
+        )
+      );
+
+      toast.success('Mise à jour réussie');
+
     } catch (err: any) {
       console.error('Erreur:', err);
-      toast.error(`Erreur: ${err.message || 'Erreur inconnue'}`);
-      
-      // En cas d'erreur, restaurer l'état précédent
-      await fetchProfiles();
+      toast.error(`Erreur: ${err.message}`);
     } finally {
-      // Retirer l'ID de la liste des profils en cours de traitement
       setProcessingIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(profileId);
         return newSet;
       });
+
+      fetchProfiles();
     }
   };
 
