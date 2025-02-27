@@ -12,10 +12,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Constants for Supabase
-const SUPABASE_URL = "https://dddtybmradplydzymrly.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZHR5Ym1yYWRwbHlkenltcmx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MTMyOTYsImV4cCI6MjA1MTA4OTI5Nn0.WMyVzGwkQlg3YZOu-N_rxI1hDuf5lFO_kntzhD3GKLI";
-
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -181,35 +177,28 @@ const AdminProfiles = () => {
 
       console.log('Données de mise à jour:', updates);
 
-      // Utiliser PATCH pour mettre à jour la table profiles directement
-      // Attention : utilisation de l'API fetch native pour plus de contrôle
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${profileId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(updates)
-      });
+      // Utiliser l'API Supabase standard au lieu de fetch direct
+      // Cette approche est plus simple et utilise les mécanismes d'authentification de Supabase
+      const { error: updateError } = await supabase
+        .from('profiles')  // Important: on met à jour 'profiles', pas 'profiles_with_emails'
+        .update(updates)
+        .eq('id', profileId);
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Erreur HTTP lors de la mise à jour:', response.status, errorData);
+      if (updateError) {
+        console.error('Erreur lors de la mise à jour:', updateError);
         // Annuler le changement dans l'interface en cas d'erreur
         fetchProfiles();
-        toast.error(`Erreur de mise à jour: ${response.status} ${errorData}`);
+        toast.error(`Erreur de mise à jour: ${updateError.message}`);
         return;
       }
 
-      console.log('Mise à jour réussie, statut:', response.status);
+      console.log('Mise à jour réussie');
       toast.success('Mise à jour réussie');
 
       // Rafraîchir les données après une mise à jour réussie pour confirmer les changements
       setTimeout(() => {
         fetchProfiles();
-      }, 1000); // Attendre 1 seconde avant de rafraîchir pour donner le temps à la BD de se mettre à jour
+      }, 1000); // Attendre 1 seconde avant de rafraîchir
 
     } catch (err: any) {
       console.error('Exception lors de la mise à jour:', err);
