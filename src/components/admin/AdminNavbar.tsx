@@ -2,7 +2,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNav } from "@/components/ui/nav/MobileNav";
@@ -20,6 +20,7 @@ export const AdminNavbar = () => {
     { href: "/admin/wednesdays", label: "Mercredis" },
     { href: "/admin/holidays", label: "Vacances" },
     { href: "/admin/reservations", label: "Réservations" },
+    { href: "/admin/profiles", label: "Utilisateurs" },
     { href: "/admin/authorized-emails", label: "Emails autorisés" },
   ];
 

@@ -1,145 +1,185 @@
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  useNavigate,
+} from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
+import { Toaster } from "@/components/ui/toaster";
+import { Layout } from "@/components/Layout";
+import { Index } from "@/pages/Index";
+import { Login } from "@/pages/Login";
+import { Register } from "@/pages/Register";
+import { Profile } from "@/pages/Profile";
+import { Children } from "@/pages/Children";
+import { WednesdayReservations } from "@/pages/WednesdayReservations";
+import { HolidayReservations } from "@/pages/HolidayReservations";
+import { TeenHolidayReservations } from "@/pages/TeenHolidayReservations";
+import { ForgotPassword } from "@/pages/ForgotPassword";
+import { ResetPassword } from "@/pages/ResetPassword";
+import { TermsOfService } from "@/pages/TermsOfService";
+import { HolidayProgram } from "@/pages/HolidayProgram";
+import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
 import { AdminPage } from "@/pages/admin/AdminPage";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import AdminWednesdays from "@/pages/admin/AdminWednesdays";
-import AdminHolidays from "@/pages/admin/AdminHolidays";
-import AdminReservations from "@/pages/admin/AdminReservations";
+import { AdminDashboard } from "@/pages/admin/AdminDashboard";
+import { AdminWednesdays } from "@/pages/admin/AdminWednesdays";
+import { AdminHolidays } from "@/pages/admin/AdminHolidays";
+import { AdminReservations } from "@/pages/admin/AdminReservations";
+import { AdminAuthorizedEmails } from "@/pages/admin/AdminAuthorizedEmails";
+import { AdminNewReservation } from "@/pages/admin/AdminNewReservation";
+import { AdminNewHolidayReservation } from "@/pages/admin/AdminNewHolidayReservation";
+import { AdminNewTeenHolidayReservation } from "@/pages/admin/AdminNewTeenHolidayReservation";
+import AdminProfiles from "@/pages/admin/AdminProfiles";
 import AdminChildren from "@/pages/admin/AdminChildren";
-import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
-import AdminLoginPage from "@/pages/admin/AdminLoginPage";
-import AdminNewReservation from "@/pages/admin/AdminNewReservation";
-import AdminNewHolidayReservation from "@/pages/admin/AdminNewHolidayReservation";
-import AdminNewTeenHolidayReservation from "@/pages/admin/AdminNewTeenHolidayReservation";
-import Index from "@/pages/Index";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import Profile from "@/pages/Profile";
-import Children from "@/pages/Children";
-import HolidayReservations from "@/pages/HolidayReservations";
-import TeenHolidayReservations from "@/pages/TeenHolidayReservations";
-import HolidayProgram from "@/pages/HolidayProgram";
-import TermsOfService from "@/pages/TermsOfService";
-import ForgotPassword from "@/pages/ForgotPassword";
-import ResetPassword from "@/pages/ResetPassword";
 
-const ErrorBoundary = () => {
+/**
+ * Auth Protected Route
+ */
+const ProtectedRoute = ({
+  children,
+  redirectTo,
+}: {
+  children: React.ReactNode;
+  redirectTo: string;
+}) => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate(redirectTo);
+    }
+  }, [user, loading, navigate, redirectTo]);
+
+  return user ? <>{children}</> : null;
+};
+
+/**
+ * Layout with Toaster
+ */
+const ToasterLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-primary">Oops!</h1>
-        <p className="text-lg text-gray-600">Une erreur est survenue.</p>
-        <button
-          onClick={() => window.location.href = '/admin/reservations'}
-          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-        >
-          Retourner aux réservations
-        </button>
-      </div>
-    </div>
+    <Layout>
+      {children}
+      <Toaster />
+    </Layout>
   );
 };
 
+/**
+ * Application Routes
+ */
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Index />,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
-  },
-  {
-    path: "/profile",
-    element: <Profile />,
-  },
-  {
-    path: "/children",
-    element: <Children />,
-  },
-  {
-    path: "/wednesday-reservations",
-    element: <Navigate to="/" replace />,
-  },
-  {
-    path: "/holiday-reservations",
-    element: <HolidayReservations />,
-  },
-  {
-    path: "/teenholiday-reservations",
-    element: <TeenHolidayReservations />,
-  },
-  {
-    path: "/holiday-program",
-    element: <HolidayProgram />,
-  },
-  {
-    path: "/terms-of-service",
-    element: <TermsOfService />,
-  },
-  {
-    path: "/forgot-password",
-    element: <ForgotPassword />,
-  },
-  {
-    path: "/reset-password",
-    element: <ResetPassword />,
-  },
-  {
-    path: "/admin-login",
-    element: <AdminLoginPage />,
-  },
-  {
-    path: "/admin",
-    element: <AdminPage />,
-    errorElement: <ErrorBoundary />,
+    element: <ToasterLayout />,
     children: [
       {
-        path: "",
-        element: <AdminDashboard />,
+        path: "/",
+        element: <Index />,
       },
       {
-        path: "wednesdays",
-        element: <AdminWednesdays />,
+        path: "/login",
+        element: <Login />,
       },
       {
-        path: "holidays",
-        element: <AdminHolidays />,
+        path: "/register",
+        element: <Register />,
       },
       {
-        path: "reservations",
-        element: <AdminReservations />,
+        path: "/forgot-password",
+        element: <ForgotPassword />,
       },
       {
-        path: "reservations/new",
-        element: <AdminNewReservation />,
+        path: "/reset-password",
+        element: <ResetPassword />,
       },
       {
-        path: "reservations/new-holiday",
-        element: <AdminNewHolidayReservation />,
+        path: "/terms-of-service",
+        element: <TermsOfService />,
       },
       {
-        path: "reservations/new-teen-holiday",
-        element: <AdminNewTeenHolidayReservation />,
+        path: "/holiday-program",
+        element: <HolidayProgram />,
+      },
+      // Auth protected routes
+      {
+        element: <ProtectedRoute redirectTo="/login" />,
+        children: [
+          {
+            path: "/profile",
+            element: <Profile />,
+          },
+          {
+            path: "/children",
+            element: <Children />,
+          },
+          {
+            path: "/wednesday-reservations",
+            element: <WednesdayReservations />,
+          },
+          {
+            path: "/holiday-reservations",
+            element: <HolidayReservations />,
+          },
+          {
+            path: "/teenholiday-reservations",
+            element: <TeenHolidayReservations />,
+          },
+        ],
+      },
+      // Admin routes
+      {
+        path: "/admin-login",
+        element: <AdminLoginPage />,
       },
       {
-        path: "children",
-        element: <AdminChildren />,
-      },
-      {
-        path: "authorized-emails",
-        element: <AdminAuthorizedEmails />,
+        path: "/admin",
+        element: <AdminPage />,
+        children: [
+          {
+            path: "",
+            element: <AdminDashboard />,
+          },
+          {
+            path: "wednesdays",
+            element: <AdminWednesdays />,
+          },
+          {
+            path: "holidays",
+            element: <AdminHolidays />,
+          },
+          {
+            path: "reservations",
+            element: <AdminReservations />,
+          },
+          {
+            path: "profiles",
+            element: <AdminProfiles />,
+          },
+          {
+            path: "children",
+            element: <AdminChildren />,
+          },
+          {
+            path: "authorized-emails",
+            element: <AdminAuthorizedEmails />,
+          },
+          {
+            path: "new-reservation",
+            element: <AdminNewReservation />,
+          },
+          {
+            path: "new-holiday-reservation",
+            element: <AdminNewHolidayReservation />,
+          },
+          {
+            path: "new-teen-holiday-reservation",
+            element: <AdminNewTeenHolidayReservation />,
+          },
+        ],
       },
     ],
   },
-  {
-    path: "*",
-    element: <Navigate to="/" replace />,
-  }
 ]);
 
 function App() {
