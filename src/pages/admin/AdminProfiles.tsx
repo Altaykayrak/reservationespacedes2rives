@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -161,40 +162,55 @@ const AdminProfiles = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      profiles.map((profile) => (
-                        <TableRow key={profile.id}>
-                          <TableCell>{profile.last_name || '-'}</TableCell>
-                          <TableCell>{profile.first_name || '-'}</TableCell>
-                          <TableCell>{profile.email}</TableCell>
-                          <TableCell>
-                            <Switch 
-                              checked={profile.automatic_payment} 
-                              disabled
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Checkbox
-                              checked={profile.is_waiting}
-                              disabled={processingIds.has(profile.id)}
-                              onCheckedChange={(checked) => {
-                                handleCheckboxChange(profile.id, 'is_waiting', checked === true);
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Checkbox
-                              checked={profile.is_closed}
-                              disabled={processingIds.has(profile.id)}
-                              onCheckedChange={(checked) => {
-                                handleCheckboxChange(profile.id, 'is_closed', checked === true);
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            {new Date(profile.created_at).toLocaleDateString('fr-FR')}
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      profiles.map((profile) => {
+                        const isProcessing = processingIds.has(profile.id);
+                        return (
+                          <TableRow key={profile.id}>
+                            <TableCell>{profile.last_name || '-'}</TableCell>
+                            <TableCell>{profile.first_name || '-'}</TableCell>
+                            <TableCell>{profile.email}</TableCell>
+                            <TableCell>
+                              <Switch 
+                                checked={profile.automatic_payment} 
+                                disabled
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center">
+                                <Checkbox
+                                  checked={profile.is_waiting}
+                                  disabled={isProcessing}
+                                  className={isProcessing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                                  onCheckedChange={(checked) => {
+                                    if (!isProcessing) {
+                                      handleCheckboxChange(profile.id, 'is_waiting', checked === true);
+                                    }
+                                  }}
+                                />
+                                {isProcessing && <Loader2 className="ml-2 h-3 w-3 animate-spin" />}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center">
+                                <Checkbox
+                                  checked={profile.is_closed}
+                                  disabled={isProcessing}
+                                  className={isProcessing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                                  onCheckedChange={(checked) => {
+                                    if (!isProcessing) {
+                                      handleCheckboxChange(profile.id, 'is_closed', checked === true);
+                                    }
+                                  }}
+                                />
+                                {isProcessing && <Loader2 className="ml-2 h-3 w-3 animate-spin" />}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(profile.created_at).toLocaleDateString('fr-FR')}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
                     )}
                   </TableBody>
                 </Table>
