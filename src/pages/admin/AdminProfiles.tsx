@@ -177,22 +177,62 @@ const AdminProfiles = () => {
 
       console.log('Données de mise à jour:', updates);
 
-      // Utiliser l'API Supabase standard au lieu de fetch direct
-      // Cette approche est plus simple et utilise les mécanismes d'authentification de Supabase
-      const { error: updateError } = await supabase
-        .from('profiles')  // Important: on met à jour 'profiles', pas 'profiles_with_emails'
-        .update(updates)
-        .eq('id', profileId);
+      // Vérification avant mise à jour - afficher l'état actuel du profil
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profileId)
+        .single();
 
-      if (updateError) {
-        console.error('Erreur lors de la mise à jour:', updateError);
-        // Annuler le changement dans l'interface en cas d'erreur
+      if (fetchError) {
+        console.error('Erreur lors de la récupération du profil actuel:', fetchError);
+      } else {
+        console.log('État actuel du profil:', currentProfile);
+      }
+
+      // Utilisation de l'API REST directe
+      const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZHR5Ym1yYWRwbHlkenltcmx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MTMyOTYsImV4cCI6MjA1MTA4OTI5Nn0.WMyVzGwkQlg3YZOu-N_rxI1hDuf5lFO_kntzhD3GKLI";
+      
+      // Récupérer le token JWT de la session courante
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token || apiKey;
+      
+      const response = await fetch(`https://dddtybmradplydzymrly.supabase.co/rest/v1/profiles?id=eq.${profileId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': apiKey,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Profile': 'public',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(updates)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erreur lors de la mise à jour:', response.status, errorText);
+        toast.error(`Erreur de mise à jour: ${response.status} ${errorText}`);
+        // Annuler le changement
         fetchProfiles();
-        toast.error(`Erreur de mise à jour: ${updateError.message}`);
         return;
       }
 
-      console.log('Mise à jour réussie');
+      console.log('Mise à jour réussie, status:', response.status);
+
+      // Vérification après mise à jour
+      const { data: updatedProfile, error: postFetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profileId)
+        .single();
+
+      if (postFetchError) {
+        console.error('Erreur lors de la vérification après mise à jour:', postFetchError);
+      } else {
+        console.log('État du profil après mise à jour:', updatedProfile);
+      }
+
       toast.success('Mise à jour réussie');
 
       // Rafraîchir les données après une mise à jour réussie pour confirmer les changements
