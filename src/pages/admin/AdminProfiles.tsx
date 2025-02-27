@@ -56,9 +56,19 @@ const AdminProfiles = () => {
 
   const updateProfileStatus = async (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
     try {
+      // Si on active une case, on désactive l'autre
+      const updates: { is_waiting?: boolean; is_closed?: boolean } = {
+        [field]: value
+      };
+      
+      // Si on active une case, on s'assure que l'autre est désactivée
+      if (value) {
+        updates[field === 'is_waiting' ? 'is_closed' : 'is_waiting'] = false;
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({ [field]: value })
+        .update(updates)
         .eq('id', profileId);
 
       if (error) throw error;
@@ -66,7 +76,10 @@ const AdminProfiles = () => {
       // Mise à jour locale de l'état
       setProfiles(profiles.map(profile => 
         profile.id === profileId 
-          ? { ...profile, [field]: value }
+          ? { 
+              ...profile, 
+              ...updates
+            }
           : profile
       ));
 
