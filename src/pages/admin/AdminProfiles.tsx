@@ -15,8 +15,8 @@ const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [modifiedProfiles, setModifiedProfiles] = useState<Set<string>>(new Set());
-  const [savingProfile, setSavingProfile] = useState<string | null>(null);
+  const [modifiedProfiles, setModifiedProfiles] = useState<Map<string, ProfileData>>(new Map());
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchProfiles();
@@ -57,93 +57,63 @@ const AdminProfiles = () => {
     }
   };
 
-  // Mise à jour immédiate dans la base de données
-  const updateProfileStatus = async (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
-    try {
-      // Empêcher les clics multiples sur le même profil
-      if (savingProfile === profileId) return;
-      
-      setSavingProfile(profileId);
-      
-      // Si on active une case, on s'assure que l'autre est désactivée
-      const updates: { is_waiting?: boolean; is_closed?: boolean } = {
-        [field]: value
-      };
-      
-      if (value) {
-        updates[field === 'is_waiting' ? 'is_closed' : 'is_waiting'] = false;
-      }
+  const handleCheckboxChange = (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
+    const profileToUpdate = profiles.find(p => p.id === profileId);
+    if (!profileToUpdate) return;
 
-      console.log(`Mise à jour directe du profil ${profileId} avec:`, updates);
-
-      // Mise à jour immédiate dans la base de données
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', profileId);
-
-      if (error) {
-        console.error("Erreur de mise à jour:", error);
-        toast.error(`Erreur lors de la mise à jour: ${error.message}`);
-        return;
-      }
-
-      // Mise à jour de l'interface utilisateur après une mise à jour réussie
-      setProfiles(prevProfiles => 
-        prevProfiles.map(profile => 
-          profile.id === profileId
-            ? { ...profile, ...updates }
-            : profile
-        )
-      );
-
-      toast.success('Statut mis à jour avec succès');
-      
-      // Après une mise à jour réussie, rafraîchissons la liste complète pour s'assurer que tout est synchronisé
-      fetchProfiles();
-      
-    } catch (err: any) {
-      console.error('Erreur lors de la mise à jour du statut:', err);
-      toast.error(`Erreur: ${err.message || 'Erreur inconnue'}`);
-    } finally {
-      setSavingProfile(null);
+    // Créer une copie du profil avec les changements
+    const updatedProfile = { ...profileToUpdate };
+    
+    // Si on active une case, on désactive l'autre
+    if (field === 'is_waiting') {
+      updatedProfile.is_waiting = value;
+      if (value) updatedProfile.is_closed = false;
+    } else {
+      updatedProfile.is_closed = value;
+      if (value) updatedProfile.is_waiting = false;
     }
+
+    // Mettre à jour l'état local des profils
+    setProfiles(prevProfiles => 
+      prevProfiles.map(profile => 
+        profile.id === profileId ? updatedProfile : profile
+      )
+    );
+
+    // Ajouter aux profils modifiés
+    setModifiedProfiles(new Map(modifiedProfiles.set(profileId, updatedProfile)));
   };
 
-  // Pour l'enregistrement groupé (en cas de besoin)
   const saveAllChanges = async () => {
     if (modifiedProfiles.size === 0) {
       toast.info('Aucune modification à enregistrer');
       return;
     }
 
-    setLoading(true);
+    setIsSaving(true);
     let successCount = 0;
     let errorCount = 0;
 
     try {
-      const profilesArray = Array.from(modifiedProfiles);
-      
-      for (const profileId of profilesArray) {
-        const profile = profiles.find(p => p.id === profileId);
-        if (!profile) continue;
+      for (const [profileId, profile] of modifiedProfiles.entries()) {
+        console.log(`Tentative de sauvegarde du profil ${profileId}:`, {
+          is_waiting: profile.is_waiting,
+          is_closed: profile.is_closed
+        });
         
-        console.log(`Sauvegarde du profil ${profileId} avec is_waiting=${profile.is_waiting}, is_closed=${profile.is_closed}`);
-        
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({
             is_waiting: profile.is_waiting,
             is_closed: profile.is_closed
           })
-          .eq('id', profileId)
-          .select();
+          .eq('id', profileId);
         
         if (error) {
           console.error(`Erreur lors de la mise à jour du profil ${profileId}:`, error);
           errorCount++;
         } else {
-          console.log(`Profil ${profileId} mis à jour avec succès:`, data);
+          console.log(`Profil ${profileId} mis à jour avec succès`);
           successCount++;
         }
       }
@@ -156,16 +126,16 @@ const AdminProfiles = () => {
         toast.error(`${errorCount} modifications ont échoué`);
       }
       
+      // Vider les modifications après la sauvegarde
+      setModifiedProfiles(new Map());
+      
       // Rafraîchir les données
       await fetchProfiles();
-      
-      // Réinitialiser les modifications
-      setModifiedProfiles(new Set());
     } catch (err: any) {
       console.error('Erreur lors de la sauvegarde:', err);
       toast.error(`Erreur: ${err.message || 'Erreur inconnue'}`);
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
@@ -176,18 +146,18 @@ const AdminProfiles = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
           <div className="flex gap-2">
-            <Button onClick={fetchProfiles} variant="outline">
+            <Button onClick={fetchProfiles} variant="outline" disabled={loading || isSaving}>
               <Loader2 className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Rafraîchir
             </Button>
             <Button 
               onClick={saveAllChanges} 
-              disabled={modifiedProfiles.size === 0 || loading}
+              disabled={modifiedProfiles.size === 0 || loading || isSaving}
               className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
-              Enregistrer les modifications
-              {modifiedProfiles.size > 0 && (
+              {isSaving ? 'Sauvegarde en cours...' : 'Enregistrer les modifications'}
+              {modifiedProfiles.size > 0 && !isSaving && (
                 <span className="ml-1 bg-primary-foreground text-primary px-2 py-0.5 rounded-full text-xs">
                   {modifiedProfiles.size}
                 </span>
@@ -250,18 +220,18 @@ const AdminProfiles = () => {
                           <TableCell>
                             <Checkbox
                               checked={profile.is_waiting}
-                              disabled={savingProfile === profile.id || loading}
+                              disabled={isSaving}
                               onCheckedChange={(checked) => {
-                                updateProfileStatus(profile.id, 'is_waiting', checked === true);
+                                handleCheckboxChange(profile.id, 'is_waiting', checked === true);
                               }}
                             />
                           </TableCell>
                           <TableCell>
                             <Checkbox
                               checked={profile.is_closed}
-                              disabled={savingProfile === profile.id || loading}
+                              disabled={isSaving}
                               onCheckedChange={(checked) => {
-                                updateProfileStatus(profile.id, 'is_closed', checked === true);
+                                handleCheckboxChange(profile.id, 'is_closed', checked === true);
                               }}
                             />
                           </TableCell>
