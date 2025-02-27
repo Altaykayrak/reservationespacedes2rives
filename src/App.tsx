@@ -41,7 +41,7 @@ const ProtectedRoute = ({
   children,
   redirectTo,
 }: {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   redirectTo: string;
 }) => {
   const { user, loading } = useAuth();
@@ -59,7 +59,7 @@ const ProtectedRoute = ({
 /**
  * Layout with Toaster
  */
-const ToasterLayout = ({ children }: { children: React.ReactNode }) => {
+const ToasterLayout = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Layout>
       {children || <Outlet />}
