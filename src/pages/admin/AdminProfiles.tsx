@@ -177,24 +177,35 @@ const AdminProfiles = () => {
 
       console.log('Données de mise à jour:', updates);
 
-      // Utiliser directement la méthode PATCH de PostgreSQL via Supabase
-      // qui est plus fiable pour les mises à jour
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', profileId);
+      // Utiliser PATCH pour mettre à jour la table profiles directement
+      // Attention : utilisation de l'API fetch native pour plus de contrôle
+      const response = await fetch(`${supabase.supabaseUrl}/rest/v1/profiles?id=eq.${profileId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabase.supabaseKey,
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(updates)
+      });
 
-      if (error) {
-        console.error('Erreur Supabase lors de la mise à jour:', error);
-        
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Erreur HTTP lors de la mise à jour:', response.status, errorData);
         // Annuler le changement dans l'interface en cas d'erreur
         fetchProfiles();
-        
-        toast.error(`Erreur de mise à jour: ${error.message}`);
+        toast.error(`Erreur de mise à jour: ${response.status} ${errorData}`);
         return;
       }
 
+      console.log('Mise à jour réussie, statut:', response.status);
       toast.success('Mise à jour réussie');
+
+      // Rafraîchir les données après une mise à jour réussie pour confirmer les changements
+      setTimeout(() => {
+        fetchProfiles();
+      }, 1000); // Attendre 1 seconde avant de rafraîchir pour donner le temps à la BD de se mettre à jour
 
     } catch (err: any) {
       console.error('Exception lors de la mise à jour:', err);
