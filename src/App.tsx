@@ -21,7 +21,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import TermsOfService from "@/pages/TermsOfService";
 import HolidayProgram from "@/pages/HolidayProgram";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
-import AdminPage from "@/pages/admin/AdminPage";
+import { AdminPage } from "@/pages/admin/AdminPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminWednesdays from "@/pages/admin/AdminWednesdays";
 import AdminHolidays from "@/pages/admin/AdminHolidays";
