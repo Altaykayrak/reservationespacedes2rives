@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import {
   createBrowserRouter,
@@ -7,28 +8,28 @@ import {
 import { useAuth } from "./hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
 import { Layout } from "@/components/Layout";
-import { Index } from "@/pages/Index";
-import { Login } from "@/pages/Login";
-import { Register } from "@/pages/Register";
-import { Profile } from "@/pages/Profile";
-import { Children } from "@/pages/Children";
-import { WednesdayReservations } from "@/pages/WednesdayReservations";
-import { HolidayReservations } from "@/pages/HolidayReservations";
-import { TeenHolidayReservations } from "@/pages/TeenHolidayReservations";
-import { ForgotPassword } from "@/pages/ForgotPassword";
-import { ResetPassword } from "@/pages/ResetPassword";
-import { TermsOfService } from "@/pages/TermsOfService";
-import { HolidayProgram } from "@/pages/HolidayProgram";
-import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
-import { AdminPage } from "@/pages/admin/AdminPage";
-import { AdminDashboard } from "@/pages/admin/AdminDashboard";
-import { AdminWednesdays } from "@/pages/admin/AdminWednesdays";
-import { AdminHolidays } from "@/pages/admin/AdminHolidays";
-import { AdminReservations } from "@/pages/admin/AdminReservations";
-import { AdminAuthorizedEmails } from "@/pages/admin/AdminAuthorizedEmails";
-import { AdminNewReservation } from "@/pages/admin/AdminNewReservation";
-import { AdminNewHolidayReservation } from "@/pages/admin/AdminNewHolidayReservation";
-import { AdminNewTeenHolidayReservation } from "@/pages/admin/AdminNewTeenHolidayReservation";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Profile from "@/pages/Profile";
+import Children from "@/pages/Children";
+import WednesdayReservations from "@/pages/WednesdayReservations";
+import HolidayReservations from "@/pages/HolidayReservations";
+import TeenHolidayReservations from "@/pages/TeenHolidayReservations";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
+import TermsOfService from "@/pages/TermsOfService";
+import HolidayProgram from "@/pages/HolidayProgram";
+import AdminLoginPage from "@/pages/admin/AdminLoginPage";
+import AdminPage from "@/pages/admin/AdminPage";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminWednesdays from "@/pages/admin/AdminWednesdays";
+import AdminHolidays from "@/pages/admin/AdminHolidays";
+import AdminReservations from "@/pages/admin/AdminReservations";
+import AdminAuthorizedEmails from "@/pages/admin/AdminAuthorizedEmails";
+import AdminNewReservation from "@/pages/admin/AdminNewReservation";
+import AdminNewHolidayReservation from "@/pages/admin/AdminNewHolidayReservation";
+import AdminNewTeenHolidayReservation from "@/pages/admin/AdminNewTeenHolidayReservation";
 import AdminProfiles from "@/pages/admin/AdminProfiles";
 import AdminChildren from "@/pages/admin/AdminChildren";
 
@@ -71,7 +72,7 @@ const ToasterLayout = ({ children }: { children: React.ReactNode }) => {
  */
 const router = createBrowserRouter([
   {
-    element: <ToasterLayout />,
+    element: <ToasterLayout children={<></>} />,
     children: [
       {
         path: "/",
@@ -103,7 +104,7 @@ const router = createBrowserRouter([
       },
       // Auth protected routes
       {
-        element: <ProtectedRoute redirectTo="/login" />,
+        element: <ProtectedRoute redirectTo="/login" children={<></>} />,
         children: [
           {
             path: "/profile",
