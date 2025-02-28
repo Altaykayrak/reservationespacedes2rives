@@ -1,3 +1,4 @@
+
 import { EmptyReservations } from "./EmptyReservations";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
@@ -83,13 +84,20 @@ export const HolidayReservationsList = () => {
         last_name: reservation.children.last_name,
         school_class: reservation.children.school_class,
         profile: {
-          school_city: reservation.children.profile.school_city
+          school_city: reservation.children.profile.school_city || ''
         }
       }
     } as HolidayReservationWithChild;
   }).filter((reservation): reservation is HolidayReservationWithChild => {
     if (!reservation) return false;
-    return isTeenPage ? isTeenClass(reservation.children.school_class) : !isTeenClass(reservation.children.school_class);
+    
+    // Sur la page normale, on affiche toutes les réservations (plus de filtrage)
+    if (!isTeenPage) {
+      return true;
+    }
+    
+    // Sur la page teen, on filtre uniquement les classes ados
+    return isTeenClass(reservation.children.school_class);
   });
 
   console.log("11. Nombre de réservations après filtrage:", filteredReservations.length);
