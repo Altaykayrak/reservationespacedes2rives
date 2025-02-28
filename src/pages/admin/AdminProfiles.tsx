@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { Loader2, AlertCircle, CheckSquare } from "lucide-react";
+import { Loader2, AlertCircle, CheckSquare, XSquare } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -209,37 +209,50 @@ const AdminProfiles = () => {
     }
   };
 
-  // Nouvelle fonction pour cocher en masse toutes les cases
+  // Fonction modifiée pour basculer en masse toutes les cases
   const handleBulkCheckboxChange = async (field: 'is_waiting' | 'is_closed') => {
     try {
       if (bulkProcessing) return;
       setBulkProcessing(true);
       
-      // Valider que l'opération est sûre
-      if (!confirm(`Voulez-vous vraiment marquer tous les profils comme "${field === 'is_waiting' ? 'En attente' : 'Fermé'}" ?`)) {
+      // Vérifier si toutes les cases sont déjà cochées pour déterminer l'action
+      const allChecked = profiles.every(profile => profile[field] === true);
+      const newValue = !allChecked; // Si toutes cochées, décocher; sinon, cocher
+      
+      // Message de confirmation avec action appropriée
+      const actionText = newValue ? 
+        `marquer tous les profils comme "${field === 'is_waiting' ? 'En attente' : 'Fermé'}"` : 
+        `désélectionner tous les profils "${field === 'is_waiting' ? 'En attente' : 'Fermé'}"`;
+      
+      if (!confirm(`Voulez-vous vraiment ${actionText} ?`)) {
         setBulkProcessing(false);
         return;
       }
 
-      console.log(`Début de la mise à jour en masse pour le champ: ${field}`);
+      console.log(`Début de la mise à jour en masse pour le champ: ${field}, nouvelle valeur: ${newValue}`);
       
       // Mise à jour de l'interface utilisateur
       setProfiles(prevProfiles =>
         prevProfiles.map(profile => ({
           ...profile,
-          is_waiting: field === 'is_waiting' ? true : false,
-          is_closed: field === 'is_closed' ? true : false
+          ...(field === 'is_waiting' ? { 
+            is_waiting: newValue,
+            ...(newValue ? { is_closed: false } : {})
+          } : { 
+            is_closed: newValue,
+            ...(newValue ? { is_waiting: false } : {})
+          })
         }))
       );
 
       // Préparation des mises à jour
       const updates = {
-        [field]: true,
-        ...(field === 'is_waiting' ? { is_closed: false } : { is_waiting: false })
+        [field]: newValue,
+        ...(field === 'is_waiting' && newValue ? { is_closed: false } : {}),
+        ...(field === 'is_closed' && newValue ? { is_waiting: false } : {})
       };
 
-      // Mise à jour dans la base de données avec une clause WHERE
-      // Sélectionner tous les profils sans filtrer
+      // Mise à jour dans la base de données
       const { error: updateError } = await supabase
         .from('profiles')
         .update(updates)
@@ -253,7 +266,7 @@ const AdminProfiles = () => {
       }
 
       console.log('Mise à jour en masse réussie');
-      toast.success(`Tous les profils ont été marqués comme "${field === 'is_waiting' ? 'En attente' : 'Fermé'}"`);
+      toast.success(`Tous les profils ont été ${newValue ? 'marqués' : 'désélectionnés'} comme "${field === 'is_waiting' ? 'En attente' : 'Fermé'}"`);
       
       // Rafraîchir les données
       fetchAllProfiles();
@@ -280,14 +293,19 @@ const AdminProfiles = () => {
               disabled={loading || bulkProcessing}
               className="flex items-center"
             >
-              <CheckSquare className="h-4 w-4 mr-2" />
+              {profiles.every(p => p.is_waiting) ? (
+                <XSquare className="h-4 w-4 mr-2" />
+              ) : (
+                <CheckSquare className="h-4 w-4 mr-2" />
+              )}
+
               {bulkProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Traitement...
                 </>
               ) : (
-                "Tous en attente"
+                profiles.every(p => p.is_waiting) ? "Désélectionner en attente" : "Tous en attente"
               )}
             </Button>
             <Button 
@@ -296,14 +314,19 @@ const AdminProfiles = () => {
               disabled={loading || bulkProcessing}
               className="flex items-center"
             >
-              <CheckSquare className="h-4 w-4 mr-2" />
+              {profiles.every(p => p.is_closed) ? (
+                <XSquare className="h-4 w-4 mr-2" />
+              ) : (
+                <CheckSquare className="h-4 w-4 mr-2" />
+              )}
+              
               {bulkProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Traitement...
                 </>
               ) : (
-                "Tous fermés"
+                profiles.every(p => p.is_closed) ? "Désélectionner fermés" : "Tous fermés"
               )}
             </Button>
           </div>
