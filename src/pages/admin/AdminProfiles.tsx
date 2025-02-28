@@ -66,25 +66,10 @@ const AdminProfiles = () => {
           return;
         }
 
-        // Vérifier les droits avec un test simple - modification de cette partie
-        const { data: testData, error: testError } = await supabase
-          .from('profiles')
-          .select('id')  // Sélectionner seulement l'ID au lieu de count(*)
-          .limit(1);     // Limiter à 1 résultat
-
-        let testMessage = '';
-        if (testError) {
-          testMessage = `Test d'accès échoué: ${testError.message}`;
-          console.error('Test d\'accès échoué:', testError);
-        } else {
-          testMessage = `Test d'accès réussi, résultat: ${JSON.stringify(testData)}`;
-          console.log('Test d\'accès réussi:', testData);
-        }
-
         setAdminStatus({
           isAdmin: isAdmin || false,
           userId: user.id,
-          message: `Utilisateur: ${user.id}, Admin: ${isAdmin}, ${testMessage}`
+          message: `Utilisateur: ${user.id}, Admin: ${isAdmin}`
         });
         
         // Si l'utilisateur est admin, on récupère immédiatement les profiles
@@ -109,78 +94,45 @@ const AdminProfiles = () => {
     setError(null);
 
     try {
-      console.log('Début de récupération des données...');
+      console.log('Début de récupération des profils...');
       
-      // Récupérer directement les données des utilisateurs depuis user_roles
-      // car cette table contient déjà les emails et les rôles
-      const { data: userRolesData, error: userRolesError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (userRolesError) {
-        console.error('Erreur récupération user_roles:', userRolesError);
-        throw userRolesError;
-      }
-
-      console.log('Données user_roles récupérées:', userRolesData);
-
-      // Filtrer les utilisateurs qui ne sont pas admin
-      const nonAdminUsers = userRolesData.filter(user => user.role !== 'admin');
-      console.log('Utilisateurs non-admin:', nonAdminUsers.length);
-
-      if (nonAdminUsers.length === 0) {
-        console.log('Aucun utilisateur non-admin trouvé');
-        setProfiles([]);
-        setLoading(false);
-        return;
-      }
-
-      // Créer une liste d'IDs d'utilisateurs
-      const userIds = nonAdminUsers.map(user => user.user_id);
-      console.log('IDs utilisateurs à récupérer:', userIds);
-
-      // Récupérer les profils correspondants pour obtenir d'autres détails
-      // Mais ne pas bloquer si certains n'ont pas de profil complet
+      // Récupérer tous les profils directement
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
-        .in('id', userIds);
+        .order('created_at', { ascending: false });
 
       if (profilesError) {
         console.error('Erreur récupération profiles:', profilesError);
-        // On continue avec les données de base plutôt que d'échouer
+        throw profilesError;
       }
 
-      console.log('Profils récupérés:', profilesData || []);
+      console.log('Profils récupérés:', profilesData);
 
-      // Créer un mapping des profils pour une recherche rapide
-      const profilesMap = new Map();
-      if (profilesData && profilesData.length > 0) {
-        profilesData.forEach(profile => {
-          profilesMap.set(profile.id, profile);
-        });
+      // Filtrer pour éviter d'afficher l'utilisateur administrateur actuel
+      const nonAdminProfiles = profilesData.filter(profile => profile.id !== adminStatus.userId);
+      
+      if (nonAdminProfiles && nonAdminProfiles.length > 0) {
+        // Créer des objets ProfileData pour chaque profil
+        const formattedProfiles: ProfileData[] = nonAdminProfiles.map(profile => ({
+          id: profile.id,
+          email: "", // On n'affiche pas l'email
+          first_name: profile.first_name || null,
+          last_name: profile.last_name || null,
+          automatic_payment: profile.automatic_payment || false,
+          accepted_cgu: profile.accepted_cgu || false,
+          is_waiting: profile.is_waiting || false,
+          is_closed: profile.is_closed || false,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at
+        }));
+
+        console.log('Profils formatés:', formattedProfiles);
+        setProfiles(formattedProfiles);
+      } else {
+        console.log('Aucun profil trouvé');
+        setProfiles([]);
       }
-
-      // Créer des objets ProfileData même pour les utilisateurs sans profil complet
-      const formattedProfiles: ProfileData[] = nonAdminUsers.map(user => {
-        const profile = profilesMap.get(user.user_id);
-        return {
-          id: user.user_id,
-          email: user.email || 'Email inconnu',
-          first_name: profile?.first_name || null,
-          last_name: profile?.last_name || null,
-          automatic_payment: profile?.automatic_payment || false,
-          accepted_cgu: profile?.accepted_cgu || false,
-          is_waiting: profile?.is_waiting || false,
-          is_closed: profile?.is_closed || false,
-          created_at: profile?.created_at || user.created_at || new Date().toISOString(),
-          updated_at: profile?.updated_at || user.updated_at || new Date().toISOString()
-        };
-      });
-
-      console.log('Profils formatés:', formattedProfiles);
-      setProfiles(formattedProfiles);
     } catch (err: any) {
       console.error('Erreur fetchProfiles:', err);
       setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
@@ -220,44 +172,11 @@ const AdminProfiles = () => {
 
       console.log('Données de mise à jour:', updates);
 
-      // Vérifier si un profil existe déjà pour cet utilisateur
-      const { data: existingProfile, error: fetchError } = await supabase
+      // Mise à jour du profil
+      const { error: updateError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error('Erreur lors de la vérification du profil:', fetchError);
-        toast.error(`Erreur de vérification: ${fetchError.message}`);
-        return;
-      }
-
-      let updateOperation;
-
-      if (existingProfile) {
-        // Mise à jour du profil existant
-        console.log('Mise à jour du profil existant:', profileId);
-        updateOperation = supabase
-          .from('profiles')
-          .update(updates)
-          .eq('id', profileId);
-      } else {
-        // Création d'un nouveau profil car il n'en existe pas encore
-        console.log('Création d\'un nouveau profil:', profileId);
-        updateOperation = supabase
-          .from('profiles')
-          .insert({
-            id: profileId,
-            first_name: null,
-            last_name: null,
-            automatic_payment: false,
-            accepted_cgu: false,
-            ...updates
-          });
-      }
-
-      const { error: updateError } = await updateOperation;
+        .update(updates)
+        .eq('id', profileId);
         
       if (updateError) {
         console.error('Erreur lors de la mise à jour via Supabase:', updateError);
@@ -335,7 +254,6 @@ const AdminProfiles = () => {
                     <TableRow>
                       <TableHead>Nom</TableHead>
                       <TableHead>Prénom</TableHead>
-                      <TableHead>Email</TableHead>
                       <TableHead>Prélèvement automatique</TableHead>
                       <TableHead>En attente</TableHead>
                       <TableHead>Fermé</TableHead>
@@ -345,7 +263,7 @@ const AdminProfiles = () => {
                   <TableBody>
                     {profiles.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                           Aucun utilisateur trouvé
                         </TableCell>
                       </TableRow>
@@ -356,7 +274,6 @@ const AdminProfiles = () => {
                           <TableRow key={profile.id}>
                             <TableCell>{profile.last_name || '-'}</TableCell>
                             <TableCell>{profile.first_name || '-'}</TableCell>
-                            <TableCell>{profile.email}</TableCell>
                             <TableCell>
                               <Switch 
                                 checked={profile.automatic_payment} 
