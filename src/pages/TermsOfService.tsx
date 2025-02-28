@@ -65,9 +65,7 @@ const TermsOfService = () => {
 
           <section>
             <h2 className="text-xl font-semibold mb-4">6. Protection des données personnelles, engagements et responsabilité</h2>
-            <p className="text-gray-700 mb-4 text-justify">
-              L'association collecte et traite les données personnelles des usagers dans le cadre de sa mission d'intérêt public, sans nécessiter de consentement, et en conformité avec le Règlement Général sur la Protection des Données (RGPD). L'association s'engage à prendre toutes les mesures nécessaires pour garantir la sécurité et la confidentialité des informations fournies par l'Usager.
-            </p>
+            <p className="text-gray-700 mb-4 text-justify">L'Association collecte et traite les données personnelles des usagers dans le cadre de sa mission d'intérêt public, sans nécessiter de consentement, et en conformité avec le Règlement Général sur la Protection des Données (RGPD). L'Association s'engage à prendre toutes les mesures nécessaires pour garantir la sécurité et la confidentialité des informations fournies par l'Usager.</p>
             <ul className="list-disc pl-5 space-y-2 text-gray-700 text-justify">
               <li>Les données sont conservées pendant 3 ans après la dernière activité sur le compte.</li>
               <li>Aucune donnée n'est transférée hors de l'Union européenne.</li>
