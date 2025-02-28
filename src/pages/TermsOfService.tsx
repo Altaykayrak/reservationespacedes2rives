@@ -1,30 +1,21 @@
-
 import { Navbar } from "@/components/ui/navbar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-
 const TermsOfService = () => {
   const navigate = useNavigate();
-
   const handleBack = () => {
     navigate(-1); // Utilise l'historique du navigateur pour revenir en arrière
   };
-
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       <Navbar />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Button 
-          onClick={handleBack}
-          variant="outline"
-          className="mb-6 flex items-center gap-2"
-        >
+        <Button onClick={handleBack} variant="outline" className="mb-6 flex items-center gap-2">
           <ChevronLeft className="h-4 w-4" />
           Retour sur l'inscription
         </Button>
 
-        <h1 className="text-3xl font-bold mb-8">CONDITIONS GÉNÉRALES D'UTILISATION</h1>
+        <h1 className="text-3xl font-bold mb-8">CONDITIONS GÉNÉRALES D'UTILISATION ET RÈGLES DE FONCTIONNEMENT</h1>
         
         <div className="space-y-8">
           <section>
@@ -96,8 +87,6 @@ const TermsOfService = () => {
           </section>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default TermsOfService;
