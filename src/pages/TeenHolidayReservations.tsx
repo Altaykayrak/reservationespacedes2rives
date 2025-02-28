@@ -6,7 +6,7 @@ import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
 
 const TeenHolidayReservations = () => {
   const { user } = useAuth();
@@ -40,12 +40,11 @@ const TeenHolidayReservations = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <Navbar />
         <div className="container mx-auto p-4 md:p-6">
-          <Alert className="mt-8">
-            <AlertTitle>Accès non disponible</AlertTitle>
-            <AlertDescription>
-              Les réservations n'ont pas encore commencé.
-            </AlertDescription>
-          </Alert>
+          <EmptyHolidayState 
+            message="Accès non disponible" 
+            subtitle="Les réservations n'ont pas encore commencé."
+            icon="info"
+          />
         </div>
       </div>
     );
@@ -56,12 +55,11 @@ const TeenHolidayReservations = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <Navbar />
         <div className="container mx-auto p-4 md:p-6">
-          <Alert className="mt-8">
-            <AlertTitle>Accès non disponible</AlertTitle>
-            <AlertDescription>
-              Les réservations sont closes.
-            </AlertDescription>
-          </Alert>
+          <EmptyHolidayState 
+            message="Accès non disponible" 
+            subtitle="Les réservations sont closes."
+            icon="info"
+          />
         </div>
       </div>
     );
