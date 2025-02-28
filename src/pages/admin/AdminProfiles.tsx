@@ -332,15 +332,7 @@ const AdminProfiles = () => {
           </div>
         </div>
         
-        {/* Infos de débogage */}
-        <Alert variant={adminStatus.isAdmin ? "default" : "destructive"} className="mb-4">
-          <AlertCircle className="h-4 w-4 mr-2" />
-          <AlertDescription>
-            {adminStatus.isAdmin 
-              ? `Connecté en tant qu'administrateur (${adminStatus.userId})` 
-              : `Votre compte n'a pas les droits d'administrateur nécessaires. Détails: ${adminStatus.message}`}
-          </AlertDescription>
-        </Alert>
+        {/* Removed the admin status info block */}
         
         <Card>
           <CardHeader>
