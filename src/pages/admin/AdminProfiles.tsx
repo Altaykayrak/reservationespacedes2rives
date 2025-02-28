@@ -74,7 +74,7 @@ const AdminProfiles = () => {
         
         // Si l'utilisateur est admin, récupérer tous les profils
         if (isAdmin) {
-          await fetchProfiles();
+          await fetchAllUsers();
         }
       } catch (err: any) {
         console.error('Erreur inattendue:', err);
@@ -89,15 +89,128 @@ const AdminProfiles = () => {
     checkAdminStatus();
   }, []);
 
-  // Version simplifiée qui utilise uniquement la table profiles
-  const fetchProfiles = async () => {
+  // Nouvelle méthode pour essayer d'obtenir tous les utilisateurs
+  const fetchAllUsers = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log('Début de récupération des profils directement de la table profiles...');
+      console.log('Tentative de récupération de tous les utilisateurs...');
       
-      // Utiliser directement la table profiles sans filtrage
+      // Essayer d'abord avec la fonction RPC
+      const { data: authUsers, error: authUsersError } = await supabase.auth.admin.listUsers();
+      
+      if (authUsersError) {
+        console.error('Accès admin refusé, utilisons une autre approche:', authUsersError);
+        // Si l'accès admin est refusé, on essaie de récupérer les rôles utilisateurs
+        await fetchUserRoles();
+        return;
+      }
+      
+      if (authUsers && authUsers.users && authUsers.users.length > 0) {
+        console.log('Utilisateurs récupérés via admin API:', authUsers.users.length);
+        
+        // Nous avons récupéré les utilisateurs, maintenant récupérons leurs profils
+        await fetchProfilesForUsers(authUsers.users.map(u => u.id));
+      } else {
+        console.log('Aucun utilisateur trouvé via admin API');
+        // Essayons une autre approche
+        await fetchProfilesDirectly();
+      }
+    } catch (err: any) {
+      console.error('Erreur fetchAllUsers:', err);
+      // En cas d'erreur, on essaie l'approche directe
+      await fetchProfilesDirectly();
+    }
+  };
+
+  // Récupération via les rôles utilisateurs
+  const fetchUserRoles = async () => {
+    try {
+      console.log('Tentative de récupération via table user_roles...');
+      
+      const { data: userRoles, error: userRolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+      
+      if (userRolesError) {
+        console.error('Erreur récupération user_roles:', userRolesError);
+        // Si erreur, on essaie l'approche directe
+        await fetchProfilesDirectly();
+        return;
+      }
+      
+      if (userRoles && userRoles.length > 0) {
+        console.log('Utilisateurs récupérés via user_roles:', userRoles.length);
+        // Récupérer les profils pour ces utilisateurs
+        await fetchProfilesForUsers(userRoles.map(ur => ur.user_id));
+      } else {
+        console.log('Aucun utilisateur trouvé via user_roles');
+        await fetchProfilesDirectly();
+      }
+    } catch (err: any) {
+      console.error('Erreur fetchUserRoles:', err);
+      await fetchProfilesDirectly();
+    }
+  };
+
+  // Récupération des profils pour des identifiants d'utilisateurs
+  const fetchProfilesForUsers = async (userIds: string[]) => {
+    try {
+      console.log('Récupération des profils pour les utilisateurs:', userIds.length);
+      
+      // Récupérer les profils existants
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds)
+        .order('created_at', { ascending: false });
+
+      if (profilesError) {
+        console.error('Erreur récupération profiles:', profilesError);
+        await fetchProfilesDirectly(); // Essayer l'approche directe
+        return;
+      }
+
+      console.log('Profils récupérés:', profilesData?.length || 0);
+
+      if (profilesData && profilesData.length > 0) {
+        const formattedProfiles: ProfileData[] = profilesData.map(profile => ({
+          id: profile.id,
+          email: "", // Pas d'email disponible ici
+          first_name: profile.first_name || null,
+          last_name: profile.last_name || null,
+          automatic_payment: profile.automatic_payment || false,
+          accepted_cgu: profile.accepted_cgu || false,
+          is_waiting: profile.is_waiting || false,
+          is_closed: profile.is_closed || false,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at
+        }));
+
+        console.log('Nombre de profils formatés:', formattedProfiles.length);
+        setProfiles(formattedProfiles);
+      } else {
+        console.log('Aucun profil trouvé via fetchProfilesForUsers');
+        await fetchProfilesDirectly(); // Essayer l'approche directe
+      }
+    } catch (err: any) {
+      console.error('Erreur fetchProfilesForUsers:', err);
+      await fetchProfilesDirectly(); // Essayer l'approche directe
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Version simplifiée qui utilise uniquement la table profiles
+  const fetchProfilesDirectly = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('Récupération directe depuis la table profiles...');
+      
+      // Utilisation du token de service role pour contourner RLS si nécessaire
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -105,16 +218,17 @@ const AdminProfiles = () => {
 
       if (profilesError) {
         console.error('Erreur récupération profiles:', profilesError);
-        throw profilesError;
+        setError(`Erreur: ${profilesError.message}`);
+        setLoading(false);
+        return;
       }
 
       console.log('Profils récupérés directement:', profilesData);
       
       if (profilesData && profilesData.length > 0) {
-        // Créer des objets ProfileData pour chaque profil
         const formattedProfiles: ProfileData[] = profilesData.map(profile => ({
           id: profile.id,
-          email: "", // On n'affiche pas l'email dans cette implémentation
+          email: "", // Pas d'email disponible ici
           first_name: profile.first_name || null,
           last_name: profile.last_name || null,
           automatic_payment: profile.automatic_payment || false,
@@ -130,9 +244,10 @@ const AdminProfiles = () => {
       } else {
         console.log('Aucun profil trouvé');
         setProfiles([]);
+        setError("Aucun profil n'a été trouvé dans la base de données.");
       }
     } catch (err: any) {
-      console.error('Erreur fetchProfiles:', err);
+      console.error('Erreur fetchProfilesDirectly:', err);
       setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
     } finally {
       setLoading(false);
@@ -180,7 +295,7 @@ const AdminProfiles = () => {
         console.error('Erreur lors de la mise à jour via Supabase:', updateError);
         toast.error(`Erreur de mise à jour: ${updateError.message}`);
         // Annuler le changement
-        fetchProfiles();
+        fetchProfilesDirectly();
         return;
       }
 
@@ -188,14 +303,14 @@ const AdminProfiles = () => {
       toast.success('Mise à jour réussie');
 
       // Rafraîchir les données après une mise à jour réussie
-      fetchProfiles();
+      fetchProfilesDirectly();
 
     } catch (err: any) {
       console.error('Exception lors de la mise à jour:', err);
       toast.error(`Erreur: ${err.message}`);
       
       // Rafraîchir
-      fetchProfiles();
+      fetchProfilesDirectly();
     } finally {
       setProcessingIds(prev => {
         const newSet = new Set(prev);
@@ -211,7 +326,7 @@ const AdminProfiles = () => {
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
-          <Button onClick={fetchProfiles} variant="outline" disabled={loading}>
+          <Button onClick={fetchProfilesDirectly} variant="outline" disabled={loading}>
             <Loader2 className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Rafraîchir
           </Button>
