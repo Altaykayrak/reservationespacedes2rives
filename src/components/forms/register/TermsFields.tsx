@@ -73,7 +73,7 @@ export const TermsFields = ({ form }: TermsFieldsProps) => {
             >
               <FormLabel>
                 J'ai pris connaissance{" "}
-                <Link to="/terms-of-service" className="text-accent-foreground font-medium hover:underline">
+                <Link to="/terms-of-service" className="text-[#0EA5E9] underline font-medium hover:text-blue-800">
                   des conditions générales d'utilisation
                 </Link>{" "}
                 et je les approuve
