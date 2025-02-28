@@ -1,5 +1,6 @@
 
 import { useAuth } from "@/hooks/useAuth";
+import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
 import { HolidayReservationsList } from "@/components/reservations/HolidayReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
@@ -78,11 +79,11 @@ const HolidayReservations = () => {
             </h1>
           </div>
           <p className="text-muted-foreground text-base md:text-lg">
-            Consultez vos réservations de vacances.
+            Réservez des places pour vos enfants pour les vacances.
           </p>
         </div>
 
-        {/* Supprimé la section HolidayReservationContent pour masquer le formulaire de création */}
+        <HolidayReservationContent />
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
           <div className="p-4 md:p-6">
