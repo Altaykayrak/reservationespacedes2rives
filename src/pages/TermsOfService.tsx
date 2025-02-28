@@ -30,7 +30,7 @@ const TermsOfService = () => {
           <section>
             <h2 className="text-xl font-semibold mb-4">1. Présentation du service</h2>
             <p className="text-gray-700 text-justify">
-              L'association L'Espace des 2 rives met à disposition un guichet en ligne (le Service) destiné à simplifier les démarches de réservation pour les usagers. Ce Service est offert gratuitement (à l'exception des frais de connexion) et <strong>son utilisation est facultative</strong>. L'usager détermine librement les services auxquels il souhaite accéder ainsi que les informations à conserver dans son compte utilisateur. L'accès au Service implique la lecture et l'acceptation intégrale des présentes CGU.
+              L'association L'Espace des 2 rives met à disposition un guichet en ligne (le Service) destiné à simplifier les démarches de réservation pour les usagers. Ce Service est offert gratuitement (à l'exception des frais de connexion) et <strong>son utilisation est facultative</strong>. L'usager détermine librement les services auxquels il souhaite accéder. L'accès au Service implique la lecture et l'acceptation intégrale des présentes CGU.
             </p>
           </section>
 
