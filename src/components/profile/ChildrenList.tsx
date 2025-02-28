@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { UserPlus } from "lucide-react"
 import { Child } from "@/types/profile"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AddChildForm } from "./AddChildForm"
 import { useQueryClient } from "@tanstack/react-query"
 import { ChildrenTable } from "./ChildrenTable"
@@ -15,14 +15,36 @@ interface ChildrenListProps {
 
 export function ChildrenList({ children }: ChildrenListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [isButtonFlashing, setIsButtonFlashing] = useState(false)
   const queryClient = useQueryClient()
+
+  // Effet de clignotement du bouton quand il n'y a pas d'enfants
+  useEffect(() => {
+    if (children.length === 0) {
+      setIsButtonFlashing(true);
+      
+      // Arrêter l'effet après 3 secondes
+      const timeout = setTimeout(() => {
+        setIsButtonFlashing(false);
+      }, 3000);
+
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [children.length]);
 
   return (
     <div className="mt-8 space-y-4">
       <div className="flex flex-col space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold tracking-tight text-left">Liste des enfants</h3>
-          <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowAddDialog(true)}
+            className={isButtonFlashing ? "animate-shake text-red-600 border-red-600" : ""}
+          >
             <UserPlus className="mr-2 h-4 w-4" />
             Ajouter un enfant
           </Button>
