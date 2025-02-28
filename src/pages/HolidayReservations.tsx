@@ -17,6 +17,7 @@ const HolidayReservations = () => {
     const checkAccess = async () => {
       if (!user?.id) return;
 
+      // Récupérer les états directement de la base de données
       const { data, error } = await supabase
         .from('profiles')
         .select('is_waiting, is_closed')
@@ -28,28 +29,15 @@ const HolidayReservations = () => {
         return;
       }
 
-      setIsWaiting(data.is_waiting);
-      setIsClosed(data.is_closed);
+      console.log('Profile data:', data);
+      setIsWaiting(data?.is_waiting || false);
+      setIsClosed(data?.is_closed || false);
     };
 
     checkAccess();
   }, [user]);
 
-  if (isWaiting) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <Navbar />
-        <div className="container mx-auto p-4 md:p-6">
-          <EmptyHolidayState 
-            message="Réservations bientôt disponibles !" 
-            subtitle="Les inscriptions ne sont pas encore ouvertes. Vous serez informé(e) par e-mail dès leur lancement. Restez à l'affût ! ✉️📅"
-            icon="info"
-          />
-        </div>
-      </div>
-    );
-  }
-
+  // Afficher le message pour l'état fermé
   if (isClosed) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -58,6 +46,22 @@ const HolidayReservations = () => {
           <EmptyHolidayState 
             message="Réservations clôturées !" 
             subtitle="Les inscriptions sont désormais fermées. Vous serez informé(e) par e-mail dès l'ouverture des inscriptions pour les prochaines vacances. À bientôt ! ✉️📅"
+            icon="info"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Afficher le message pour l'état en attente
+  if (isWaiting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6">
+          <EmptyHolidayState 
+            message="Réservations bientôt disponibles !" 
+            subtitle="Les inscriptions ne sont pas encore ouvertes. Vous serez informé(e) par e-mail dès leur lancement. Restez à l'affût ! ✉️📅"
             icon="info"
           />
         </div>
