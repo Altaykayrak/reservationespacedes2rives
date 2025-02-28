@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -17,6 +17,7 @@ const AdminProfiles = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState<boolean>(false);
   const [adminStatus, setAdminStatus] = useState<{isAdmin: boolean; userId: string | null; message: string}>({ 
     isAdmin: false, 
     userId: null,
@@ -208,16 +209,102 @@ const AdminProfiles = () => {
     }
   };
 
+  // Nouvelle fonction pour cocher en masse toutes les cases
+  const handleBulkCheckboxChange = async (field: 'is_waiting' | 'is_closed') => {
+    try {
+      if (bulkProcessing) return;
+      setBulkProcessing(true);
+      
+      // Valider que l'opération est sûre
+      if (!confirm(`Voulez-vous vraiment marquer tous les profils comme "${field === 'is_waiting' ? 'En attente' : 'Fermé'}" ?`)) {
+        setBulkProcessing(false);
+        return;
+      }
+
+      console.log(`Début de la mise à jour en masse pour le champ: ${field}`);
+      
+      // Mise à jour de l'interface utilisateur
+      setProfiles(prevProfiles =>
+        prevProfiles.map(profile => ({
+          ...profile,
+          is_waiting: field === 'is_waiting' ? true : false,
+          is_closed: field === 'is_closed' ? true : false
+        }))
+      );
+
+      // Préparation des mises à jour
+      const updates = {
+        [field]: true,
+        ...(field === 'is_waiting' ? { is_closed: false } : { is_waiting: false })
+      };
+
+      // Mise à jour dans la base de données
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updates);
+        
+      if (updateError) {
+        console.error('Erreur lors de la mise à jour en masse:', updateError);
+        toast.error(`Erreur de mise à jour en masse: ${updateError.message}`);
+        fetchAllProfiles();
+        return;
+      }
+
+      console.log('Mise à jour en masse réussie');
+      toast.success(`Tous les profils ont été marqués comme "${field === 'is_waiting' ? 'En attente' : 'Fermé'}"`);
+      
+      // Rafraîchir les données
+      fetchAllProfiles();
+
+    } catch (err: any) {
+      console.error('Exception lors de la mise à jour en masse:', err);
+      toast.error(`Erreur: ${err.message}`);
+      fetchAllProfiles();
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNavbar />
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
-          <Button onClick={fetchAllProfiles} variant="outline" disabled={loading}>
-            <Loader2 className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Rafraîchir
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => handleBulkCheckboxChange('is_waiting')} 
+              variant="outline" 
+              disabled={loading || bulkProcessing}
+              className="flex items-center"
+            >
+              <CheckSquare className="h-4 w-4 mr-2" />
+              {bulkProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Traitement...
+                </>
+              ) : (
+                "Tous en attente"
+              )}
+            </Button>
+            <Button 
+              onClick={() => handleBulkCheckboxChange('is_closed')} 
+              variant="outline" 
+              disabled={loading || bulkProcessing}
+              className="flex items-center"
+            >
+              <CheckSquare className="h-4 w-4 mr-2" />
+              {bulkProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Traitement...
+                </>
+              ) : (
+                "Tous fermés"
+              )}
+            </Button>
+          </div>
         </div>
         
         {/* Infos de débogage */}
@@ -287,10 +374,10 @@ const AdminProfiles = () => {
                               <div className="flex items-center">
                                 <Checkbox
                                   checked={profile.is_waiting}
-                                  disabled={isProcessing}
-                                  className={isProcessing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                                  disabled={isProcessing || bulkProcessing}
+                                  className={isProcessing || bulkProcessing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                                   onCheckedChange={(checked) => {
-                                    if (!isProcessing) {
+                                    if (!isProcessing && !bulkProcessing) {
                                       handleCheckboxChange(profile.id, 'is_waiting', checked === true);
                                     }
                                   }}
@@ -302,10 +389,10 @@ const AdminProfiles = () => {
                               <div className="flex items-center">
                                 <Checkbox
                                   checked={profile.is_closed}
-                                  disabled={isProcessing}
-                                  className={isProcessing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                                  disabled={isProcessing || bulkProcessing}
+                                  className={isProcessing || bulkProcessing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                                   onCheckedChange={(checked) => {
-                                    if (!isProcessing) {
+                                    if (!isProcessing && !bulkProcessing) {
                                       handleCheckboxChange(profile.id, 'is_closed', checked === true);
                                     }
                                   }}
