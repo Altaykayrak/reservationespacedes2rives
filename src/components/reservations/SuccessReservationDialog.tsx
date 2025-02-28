@@ -28,7 +28,7 @@ export const SuccessReservationDialog = ({
               Votre réservation a été enregistrée avec succès. Vous pouvez consulter ci-dessous l'ensemble des réservations pour vos enfants.
             </p>
             <p className="text-[#ea384c] font-medium">
-              Merci de nous prévenir dès que possible de toute absence de vos enfants afin de pouvoir faire profiter de la place à un enfant qui serait en liste d'attente.
+              Merci de nous informer au plus tôt de toute absence de votre enfant afin d'attribuer la place à un enfant en liste d'attente.
             </p>
           </DialogDescription>
         </DialogHeader>
