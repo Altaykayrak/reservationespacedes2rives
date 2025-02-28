@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { User } from "lucide-react";
@@ -23,7 +22,7 @@ export const HolidayChildReservationCard = ({
               <User className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
             </div>
             <div>
-              <h3 className="text-xs md:text-sm font-medium text-gray-800 bg-neutral-200">{childName}</h3>
+              <h3 className="text-xs md:text-sm font-medium bg-neutral-200 text-inherit">{childName}</h3>
               <p className="text-[10px] md:text-xs text-muted-foreground">{schoolClass}</p>
             </div>
           </div>
