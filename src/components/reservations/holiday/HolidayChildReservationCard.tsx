@@ -26,7 +26,7 @@ export const HolidayChildReservationCard = ({
               <p className="text-[10px] md:text-xs text-muted-foreground">{schoolClass}</p>
             </div>
           </div>
-          <Badge variant="secondary" className="flex items-center justify-center h-5 bg-primary/10 text-primary hover:bg-primary/20 text-[8px] md:text-[10px]">
+          <Badge variant="secondary" className="flex items-center justify-center h-5 text-primary text-[8px] md:text-[10px] bg-stone-500">
             {reservations.length} réservation{reservations.length > 1 ? 's' : ''}
           </Badge>
         </div>
