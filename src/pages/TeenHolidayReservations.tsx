@@ -41,7 +41,7 @@ const TeenHolidayReservations = () => {
         <Navbar />
         <div className="container mx-auto p-4 md:p-6">
           <EmptyHolidayState 
-            message="Accès non disponible" 
+            message="Inscriptions bientôt disponibles" 
             subtitle="Les inscriptions ne sont pas encore ouvertes. Vous serez informé(e) par e-mail dès leur lancement. Restez à l'affût ! ✉️📅"
             icon="info"
           />
