@@ -15,7 +15,7 @@ export const HolidayChildReservationCard = ({
   onUpdate
 }: ChildReservationCardProps) => {
   return <Card className="overflow-hidden border-gray-100 shadow-sm h-full">
-      <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white p-2 md:p-3">
+      <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white p-2 md:p-3 bg-zinc-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-6 w-6 md:h-7 md:w-7 items-center justify-center rounded-full bg-primary/10">
