@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { Calendar, CalendarHeart, ClipboardList, Users } from "lucide-react";
+import { Calendar, CalendarHeart, ClipboardList, Users, Mail } from "lucide-react";
 
 const AdminDashboard = () => {
   return (
@@ -75,6 +75,19 @@ const AdminDashboard = () => {
             </div>
             <Button asChild className="mt-4">
               <Link to="/admin/profiles">Gérer les utilisateurs</Link>
+            </Button>
+          </Card>
+
+          <Card className="p-6 flex flex-col h-full">
+            <div className="flex-grow">
+              <div className="flex items-center gap-2 mb-4">
+                <Mail className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">Gestion des emails</h2>
+              </div>
+              <p className="text-gray-600">Gérer les emails autorisés à s'inscrire</p>
+            </div>
+            <Button asChild className="mt-4">
+              <Link to="/admin/authorized-emails">Gérer les emails</Link>
             </Button>
           </Card>
         </div>
