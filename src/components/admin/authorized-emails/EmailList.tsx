@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -54,20 +55,20 @@ export const EmailList = ({ emails }: EmailListProps) => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Date d'ajout</TableHead>
-          <TableHead className="w-[100px]">Actions</TableHead>
+          <TableHead className="text-left">Email</TableHead>
+          <TableHead className="text-left">Date d'ajout</TableHead>
+          <TableHead className="w-[100px] text-left">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {emails.length > 0 ? (
           emails.map((email) => (
             <TableRow key={email.id}>
-              <TableCell>{email.email}</TableCell>
-              <TableCell>
+              <TableCell className="text-left">{email.email}</TableCell>
+              <TableCell className="text-left">
                 {new Date(email.created_at).toLocaleDateString()}
               </TableCell>
-              <TableCell>
+              <TableCell className="text-left">
                 <Button
                   variant="ghost"
                   size="icon"
