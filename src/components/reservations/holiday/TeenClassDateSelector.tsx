@@ -46,7 +46,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
     <div className="space-y-4">
       <Alert>
         <AlertDescription 
-          className={`font-bold text-red-600 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-30'}`}
+          className={`text-red-600 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-30'}`}
         >
           Les adolescents doivent être inscrits pour la semaine complète. La réservation sera automatiquement faite pour tous les jours de la période.
         </AlertDescription>
