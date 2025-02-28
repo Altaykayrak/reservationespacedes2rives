@@ -51,6 +51,11 @@ export const EmailList = ({ emails }: EmailListProps) => {
     },
   });
 
+  // Sort emails alphabetically by email address
+  const sortedEmails = [...emails].sort((a, b) => 
+    a.email.localeCompare(b.email)
+  );
+
   return (
     <Table>
       <TableHeader>
@@ -61,8 +66,8 @@ export const EmailList = ({ emails }: EmailListProps) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {emails.length > 0 ? (
-          emails.map((email) => (
+        {sortedEmails.length > 0 ? (
+          sortedEmails.map((email) => (
             <TableRow key={email.id}>
               <TableCell className="text-left">{email.email}</TableCell>
               <TableCell className="text-left">
