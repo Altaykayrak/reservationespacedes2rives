@@ -57,7 +57,7 @@ const TeenHolidayReservations = () => {
         <div className="container mx-auto p-4 md:p-6">
           <EmptyHolidayState 
             message="Réservations clôturées !" 
-            subtitle="Les inscriptions sont actuellement fermées. Veuillez vérifier ultérieurement pour les prochaines sessions disponibles."
+            subtitle="Les inscriptions sont désormais fermées. Vous serez informé(e) par e-mail dès l'ouverture des inscriptions pour les prochaines vacances. À bientôt ! ✉️📅"
             icon="info"
           />
         </div>
