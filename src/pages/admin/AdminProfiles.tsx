@@ -238,10 +238,12 @@ const AdminProfiles = () => {
         ...(field === 'is_waiting' ? { is_closed: false } : { is_waiting: false })
       };
 
-      // Mise à jour dans la base de données
+      // Mise à jour dans la base de données avec une clause WHERE
+      // Sélectionner tous les profils sans filtrer
       const { error: updateError } = await supabase
         .from('profiles')
-        .update(updates);
+        .update(updates)
+        .not('id', 'is', null); // Clause WHERE nécessaire qui sélectionne tous les enregistrements
         
       if (updateError) {
         console.error('Erreur lors de la mise à jour en masse:', updateError);
