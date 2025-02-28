@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { User } from "lucide-react";
@@ -26,7 +27,7 @@ export const HolidayChildReservationCard = ({
               <p className="text-[10px] md:text-xs text-muted-foreground">{schoolClass}</p>
             </div>
           </div>
-          <Badge variant="secondary" className="flex items-center justify-center h-5 text-primary text-[8px] md:text-[10px] bg-sky-50">
+          <Badge variant="secondary" className="flex items-center justify-center h-5 text-black text-[8px] md:text-[10px] bg-sky-50">
             {reservations.length} réservation{reservations.length > 1 ? 's' : ''}
           </Badge>
         </div>
