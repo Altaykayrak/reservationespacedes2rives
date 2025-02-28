@@ -2,7 +2,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { lazy, Suspense } from "react";
-import Layout from "./components/Layout";
+import { Layout } from "./components/Layout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -12,7 +12,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Children from "./pages/Children";
 import TermsOfService from "./pages/TermsOfService";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminPage from "./pages/admin/AdminPage";
+import { AdminPage } from "./pages/admin/AdminPage";
 import AdminProfiles from "./pages/admin/AdminProfiles";
 import AdminAuthorizedEmails from "./pages/admin/AdminAuthorizedEmails";
 import AdminChildren from "./pages/admin/AdminChildren";
@@ -24,12 +24,12 @@ import AdminNewReservation from "./pages/admin/AdminNewReservation";
 import AdminNewHolidayReservation from "./pages/admin/AdminNewHolidayReservation";
 import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
 import WednesdayReservations from "./pages/WednesdayReservations";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import ToasterLayout from "./components/layouts/ToasterLayout";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { ToasterLayout } from "./components/layouts/ToasterLayout";
 import HolidayReservations from "./pages/HolidayReservations";
 import TeenHolidayReservations from "./pages/TeenHolidayReservations";
 import HolidayProgram from "./pages/HolidayProgram";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 import './App.css';
 
