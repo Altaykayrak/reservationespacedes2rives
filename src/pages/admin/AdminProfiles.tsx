@@ -98,10 +98,11 @@ const AdminProfiles = () => {
       console.log('Récupération de tous les profils avec emails...');
       
       // Utilisation de la vue profiles_with_emails qui inclut les emails
+      // Tri par nom de famille directement dans la requête
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles_with_emails')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('last_name', { ascending: true });
 
       if (profilesError) {
         console.error('Erreur récupération profiles:', profilesError);
