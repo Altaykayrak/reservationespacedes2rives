@@ -77,7 +77,7 @@ const AdminProfiles = () => {
         // Si l'utilisateur est admin, récupérer la liste des admins et les profils
         if (isAdmin) {
           await fetchAdminUserIds();
-          await fetchUserRoles(); // Nouvelle méthode pour récupérer tous les utilisateurs
+          await fetchProfilesWithEmails(); // Nouvelle méthode pour récupérer les infos complètes
         }
       } catch (err: any) {
         console.error('Erreur inattendue:', err);
@@ -114,7 +114,59 @@ const AdminProfiles = () => {
     }
   };
 
-  // Nouvelle méthode pour récupérer tous les utilisateurs via user_roles
+  // Nouvelle méthode pour récupérer les profils avec emails en utilisant la vue
+  const fetchProfilesWithEmails = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('Récupération des profils avec emails...');
+      
+      // Utiliser la vue profiles_with_emails qui contient toutes les informations
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles_with_emails')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (profilesError) {
+        console.error('Erreur récupération profiles_with_emails:', profilesError);
+        throw profilesError;
+      }
+
+      console.log('Profils avec emails récupérés:', profilesData);
+
+      if (!profilesData || profilesData.length === 0) {
+        console.log('Aucun profil trouvé');
+        setProfiles([]);
+        setLoading(false);
+        return;
+      }
+
+      // Créer des objets ProfileData pour tous les utilisateurs
+      const formattedProfiles: ProfileData[] = profilesData.map(profile => ({
+        id: profile.id,
+        email: profile.email || "",
+        first_name: profile.first_name || null,
+        last_name: profile.last_name || null,
+        automatic_payment: profile.automatic_payment || false,
+        accepted_cgu: profile.accepted_cgu || false,
+        is_waiting: profile.is_waiting || false,
+        is_closed: profile.is_closed || false,
+        created_at: profile.created_at || new Date().toISOString(),
+        updated_at: profile.updated_at || new Date().toISOString()
+      }));
+
+      console.log('Profils formatés:', formattedProfiles);
+      setProfiles(formattedProfiles);
+    } catch (err: any) {
+      console.error('Erreur fetchProfilesWithEmails:', err);
+      setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Récupère les profils par la table user_roles et les associe aux profiles
   const fetchUserRoles = async () => {
     setLoading(true);
     setError(null);
@@ -214,56 +266,6 @@ const AdminProfiles = () => {
       setProfiles(formattedProfiles);
     } catch (err: any) {
       console.error('Erreur fetchProfilesForUsers:', err);
-      setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Cette fonction n'est plus utilisée directement
-  const fetchProfiles = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      console.log('Début de récupération des profils...');
-      
-      // Récupérer tous les profils directement
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (profilesError) {
-        console.error('Erreur récupération profiles:', profilesError);
-        throw profilesError;
-      }
-
-      console.log('Profils récupérés:', profilesData);
-      
-      if (profilesData && profilesData.length > 0) {
-        // Créer des objets ProfileData pour chaque profil
-        const formattedProfiles: ProfileData[] = profilesData.map(profile => ({
-          id: profile.id,
-          email: "", // On n'affiche pas l'email
-          first_name: profile.first_name || null,
-          last_name: profile.last_name || null,
-          automatic_payment: profile.automatic_payment || false,
-          accepted_cgu: profile.accepted_cgu || false,
-          is_waiting: profile.is_waiting || false,
-          is_closed: profile.is_closed || false,
-          created_at: profile.created_at,
-          updated_at: profile.updated_at
-        }));
-
-        console.log('Nombre de profils formatés:', formattedProfiles.length);
-        setProfiles(formattedProfiles);
-      } else {
-        console.log('Aucun profil trouvé');
-        setProfiles([]);
-      }
-    } catch (err: any) {
-      console.error('Erreur fetchProfiles:', err);
       setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
     } finally {
       setLoading(false);
