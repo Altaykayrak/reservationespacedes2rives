@@ -1,12 +1,35 @@
 
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table"
 import { Child } from "@/types/profile"
+import { useState, useEffect } from "react"
 
 interface ChildrenTableProps {
   children: Child[]
 }
 
 export function ChildrenTable({ children }: ChildrenTableProps) {
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Effet de clignotement au chargement quand il n'y a pas d'enfants
+  useEffect(() => {
+    if (children.length === 0) {
+      const interval = setInterval(() => {
+        setIsVisible(prev => !prev);
+      }, 700);
+
+      // Arrêter l'effet après 3 secondes
+      const timeout = setTimeout(() => {
+        clearInterval(interval);
+        setIsVisible(true);
+      }, 3000);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [children.length]);
+
   return (
     <Table>
       <TableHeader>
@@ -32,7 +55,7 @@ export function ChildrenTable({ children }: ChildrenTableProps) {
           <TableRow>
             <TableCell 
               colSpan={3} 
-              className="text-center h-32 text-muted-foreground"
+              className={`text-center h-32 text-red-600 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-30'}`}
             >
               Aucun enfant enregistré
             </TableCell>
