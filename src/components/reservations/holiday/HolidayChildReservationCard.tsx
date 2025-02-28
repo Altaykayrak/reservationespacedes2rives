@@ -22,7 +22,7 @@ export const HolidayChildReservationCard = ({
               <User className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
             </div>
             <div>
-              <h3 className="text-xs md:text-sm font-medium bg-neutral-200 text-inherit">{childName}</h3>
+              <h3 className="text-xs md:text-sm font-medium bg-neutral-200 text-cyan-950">{childName}</h3>
               <p className="text-[10px] md:text-xs text-muted-foreground">{schoolClass}</p>
             </div>
           </div>
