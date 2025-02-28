@@ -28,7 +28,7 @@ const TermsOfService = () => {
           <section>
             <h2 className="text-xl font-semibold mb-4">2. Définitions</h2>
             <ul className="list-disc pl-5 space-y-2 text-gray-700 text-justify">
-              <li>L'association : L'Espace des 2 rives.</li>
+              <li>L'Association : L'Espace des 2 rives.</li>
               <li>Le Service : L'application web dédiée à la réservation en ligne.</li>
               <li>CGU : Conditions Générales d'Utilisation.</li>
               <li>L'Usager : Toute personne (particulier) qui utilise le Service.</li>
