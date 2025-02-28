@@ -77,7 +77,7 @@ const AdminProfiles = () => {
         // Si l'utilisateur est admin, récupérer la liste des admins et les profils
         if (isAdmin) {
           await fetchAdminUserIds();
-          fetchProfiles();
+          await fetchUserRoles(); // Nouvelle méthode pour récupérer tous les utilisateurs
         }
       } catch (err: any) {
         console.error('Erreur inattendue:', err);
@@ -114,6 +114,113 @@ const AdminProfiles = () => {
     }
   };
 
+  // Nouvelle méthode pour récupérer tous les utilisateurs via user_roles
+  const fetchUserRoles = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('Récupération des utilisateurs depuis user_roles...');
+      
+      // Récupérer tous les utilisateurs via user_roles
+      const { data: userRolesData, error: userRolesError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (userRolesError) {
+        console.error('Erreur récupération user_roles:', userRolesError);
+        throw userRolesError;
+      }
+
+      console.log('Utilisateurs récupérés depuis user_roles:', userRolesData);
+
+      if (!userRolesData || userRolesData.length === 0) {
+        console.log('Aucun utilisateur trouvé');
+        setProfiles([]);
+        setLoading(false);
+        return;
+      }
+
+      // On extrait les IDs pour récupérer les profils correspondants
+      const userIds = userRolesData.map(user => user.user_id);
+
+      // Récupérer les détails des profils pour ces utilisateurs
+      await fetchProfilesForUsers(userIds, userRolesData);
+      
+    } catch (err: any) {
+      console.error('Erreur fetchUserRoles:', err);
+      setError(err.message || 'Une erreur est survenue lors de la récupération des utilisateurs.');
+      setLoading(false);
+    }
+  };
+
+  // Récupère les profils pour une liste d'utilisateurs
+  const fetchProfilesForUsers = async (userIds: string[], userRolesData: any[]) => {
+    try {
+      console.log('Récupération des profils pour les utilisateurs:', userIds);
+      
+      // Récupérer les profils existants
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Erreur récupération profiles:', profilesError);
+        throw profilesError;
+      }
+
+      console.log('Profils récupérés:', profilesData || []);
+
+      // Créer un mapping entre les IDs et les profils
+      const profilesMap = new Map();
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          profilesMap.set(profile.id, profile);
+        });
+      }
+
+      // Créer des objets ProfileData pour tous les utilisateurs
+      const formattedProfiles: ProfileData[] = userIds.map(userId => {
+        const userRole = userRolesData.find(ur => ur.user_id === userId);
+        const profile = profilesMap.get(userId) || { 
+          id: userId,
+          first_name: null,
+          last_name: null,
+          automatic_payment: false,
+          accepted_cgu: false,
+          is_waiting: false,
+          is_closed: false,
+          created_at: userRole?.created_at,
+          updated_at: userRole?.updated_at
+        };
+
+        return {
+          id: userId,
+          email: userRole?.email || "",
+          first_name: profile.first_name || null,
+          last_name: profile.last_name || null,
+          automatic_payment: profile.automatic_payment || false,
+          accepted_cgu: profile.accepted_cgu || false,
+          is_waiting: profile.is_waiting || false,
+          is_closed: profile.is_closed || false,
+          created_at: profile.created_at || userRole?.created_at || new Date().toISOString(),
+          updated_at: profile.updated_at || userRole?.updated_at || new Date().toISOString()
+        };
+      });
+
+      console.log('Profils formatés:', formattedProfiles);
+      setProfiles(formattedProfiles);
+    } catch (err: any) {
+      console.error('Erreur fetchProfilesForUsers:', err);
+      setError(err.message || 'Une erreur est survenue lors de la récupération des profils.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cette fonction n'est plus utilisée directement
   const fetchProfiles = async () => {
     setLoading(true);
     setError(null);
@@ -200,17 +307,50 @@ const AdminProfiles = () => {
 
       console.log('Données de mise à jour:', updates);
 
-      // Mise à jour du profil
-      const { error: updateError } = await supabase
+      // Vérifier si un profil existe déjà pour cet utilisateur
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
-        .update(updates)
-        .eq('id', profileId);
+        .select('id')
+        .eq('id', profileId)
+        .maybeSingle();
+        
+      if (fetchError) {
+        console.error('Erreur lors de la vérification du profil:', fetchError);
+        toast.error(`Erreur de vérification: ${fetchError.message}`);
+        return;
+      }
+
+      let updateOperation;
+
+      if (existingProfile) {
+        // Mise à jour du profil existant
+        console.log('Mise à jour du profil existant:', profileId);
+        updateOperation = supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', profileId);
+      } else {
+        // Création d'un nouveau profil car il n'en existe pas encore
+        console.log('Création d\'un nouveau profil:', profileId);
+        updateOperation = supabase
+          .from('profiles')
+          .insert({
+            id: profileId,
+            first_name: null,
+            last_name: null,
+            automatic_payment: false,
+            accepted_cgu: false,
+            ...updates
+          });
+      }
+
+      const { error: updateError } = await updateOperation;
         
       if (updateError) {
         console.error('Erreur lors de la mise à jour via Supabase:', updateError);
         toast.error(`Erreur de mise à jour: ${updateError.message}`);
         // Annuler le changement
-        fetchProfiles();
+        fetchUserRoles();
         return;
       }
 
@@ -218,14 +358,14 @@ const AdminProfiles = () => {
       toast.success('Mise à jour réussie');
 
       // Rafraîchir les données après une mise à jour réussie
-      fetchProfiles();
+      fetchUserRoles();
 
     } catch (err: any) {
       console.error('Exception lors de la mise à jour:', err);
       toast.error(`Erreur: ${err.message}`);
       
       // Rafraîchir
-      fetchProfiles();
+      fetchUserRoles();
     } finally {
       setProcessingIds(prev => {
         const newSet = new Set(prev);
@@ -245,7 +385,7 @@ const AdminProfiles = () => {
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
-          <Button onClick={fetchProfiles} variant="outline" disabled={loading}>
+          <Button onClick={fetchUserRoles} variant="outline" disabled={loading}>
             <Loader2 className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Rafraîchir
           </Button>
