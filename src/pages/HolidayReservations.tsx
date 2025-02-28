@@ -37,23 +37,7 @@ const HolidayReservations = () => {
     checkAccess();
   }, [user]);
 
-  // Afficher le message pour l'état fermé
-  if (isClosed) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <Navbar />
-        <div className="container mx-auto p-4 md:p-6">
-          <EmptyHolidayState 
-            message="Réservations clôturées !" 
-            subtitle="Les inscriptions sont désormais fermées. Vous serez informé(e) par e-mail dès l'ouverture des inscriptions pour les prochaines vacances. À bientôt ! ✉️📅"
-            icon="info"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Afficher le message pour l'état en attente
+  // Afficher le message d'attente et empêcher la création de nouvelles réservations
   if (isWaiting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -85,7 +69,17 @@ const HolidayReservations = () => {
           </p>
         </div>
 
-        <HolidayReservationContent />
+        {isClosed ? (
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+            <EmptyHolidayState 
+              message="Réservations clôturées !" 
+              subtitle="Les inscriptions sont désormais fermées. Vous serez informé(e) par e-mail dès l'ouverture des inscriptions pour les prochaines vacances. À bientôt ! ✉️📅"
+              icon="info"
+            />
+          </div>
+        ) : (
+          <HolidayReservationContent />
+        )}
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
           <div className="p-4 md:p-6">
