@@ -7,10 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
@@ -22,6 +23,7 @@ const AdminProfiles = () => {
     userId: null,
     message: "Vérification des droits d'administrateur..."
   });
+  const [adminUserIds, setAdminUserIds] = useState<Set<string>>(new Set());
 
   // Vérification du statut d'administrateur
   useEffect(() => {
@@ -72,8 +74,9 @@ const AdminProfiles = () => {
           message: `Utilisateur: ${user.id}, Admin: ${isAdmin}`
         });
         
-        // Si l'utilisateur est admin, on récupère immédiatement les profiles
+        // Si l'utilisateur est admin, récupérer la liste des admins et les profils
         if (isAdmin) {
+          await fetchAdminUserIds();
           fetchProfiles();
         }
       } catch (err: any) {
@@ -88,6 +91,28 @@ const AdminProfiles = () => {
 
     checkAdminStatus();
   }, []);
+
+  const fetchAdminUserIds = async () => {
+    try {
+      const { data: userRoles, error } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      if (error) {
+        console.error('Erreur récupération admins:', error);
+        return;
+      }
+
+      if (userRoles && userRoles.length > 0) {
+        const adminIds = new Set(userRoles.map(user => user.user_id));
+        console.log('IDs des administrateurs:', adminIds);
+        setAdminUserIds(adminIds);
+      }
+    } catch (err) {
+      console.error('Erreur fetch admin IDs:', err);
+    }
+  };
 
   const fetchProfiles = async () => {
     setLoading(true);
@@ -108,13 +133,10 @@ const AdminProfiles = () => {
       }
 
       console.log('Profils récupérés:', profilesData);
-
-      // Filtrer pour éviter d'afficher l'utilisateur administrateur actuel
-      const nonAdminProfiles = profilesData.filter(profile => profile.id !== adminStatus.userId);
       
-      if (nonAdminProfiles && nonAdminProfiles.length > 0) {
+      if (profilesData && profilesData.length > 0) {
         // Créer des objets ProfileData pour chaque profil
-        const formattedProfiles: ProfileData[] = nonAdminProfiles.map(profile => ({
+        const formattedProfiles: ProfileData[] = profilesData.map(profile => ({
           id: profile.id,
           email: "", // On n'affiche pas l'email
           first_name: profile.first_name || null,
@@ -127,7 +149,7 @@ const AdminProfiles = () => {
           updated_at: profile.updated_at
         }));
 
-        console.log('Profils formatés:', formattedProfiles);
+        console.log('Nombre de profils formatés:', formattedProfiles.length);
         setProfiles(formattedProfiles);
       } else {
         console.log('Aucun profil trouvé');
@@ -143,6 +165,12 @@ const AdminProfiles = () => {
 
   const handleCheckboxChange = async (profileId: string, field: 'is_waiting' | 'is_closed', value: boolean) => {
     try {
+      // Empêcher la modification d'un compte admin
+      if (adminUserIds.has(profileId)) {
+        toast.error("Impossible de modifier un compte administrateur");
+        return;
+      }
+
       if (processingIds.has(profileId)) return;
       setProcessingIds(prev => new Set(prev).add(profileId));
 
@@ -207,6 +235,10 @@ const AdminProfiles = () => {
     }
   };
 
+  const isAdmin = (profileId: string): boolean => {
+    return adminUserIds.has(profileId);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNavbar />
@@ -254,6 +286,7 @@ const AdminProfiles = () => {
                     <TableRow>
                       <TableHead>Nom</TableHead>
                       <TableHead>Prénom</TableHead>
+                      <TableHead>Rôle</TableHead>
                       <TableHead>Prélèvement automatique</TableHead>
                       <TableHead>En attente</TableHead>
                       <TableHead>Fermé</TableHead>
@@ -263,17 +296,29 @@ const AdminProfiles = () => {
                   <TableBody>
                     {profiles.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                           Aucun utilisateur trouvé
                         </TableCell>
                       </TableRow>
                     ) : (
                       profiles.map((profile) => {
+                        const isUserAdmin = isAdmin(profile.id);
                         const isProcessing = processingIds.has(profile.id);
                         return (
-                          <TableRow key={profile.id}>
+                          <TableRow 
+                            key={profile.id} 
+                            className={isUserAdmin ? "bg-slate-50" : ""}
+                          >
                             <TableCell>{profile.last_name || '-'}</TableCell>
                             <TableCell>{profile.first_name || '-'}</TableCell>
+                            <TableCell>
+                              {isUserAdmin ? (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center">
+                                  <ShieldCheck className="h-3 w-3 mr-1" />
+                                  Admin
+                                </Badge>
+                              ) : 'Utilisateur'}
+                            </TableCell>
                             <TableCell>
                               <Switch 
                                 checked={profile.automatic_payment} 
@@ -284,10 +329,10 @@ const AdminProfiles = () => {
                               <div className="flex items-center">
                                 <Checkbox
                                   checked={profile.is_waiting}
-                                  disabled={isProcessing}
-                                  className={isProcessing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                                  disabled={isProcessing || isUserAdmin}
+                                  className={(isProcessing || isUserAdmin) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                                   onCheckedChange={(checked) => {
-                                    if (!isProcessing) {
+                                    if (!isProcessing && !isUserAdmin) {
                                       handleCheckboxChange(profile.id, 'is_waiting', checked === true);
                                     }
                                   }}
@@ -299,10 +344,10 @@ const AdminProfiles = () => {
                               <div className="flex items-center">
                                 <Checkbox
                                   checked={profile.is_closed}
-                                  disabled={isProcessing}
-                                  className={isProcessing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                                  disabled={isProcessing || isUserAdmin}
+                                  className={(isProcessing || isUserAdmin) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                                   onCheckedChange={(checked) => {
-                                    if (!isProcessing) {
+                                    if (!isProcessing && !isUserAdmin) {
                                       handleCheckboxChange(profile.id, 'is_closed', checked === true);
                                     }
                                   }}
