@@ -1,52 +1,60 @@
 
-import { useRouteError, useNavigate } from "react-router-dom";
+import { Component, ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 
-interface RouterError {
-  message?: string;
-  statusText?: string;
-  data?: any;
+interface ErrorBoundaryProps {
+  children: ReactNode;
 }
 
-export default function ErrorBoundary() {
-  const error = useRouteError() as RouterError;
-  const navigate = useNavigate();
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
 
-  // Fonction pour obtenir un message d'erreur plus convivial
-  const getErrorMessage = () => {
-    const errorMessage = error?.message || error?.statusText || "Une erreur est survenue";
-    
-    if (errorMessage.includes("JWT expired")) {
-      return "Votre session a expiré. Veuillez vous reconnecter.";
-    }
-    if (errorMessage.includes("No user found")) {
-      return "Veuillez vous connecter pour accéder à cette page.";
-    }
-    if (errorMessage.includes("No routes matched location")) {
-      return "Cette page n'existe pas.";
-    }
-    return "Désolé, une erreur est survenue. Veuillez réessayer.";
-  };
+class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Oops!</h1>
-        <p className="text-gray-600 mb-4">{getErrorMessage()}</p>
-        <div className="space-x-4">
-          <Button
-            onClick={() => navigate(-1)}
-            variant="outline"
-          >
-            Retour
-          </Button>
-          <Button
-            onClick={() => navigate("/login")}
-          >
-            Se connecter
-          </Button>
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Oops!</h1>
+            <p className="text-gray-600 mb-4">
+              {this.state.error?.message || "Une erreur est survenue dans l'application."}
+            </p>
+            <div className="space-x-4">
+              <Button
+                onClick={() => window.location.href = "/"}
+                variant="outline"
+              >
+                Retour à l'accueil
+              </Button>
+              <Button
+                onClick={() => window.location.reload()}
+              >
+                Recharger la page
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  );
+      );
+    }
+
+    return this.props.children;
+  }
 }
+
+export default ErrorBoundaryClass;

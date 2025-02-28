@@ -46,9 +46,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Suspense fallback={<div>Loading...</div>}>
-          <ErrorBoundary>
-            <ToasterLayout>
+        <ErrorBoundary>
+          <ToasterLayout>
+            <Suspense fallback={<div>Loading...</div>}>
               <Routes>
                 <Route path="/" element={<Layout />}>
                   <Route index element={<Index />} />
@@ -100,9 +100,9 @@ function App() {
                   <Route path="wednesdays" element={<AdminWednesdays />} />
                 </Route>
               </Routes>
-            </ToasterLayout>
-          </ErrorBoundary>
-        </Suspense>
+            </Suspense>
+          </ToasterLayout>
+        </ErrorBoundary>
       </Router>
     </QueryClientProvider>
   );

@@ -1,10 +1,7 @@
 
 import React from "react";
+import { Outlet } from "react-router-dom";
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export const Layout = ({ children }: LayoutProps) => {
-  return <div className="min-h-screen">{children}</div>;
+export const Layout = () => {
+  return <div className="min-h-screen"><Outlet /></div>;
 };
