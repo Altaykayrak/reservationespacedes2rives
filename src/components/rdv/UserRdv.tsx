@@ -52,7 +52,7 @@ export const UserRdv = ({
     const mapsUrl = "https://www.google.com/maps/place//data=!4m2!3m1!1s0x47e127d4acf81da1:0xf77c5488daee9f99?sa=X&ved=1t:8290&ictx=111";
     const phone = "02 32 68 32 10";
     const details = `Motif(s): ${rdv.motifs.join(", ")}\n\nDocuments à apporter:\n- Justificatif de domicile\n- Carnet de santé (si nouveaux vaccins)\n- Quotient familial CAF ou avis d'imposition N-2\n- Un moyen de règlement (chèque, carte de paiement, RIB si vous souhaitez mettre en place le prélèvement automatique)\n\nTéléphone: ${phone}`;
-    const location = `Service Enfance - Espace des 2 rives\n${mapsUrl}`;
+    const location = `Service Enfance - Espace des 2 rives\n4 Pl. de la Fraternité, 27590 Pitres\n${mapsUrl}`;
     const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
     return googleCalendarUrl;
   };
@@ -84,7 +84,7 @@ export const UserRdv = ({
                 <strong>Heure :</strong> {formatTime(userRdv.heure_debut)} - {formatTime(userRdv.heure_fin)}
               </p>
               <p>
-                <strong>Lieu :</strong> Accueil Espace des 2 rives 4 place de la fraternité, 27590 Pîtres
+                <strong>Lieu :</strong> Accueil Espace des 2 rives 4 Pl. de la Fraternité, 27590 Pitres
               </p>
               <p>
                 <strong>Motif(s) :</strong> {userRdv.motifs.join(", ")}
