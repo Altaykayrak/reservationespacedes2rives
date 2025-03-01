@@ -22,6 +22,7 @@ export function ChildrenList({ children }: ChildrenListProps) {
   const [deletingChild, setDeletingChild] = useState<Child | null>(null)
   const [isButtonFlashing, setIsButtonFlashing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isChecking, setIsChecking] = useState(false)
   const queryClient = useQueryClient()
 
   // Effet de clignotement du bouton quand il n'y a pas d'enfants
@@ -39,6 +40,42 @@ export function ChildrenList({ children }: ChildrenListProps) {
       };
     }
   }, [children.length]);
+
+  const handleEditClick = async (child: Child) => {
+    setIsChecking(true);
+    
+    try {
+      // Vérifier si l'enfant a des réservations
+      const { data: wednesdayReservations, error: wednesdayError } = await supabase
+        .from('wednesday_reservations')
+        .select('id')
+        .eq('child_id', child.id)
+        .limit(1);
+
+      if (wednesdayError) throw wednesdayError;
+
+      const { data: holidayReservations, error: holidayError } = await supabase
+        .from('holiday_reservations')
+        .select('id')
+        .eq('child_id', child.id)
+        .limit(1);
+
+      if (holidayError) throw holidayError;
+
+      if (wednesdayReservations?.length > 0 || holidayReservations?.length > 0) {
+        toast.error("Impossible de modifier un enfant qui a des réservations");
+        return;
+      }
+
+      // Si pas de réservations, permettre la modification
+      setEditingChild(child);
+    } catch (error) {
+      console.error('Error checking reservations:', error);
+      toast.error("Erreur lors de la vérification des réservations");
+    } finally {
+      setIsChecking(false);
+    }
+  };
 
   const handleSuccessfulEdit = () => {
     setEditingChild(null);
@@ -118,8 +155,9 @@ export function ChildrenList({ children }: ChildrenListProps) {
         <div className="overflow-x-auto">
           <ChildrenTable 
             children={children} 
-            onEdit={setEditingChild}
+            onEdit={handleEditClick}
             onDelete={setDeletingChild}
+            isChecking={isChecking}
           />
         </div>
       </Card>

@@ -10,13 +10,15 @@ interface ChildrenTableProps {
   onEdit?: (child: Child) => void;
   onDelete?: (child: Child) => void;
   isAdmin?: boolean;
+  isChecking?: boolean;
 }
 
 export function ChildrenTable({
   children,
   onEdit,
   onDelete,
-  isAdmin = false
+  isAdmin = false,
+  isChecking = false
 }: ChildrenTableProps) {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -57,12 +59,23 @@ export function ChildrenTable({
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     {onEdit && (
-                      <Button variant="ghost" size="icon" onClick={() => onEdit(child)} title="Modifier">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => onEdit(child)} 
+                        title="Modifier"
+                        disabled={isChecking}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
                     )}
                     {onDelete && (
-                      <Button variant="ghost" size="icon" onClick={() => onDelete(child)} title="Supprimer">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => onDelete(child)} 
+                        title="Supprimer"
+                      >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     )}
