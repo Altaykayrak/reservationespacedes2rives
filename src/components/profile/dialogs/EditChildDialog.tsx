@@ -5,7 +5,7 @@ import { Child } from "@/types/profile"
 
 interface EditChildDialogProps {
   child: Child | null
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (child: Child | null) => void
   onSuccess: () => void
 }
 
