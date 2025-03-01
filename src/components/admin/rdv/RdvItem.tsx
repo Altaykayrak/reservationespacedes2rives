@@ -18,35 +18,35 @@ const RdvItem: React.FC<RdvItemProps> = ({ rdv, onDeleteRdv }) => {
   };
 
   return (
-    <Card key={rdv.id} className="p-4 relative group">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div>
-            <p className="font-semibold">{formatDate(rdv.date)}</p>
-            <p className="text-sm">{rdv.heure_debut.substring(0, 5)} - {rdv.heure_fin.substring(0, 5)}</p>
-          </div>
-          
-          <span className={`px-2 py-0.5 rounded text-xs ${
-            rdv.status === 'disponible' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-blue-100 text-blue-800'
-          }`}>
-            {rdv.status}
-          </span>
-          
-          {rdv.status === 'réservé' && rdv.profiles && (
-            <div className="text-sm flex space-x-2">
-              <p className="whitespace-nowrap">{rdv.profiles.first_name} {rdv.profiles.last_name}</p>
-              <p className="whitespace-nowrap">{rdv.profiles.email}</p>
-              <p className="whitespace-nowrap">Motifs: {rdv.motifs.join(', ')}</p>
-            </div>
-          )}
+    <Card key={rdv.id} className="p-3 relative group">
+      <div className="flex items-center space-x-3">
+        <div className="w-36 flex-shrink-0">
+          <p className="font-semibold text-sm">{formatDate(rdv.date)}</p>
+          <p className="text-xs text-gray-600">{rdv.heure_debut.substring(0, 5)} - {rdv.heure_fin.substring(0, 5)}</p>
         </div>
+        
+        <span className={`px-2 py-0.5 rounded text-xs flex-shrink-0 ${
+          rdv.status === 'disponible' 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-blue-100 text-blue-800'
+        }`}>
+          {rdv.status}
+        </span>
+        
+        {rdv.status === 'réservé' && rdv.profiles ? (
+          <div className="flex-grow overflow-hidden flex items-center space-x-2 text-xs">
+            <span className="truncate">{rdv.profiles.first_name} {rdv.profiles.last_name}</span>
+            <span className="truncate">{rdv.profiles.email}</span>
+            <span className="truncate">Motifs: {rdv.motifs.join(', ')}</span>
+          </div>
+        ) : (
+          <div className="flex-grow"></div>
+        )}
         
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-auto"
           onClick={() => onDeleteRdv(rdv.id)}
         >
           <svg 
