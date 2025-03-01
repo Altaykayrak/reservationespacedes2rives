@@ -37,13 +37,16 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
     setMinimumDaysDialog
   } = useHolidayReservation();
 
+  // Use the filtered children if provided, otherwise use the children from the hook
+  const childrenToDisplay = filteredChildren || children;
+
   return (
     <Card className="p-6">
       <div className="space-y-6">
         <ChildSelector
           selectedChild={selectedChild}
           setSelectedChild={setSelectedChild}
-          children={filteredChildren || children}
+          children={childrenToDisplay}
           setSelectedDates={setSelectedDates}
         />
 

@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useChildrenData } from "@/hooks/useChildrenData";
+import { Tables } from "@/integrations/supabase/types";
 
 const AdminNewHolidayReservation = () => {
   const { data: isAdmin } = useAdminAuth();
@@ -16,12 +17,13 @@ const AdminNewHolidayReservation = () => {
 
   const filteredChildren = children?.filter(child => {
     if (selectedGroup === "all") return true;
-    const schoolClass = child.school_class.toUpperCase();
     if (selectedGroup === "maternelle") {
-      return ["PS", "MS", "GS"].includes(schoolClass);
+      return ["PS", "MS", "GS"].some(cls => 
+        child.school_class.toUpperCase().includes(cls));
     }
     if (selectedGroup === "primaire") {
-      return ["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass);
+      return ["CP", "CE1", "CE2", "CM1", "CM2"].some(cls => 
+        child.school_class.toUpperCase().includes(cls));
     }
     return true;
   });
@@ -81,7 +83,7 @@ const AdminNewHolidayReservation = () => {
           </div>
         </Card>
 
-        <HolidayReservationContent filteredChildren={filteredChildren} />
+        <HolidayReservationContent filteredChildren={filteredChildren as Tables<"children">[] | null} />
       </div>
     </div>
   );
