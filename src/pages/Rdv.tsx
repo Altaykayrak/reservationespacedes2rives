@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,8 +35,8 @@ export default function RdvPage() {
 
   // Define July and August 2025 date range
   const summerRange = {
-    from: new Date(2025, 6, 1), // July 1, 2025
-    to: new Date(2025, 7, 31)   // August 31, 2025
+    start: new Date(2025, 6, 1), // July 1, 2025
+    end: new Date(2025, 7, 31)   // August 31, 2025
   };
 
   useEffect(() => {
