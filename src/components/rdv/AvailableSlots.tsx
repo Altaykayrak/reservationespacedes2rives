@@ -20,6 +20,15 @@ export const AvailableSlots = ({
     return timeStr.substring(0, 5);
   };
 
+  console.log("AvailableSlots - Selected date:", selectedDate);
+  console.log("AvailableSlots - Available slots:", availableSlots);
+
+  const filteredSlots = selectedDate 
+    ? availableSlots.filter(slot => slot.date === format(selectedDate, 'yyyy-MM-dd'))
+    : [];
+  
+  console.log("AvailableSlots - Filtered slots:", filteredSlots);
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
@@ -34,13 +43,13 @@ export const AvailableSlots = ({
           <div className="text-center py-4">
             <p className="text-gray-500 text-sm">Veuillez sélectionner une date sur le calendrier</p>
           </div>
-        ) : availableSlots.length === 0 ? (
+        ) : filteredSlots.length === 0 ? (
           <div className="text-center py-4">
             <p className="text-gray-500 text-sm">Aucun créneau disponible pour cette date</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-2">
-            {availableSlots.map((rdv) => (
+            {filteredSlots.map((rdv) => (
               <Card 
                 key={rdv.id} 
                 className="hover:shadow-md transition-shadow cursor-pointer border-gray-200"

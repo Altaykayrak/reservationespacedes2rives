@@ -42,6 +42,7 @@ export const useRdv = () => {
     try {
       setIsLoading(true);
       
+      console.log("Fetching user RDV for user:", user?.id);
       const { data: userRdvData, error: userRdvError } = await supabase
         .from('rdv')
         .select('*')
@@ -52,6 +53,7 @@ export const useRdv = () => {
       
       if (userRdvError) throw userRdvError;
       
+      console.log("User RDV data:", userRdvData);
       if (userRdvData && userRdvData.length > 0) {
         setUserRdv(userRdvData[0] as unknown as Rdv);
       } else {
@@ -71,6 +73,7 @@ export const useRdv = () => {
 
   const fetchRdvs = async () => {
     try {
+      console.log("Fetching available RDVs");
       const { data, error } = await supabase
         .from('rdv')
         .select('*')
@@ -79,6 +82,8 @@ export const useRdv = () => {
         .order('heure_debut');
 
       if (error) throw error;
+      
+      console.log("Available RDVs:", data);
       setRdvList(data as unknown as Rdv[]);
     } catch (error) {
       console.error("Error fetching RDVs:", error);
@@ -97,10 +102,14 @@ export const useRdv = () => {
     }
 
     const formattedSelectedDate = format(date, 'yyyy-MM-dd');
+    console.log("Filtering slots for date:", formattedSelectedDate);
+    console.log("Total rdvList:", rdvList.length);
+    
     const filteredSlots = rdvList.filter(
       slot => slot.date === formattedSelectedDate
     );
     
+    console.log("Filtered slots:", filteredSlots);
     setAvailableSlots(filteredSlots);
   };
 

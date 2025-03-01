@@ -26,6 +26,18 @@ export const RdvCalendar = ({
     return rdvList.some(slot => slot.date === formattedDate);
   };
 
+  console.log("RdvCalendar - rdvList length:", rdvList.length);
+  console.log("RdvCalendar - Summer range:", summerRange);
+  
+  // Debug available dates
+  const availableDates = [];
+  for (let d = new Date(summerRange.start); d <= summerRange.end; d.setDate(d.getDate() + 1)) {
+    if (isDayWithSlots(new Date(d))) {
+      availableDates.push(format(new Date(d), 'yyyy-MM-dd'));
+    }
+  }
+  console.log("RdvCalendar - Available dates:", availableDates);
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
