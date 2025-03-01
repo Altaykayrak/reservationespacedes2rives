@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,14 +12,13 @@ export const useRdvActions = (
   setShowConfirmDialog: (show: boolean) => void,
   setReservationComplete: (complete: boolean) => void,
   setSelectedRdv: (rdv: Rdv | null) => void,
-  setSelectedMotifs: (motifs: string[]) => void
+  setSelectedMotifs: (motifs: string[] | ((prev: string[]) => string[])) => void
 ) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Function to check if a user already has a reservation
   const checkUserReservation = async () => {
     if (!user) return null;
 
@@ -43,22 +41,19 @@ export const useRdvActions = (
     }
   };
 
-  // Handle slot selection
   const handleSelectSlot = (rdv: Rdv) => {
     setSelectedRdv(rdv);
     setSelectedMotifs([]);
     setShowConfirmDialog(true);
   };
 
-  // Close the confirmation dialog
   const handleCloseConfirm = () => {
     setShowConfirmDialog(false);
     setSelectedRdv(null);
   };
 
-  // Handle motif selection (for the form in the confirmation dialog)
   const handleMotifSelection = (motif: string) => {
-    setSelectedMotifs((prev) => {
+    setSelectedMotifs((prev: string[]) => {
       if (prev.includes(motif)) {
         return prev.filter((m) => m !== motif);
       } else {
@@ -67,16 +62,13 @@ export const useRdvActions = (
     });
   };
 
-  // Alias for handleMotifSelection to match useRdv.ts expectations
   const handleMotifChange = handleMotifSelection;
 
-  // Handle reservation submission
   const handleReservation = async (selectedRdv: Rdv, motifs: string[]) => {
     if (!user || !selectedRdv) return;
 
     try {
       setIsProcessing(true);
-      // Update the RDV to mark it as reserved
       const { error: updateError } = await supabase
         .from("rdv")
         .update({
@@ -96,11 +88,9 @@ export const useRdvActions = (
         return;
       }
 
-      // Close the confirmation dialog and show success message
       setShowConfirmDialog(false);
       setReservationComplete(true);
 
-      // Refresh the user's RDV
       const updatedRdv = {
         ...selectedRdv,
         is_available: false,
@@ -128,19 +118,16 @@ export const useRdvActions = (
     }
   };
 
-  // Handle complete dialog close (navigation after successful reservation)
   const handleCompleteDialogClose = () => {
     setReservationComplete(false);
     navigate("/profile");
   };
 
-  // Handle cancel reservation
   const handleCancelReservation = async () => {
     if (!userRdv) return;
 
     try {
       setIsProcessing(true);
-      // Update the RDV to mark it as available again
       const { error } = await supabase
         .from("rdv")
         .update({
@@ -160,7 +147,6 @@ export const useRdvActions = (
         return;
       }
 
-      // Update UI state
       setUserRdv(null);
       
       toast({
@@ -186,7 +172,6 @@ export const useRdvActions = (
     handleReservation,
     handleMotifSelection,
     handleCancelReservation,
-    // Add these to match useRdv.ts expectations
     handleMotifChange,
     handleCompleteDialogClose,
     isProcessing
