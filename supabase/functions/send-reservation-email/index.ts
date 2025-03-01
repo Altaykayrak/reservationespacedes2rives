@@ -1,21 +1,25 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.0";
 import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface ReservationEmailData {
-  childName: string;
-  dates: string[];
-  type: 'wednesday' | 'holiday';
-  withoutMeal: boolean[];
-  earlyDropoff: boolean[];
+interface ReservationEmailRequest {
+  rdvId: string;
+  motifs: string[];
+  userId: string;
 }
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const resendApiKey = Deno.env.get("RESEND_API_KEY") || "";
+
+const resend = new Resend(resendApiKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -24,40 +28,58 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { childName, dates, type, withoutMeal, earlyDropoff }: ReservationEmailData = await req.json();
+    const { rdvId, motifs, userId }: ReservationEmailRequest = await req.json();
 
-    // Créer le contenu HTML pour les dates et options
-    const datesHtml = dates.map((date, index) => `
-      <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;">${date}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${withoutMeal[index] ? 'Oui' : 'Non'}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${earlyDropoff[index] ? 'Oui' : 'Non'}</td>
-      </tr>
-    `).join('');
+    // Fetch the rdv details
+    const { data: rdvData, error: rdvError } = await supabase
+      .from("rdv")
+      .select("*")
+      .eq("id", rdvId)
+      .single();
 
-    const reservationType = type === 'wednesday' ? 'mercredis' : 'vacances';
+    if (rdvError) {
+      console.error("Error fetching rdv:", rdvError);
+      throw new Error("Error fetching rdv details");
+    }
 
+    // Fetch the user profile
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles_with_emails")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      throw new Error("Error fetching user profile");
+    }
+
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("fr-FR", { 
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    };
+
+    const formatTime = (timeStr: string) => {
+      return timeStr.substring(0, 5);
+    };
+
+    // Send email
     const emailResponse = await resend.emails.send({
-      from: "E2R <onboarding@resend.dev>",
+      from: "Réservation <onboarding@resend.dev>",
       to: ["accueil@e2rives.fr"],
-      subject: `Nouvelle réservation ${reservationType} - ${childName}`,
+      subject: `Nouvelle réservation de rendez-vous - ${profileData.first_name} ${profileData.last_name}`,
       html: `
-        <h1>Nouvelle réservation pour ${childName}</h1>
-        <p>Une nouvelle réservation a été effectuée pour les ${reservationType}.</p>
-        
-        <h2>Détails de la réservation :</h2>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-          <thead>
-            <tr style="background-color: #f8f9fa;">
-              <th style="padding: 8px; border: 1px solid #ddd;">Date</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Sans repas</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Accueil avant 8h30</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${datesHtml}
-          </tbody>
-        </table>
+        <h1>Nouvelle réservation de rendez-vous</h1>
+        <p><strong>Nom et prénom:</strong> ${profileData.first_name} ${profileData.last_name}</p>
+        <p><strong>Email:</strong> ${profileData.email}</p>
+        <p><strong>Date:</strong> ${formatDate(rdvData.date)}</p>
+        <p><strong>Horaire:</strong> ${formatTime(rdvData.heure_debut)} - ${formatTime(rdvData.heure_fin)}</p>
+        <p><strong>Motifs:</strong> ${motifs.join(", ")}</p>
       `,
     });
 
@@ -70,8 +92,8 @@ const handler = async (req: Request): Promise<Response> => {
         ...corsHeaders,
       },
     });
-  } catch (error) {
-    console.error("Error sending email:", error);
+  } catch (error: any) {
+    console.error("Error in send-reservation-email function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

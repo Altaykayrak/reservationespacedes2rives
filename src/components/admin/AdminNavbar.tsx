@@ -1,87 +1,80 @@
-
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { MobileNav } from "@/components/ui/nav/MobileNav";
-import { Logo } from "@/components/ui/nav/Logo";
+import { Menu } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
-export const AdminNavbar = () => {
-  const location = useLocation();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
+export function AdminNavbar() {
   const { signOut } = useAuth();
+  const [isMounted, setIsMounted] = useState(false);
 
-  const links = [
-    { href: "/admin", label: "Tableau de bord" },
-    { href: "/admin/wednesdays", label: "Mercredis" },
-    { href: "/admin/holidays", label: "Vacances" },
-    { href: "/admin/reservations", label: "Réservations" },
-    { href: "/admin/profiles", label: "Utilisateurs" },
-    { href: "/admin/authorized-emails", label: "Emails autorisés" },
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const menuItems = [
+    { label: "Dashboard", href: "/admin" },
+    { label: "Réservations", href: "/admin/reservations" },
+    { label: "Rendez-vous", href: "/admin/rdv" },
+    { label: "Utilisateurs", href: "/admin/profiles" },
+    { label: "Enfants", href: "/admin/children" },
+    { label: "Emails autorisés", href: "/admin/authorized-emails" },
+    { label: "Mercredis", href: "/admin/wednesdays" },
+    { label: "Périodes vacances", href: "/admin/holidays" },
   ];
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Déconnexion réussie",
-        description: "Vous avez été déconnecté avec succès.",
-      });
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la déconnexion.",
-        variant: "destructive"
-      });
-    }
-  };
+  if (!isMounted) {
+    return null;
+  }
 
   return (
-    <nav className="bg-gray-100 p-4">
-      <div className="container mx-auto flex items-center justify-between">
-        <Logo />
-        {isMobile ? (
-          <div className="flex justify-start">
-            <MobileNav 
-              menuItems={links}
-              isAuthenticated={true}
-              onLogout={handleLogout}
-            />
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-wrap gap-4 mx-auto">
-              {links.map((link) => (
+    <div className="border-b">
+      <div className="flex h-16 items-center px-4">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-full sm:w-60">
+            <SheetHeader>
+              <SheetTitle>Administration</SheetTitle>
+              <SheetDescription>
+                Gérez les différents aspects de l'application.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="py-4">
+              {menuItems.map((item) => (
                 <Link
-                  key={link.href}
-                  to={link.href}
-                  className={cn(
-                    "px-4 py-2 rounded-md transition-colors",
-                    location.pathname === link.href
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-gray-200"
-                  )}
+                  key={item.label}
+                  to={item.href}
+                  className="block py-2 px-4 rounded hover:bg-secondary"
                 >
-                  {link.label}
+                  {item.label}
                 </Link>
               ))}
             </div>
-            <Button 
-              variant="outline" 
-              onClick={handleLogout}
-              className="ml-4"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
-            </Button>
-          </>
-        )}
+            <SheetFooter>
+              <Button variant="destructive" onClick={signOut}>
+                Se déconnecter
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+        <div className="ml-auto font-semibold">Administration</div>
       </div>
-    </nav>
+    </div>
   );
+}
+
+const SheetFooter = ({ children }: { children: React.ReactNode }) => {
+  return <div className="mt-6 flex items-center justify-end">{children}</div>;
 };
