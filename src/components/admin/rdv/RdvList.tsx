@@ -51,6 +51,9 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
     
     const statusLabel = status === "all" ? "Tous" : status === "disponible" ? "Disponibles" : "Réservés";
     doc.text(`Statut: ${statusLabel}`, 14, 22);
+    
+    // Add total count of appointments
+    doc.text(`Nombre total de rendez-vous: ${filteredRdvList.length}`, 14, 29);
 
     const headers = [
       "Date",
@@ -77,7 +80,7 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
     autoTable(doc, {
       head: [headers],
       body: data,
-      startY: 30,
+      startY: 36,  // Increased startY to accommodate the total count text
       styles: {
         fontSize: 8,
         cellPadding: 1
