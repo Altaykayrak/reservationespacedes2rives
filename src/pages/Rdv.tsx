@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,10 +34,9 @@ export default function RdvPage() {
   const [reservationComplete, setReservationComplete] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
-  // Define July and August 2025 date range
   const summerRange = {
-    start: new Date(2025, 6, 1), // July 1, 2025
-    end: new Date(2025, 7, 31)   // August 31, 2025
+    start: new Date(2025, 6, 1),
+    end: new Date(2025, 7, 31)
   };
 
   useEffect(() => {
@@ -57,7 +55,6 @@ export default function RdvPage() {
     try {
       setIsLoading(true);
       
-      // Récupérer le rendez-vous de l'utilisateur connecté
       const { data: userRdvData, error: userRdvError } = await supabase
         .from('rdv')
         .select('*')
@@ -71,7 +68,6 @@ export default function RdvPage() {
       if (userRdvData && userRdvData.length > 0) {
         setUserRdv(userRdvData[0] as unknown as Rdv);
       } else {
-        // Si l'utilisateur n'a pas de rendez-vous, récupérer les créneaux disponibles
         await fetchRdvs();
       }
     } catch (error) {
@@ -107,7 +103,6 @@ export default function RdvPage() {
     }
   };
 
-  // Function to filter available slots for a selected date
   const filterSlotsByDate = (date: Date | undefined) => {
     if (!date) {
       setAvailableSlots([]);
@@ -148,7 +143,6 @@ export default function RdvPage() {
     try {
       setIsLoading(true);
       
-      // Mise à jour du créneau en base de données
       const { error } = await supabase
         .from('rdv')
         .update({
@@ -160,7 +154,6 @@ export default function RdvPage() {
 
       if (error) throw error;
 
-      // Envoi de l'email de confirmation
       const { error: emailError } = await supabase.functions.invoke('send-reservation-email', {
         body: {
           rdvId: selectedRdv.id,
@@ -176,7 +169,6 @@ export default function RdvPage() {
       setShowConfirmDialog(false);
       setReservationComplete(true);
       
-      // Mettre à jour le rendez-vous de l'utilisateur
       setUserRdv({
         ...selectedRdv,
         motifs: selectedMotifs,
@@ -206,11 +198,9 @@ export default function RdvPage() {
   };
 
   const formatTime = (timeStr: string) => {
-    // Convert "HH:mm:ss" to "HH:mm"
     return timeStr.substring(0, 5);
   };
 
-  // Function to check if a date is a day with available slots
   const isDayWithSlots = (date: Date) => {
     const formattedDate = format(date, 'yyyy-MM-dd');
     return rdvList.some(slot => slot.date === formattedDate);
@@ -220,7 +210,7 @@ export default function RdvPage() {
     setUserRdv(null);
     fetchRdvs();
   };
-  
+
   if (loading || isLoading) {
     return (
       <>
@@ -237,7 +227,6 @@ export default function RdvPage() {
     );
   }
 
-  // Si l'utilisateur a déjà un rendez-vous, afficher les détails de celui-ci
   if (userRdv) {
     return (
       <>
@@ -276,12 +265,6 @@ export default function RdvPage() {
                   <li>Quotient familial CAF ou avis d'imposition N-2</li>
                 </ul>
               </div>
-              
-              <div className="mt-6 text-right">
-                <Button variant="outline" onClick={handleCancelRdv}>
-                  Réserver un autre rendez-vous
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -289,7 +272,6 @@ export default function RdvPage() {
     );
   }
 
-  // Sinon, afficher le calendrier pour réserver un nouveau rendez-vous
   return (
     <>
       <Navbar />
@@ -302,7 +284,6 @@ export default function RdvPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Calendar section */}
           <Card>
             <CardHeader>
               <CardTitle>Calendrier - Juillet/Août 2025</CardTitle>
@@ -314,7 +295,7 @@ export default function RdvPage() {
                 onSelect={setSelectedDate}
                 locale={fr}
                 className="mx-auto"
-                defaultMonth={new Date(2025, 6, 1)} // July 2025
+                defaultMonth={new Date(2025, 6, 1)}
                 disabled={(date) => 
                   !isWithinInterval(date, summerRange) || 
                   !isDayWithSlots(date)
@@ -333,7 +314,6 @@ export default function RdvPage() {
             </CardContent>
           </Card>
 
-          {/* Available slots section */}
           <Card>
             <CardHeader>
               <CardTitle>
@@ -379,7 +359,6 @@ export default function RdvPage() {
           </Card>
         </div>
 
-        {/* Dialog de confirmation de réservation */}
         <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
@@ -433,7 +412,6 @@ export default function RdvPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog de récapitulatif après réservation */}
         <Dialog open={reservationComplete} onOpenChange={setReservationComplete}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
