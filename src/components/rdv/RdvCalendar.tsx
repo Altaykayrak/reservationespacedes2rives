@@ -27,17 +27,17 @@ export const RdvCalendar = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Calendrier - Juillet/Août 2025</CardTitle>
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Calendrier - Juillet/Août 2025</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <Calendar
           mode="single"
           selected={selectedDate}
           onSelect={setSelectedDate}
           locale={fr}
-          className="mx-auto"
+          className="mx-auto scale-95 transform origin-top-left"
           defaultMonth={new Date(2025, 6, 1)}
           disabled={(date) => 
             !isWithinInterval(date, summerRange) || 
@@ -51,7 +51,7 @@ export const RdvCalendar = ({
           }}
         />
         
-        <div className="mt-4 text-center text-sm text-gray-500">
+        <div className="mt-2 text-center text-xs text-gray-500">
           Les dates avec des créneaux disponibles sont en surbrillance
         </div>
       </CardContent>

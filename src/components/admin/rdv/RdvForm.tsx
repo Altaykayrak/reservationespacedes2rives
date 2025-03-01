@@ -154,86 +154,96 @@ const RdvForm: React.FC<RdvFormProps> = ({ onRdvAdded }) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Ajouter des rendez-vous</CardTitle>
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Ajouter des rendez-vous</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div>
-            <Label>Sélectionnez une ou plusieurs dates</Label>
-            <Calendar
-              mode="single"
-              onSelect={handleDateSelect}
-              locale={fr}
-              className="mx-auto"
-              disabled={disableWeekends}
-              modifiers={{ selected: isDateSelected }}
-              modifiersClassNames={{
-                selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
-              }}
-            />
-          </div>
-
-          {selectedDates.length > 0 && (
-            <div className="mt-4">
-              <Label>Dates sélectionnées</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedDates.map((date, index) => (
-                  <Badge 
-                    key={index} 
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    {format(date, 'dd/MM/yyyy', { locale: fr })}
-                    <button 
-                      type="button" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        removeDate(date);
-                      }}
-                      className="ml-1 rounded-full hover:bg-gray-200 p-0.5"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs mb-1 block">Sélectionnez dates</Label>
+              <Calendar
+                mode="single"
+                onSelect={handleDateSelect}
+                locale={fr}
+                className="mx-auto scale-90 transform origin-top-left"
+                disabled={disableWeekends}
+                modifiers={{ selected: isDateSelected }}
+                modifiersClassNames={{
+                  selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
+                }}
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs mb-1 block">Heures</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="heureDebut" className="text-xs">Début</Label>
+                    <Input
+                      id="heureDebut"
+                      type="time"
+                      value={heureDebut}
+                      onChange={(e) => setHeureDebut(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="heureFin" className="text-xs">Fin</Label>
+                    <Input
+                      id="heureFin"
+                      type="time"
+                      value={heureFin}
+                      onChange={(e) => setHeureFin(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="heureDebut">Heure de début</Label>
-              <Input
-                id="heureDebut"
-                type="time"
-                value={heureDebut}
-                onChange={(e) => setHeureDebut(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="heureFin">Heure de fin</Label>
-              <Input
-                id="heureFin"
-                type="time"
-                value={heureFin}
-                onChange={(e) => setHeureFin(e.target.value)}
-              />
+              
+              {selectedDates.length > 0 && (
+                <div>
+                  <Label className="text-xs mb-1 block">Dates sélectionnées</Label>
+                  <div className="flex flex-wrap gap-1 mt-1 max-h-24 overflow-y-auto">
+                    {selectedDates.map((date, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="secondary"
+                        className="flex items-center gap-1 text-xs py-0.5 px-1.5 my-0.5"
+                      >
+                        {format(date, 'dd/MM/yyyy', { locale: fr })}
+                        <button 
+                          type="button" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            removeDate(date);
+                          }}
+                          className="rounded-full hover:bg-gray-200 p-0.5"
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <Button 
+                onClick={handleAddRdv} 
+                className="w-full mt-auto"
+                size="sm"
+                disabled={selectedDates.length === 0}
+              >
+                {selectedDates.length > 1 
+                  ? `Ajouter ${selectedDates.length} rendez-vous` 
+                  : selectedDates.length === 1 
+                    ? "Ajouter un rendez-vous" 
+                    : "Sélectionnez au moins une date"}
+              </Button>
             </div>
           </div>
-
-          <Button 
-            onClick={handleAddRdv} 
-            className="w-full"
-            disabled={selectedDates.length === 0}
-          >
-            {selectedDates.length > 1 
-              ? `Ajouter ${selectedDates.length} rendez-vous` 
-              : selectedDates.length === 1 
-                ? "Ajouter un rendez-vous" 
-                : "Sélectionnez au moins une date"}
-          </Button>
         </div>
       </CardContent>
     </Card>
