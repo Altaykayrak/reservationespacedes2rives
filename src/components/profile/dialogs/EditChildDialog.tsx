@@ -11,7 +11,7 @@ interface EditChildDialogProps {
 
 export function EditChildDialog({ child, onOpenChange, onSuccess }: EditChildDialogProps) {
   return (
-    <Dialog open={!!child} onOpenChange={() => onOpenChange(null)}>
+    <Dialog open={!!child} onOpenChange={(open) => open ? undefined : onOpenChange(null)}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifier l'enfant</DialogTitle>
