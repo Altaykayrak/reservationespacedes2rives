@@ -55,6 +55,7 @@ export const ReservationCompleteDialog = ({
                   <li>Justificatif de domicile</li>
                   <li>Carnet de santé (si nouveaux vaccins)</li>
                   <li>Quotient familial CAF ou avis d'imposition N-2</li>
+                  <li>Un moyen de règlement (chèque, carte de paiement, RIB si vous souhaitez mettre en place le prélèvement automatique)</li>
                 </ul>
               </div>
             </>

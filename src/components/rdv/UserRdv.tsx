@@ -4,9 +4,11 @@ import { Navbar } from "@/components/ui/navbar";
 import { Rdv } from "@/types/rdv";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+
 interface UserRdvProps {
   userRdv: Rdv;
 }
+
 export const UserRdv = ({
   userRdv
 }: UserRdvProps) => {
@@ -16,9 +18,11 @@ export const UserRdv = ({
       locale: fr
     });
   };
+
   const formatTime = (timeStr: string) => {
     return timeStr.substring(0, 5);
   };
+
   const createGoogleCalendarLink = (rdv: Rdv) => {
     const rdvDate = new Date(rdv.date);
     const [startHour, startMinute] = rdv.heure_debut.split(':').map(Number);
@@ -38,6 +42,7 @@ export const UserRdv = ({
     const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
     return googleCalendarUrl;
   };
+
   return <>
       <Navbar />
       <div className="container mx-auto py-8">
@@ -72,6 +77,7 @@ export const UserRdv = ({
                 <li>Justificatif de domicile</li>
                 <li>Carnet de santé (si nouveaux vaccins)</li>
                 <li>Quotient familial CAF ou avis d'imposition N-2</li>
+                <li>Un moyen de règlement (chèque, carte de paiement, RIB si vous souhaitez mettre en place le prélèvement automatique)</li>
               </ul>
             </div>
 
