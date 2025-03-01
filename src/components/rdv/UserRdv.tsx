@@ -1,59 +1,48 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/ui/navbar";
 import { Rdv } from "@/types/rdv";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-
 interface UserRdvProps {
   userRdv: Rdv;
 }
-
-export const UserRdv = ({ userRdv }: UserRdvProps) => {
+export const UserRdv = ({
+  userRdv
+}: UserRdvProps) => {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return format(date, 'EEEE d MMMM yyyy', { locale: fr });
+    return format(date, 'EEEE d MMMM yyyy', {
+      locale: fr
+    });
   };
-
   const formatTime = (timeStr: string) => {
     return timeStr.substring(0, 5);
   };
-
   const createGoogleCalendarLink = (rdv: Rdv) => {
     const rdvDate = new Date(rdv.date);
-    
     const [startHour, startMinute] = rdv.heure_debut.split(':').map(Number);
     const [endHour, endMinute] = rdv.heure_fin.split(':').map(Number);
-    
     const startDate = new Date(rdvDate);
     startDate.setHours(startHour, startMinute, 0);
-    
     const endDate = new Date(rdvDate);
     endDate.setHours(endHour, endMinute, 0);
-    
     const formatDateForGCal = (date: Date) => {
       return date.toISOString().replace(/-|:|\.\d+/g, '');
     };
-    
     const start = formatDateForGCal(startDate);
     const end = formatDateForGCal(endDate);
-    
     const title = "Rendez-vous Service Enfance";
     const details = `Motif(s): ${rdv.motifs.join(", ")}\n\nDocuments à apporter:\n- Justificatif de domicile\n- Carnet de santé (si nouveaux vaccins)\n- Quotient familial CAF ou avis d'imposition N-2`;
     const location = "Service Enfance";
-    
     const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
-    
     return googleCalendarUrl;
   };
-
-  return (
-    <>
+  return <>
       <Navbar />
       <div className="container mx-auto py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Votre rendez-vous</h1>
+          <h1 className="text-3xl font-bold mb-2">Votre rendez-vous d'inscription(s)</h1>
           <p className="text-gray-600">
             Voici les détails de votre rendez-vous confirmé
           </p>
@@ -61,7 +50,7 @@ export const UserRdv = ({ userRdv }: UserRdvProps) => {
 
         <Card className="max-w-3xl mx-auto">
           <CardHeader>
-            <CardTitle>Rendez-vous confirmé</CardTitle>
+            <CardTitle>Rendez-vous inscription(s)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -87,10 +76,7 @@ export const UserRdv = ({ userRdv }: UserRdvProps) => {
             </div>
 
             <div className="mt-6">
-              <Button 
-                className="w-full flex items-center justify-center gap-2"
-                onClick={() => window.open(createGoogleCalendarLink(userRdv), "_blank")}
-              >
+              <Button className="w-full flex items-center justify-center gap-2" onClick={() => window.open(createGoogleCalendarLink(userRdv), "_blank")}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
                   <line x1="16" x2="16" y1="2" y2="6" />
@@ -103,6 +89,5 @@ export const UserRdv = ({ userRdv }: UserRdvProps) => {
           </CardContent>
         </Card>
       </div>
-    </>
-  );
+    </>;
 };
