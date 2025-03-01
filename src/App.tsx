@@ -59,46 +59,48 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          
-          {/* Rendez-vous */}
-          <Route path="/rdv" element={<Rdv />} />
-          
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/children" element={<Children />} />
-            <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
-            <Route path="/holiday-reservations" element={<HolidayReservations />} />
-            <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
-          </Route>
-          
-          <Route path="/holiday-program" element={<HolidayProgram />} />
-          <Route path="/terms-of-service" element={<TermsOfService />} />
-          
-          {/* Admin routes */}
-          <Route path="/admin" element={<AdminPage />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="reservations" element={<AdminReservations />} />
-            <Route path="profiles" element={<AdminProfiles />} />
-            <Route path="children" element={<AdminChildren />} />
-            <Route path="authorized-emails" element={<AdminAuthorizedEmails />} />
-            <Route path="wednesdays" element={<AdminWednesdays />} />
-            <Route path="holidays" element={<AdminHolidays />} />
-            <Route path="new-reservation" element={<AdminNewReservation />} />
-            <Route path="new-holiday-reservation" element={<AdminNewHolidayReservation />} />
-            <Route path="new-teenholiday-reservation" element={<AdminNewTeenHolidayReservation />} />
-            <Route path="rdv" element={<AdminRdv />} />
-          </Route>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            
+            {/* Rendez-vous */}
+            <Route path="/rdv" element={<Rdv />} />
+            
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/children" element={<Children />} />
+              <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
+              <Route path="/holiday-reservations" element={<HolidayReservations />} />
+              <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
+            </Route>
+            
+            <Route path="/holiday-program" element={<HolidayProgram />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            
+            {/* Admin routes */}
+            <Route path="/admin" element={<AdminPage />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="reservations" element={<AdminReservations />} />
+              <Route path="profiles" element={<AdminProfiles />} />
+              <Route path="children" element={<AdminChildren />} />
+              <Route path="authorized-emails" element={<AdminAuthorizedEmails />} />
+              <Route path="wednesdays" element={<AdminWednesdays />} />
+              <Route path="holidays" element={<AdminHolidays />} />
+              <Route path="new-reservation" element={<AdminNewReservation />} />
+              <Route path="new-holiday-reservation" element={<AdminNewHolidayReservation />} />
+              <Route path="new-teenholiday-reservation" element={<AdminNewTeenHolidayReservation />} />
+              <Route path="rdv" element={<AdminRdv />} />
+            </Route>
 
-          <Route path="*" element={<div>Page not found</div>} />
-        </Routes>
+            <Route path="*" element={<div>Page not found</div>} />
+          </Routes>
+        </Router>
       </ErrorBoundary>
       <Toaster />
     </QueryClientProvider>
