@@ -46,6 +46,9 @@ export const ReservationCompleteDialog = ({
                 <strong>Heure :</strong> {formatTime(selectedRdv.heure_debut)} - {formatTime(selectedRdv.heure_fin)}
               </p>
               <p>
+                <strong>Lieu :</strong> Accueil Espace des 2 rives 4 place de la fraternité, 27590 Pîtres
+              </p>
+              <p>
                 <strong>Motif(s) :</strong> {selectedMotifs.join(", ")}
               </p>
               

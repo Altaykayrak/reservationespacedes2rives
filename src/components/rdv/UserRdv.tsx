@@ -70,6 +70,9 @@ export const UserRdv = ({
                 <strong>Heure :</strong> {formatTime(userRdv.heure_debut)} - {formatTime(userRdv.heure_fin)}
               </p>
               <p>
+                <strong>Lieu :</strong> Accueil Espace des 2 rives 4 place de la fraternité, 27590 Pîtres
+              </p>
+              <p>
                 <strong>Motif(s) :</strong> {userRdv.motifs.join(", ")}
               </p>
             </div>
