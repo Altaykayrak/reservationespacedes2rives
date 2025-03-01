@@ -25,7 +25,7 @@ import HolidayReservations from "./pages/HolidayReservations";
 import TeenHolidayReservations from "./pages/TeenHolidayReservations";
 import HolidayProgram from "./pages/HolidayProgram";
 import TermsOfService from "./pages/TermsOfService";
-import { AdminPage } from "./pages/admin/AdminPage";
+import { AdminPage } from "./pages/admin/AdminPage"; // Corrected import
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservations from "./pages/admin/AdminReservations";
 import AdminProfiles from "./pages/admin/AdminProfiles";

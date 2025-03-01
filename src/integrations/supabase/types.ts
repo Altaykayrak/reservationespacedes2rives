@@ -305,6 +305,42 @@ export type Database = {
         }
         Relationships: []
       }
+      rdv: {
+        Row: {
+          created_at: string
+          date: string
+          heure_debut: string
+          heure_fin: string
+          id: string
+          motifs: string[] | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          heure_debut: string
+          heure_fin: string
+          id?: string
+          motifs?: string[] | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          heure_debut?: string
+          heure_fin?: string
+          id?: string
+          motifs?: string[] | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       school_class: {
         Row: {
           category: string

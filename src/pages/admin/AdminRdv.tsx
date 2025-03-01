@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,7 +53,7 @@ const AdminRdv = () => {
           .order('heure_debut');
 
         if (error) throw error;
-        setRdvList(data as Rdv[]);
+        setRdvList(data as unknown as Rdv[]);
       } catch (error) {
         console.error("Error fetching RDVs:", error);
         toast({
@@ -111,7 +110,7 @@ const AdminRdv = () => {
         .order('heure_debut');
 
       if (fetchError) throw fetchError;
-      setRdvList(newData as Rdv[]);
+      setRdvList(newData as unknown as Rdv[]);
     } catch (error) {
       console.error("Error adding RDV:", error);
       toast({

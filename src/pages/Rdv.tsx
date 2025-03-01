@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,7 +53,7 @@ export default function RdvPage() {
         .order('heure_debut');
 
       if (error) throw error;
-      setRdvList(data as Rdv[]);
+      setRdvList(data as unknown as Rdv[]);
     } catch (error) {
       console.error("Error fetching RDVs:", error);
       toast({
