@@ -43,11 +43,11 @@ export const LoginForm = ({
           {isLoading ? "Connexion..." : "Se connecter"}
         </Button>
         <div className="text-center text-sm">
-          <Link to="/register" className="text-primary hover:underline">
+          <Link to="/register" className="text-[#1F2937] hover:underline">
             Créer un compte
           </Link>
           <span className="text-[#1F2937]"> • </span>
-          <Link to="/forgot-password" className="text-primary hover:underline">
+          <Link to="/forgot-password" className="text-[#1F2937] hover:underline">
             Mot de passe oublié
           </Link>
         </div>
