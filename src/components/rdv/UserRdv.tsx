@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/ui/navbar";
@@ -36,7 +37,7 @@ export const UserRdv = ({
     };
     const start = formatDateForGCal(startDate);
     const end = formatDateForGCal(endDate);
-    const title = "Rendez-vous Service Enfance";
+    const title = "Rendez-vous inscription Espace des 2 rives";
     const details = `Motif(s): ${rdv.motifs.join(", ")}\n\nDocuments à apporter:\n- Justificatif de domicile\n- Carnet de santé (si nouveaux vaccins)\n- Quotient familial CAF ou avis d'imposition N-2`;
     const location = "Service Enfance";
     const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
