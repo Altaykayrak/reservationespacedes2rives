@@ -99,7 +99,9 @@ export const useHolidayReservation = () => {
   };
 
   const handleDateToggle = (date: Date) => {
-    const isTeenPage = window.location.pathname === "/teenholiday-reservations";
+    const isTeenPage = window.location.pathname === "/teenholiday-reservations" ||
+                      window.location.pathname === "/admin/reservations/new-teen-holiday" ||
+                      window.location.pathname === "/admin/new-teenholiday-reservation";
     
     if (isTeenClass && isTeenPage) return;
     

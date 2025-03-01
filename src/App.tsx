@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -92,6 +93,8 @@ function App() {
               <Route path="new-reservation" element={<AdminNewReservation />} />
               <Route path="new-holiday-reservation" element={<AdminNewHolidayReservation />} />
               <Route path="new-teenholiday-reservation" element={<AdminNewTeenHolidayReservation />} />
+              {/* Added alias route for "reservations/new-holiday" */}
+              <Route path="reservations/new-holiday" element={<AdminNewHolidayReservation />} />
               {/* <Route path="rdv" element={<AdminRdv />} /> */}
             </Route>
 
