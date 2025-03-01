@@ -1,565 +1,292 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { format, parse, isValid } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useToast } from "@/hooks/use-toast";
-import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
+import React, { useState, useEffect } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Rdv, RdvFormValues, MOTIFS_OPTIONS } from "@/types/rdv";
+import { Calendar } from "@/components/ui/calendar";
+import { fr } from "date-fns/locale";
+import { Rdv } from "@/types/rdv";
+import { format } from "date-fns";
 
-export default function AdminRdvPage() {
-  const { data: isAdmin, isLoading: isAdminLoading } = useAdminAuth();
-  const navigate = useNavigate();
+const AdminRdv = () => {
   const { toast } = useToast();
-  
   const [rdvList, setRdvList] = useState<Rdv[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
-  const [formValues, setFormValues] = useState<RdvFormValues>({
-    date: new Date(),
-    heure_debut: "09:00",
-    heure_fin: "10:00",
-  });
-  
-  const [selectedRdv, setSelectedRdv] = useState<Rdv | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [heureDebut, setHeureDebut] = useState("09:00");
+  const [heureFin, setHeureFin] = useState("09:30");
+  const [isAdmin, setIsAdmin] = useState(false);
 
+  // Check if user is admin
   useEffect(() => {
-    if (!isAdminLoading && !isAdmin) {
-      navigate("/admin-login");
+    async function checkAdmin() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("No user found");
+        
+        const { data, error } = await supabase.rpc('is_admin', { user_id: user.id });
+        if (error) throw error;
+        setIsAdmin(!!data);
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        setIsAdmin(false);
+      }
     }
-  }, [isAdmin, isAdminLoading, navigate]);
+    
+    checkAdmin();
+  }, []);
 
+  // Fetch all rdv
   useEffect(() => {
-    if (isAdmin) {
-      fetchRdvs();
-    }
-  }, [isAdmin]);
+    async function fetchRdv() {
+      if (!isAdmin) return;
+      
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('rdv')
+          .select('*, profiles(first_name, last_name, email)')
+          .order('date')
+          .order('heure_debut');
 
-  const fetchRdvs = async () => {
+        if (error) throw error;
+        setRdvList(data || []);
+      } catch (error) {
+        console.error("Error fetching RDVs:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les rendez-vous",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchRdv();
+  }, [isAdmin, toast]);
+
+  const handleAddRdv = async () => {
+    if (!date || !heureDebut || !heureFin) {
+      toast({
+        title: "Formulaire incomplet",
+        description: "Veuillez remplir tous les champs du formulaire",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      setIsLoading(true);
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      
       const { data, error } = await supabase
         .from('rdv')
-        .select(`
-          *,
-          profiles:user_id (
-            first_name,
-            last_name,
-            email
-          )
-        `)
+        .insert([
+          { 
+            date: formattedDate,
+            heure_debut: heureDebut,
+            heure_fin: heureFin,
+            status: 'disponible',
+            motifs: [],
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Le rendez-vous a été ajouté avec succès",
+      });
+
+      // Refetch RDVs
+      const { data: newData, error: fetchError } = await supabase
+        .from('rdv')
+        .select('*, profiles(first_name, last_name, email)')
         .order('date')
         .order('heure_debut');
 
-      if (error) throw error;
-      setRdvList(data || []);
+      if (fetchError) throw fetchError;
+      setRdvList(newData || []);
     } catch (error) {
-      console.error("Error fetching RDVs:", error);
+      console.error("Error adding RDV:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les rendez-vous",
+        description: "Impossible d'ajouter le rendez-vous",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleCreateRdv = async () => {
+  const handleDeleteRdv = async (id: string) => {
     try {
-      setIsLoading(true);
-      
-      if (!formValues.date || !formValues.heure_debut || !formValues.heure_fin) {
-        toast({
-          title: "Données manquantes",
-          description: "Veuillez remplir tous les champs",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const formattedDate = format(formValues.date, 'yyyy-MM-dd');
-      
-      const { error } = await supabase
-        .from('rdv')
-        .insert({
-          date: formattedDate,
-          heure_debut: formValues.heure_debut,
-          heure_fin: formValues.heure_fin,
-          status: 'disponible'
-        });
-
-      if (error) throw error;
-      
-      toast({
-        title: "Succès",
-        description: "Le créneau a été créé avec succès",
-      });
-      
-      setShowCreateDialog(false);
-      fetchRdvs();
-    } catch (error) {
-      console.error("Error creating RDV:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer le créneau",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdateRdv = async () => {
-    if (!selectedRdv) return;
-    
-    try {
-      setIsLoading(true);
-      
-      if (!formValues.date || !formValues.heure_debut || !formValues.heure_fin) {
-        toast({
-          title: "Données manquantes",
-          description: "Veuillez remplir tous les champs",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const formattedDate = format(formValues.date, 'yyyy-MM-dd');
-      
-      const { error } = await supabase
-        .from('rdv')
-        .update({
-          date: formattedDate,
-          heure_debut: formValues.heure_debut,
-          heure_fin: formValues.heure_fin
-        })
-        .eq('id', selectedRdv.id);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Succès",
-        description: "Le créneau a été mis à jour avec succès",
-      });
-      
-      setShowEditDialog(false);
-      fetchRdvs();
-    } catch (error) {
-      console.error("Error updating RDV:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le créneau",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteRdv = async () => {
-    if (!selectedRdv) return;
-    
-    try {
-      setIsLoading(true);
-      
       const { error } = await supabase
         .from('rdv')
         .delete()
-        .eq('id', selectedRdv.id);
+        .eq('id', id);
 
       if (error) throw error;
-      
+
       toast({
         title: "Succès",
-        description: "Le créneau a été supprimé avec succès",
+        description: "Le rendez-vous a été supprimé avec succès",
       });
-      
-      setShowDeleteDialog(false);
-      fetchRdvs();
+
+      // Update local state
+      setRdvList(rdvList.filter(rdv => rdv.id !== id));
     } catch (error) {
       console.error("Error deleting RDV:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer le créneau",
+        description: "Impossible de supprimer le rendez-vous",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResetStatus = async (rdv: Rdv) => {
-    try {
-      setIsLoading(true);
-      
-      const { error } = await supabase
-        .from('rdv')
-        .update({
-          status: 'disponible',
-          user_id: null,
-          motifs: []
-        })
-        .eq('id', rdv.id);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Succès",
-        description: "Le rendez-vous a été réinitialisé avec succès",
-      });
-      
-      fetchRdvs();
-    } catch (error) {
-      console.error("Error resetting RDV:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de réinitialiser le rendez-vous",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return format(date, 'dd/MM/yyyy', { locale: fr });
+    return format(date, 'EEEE d MMMM yyyy', { locale: fr });
   };
 
-  const formatTime = (timeStr: string) => {
-    // Convert "HH:mm:ss" to "HH:mm"
-    return timeStr.substring(0, 5);
-  };
-
-  if (isAdminLoading || isLoading) {
+  if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement...</p>
+      <div>
+        <AdminNavbar />
+        <div className="container mx-auto p-8">
+          <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
+          <p>Vous devez être administrateur pour accéder à cette page.</p>
         </div>
       </div>
     );
   }
-  
-  if (!isAdmin) {
-    return null; // Will be redirected by useEffect
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       <AdminNavbar />
-      
-      <main className="container mx-auto p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Gestion des rendez-vous</h1>
-          <Button onClick={() => {
-            setFormValues({
-              date: new Date(),
-              heure_debut: "09:00",
-              heure_fin: "10:00"
-            });
-            setShowCreateDialog(true);
-          }}>
-            Ajouter un créneau
-          </Button>
-        </div>
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-8">Gestion des rendez-vous</h1>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Liste des créneaux</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {rdvList.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Aucun créneau n'a été créé.</p>
-                <Button 
-                  className="mt-4" 
-                  onClick={() => setShowCreateDialog(true)}
-                >
-                  Créer un créneau
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Add RDV Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Ajouter un rendez-vous</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label>Date</Label>
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    locale={fr}
+                    className="mx-auto"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="heureDebut">Heure de début</Label>
+                    <Input
+                      id="heureDebut"
+                      type="time"
+                      value={heureDebut}
+                      onChange={(e) => setHeureDebut(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="heureFin">Heure de fin</Label>
+                    <Input
+                      id="heureFin"
+                      type="time"
+                      value={heureFin}
+                      onChange={(e) => setHeureFin(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <Button onClick={handleAddRdv} className="w-full">
+                  Ajouter
                 </Button>
               </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Horaire</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Utilisateur</TableHead>
-                    <TableHead>Motifs</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+            </CardContent>
+          </Card>
+
+          {/* RDV List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Rendez-vous disponibles</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-4">Chargement...</div>
+              ) : rdvList.length === 0 ? (
+                <div className="text-center py-4">Aucun rendez-vous disponible</div>
+              ) : (
+                <div className="space-y-4">
                   {rdvList.map((rdv) => (
-                    <TableRow key={rdv.id}>
-                      <TableCell>{formatDate(rdv.date)}</TableCell>
-                      <TableCell>{formatTime(rdv.heure_debut)} - {formatTime(rdv.heure_fin)}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          rdv.status === 'disponible' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {rdv.status === 'disponible' ? 'Disponible' : 'Réservé'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {rdv.profiles ? (
-                          <div>
-                            <p>{rdv.profiles.first_name} {rdv.profiles.last_name}</p>
-                            <p className="text-xs text-gray-500">{rdv.profiles.email}</p>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {rdv.motifs && rdv.motifs.length > 0 ? (
-                          <div className="space-y-1">
-                            {rdv.motifs.map(motif => (
-                              <div key={motif} className="text-xs bg-gray-100 rounded px-2 py-1 inline-block mr-1">
-                                {motif}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedRdv(rdv);
-                              setFormValues({
-                                date: parse(rdv.date, 'yyyy-MM-dd', new Date()),
-                                heure_debut: formatTime(rdv.heure_debut),
-                                heure_fin: formatTime(rdv.heure_fin)
-                              });
-                              setShowEditDialog(true);
-                            }}
+                    <Card key={rdv.id} className="p-4 relative group">
+                      <div className="absolute top-2 right-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleDeleteRdv(rdv.id)}
+                        >
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="16" 
+                            height="16" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            className="text-red-500"
                           >
-                            Modifier
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedRdv(rdv);
-                              setShowDeleteDialog(true);
-                            }}
-                          >
-                            Supprimer
-                          </Button>
-                          {rdv.status === 'réservé' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleResetStatus(rdv)}
-                            >
-                              Réinitialiser
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                          </svg>
+                        </Button>
+                      </div>
+                      <div>
+                        <p className="font-semibold">{formatDate(rdv.date)}</p>
+                        <p className="text-sm">{rdv.heure_debut.substring(0, 5)} - {rdv.heure_fin.substring(0, 5)}</p>
+                        <p className="text-sm mt-1">
+                          <span className={`px-2 py-0.5 rounded text-xs ${
+                            rdv.status === 'disponible' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {rdv.status}
+                          </span>
+                        </p>
+                        {rdv.status === 'réservé' && rdv.profiles && (
+                          <div className="mt-2 text-sm">
+                            <p>Réservé par: {rdv.profiles.first_name} {rdv.profiles.last_name}</p>
+                            <p>Email: {rdv.profiles.email}</p>
+                            <p>Motifs: {rdv.motifs.join(', ')}</p>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
                   ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Create RDV Dialog */}
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Ajouter un créneau</DialogTitle>
-              <DialogDescription>
-                Définissez la date et l'horaire du nouveau créneau.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
-                <Calendar
-                  mode="single"
-                  selected={formValues.date}
-                  onSelect={(date) => date && setFormValues({...formValues, date})}
-                  disabled={(date) => date < new Date()}
-                  className="rounded-md border"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="heure_debut">Heure de début</Label>
-                  <Input
-                    id="heure_debut"
-                    type="time"
-                    value={formValues.heure_debut}
-                    onChange={(e) => setFormValues({...formValues, heure_debut: e.target.value})}
-                  />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="heure_fin">Heure de fin</Label>
-                  <Input
-                    id="heure_fin"
-                    type="time"
-                    value={formValues.heure_fin}
-                    onChange={(e) => setFormValues({...formValues, heure_fin: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowCreateDialog(false)}
-                disabled={isLoading}
-              >
-                Annuler
-              </Button>
-              <Button 
-                onClick={handleCreateRdv}
-                disabled={isLoading}
-              >
-                {isLoading ? "Création..." : "Créer"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit RDV Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Modifier le créneau</DialogTitle>
-              <DialogDescription>
-                Modifiez la date et l'horaire du créneau sélectionné.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
-                <Calendar
-                  mode="single"
-                  selected={formValues.date}
-                  onSelect={(date) => date && setFormValues({...formValues, date})}
-                  disabled={(date) => date < new Date()}
-                  className="rounded-md border"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="heure_debut">Heure de début</Label>
-                  <Input
-                    id="heure_debut"
-                    type="time"
-                    value={formValues.heure_debut}
-                    onChange={(e) => setFormValues({...formValues, heure_debut: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="heure_fin">Heure de fin</Label>
-                  <Input
-                    id="heure_fin"
-                    type="time"
-                    value={formValues.heure_fin}
-                    onChange={(e) => setFormValues({...formValues, heure_fin: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowEditDialog(false)}
-                disabled={isLoading}
-              >
-                Annuler
-              </Button>
-              <Button 
-                onClick={handleUpdateRdv}
-                disabled={isLoading}
-              >
-                {isLoading ? "Mise à jour..." : "Mettre à jour"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmation de suppression</AlertDialogTitle>
-              <AlertDialogDescription>
-                Êtes-vous sûr de vouloir supprimer ce créneau ?
-                {selectedRdv && selectedRdv.status === 'réservé' && (
-                  <div className="mt-2 text-red-600 font-medium">
-                    Attention : Ce créneau est déjà réservé.
-                  </div>
-                )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isLoading}>Annuler</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteRdv}
-                disabled={isLoading}
-                className="bg-red-500 hover:bg-red-600"
-              >
-                {isLoading ? "Suppression..." : "Supprimer"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </main>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default AdminRdv;
