@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Rdv } from "@/types/rdv";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useMemo } from "react";
 
 interface AvailableSlotsProps {
   selectedDate: Date | undefined;
@@ -23,12 +24,6 @@ export const AvailableSlots = ({
   console.log("AvailableSlots - Selected date:", selectedDate);
   console.log("AvailableSlots - Available slots:", availableSlots);
 
-  // Si une date est sélectionnée, on utilise les créneaux disponibles directement
-  // car ils ont déjà été filtrés dans le hook useRdv
-  const filteredSlots = availableSlots;
-  
-  console.log("AvailableSlots - Filtered slots:", filteredSlots);
-
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
@@ -43,13 +38,13 @@ export const AvailableSlots = ({
           <div className="text-center py-4">
             <p className="text-gray-500 text-sm">Veuillez sélectionner une date sur le calendrier</p>
           </div>
-        ) : filteredSlots.length === 0 ? (
+        ) : availableSlots.length === 0 ? (
           <div className="text-center py-4">
             <p className="text-gray-500 text-sm">Aucun créneau disponible pour cette date</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-2">
-            {filteredSlots.map((rdv) => (
+            {availableSlots.map((rdv) => (
               <Card 
                 key={rdv.id} 
                 className="hover:shadow-md transition-shadow cursor-pointer border-gray-200"

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -22,10 +22,10 @@ export const useRdv = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   // Define summer range with explicit Date objects
-  const summerRange = {
+  const summerRange = useMemo(() => ({
     start: new Date(2025, 6, 1), // July 1, 2025
     end: new Date(2025, 7, 31)   // August 31, 2025
-  };
+  }), []);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -41,12 +41,12 @@ export const useRdv = () => {
     }
   }, [user]);
 
-  // Fetch available RDVs when component mounts
+  // Always fetch RDVs when component mounts, regardless of userRdv
   useEffect(() => {
-    if (user && !userRdv) {
+    if (user) {
       fetchRdvs();
     }
-  }, [user, userRdv]);
+  }, [user]);
 
   const fetchUserRdv = async () => {
     try {
@@ -66,8 +66,6 @@ export const useRdv = () => {
       console.log("User RDV data:", userRdvData);
       if (userRdvData && userRdvData.length > 0) {
         setUserRdv(userRdvData[0] as unknown as Rdv);
-      } else {
-        await fetchRdvs();
       }
     } catch (error) {
       console.error("Error fetching user RDV:", error);
@@ -131,13 +129,13 @@ export const useRdv = () => {
     setAvailableSlots(filteredSlots);
   };
 
-  // Update available slots when selected date or rdvList changes
+  // Update available slots when selected date changes
   useEffect(() => {
     if (selectedDate) {
       console.log("Date selection changed, filtering slots...");
       filterSlotsByDate(selectedDate);
     }
-  }, [selectedDate, rdvList]);
+  }, [selectedDate]);
 
   // Handle selecting a motif
   const handleMotifChange = (motif: string) => {
