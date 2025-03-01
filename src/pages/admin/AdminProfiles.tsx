@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,13 +7,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { Loader2, AlertCircle, CheckSquare, XSquare } from "lucide-react";
+import { Loader2, AlertCircle, CheckSquare, XSquare, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
+  const [filteredProfiles, setFilteredProfiles] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
@@ -22,6 +27,10 @@ const AdminProfiles = () => {
     userId: null,
     message: "Vérification des droits d'administrateur..."
   });
+
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
 
   useEffect(() => {
     async function checkAdminStatus() {
@@ -84,6 +93,39 @@ const AdminProfiles = () => {
 
     checkAdminStatus();
   }, []);
+
+  useEffect(() => {
+    if (profiles.length > 0) {
+      applyFilters();
+    }
+  }, [searchQuery, paymentFilter, profiles]);
+
+  const applyFilters = () => {
+    let result = [...profiles];
+
+    // Apply search filter (name or email)
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(profile => 
+        (profile.first_name && profile.first_name.toLowerCase().includes(query)) ||
+        (profile.last_name && profile.last_name.toLowerCase().includes(query)) ||
+        profile.email.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply payment filter
+    if (paymentFilter !== "all") {
+      const isAutomaticPayment = paymentFilter === "automatic";
+      result = result.filter(profile => profile.automatic_payment === isAutomaticPayment);
+    }
+
+    setFilteredProfiles(result);
+  };
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setPaymentFilter("all");
+  };
 
   const fetchAllProfiles = async () => {
     setLoading(true);
@@ -318,7 +360,7 @@ const AdminProfiles = () => {
               disabled={loading || bulkProcessing}
               className="flex items-center"
             >
-              {profiles.every(p => p.is_waiting) ? (
+              {filteredProfiles.every(p => p.is_waiting) ? (
                 <XSquare className="h-4 w-4 mr-2" />
               ) : (
                 <CheckSquare className="h-4 w-4 mr-2" />
@@ -330,7 +372,7 @@ const AdminProfiles = () => {
                   Traitement...
                 </>
               ) : (
-                profiles.every(p => p.is_waiting) ? "Désélectionner en attente" : "Tous en attente"
+                filteredProfiles.every(p => p.is_waiting) ? "Désélectionner en attente" : "Tous en attente"
               )}
             </Button>
             <Button 
@@ -339,7 +381,7 @@ const AdminProfiles = () => {
               disabled={loading || bulkProcessing}
               className="flex items-center"
             >
-              {profiles.every(p => p.is_closed) ? (
+              {filteredProfiles.every(p => p.is_closed) ? (
                 <XSquare className="h-4 w-4 mr-2" />
               ) : (
                 <CheckSquare className="h-4 w-4 mr-2" />
@@ -351,15 +393,62 @@ const AdminProfiles = () => {
                   Traitement...
                 </>
               ) : (
-                profiles.every(p => p.is_closed) ? "Désélectionner fermés" : "Tous fermés"
+                filteredProfiles.every(p => p.is_closed) ? "Désélectionner fermés" : "Tous fermés"
               )}
             </Button>
           </div>
         </div>
         
+        {/* Filtres */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Filtres</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="search">Recherche par nom ou email</Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Rechercher..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Prélèvement automatique</Label>
+                <Select
+                  value={paymentFilter}
+                  onValueChange={(value) => setPaymentFilter(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrer par prélèvement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="automatic">Prélèvement automatique</SelectItem>
+                    <SelectItem value="manual">Paiement manuel</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-end">
+                <Button variant="outline" onClick={clearFilters}>
+                  Réinitialiser les filtres
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
         <Card>
           <CardHeader>
-            <CardTitle>Liste des utilisateurs ({profiles.length})</CardTitle>
+            <CardTitle>Liste des utilisateurs ({filteredProfiles.length} sur {profiles.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {loading && (
@@ -390,14 +479,14 @@ const AdminProfiles = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {profiles.length === 0 ? (
+                    {filteredProfiles.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                           Aucun utilisateur trouvé
                         </TableCell>
                       </TableRow>
                     ) : (
-                      profiles.map((profile) => {
+                      filteredProfiles.map((profile) => {
                         const isProcessing = processingIds.has(profile.id);
                         return (
                           <TableRow key={profile.id}>
