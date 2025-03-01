@@ -23,6 +23,7 @@ const AdminProfiles = () => {
   const [waitingFilter, setWaitingFilter] = useState<"all" | boolean>("all");
   const [closedFilter, setClosedFilter] = useState<"all" | boolean>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   useEffect(() => {
     fetchProfiles();
@@ -105,6 +106,52 @@ const AdminProfiles = () => {
     }
   };
 
+  const handleBulkWaitingChange = async (value: boolean) => {
+    setBulkActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_waiting: value })
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all profiles
+
+      if (error) {
+        toast.error(`Erreur lors de la mise à jour des profils: ${error.message}`);
+      } else {
+        fetchProfiles();
+        toast.success(`Tous les profils ont été mis ${value ? 'en attente' : 'hors attente'} avec succès!`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(`Erreur: ${error.message}`);
+      }
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkClosedChange = async (value: boolean) => {
+    setBulkActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_closed: value })
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all profiles
+
+      if (error) {
+        toast.error(`Erreur lors de la mise à jour des profils: ${error.message}`);
+      } else {
+        fetchProfiles();
+        toast.success(`Tous les profils ont été ${value ? 'fermés' : 'ouverts'} avec succès!`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(`Erreur: ${error.message}`);
+      }
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   return (
     <div>
       <AdminNavbar />
@@ -179,12 +226,51 @@ const AdminProfiles = () => {
               </div>
             ) : (
               <>
-                <div className="mb-4">
+                <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Button onClick={() => exportProfilesToPDF(profiles)}>
                     <FileDown className="mr-2 h-4 w-4" />
                     Exporter en PDF
                   </Button>
+                  
+                  <div className="space-x-2">
+                    <Button 
+                      onClick={() => handleBulkWaitingChange(true)} 
+                      variant="outline" 
+                      disabled={bulkActionLoading}
+                    >
+                      {bulkActionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Tous en attente
+                    </Button>
+                    <Button 
+                      onClick={() => handleBulkWaitingChange(false)} 
+                      variant="outline"
+                      disabled={bulkActionLoading}
+                    >
+                      {bulkActionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Aucun en attente
+                    </Button>
+                  </div>
+                  
+                  <div className="space-x-2">
+                    <Button 
+                      onClick={() => handleBulkClosedChange(true)} 
+                      variant="outline"
+                      disabled={bulkActionLoading}
+                    >
+                      {bulkActionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Tous fermés
+                    </Button>
+                    <Button 
+                      onClick={() => handleBulkClosedChange(false)} 
+                      variant="outline"
+                      disabled={bulkActionLoading}
+                    >
+                      {bulkActionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Aucun fermé
+                    </Button>
+                  </div>
                 </div>
+                
                 <Table>
                   <TableHeader>
                     <TableRow>
