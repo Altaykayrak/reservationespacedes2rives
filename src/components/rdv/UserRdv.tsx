@@ -5,6 +5,7 @@ import { Navbar } from "@/components/ui/navbar";
 import { Rdv } from "@/types/rdv";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useEffect, useState } from "react";
 
 interface UserRdvProps {
   userRdv: Rdv;
@@ -13,6 +14,16 @@ interface UserRdvProps {
 export const UserRdv = ({
   userRdv
 }: UserRdvProps) => {
+  const [isAnimating, setIsAnimating] = useState(true);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAnimating(false);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return format(date, 'EEEE d MMMM yyyy', {
@@ -54,7 +65,7 @@ export const UserRdv = ({
           <p className="text-gray-600">
             Voici les détails de votre rendez-vous confirmé
           </p>
-          <p className="text-gray-600 mt-2">
+          <p className={`${isAnimating ? "text-red-600 animate-shake" : "text-gray-600"} mt-2 transition-colors duration-300`}>
             Pour toute annulation ou modification merci de nous contacter au 02 32 68 32 10 ou par mail : accueil@e2rives.fr
           </p>
         </div>
