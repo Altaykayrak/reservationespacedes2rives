@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,7 +54,7 @@ const AdminRdv = () => {
           .order('heure_debut');
 
         if (error) throw error;
-        setRdvList(data as unknown as Rdv[]);
+        setRdvList(data as Rdv[]);
       } catch (error) {
         console.error("Error fetching RDVs:", error);
         toast({
@@ -82,7 +83,7 @@ const AdminRdv = () => {
     try {
       const formattedDate = format(date, 'yyyy-MM-dd');
       
-      const { data, error } = await supabase
+      const { data: newRdv, error } = await supabase
         .from('rdv')
         .insert([
           { 
@@ -102,15 +103,10 @@ const AdminRdv = () => {
         description: "Le rendez-vous a été ajouté avec succès",
       });
 
-      // Refetch RDVs
-      const { data: newData, error: fetchError } = await supabase
-        .from('rdv')
-        .select('*, profiles(first_name, last_name, email)')
-        .order('date')
-        .order('heure_debut');
-
-      if (fetchError) throw fetchError;
-      setRdvList(newData as unknown as Rdv[]);
+      // Mettre à jour la liste locale des rendez-vous
+      if (newRdv && newRdv.length > 0) {
+        setRdvList([...rdvList, ...(newRdv as Rdv[])]);
+      }
     } catch (error) {
       console.error("Error adding RDV:", error);
       toast({
