@@ -23,9 +23,9 @@ export const AvailableSlots = ({
   console.log("AvailableSlots - Selected date:", selectedDate);
   console.log("AvailableSlots - Available slots:", availableSlots);
 
-  const filteredSlots = selectedDate 
-    ? availableSlots.filter(slot => slot.date === format(selectedDate, 'yyyy-MM-dd'))
-    : [];
+  // Si une date est sélectionnée, on utilise les créneaux disponibles directement
+  // car ils ont déjà été filtrés dans le hook useRdv
+  const filteredSlots = availableSlots;
   
   console.log("AvailableSlots - Filtered slots:", filteredSlots);
 

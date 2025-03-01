@@ -21,22 +21,32 @@ export const useRdv = () => {
   const [reservationComplete, setReservationComplete] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
+  // Define summer range with explicit Date objects
   const summerRange = {
-    start: new Date(2025, 6, 1),
-    end: new Date(2025, 7, 31)
+    start: new Date(2025, 6, 1), // July 1, 2025
+    end: new Date(2025, 7, 31)   // August 31, 2025
   };
 
+  // Redirect if not logged in
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
     }
   }, [user, loading, navigate]);
 
+  // Check if user has already a reservation
   useEffect(() => {
     if (user) {
       fetchUserRdv();
     }
   }, [user]);
+
+  // Fetch available RDVs when component mounts
+  useEffect(() => {
+    if (user && !userRdv) {
+      fetchRdvs();
+    }
+  }, [user, userRdv]);
 
   const fetchUserRdv = async () => {
     try {
@@ -86,7 +96,9 @@ export const useRdv = () => {
       console.log("Available RDVs:", data);
       if (data) {
         setRdvList(data as unknown as Rdv[]);
-        // Mettre à jour immediadement les créneaux disponibles si une date est sélectionnée
+        console.log("All available RDVs set:", data.length);
+        
+        // Update available slots if a date is already selected
         if (selectedDate) {
           filterSlotsByDate(selectedDate);
         }
@@ -119,12 +131,15 @@ export const useRdv = () => {
     setAvailableSlots(filteredSlots);
   };
 
+  // Update available slots when selected date or rdvList changes
   useEffect(() => {
     if (selectedDate) {
+      console.log("Date selection changed, filtering slots...");
       filterSlotsByDate(selectedDate);
     }
   }, [selectedDate, rdvList]);
 
+  // Handle selecting a motif
   const handleMotifChange = (motif: string) => {
     setSelectedMotifs((prev) => {
       if (prev.includes(motif)) {
@@ -134,6 +149,7 @@ export const useRdv = () => {
     });
   };
 
+  // Handle reservation
   const handleReservation = async () => {
     if (!user || !selectedRdv || selectedMotifs.length === 0) {
       toast({
