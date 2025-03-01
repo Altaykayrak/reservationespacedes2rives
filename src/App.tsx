@@ -36,8 +36,8 @@ import AdminHolidays from "./pages/admin/AdminHolidays";
 import AdminNewReservation from "./pages/admin/AdminNewReservation";
 import AdminNewHolidayReservation from "./pages/admin/AdminNewHolidayReservation";
 import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
-import Rdv from "./pages/Rdv";
-import AdminRdv from "./pages/admin/AdminRdv";
+// import Rdv from "./pages/Rdv";
+// import AdminRdv from "./pages/admin/AdminRdv";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,8 +68,8 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
-            {/* Rendez-vous */}
-            <Route path="/rdv" element={<Rdv />} />
+            {/* Rendez-vous - temporarily disabled */}
+            {/* <Route path="/rdv" element={<Rdv />} /> */}
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
@@ -95,7 +95,7 @@ function App() {
               <Route path="new-reservation" element={<AdminNewReservation />} />
               <Route path="new-holiday-reservation" element={<AdminNewHolidayReservation />} />
               <Route path="new-teenholiday-reservation" element={<AdminNewTeenHolidayReservation />} />
-              <Route path="rdv" element={<AdminRdv />} />
+              {/* <Route path="rdv" element={<AdminRdv />} /> */}
             </Route>
 
             <Route path="*" element={<div>Page not found</div>} />

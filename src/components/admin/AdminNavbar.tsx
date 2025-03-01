@@ -18,7 +18,7 @@ export function AdminNavbar() {
   const menuItems = [
     { label: "Dashboard", href: "/admin" },
     { label: "Réservations", href: "/admin/reservations" },
-    { label: "RDV", href: "/admin/rdv" },
+    // RDV tab removed
     { label: "Utilisateurs", href: "/admin/profiles" },
     { label: "Enfants", href: "/admin/children" },
     { label: "Emails autorisés", href: "/admin/authorized-emails" },
