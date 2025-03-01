@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { ChildrenFilters } from "@/components/admin/children/ChildrenFilters";
@@ -12,6 +11,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
+import { exportChildrenToPdf } from "@/components/admin/children/export/childrenPdfExport";
 
 const AdminChildren = () => {
   const queryClient = useQueryClient();
@@ -84,6 +86,25 @@ const AdminChildren = () => {
     }
   };
 
+  const handleExportPdf = () => {
+    if (!filteredChildren || filteredChildren.length === 0) {
+      toast.error("Aucun enfant à exporter");
+      return;
+    }
+    
+    try {
+      exportChildrenToPdf(filteredChildren, {
+        searchQuery,
+        selectedClass,
+        selectedGroup
+      });
+      toast.success("Export PDF généré avec succès");
+    } catch (error) {
+      console.error("Erreur lors de l'export PDF:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    }
+  };
+
   if (isLoading) {
     return <div>Chargement...</div>;
   }
@@ -92,7 +113,17 @@ const AdminChildren = () => {
     <div>
       <AdminNavbar />
       <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Gestion des enfants</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Gestion des enfants</h1>
+          <Button 
+            onClick={handleExportPdf}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            Export PDF
+          </Button>
+        </div>
 
         <ChildrenFilters
           searchQuery={searchQuery}
