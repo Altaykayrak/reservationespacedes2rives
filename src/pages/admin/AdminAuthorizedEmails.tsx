@@ -6,6 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { AddEmailForm } from "@/components/admin/authorized-emails/AddEmailForm";
 import { EmailSearch } from "@/components/admin/authorized-emails/EmailSearch";
 import { EmailList } from "@/components/admin/authorized-emails/EmailList";
+import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
+import { toast } from "sonner";
+import { exportEmailsToPdf } from "@/components/admin/authorized-emails/export/emailPdfExport";
 
 const AdminAuthorizedEmails = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,6 +63,23 @@ const AdminAuthorizedEmails = () => {
   const filteredEmails = authorizedEmails?.filter((email) =>
     email.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleExportPdf = () => {
+    if (!filteredEmails || filteredEmails.length === 0) {
+      toast.error("Aucun email à exporter");
+      return;
+    }
+    
+    try {
+      exportEmailsToPdf(filteredEmails, {
+        searchTerm
+      });
+      toast.success("Export PDF généré avec succès");
+    } catch (error) {
+      console.error("Erreur lors de l'export PDF:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    }
+  };
 
   if (isCheckingAdmin) {
     return (
@@ -114,7 +135,17 @@ const AdminAuthorizedEmails = () => {
     <div>
       <AdminNavbar />
       <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Gestion des emails autorisés</h1>
+          <Button 
+            onClick={handleExportPdf}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            Export PDF
+          </Button>
+        </div>
         <AddEmailForm />
         <EmailSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
         <EmailList emails={filteredEmails || []} />
