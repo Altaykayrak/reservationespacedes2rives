@@ -50,20 +50,20 @@ export const useRdv = () => {
   
   // Get RDV actions
   const { 
-    handleMotifChange, 
+    handleMotifChange,
+    handleMotifSelection, 
     handleReservation, 
-    handleSelectSlot, 
+    handleSelectSlot,
+    handleCloseConfirm,
     handleCompleteDialogClose,
     isProcessing 
   } = useRdvActions(
-    user, 
-    setSelectedMotifs, 
-    setSelectedRdv, 
-    setShowConfirmDialog, 
-    setReservationComplete, 
-    setUserRdv, 
-    setIsLoading,
-    fetchUserRdv
+    userRdv,
+    setUserRdv,
+    setShowConfirmDialog,
+    setReservationComplete,
+    setSelectedRdv,
+    setSelectedMotifs
   );
   
   // Get RDV configuration

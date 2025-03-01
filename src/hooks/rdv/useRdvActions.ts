@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Rdv } from "@/types/rdv";
 import { useToast } from "../use-toast";
 import { format } from "date-fns";
+import { useState } from "react";
 
 export const useRdvActions = (
   userRdv: Rdv | null,
@@ -17,6 +18,7 @@ export const useRdvActions = (
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Function to check if a user already has a reservation
   const checkUserReservation = async () => {
@@ -54,11 +56,26 @@ export const useRdvActions = (
     setSelectedRdv(null);
   };
 
+  // Handle motif selection (for the form in the confirmation dialog)
+  const handleMotifSelection = (motif: string) => {
+    setSelectedMotifs((prev) => {
+      if (prev.includes(motif)) {
+        return prev.filter((m) => m !== motif);
+      } else {
+        return [...prev, motif];
+      }
+    });
+  };
+
+  // Alias for handleMotifSelection to match useRdv.ts expectations
+  const handleMotifChange = handleMotifSelection;
+
   // Handle reservation submission
   const handleReservation = async (selectedRdv: Rdv, motifs: string[]) => {
     if (!user || !selectedRdv) return;
 
     try {
+      setIsProcessing(true);
       // Update the RDV to mark it as reserved
       const { error: updateError } = await supabase
         .from("rdv")
@@ -97,7 +114,7 @@ export const useRdvActions = (
         description: `Votre rendez-vous est confirmé pour le ${format(
           new Date(updatedRdv.date),
           "dd/MM/yyyy"
-        )} à ${updatedRdv.time}.`,
+        )} à ${updatedRdv.heure_debut}.`,
       });
     } catch (error) {
       console.error("Error in handleReservation:", error);
@@ -106,18 +123,15 @@ export const useRdvActions = (
         description: "Une erreur est survenue lors de la réservation.",
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  // Handle motif selection
-  const handleMotifSelection = (motif: string) => {
-    setSelectedMotifs((prev) => {
-      if (prev.includes(motif)) {
-        return prev.filter((m) => m !== motif);
-      } else {
-        return [...prev, motif];
-      }
-    });
+  // Handle complete dialog close (navigation after successful reservation)
+  const handleCompleteDialogClose = () => {
+    setReservationComplete(false);
+    navigate("/profile");
   };
 
   // Handle cancel reservation
@@ -125,6 +139,7 @@ export const useRdvActions = (
     if (!userRdv) return;
 
     try {
+      setIsProcessing(true);
       // Update the RDV to mark it as available again
       const { error } = await supabase
         .from("rdv")
@@ -159,6 +174,8 @@ export const useRdvActions = (
         description: "Une erreur est survenue lors de l'annulation.",
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -169,5 +186,9 @@ export const useRdvActions = (
     handleReservation,
     handleMotifSelection,
     handleCancelReservation,
+    // Add these to match useRdv.ts expectations
+    handleMotifChange,
+    handleCompleteDialogClose,
+    isProcessing
   };
 };
