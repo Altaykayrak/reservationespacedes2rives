@@ -8,6 +8,9 @@ import { useState, useEffect } from "react"
 import { AddChildForm } from "./AddChildForm"
 import { useQueryClient } from "@tanstack/react-query"
 import { ChildrenTable } from "./ChildrenTable"
+import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface ChildrenListProps {
   children: Child[]
@@ -15,7 +18,10 @@ interface ChildrenListProps {
 
 export function ChildrenList({ children }: ChildrenListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [editingChild, setEditingChild] = useState<Child | null>(null)
+  const [deletingChild, setDeletingChild] = useState<Child | null>(null)
   const [isButtonFlashing, setIsButtonFlashing] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const queryClient = useQueryClient()
 
   // Effet de clignotement du bouton quand il n'y a pas d'enfants
@@ -33,6 +39,61 @@ export function ChildrenList({ children }: ChildrenListProps) {
       };
     }
   }, [children.length]);
+
+  const handleSuccessfulEdit = () => {
+    setEditingChild(null);
+    // Invalider explicitement le cache pour forcer un re-fetch
+    queryClient.invalidateQueries({ queryKey: ['children'] });
+    toast.success("Enfant modifié avec succès");
+  };
+
+  const handleDeleteChild = async () => {
+    if (!deletingChild) return;
+    
+    setIsDeleting(true);
+
+    try {
+      // Vérifier si l'enfant a des réservations
+      const { data: wednesdayReservations, error: wednesdayError } = await supabase
+        .from('wednesday_reservations')
+        .select('id')
+        .eq('child_id', deletingChild.id)
+        .limit(1);
+
+      if (wednesdayError) throw wednesdayError;
+
+      const { data: holidayReservations, error: holidayError } = await supabase
+        .from('holiday_reservations')
+        .select('id')
+        .eq('child_id', deletingChild.id)
+        .limit(1);
+
+      if (holidayError) throw holidayError;
+
+      if (wednesdayReservations?.length > 0 || holidayReservations?.length > 0) {
+        toast.error("Impossible de supprimer un enfant qui a des réservations");
+        return;
+      }
+
+      // Supprimer l'enfant
+      const { error } = await supabase
+        .from('children')
+        .delete()
+        .eq('id', deletingChild.id);
+
+      if (error) throw error;
+
+      // Invalider explicitement le cache pour forcer un re-fetch
+      queryClient.invalidateQueries({ queryKey: ['children'] });
+      toast.success("Enfant supprimé avec succès");
+      setDeletingChild(null);
+    } catch (error) {
+      console.error('Error deleting child:', error);
+      toast.error("Erreur lors de la suppression de l'enfant");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="mt-8 space-y-4">
@@ -55,7 +116,11 @@ export function ChildrenList({ children }: ChildrenListProps) {
       </div>
       <Card className="overflow-hidden border-0 shadow-sm">
         <div className="overflow-x-auto">
-          <ChildrenTable children={children} />
+          <ChildrenTable 
+            children={children} 
+            onEdit={setEditingChild}
+            onDelete={setDeletingChild}
+          />
         </div>
       </Card>
 
@@ -67,6 +132,45 @@ export function ChildrenList({ children }: ChildrenListProps) {
           <AddChildForm onSuccess={() => setShowAddDialog(false)} />
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!editingChild} onOpenChange={() => setEditingChild(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier l'enfant</DialogTitle>
+          </DialogHeader>
+          {editingChild && (
+            <AddChildForm
+              initialData={editingChild}
+              onSuccess={handleSuccessfulEdit}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog 
+        open={!!deletingChild} 
+        onOpenChange={(isOpen) => !isDeleting && setDeletingChild(isOpen ? deletingChild : null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. L'enfant sera définitivement supprimé.
+              {isDeleting && <p className="mt-2">Vérification des réservations en cours...</p>}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteChild}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Suppression..." : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
