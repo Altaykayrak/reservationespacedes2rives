@@ -1,7 +1,8 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { format, getMonth, isWithinInterval, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Rdv, MOTIFS_OPTIONS } from "@/types/rdv";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -24,11 +26,19 @@ export default function RdvPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [rdvList, setRdvList] = useState<Rdv[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<Rdv[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRdv, setSelectedRdv] = useState<Rdv | null>(null);
   const [selectedMotifs, setSelectedMotifs] = useState<string[]>([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [reservationComplete, setReservationComplete] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+
+  // Define July and August 2025 date range
+  const summerRange = {
+    from: new Date(2025, 6, 1), // July 1, 2025
+    to: new Date(2025, 7, 31)   // August 31, 2025
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -65,6 +75,25 @@ export default function RdvPage() {
       setIsLoading(false);
     }
   };
+
+  // Function to filter available slots for a selected date
+  const filterSlotsByDate = (date: Date | undefined) => {
+    if (!date) {
+      setAvailableSlots([]);
+      return;
+    }
+
+    const formattedSelectedDate = format(date, 'yyyy-MM-dd');
+    const filteredSlots = rdvList.filter(
+      slot => slot.date === formattedSelectedDate
+    );
+    
+    setAvailableSlots(filteredSlots);
+  };
+
+  useEffect(() => {
+    filterSlotsByDate(selectedDate);
+  }, [selectedDate, rdvList]);
 
   const handleMotifChange = (motif: string) => {
     setSelectedMotifs((prev) => {
@@ -142,6 +171,12 @@ export default function RdvPage() {
     return timeStr.substring(0, 5);
   };
 
+  // Function to check if a date is a day with available slots
+  const isDayWithSlots = (date: Date) => {
+    const formattedDate = format(date, 'yyyy-MM-dd');
+    return rdvList.some(slot => slot.date === formattedDate);
+  };
+  
   if (loading || isLoading) {
     return (
       <>
@@ -165,50 +200,87 @@ export default function RdvPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Prise de rendez-vous</h1>
           <p className="text-gray-600">
-            Sélectionnez un créneau disponible pour prendre rendez-vous
+            Sélectionnez une date pour voir les créneaux disponibles
           </p>
         </div>
 
-        {rdvList.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Calendar section */}
           <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">Aucun créneau disponible pour le moment.</p>
-                <p className="text-gray-500">
-                  Veuillez revenir ultérieurement ou contacter l'administration.
-                </p>
+            <CardHeader>
+              <CardTitle>Calendrier - Juillet/Août 2025</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                locale={fr}
+                className="mx-auto"
+                defaultMonth={new Date(2025, 6, 1)} // July 2025
+                disabled={(date) => 
+                  !isWithinInterval(date, summerRange) || 
+                  !isDayWithSlots(date)
+                }
+                modifiers={{
+                  hasSlots: (date) => isDayWithSlots(date)
+                }}
+                modifiersClassNames={{
+                  hasSlots: "bg-green-50 font-medium"
+                }}
+              />
+              
+              <div className="mt-4 text-center text-sm text-gray-500">
+                Les dates avec des créneaux disponibles sont en surbrillance
               </div>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rdvList.map((rdv) => (
-              <Card 
-                key={rdv.id} 
-                className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => {
-                  setSelectedRdv(rdv);
-                  setSelectedMotifs([]);
-                  setShowConfirmDialog(true);
-                }}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">
-                    {formatDate(rdv.date)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600">
-                    De {formatTime(rdv.heure_debut)} à {formatTime(rdv.heure_fin)}
-                  </p>
-                  <Button className="w-full mt-4">
-                    Sélectionner ce créneau
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+
+          {/* Available slots section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {selectedDate 
+                  ? `Créneaux disponibles pour le ${format(selectedDate, 'dd MMMM yyyy', { locale: fr })}` 
+                  : "Créneaux disponibles"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!selectedDate ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">Veuillez sélectionner une date sur le calendrier</p>
+                </div>
+              ) : availableSlots.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">Aucun créneau disponible pour cette date</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {availableSlots.map((rdv) => (
+                    <Card 
+                      key={rdv.id} 
+                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => {
+                        setSelectedRdv(rdv);
+                        setSelectedMotifs([]);
+                        setShowConfirmDialog(true);
+                      }}
+                    >
+                      <CardContent className="p-4 flex justify-between items-center">
+                        <p className="text-gray-600">
+                          {formatTime(rdv.heure_debut)} à {formatTime(rdv.heure_fin)}
+                        </p>
+                        <Button size="sm">
+                          Sélectionner
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Dialog de confirmation de réservation */}
         <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
@@ -299,6 +371,7 @@ export default function RdvPage() {
               <Button 
                 onClick={() => {
                   setReservationComplete(false);
+                  setSelectedDate(undefined);
                   fetchRdvs();
                 }}
               >
