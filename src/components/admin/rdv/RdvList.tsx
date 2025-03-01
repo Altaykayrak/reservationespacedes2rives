@@ -11,6 +11,8 @@ import { FileText } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { format } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
+import { MOTIFS_OPTIONS } from "@/types/rdv";
 
 interface RdvListProps {
   rdvList: Rdv[];
@@ -22,6 +24,16 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [status, setStatus] = useState<string>("all");
+  const [selectedMotifs, setSelectedMotifs] = useState<string[]>([]);
+
+  // Handle motif selection
+  const handleMotifChange = (motif: string) => {
+    setSelectedMotifs(prev => 
+      prev.includes(motif) 
+        ? prev.filter(m => m !== motif) 
+        : [...prev, motif]
+    );
+  };
 
   // Filter rdvList based on the filter criteria
   const filteredRdvList = rdvList.filter((rdv) => {
@@ -36,7 +48,13 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
       (status === "disponible" && rdv.status === "disponible") ||
       (status === "réservé" && rdv.status === "réservé");
     
-    return dateMatches && statusMatches;
+    // Filter by motifs if any are selected
+    const motifsMatch = 
+      selectedMotifs.length === 0 || 
+      (rdv.motifs && 
+        selectedMotifs.some(motif => rdv.motifs?.includes(motif)));
+    
+    return dateMatches && statusMatches && motifsMatch;
   });
 
   const handleExportPdf = () => {
@@ -54,6 +72,11 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
     
     // Add total count of appointments
     doc.text(`Nombre total de rendez-vous: ${filteredRdvList.length}`, 14, 29);
+
+    // Add selected motifs if any
+    if (selectedMotifs.length > 0) {
+      doc.text(`Motifs: ${selectedMotifs.join(', ')}`, 14, 36);
+    }
 
     const headers = [
       "Date",
@@ -80,7 +103,7 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
     autoTable(doc, {
       head: [headers],
       body: data,
-      startY: 36,  // Increased startY to accommodate the total count text
+      startY: selectedMotifs.length > 0 ? 43 : 36,  // Adjust startY based on whether motifs filter is displayed
       styles: {
         fontSize: 8,
         cellPadding: 1
@@ -144,6 +167,28 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
                   <SelectItem value="réservé">Réservé</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+          
+          {/* Motifs filter */}
+          <div className="space-y-2">
+            <Label>Motifs</Label>
+            <div className="flex flex-wrap gap-4">
+              {MOTIFS_OPTIONS.map((motif) => (
+                <div key={motif} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`motif-${motif}`} 
+                    checked={selectedMotifs.includes(motif)}
+                    onCheckedChange={() => handleMotifChange(motif)}
+                  />
+                  <label 
+                    htmlFor={`motif-${motif}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {motif}
+                  </label>
+                </div>
+              ))}
             </div>
           </div>
         </div>
