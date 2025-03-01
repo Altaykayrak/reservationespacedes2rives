@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { ChildrenFilters } from "@/components/admin/children/ChildrenFilters";
@@ -12,7 +13,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { exportChildrenToPdf } from "@/components/admin/children/export/childrenPdfExport";
 
 const AdminChildren = () => {
@@ -23,6 +24,7 @@ const AdminChildren = () => {
   const [selectedGroup, setSelectedGroup] = useState("all");
   const [editingChild, setEditingChild] = useState<Child | null>(null);
   const [deletingChild, setDeletingChild] = useState<Child | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   const filteredChildren = children?.filter((child) => {
     const matchesSearch = 
@@ -40,6 +42,13 @@ const AdminChildren = () => {
     // Invalider explicitement le cache pour forcer un re-fetch
     queryClient.invalidateQueries({ queryKey: ['children'] });
     toast.success("Enfant modifié avec succès");
+  };
+
+  const handleSuccessfulAdd = () => {
+    setShowAddDialog(false);
+    // Invalider explicitement le cache pour forcer un re-fetch
+    queryClient.invalidateQueries({ queryKey: ['children'] });
+    toast.success("Enfant ajouté avec succès");
   };
 
   const handleDeleteChild = async () => {
@@ -115,14 +124,23 @@ const AdminChildren = () => {
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Gestion des enfants</h1>
-          <Button 
-            onClick={handleExportPdf}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            Export PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleExportPdf}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Export PDF
+            </Button>
+            <Button 
+              onClick={() => setShowAddDialog(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Ajouter un enfant
+            </Button>
+          </div>
         </div>
 
         <ChildrenFilters
@@ -139,6 +157,17 @@ const AdminChildren = () => {
           onEdit={setEditingChild}
           onDelete={setDeletingChild}
         />
+
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Ajouter un enfant</DialogTitle>
+            </DialogHeader>
+            <AddChildForm
+              onSuccess={handleSuccessfulAdd}
+            />
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={!!editingChild} onOpenChange={() => setEditingChild(null)}>
           <DialogContent>
