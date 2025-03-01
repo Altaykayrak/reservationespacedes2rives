@@ -42,7 +42,7 @@ export default function RdvPage() {
       <Navbar />
       <div className="container mx-auto py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Prise de rendez-vous</h1>
+          <h1 className="text-3xl font-bold mb-2">RDV Inscription</h1>
           <p className="text-gray-600">
             Sélectionnez une date pour voir les créneaux disponibles
           </p>
