@@ -47,14 +47,58 @@ const AdminRdv = () => {
       
       try {
         setLoading(true);
+        // Fetch RDV data without the profiles join
         const { data, error } = await supabase
           .from('rdv')
-          .select('*, profiles(first_name, last_name, email)')
+          .select('*')
           .order('date')
           .order('heure_debut');
 
         if (error) throw error;
-        setRdvList(data as Rdv[]);
+        
+        // Now fetch user profiles data separately for reserved appointments
+        const reservedRdvs = data.filter(rdv => rdv.status === 'réservé' && rdv.user_id);
+        
+        // Initialize results with base rdv data
+        let results = [...data] as Rdv[];
+        
+        // Only fetch profiles if there are any reserved appointments
+        if (reservedRdvs.length > 0) {
+          // Fetch profiles for reserved appointments
+          const userIds = reservedRdvs.map(rdv => rdv.user_id);
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name')
+            .in('id', userIds);
+            
+          if (profilesError) {
+            console.error("Error fetching profiles:", profilesError);
+          } else if (profilesData) {
+            // Match profiles to RDVs
+            results = data.map(rdv => {
+              if (rdv.user_id) {
+                const profile = profilesData.find(p => p.id === rdv.user_id);
+                if (profile) {
+                  return {
+                    ...rdv,
+                    profiles: {
+                      first_name: profile.first_name,
+                      last_name: profile.last_name,
+                      email: null // We don't have email from profiles query
+                    }
+                  } as Rdv;
+                }
+              }
+              // Return the RDV with default empty profiles data if no matching profile
+              return {
+                ...rdv,
+                profiles: rdv.user_id ? { first_name: null, last_name: null, email: null } : undefined
+              } as Rdv;
+            });
+          }
+        }
+        
+        setRdvList(results);
       } catch (error) {
         console.error("Error fetching RDVs:", error);
         toast({
