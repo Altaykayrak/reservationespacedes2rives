@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ export default function RdvPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [rdvList, setRdvList] = useState<Rdv[]>([]);
+  const [userRdv, setUserRdv] = useState<Rdv | null>(null);
   const [availableSlots, setAvailableSlots] = useState<Rdv[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRdv, setSelectedRdv] = useState<Rdv | null>(null);
@@ -47,13 +49,45 @@ export default function RdvPage() {
 
   useEffect(() => {
     if (user) {
-      fetchRdvs();
+      fetchUserRdv();
     }
   }, [user]);
 
-  const fetchRdvs = async () => {
+  const fetchUserRdv = async () => {
     try {
       setIsLoading(true);
+      
+      // Récupérer le rendez-vous de l'utilisateur connecté
+      const { data: userRdvData, error: userRdvError } = await supabase
+        .from('rdv')
+        .select('*')
+        .eq('user_id', user?.id)
+        .eq('status', 'réservé')
+        .order('date')
+        .limit(1);
+      
+      if (userRdvError) throw userRdvError;
+      
+      if (userRdvData && userRdvData.length > 0) {
+        setUserRdv(userRdvData[0] as unknown as Rdv);
+      } else {
+        // Si l'utilisateur n'a pas de rendez-vous, récupérer les créneaux disponibles
+        await fetchRdvs();
+      }
+    } catch (error) {
+      console.error("Error fetching user RDV:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger votre rendez-vous",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchRdvs = async () => {
+    try {
       const { data, error } = await supabase
         .from('rdv')
         .select('*')
@@ -70,8 +104,6 @@ export default function RdvPage() {
         description: "Impossible de charger les créneaux disponibles",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -144,6 +176,14 @@ export default function RdvPage() {
       setShowConfirmDialog(false);
       setReservationComplete(true);
       
+      // Mettre à jour le rendez-vous de l'utilisateur
+      setUserRdv({
+        ...selectedRdv,
+        motifs: selectedMotifs,
+        user_id: user.id,
+        status: 'réservé'
+      });
+      
       toast({
         title: "Réservation confirmée",
         description: "Votre rendez-vous a été réservé avec succès",
@@ -175,6 +215,11 @@ export default function RdvPage() {
     const formattedDate = format(date, 'yyyy-MM-dd');
     return rdvList.some(slot => slot.date === formattedDate);
   };
+
+  const handleCancelRdv = () => {
+    setUserRdv(null);
+    fetchRdvs();
+  };
   
   if (loading || isLoading) {
     return (
@@ -192,6 +237,59 @@ export default function RdvPage() {
     );
   }
 
+  // Si l'utilisateur a déjà un rendez-vous, afficher les détails de celui-ci
+  if (userRdv) {
+    return (
+      <>
+        <Navbar />
+        <div className="container mx-auto py-8">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-2">Votre rendez-vous</h1>
+            <p className="text-gray-600">
+              Voici les détails de votre rendez-vous confirmé
+            </p>
+          </div>
+
+          <Card className="max-w-3xl mx-auto">
+            <CardHeader>
+              <CardTitle>Rendez-vous confirmé</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-medium text-lg">Détails du rendez-vous :</h3>
+                <p className="mt-2">
+                  <strong>Date :</strong> {formatDate(userRdv.date)}
+                </p>
+                <p>
+                  <strong>Heure :</strong> {formatTime(userRdv.heure_debut)} - {formatTime(userRdv.heure_fin)}
+                </p>
+                <p>
+                  <strong>Motif(s) :</strong> {userRdv.motifs.join(", ")}
+                </p>
+              </div>
+              
+              <div className="mt-6 p-4 bg-gray-50 rounded-md">
+                <h4 className="font-medium mb-2">Documents à apporter :</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Justificatif de domicile</li>
+                  <li>Carnet de santé (si nouveaux vaccins)</li>
+                  <li>Quotient familial CAF ou avis d'imposition N-2</li>
+                </ul>
+              </div>
+              
+              <div className="mt-6 text-right">
+                <Button variant="outline" onClick={handleCancelRdv}>
+                  Réserver un autre rendez-vous
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  // Sinon, afficher le calendrier pour réserver un nouveau rendez-vous
   return (
     <>
       <Navbar />
@@ -371,7 +469,7 @@ export default function RdvPage() {
                 onClick={() => {
                   setReservationComplete(false);
                   setSelectedDate(undefined);
-                  fetchRdvs();
+                  fetchUserRdv();
                 }}
               >
                 Fermer
