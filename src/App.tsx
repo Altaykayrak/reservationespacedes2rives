@@ -9,10 +9,11 @@ import {
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import { ErrorBoundary } from "react-error-boundary";
 
 import Index from "./pages/Index";
 import Login from "./pages/Login";
-import AdminLogin from "./pages/AdminLogin"; // Changed from "./pages/AdminLoginPage"
+import AdminLogin from "./pages/AdminLogin"; 
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -34,7 +35,6 @@ import AdminHolidays from "./pages/admin/AdminHolidays";
 import AdminNewReservation from "./pages/admin/AdminNewReservation";
 import AdminNewHolidayReservation from "./pages/admin/AdminNewHolidayReservation";
 import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
-import { ErrorBoundary } from "react-error-boundary";
 import Rdv from "./pages/Rdv";
 import AdminRdv from "./pages/admin/AdminRdv";
 
