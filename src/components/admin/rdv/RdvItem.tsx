@@ -19,11 +19,34 @@ const RdvItem: React.FC<RdvItemProps> = ({ rdv, onDeleteRdv }) => {
 
   return (
     <Card key={rdv.id} className="p-4 relative group">
-      <div className="absolute top-2 right-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div>
+            <p className="font-semibold">{formatDate(rdv.date)}</p>
+            <p className="text-sm">{rdv.heure_debut.substring(0, 5)} - {rdv.heure_fin.substring(0, 5)}</p>
+          </div>
+          
+          <span className={`px-2 py-0.5 rounded text-xs ${
+            rdv.status === 'disponible' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-blue-100 text-blue-800'
+          }`}>
+            {rdv.status}
+          </span>
+          
+          {rdv.status === 'réservé' && rdv.profiles && (
+            <div className="text-sm flex space-x-2">
+              <p className="whitespace-nowrap">{rdv.profiles.first_name} {rdv.profiles.last_name}</p>
+              <p className="whitespace-nowrap">{rdv.profiles.email}</p>
+              <p className="whitespace-nowrap">Motifs: {rdv.motifs.join(', ')}</p>
+            </div>
+          )}
+        </div>
+        
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
           onClick={() => onDeleteRdv(rdv.id)}
         >
           <svg 
@@ -43,26 +66,6 @@ const RdvItem: React.FC<RdvItemProps> = ({ rdv, onDeleteRdv }) => {
             <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
           </svg>
         </Button>
-      </div>
-      <div>
-        <p className="font-semibold">{formatDate(rdv.date)}</p>
-        <p className="text-sm">{rdv.heure_debut.substring(0, 5)} - {rdv.heure_fin.substring(0, 5)}</p>
-        <p className="text-sm mt-1">
-          <span className={`px-2 py-0.5 rounded text-xs ${
-            rdv.status === 'disponible' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-blue-100 text-blue-800'
-          }`}>
-            {rdv.status}
-          </span>
-        </p>
-        {rdv.status === 'réservé' && rdv.profiles && (
-          <div className="mt-2 text-sm">
-            <p>Réservé par: {rdv.profiles.first_name} {rdv.profiles.last_name}</p>
-            <p>Email: {rdv.profiles.email}</p>
-            <p>Motifs: {rdv.motifs.join(', ')}</p>
-          </div>
-        )}
       </div>
     </Card>
   );
