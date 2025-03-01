@@ -52,7 +52,10 @@ export const RdvCalendar = ({
           className="mx-auto scale-95 transform origin-top-left"
           defaultMonth={new Date(2025, 6, 1)}
           disabled={(date) => 
-            !isWithinInterval(date, summerRange) || 
+            !isWithinInterval(date, { 
+              start: new Date(summerRange.start), 
+              end: new Date(summerRange.end) 
+            }) || 
             !isDayWithSlots(date)
           }
           modifiers={{

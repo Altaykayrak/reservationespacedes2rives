@@ -84,7 +84,13 @@ export const useRdv = () => {
       if (error) throw error;
       
       console.log("Available RDVs:", data);
-      setRdvList(data as unknown as Rdv[]);
+      if (data) {
+        setRdvList(data as unknown as Rdv[]);
+        // Mettre à jour immediadement les créneaux disponibles si une date est sélectionnée
+        if (selectedDate) {
+          filterSlotsByDate(selectedDate);
+        }
+      }
     } catch (error) {
       console.error("Error fetching RDVs:", error);
       toast({
@@ -114,7 +120,9 @@ export const useRdv = () => {
   };
 
   useEffect(() => {
-    filterSlotsByDate(selectedDate);
+    if (selectedDate) {
+      filterSlotsByDate(selectedDate);
+    }
   }, [selectedDate, rdvList]);
 
   const handleMotifChange = (motif: string) => {
