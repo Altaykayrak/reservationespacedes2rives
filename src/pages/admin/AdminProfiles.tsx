@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,11 +23,9 @@ const AdminProfiles = () => {
     message: "Vérification des droits d'administrateur..."
   });
 
-  // Vérification du statut d'administrateur
   useEffect(() => {
     async function checkAdminStatus() {
       try {
-        // Vérifier l'utilisateur connecté
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
@@ -53,7 +50,6 @@ const AdminProfiles = () => {
 
         console.log('Utilisateur connecté:', user.id);
         
-        // Vérifier si l'utilisateur est admin
         const { data: isAdmin, error: adminError } = await supabase
           .rpc('is_admin', { user_id: user.id });
 
@@ -73,7 +69,6 @@ const AdminProfiles = () => {
           message: `Utilisateur: ${user.id}, Admin: ${isAdmin}`
         });
         
-        // Si l'utilisateur est admin, récupérer tous les profils
         if (isAdmin) {
           await fetchAllProfiles();
         }
@@ -90,7 +85,6 @@ const AdminProfiles = () => {
     checkAdminStatus();
   }, []);
 
-  // Méthode simplifiée pour récupérer tous les profils avec emails
   const fetchAllProfiles = async () => {
     setLoading(true);
     setError(null);
@@ -98,8 +92,6 @@ const AdminProfiles = () => {
     try {
       console.log('Récupération de tous les profils avec emails...');
       
-      // Utilisation de la vue profiles_with_emails qui inclut les emails
-      // Tri par nom de famille directement dans la requête
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles_with_emails')
         .select('*')
@@ -152,7 +144,6 @@ const AdminProfiles = () => {
       console.log('Champ à modifier:', field);
       console.log('Nouvelle valeur:', value);
 
-      // Mettre à jour l'interface utilisateur immédiatement pour feedback instantané
       setProfiles(prevProfiles =>
         prevProfiles.map(profile =>
           profile.id === profileId
@@ -174,7 +165,6 @@ const AdminProfiles = () => {
 
       console.log('Données de mise à jour:', updates);
 
-      // Mise à jour du profil existant
       const { error: updateError } = await supabase
         .from('profiles')
         .update(updates)
@@ -183,7 +173,6 @@ const AdminProfiles = () => {
       if (updateError) {
         console.error('Erreur lors de la mise à jour via Supabase:', updateError);
         toast.error(`Erreur de mise à jour: ${updateError.message}`);
-        // Annuler le changement
         fetchAllProfiles();
         return;
       }
@@ -191,14 +180,11 @@ const AdminProfiles = () => {
       console.log('Mise à jour réussie');
       toast.success('Mise à jour réussie');
 
-      // Rafraîchir les données après une mise à jour réussie
       fetchAllProfiles();
 
     } catch (err: any) {
       console.error('Exception lors de la mise à jour:', err);
       toast.error(`Erreur: ${err.message}`);
-      
-      // Rafraîchir
       fetchAllProfiles();
     } finally {
       setProcessingIds(prev => {
@@ -209,17 +195,14 @@ const AdminProfiles = () => {
     }
   };
 
-  // Fonction modifiée pour basculer en masse toutes les cases
   const handleBulkCheckboxChange = async (field: 'is_waiting' | 'is_closed') => {
     try {
       if (bulkProcessing) return;
       setBulkProcessing(true);
       
-      // Vérifier si toutes les cases sont déjà cochées pour déterminer l'action
       const allChecked = profiles.every(profile => profile[field] === true);
-      const newValue = !allChecked; // Si toutes cochées, décocher; sinon, cocher
-      
-      // Message de confirmation avec action appropriée
+      const newValue = !allChecked;
+
       const actionText = newValue ? 
         `marquer tous les profils comme "${field === 'is_waiting' ? 'En attente' : 'Fermé'}"` : 
         `désélectionner tous les profils "${field === 'is_waiting' ? 'En attente' : 'Fermé'}"`;
@@ -231,7 +214,6 @@ const AdminProfiles = () => {
 
       console.log(`Début de la mise à jour en masse pour le champ: ${field}, nouvelle valeur: ${newValue}`);
       
-      // Mise à jour de l'interface utilisateur
       setProfiles(prevProfiles =>
         prevProfiles.map(profile => ({
           ...profile,
@@ -245,19 +227,17 @@ const AdminProfiles = () => {
         }))
       );
 
-      // Préparation des mises à jour
       const updates = {
         [field]: newValue,
         ...(field === 'is_waiting' && newValue ? { is_closed: false } : {}),
         ...(field === 'is_closed' && newValue ? { is_waiting: false } : {})
       };
 
-      // Mise à jour dans la base de données
       const { error: updateError } = await supabase
         .from('profiles')
         .update(updates)
-        .not('id', 'is', null); // Clause WHERE nécessaire qui sélectionne tous les enregistrements
-        
+        .not('id', 'is', null);
+
       if (updateError) {
         console.error('Erreur lors de la mise à jour en masse:', updateError);
         toast.error(`Erreur de mise à jour en masse: ${updateError.message}`);
@@ -268,7 +248,6 @@ const AdminProfiles = () => {
       console.log('Mise à jour en masse réussie');
       toast.success(`Tous les profils ont été ${newValue ? 'marqués' : 'désélectionnés'} comme "${field === 'is_waiting' ? 'En attente' : 'Fermé'}"`);
       
-      // Rafraîchir les données
       fetchAllProfiles();
 
     } catch (err: any) {
@@ -277,6 +256,52 @@ const AdminProfiles = () => {
       fetchAllProfiles();
     } finally {
       setBulkProcessing(false);
+    }
+  };
+
+  const handleAutomaticPaymentChange = async (profileId: string, value: boolean) => {
+    try {
+      if (processingIds.has(profileId)) return;
+      setProcessingIds(prev => new Set(prev).add(profileId));
+
+      console.log('Updating automatic payment status for profile:', profileId);
+      console.log('New value:', value);
+
+      setProfiles(prevProfiles =>
+        prevProfiles.map(profile =>
+          profile.id === profileId
+            ? { ...profile, automatic_payment: value }
+            : profile
+        )
+      );
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ automatic_payment: value })
+        .eq('id', profileId);
+        
+      if (updateError) {
+        console.error('Error updating automatic payment status:', updateError);
+        toast.error(`Erreur de mise à jour: ${updateError.message}`);
+        fetchAllProfiles();
+        return;
+      }
+
+      console.log('Automatic payment status updated successfully');
+      toast.success('Mise à jour réussie');
+
+      fetchAllProfiles();
+
+    } catch (err: any) {
+      console.error('Exception during update:', err);
+      toast.error(`Erreur: ${err.message}`);
+      fetchAllProfiles();
+    } finally {
+      setProcessingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(profileId);
+        return newSet;
+      });
     }
   };
 
@@ -332,8 +357,6 @@ const AdminProfiles = () => {
           </div>
         </div>
         
-        {/* Removed the admin status info block */}
-        
         <Card>
           <CardHeader>
             <CardTitle>Liste des utilisateurs ({profiles.length})</CardTitle>
@@ -382,10 +405,18 @@ const AdminProfiles = () => {
                             <TableCell>{profile.first_name || '-'}</TableCell>
                             <TableCell>{profile.email || '-'}</TableCell>
                             <TableCell>
-                              <Switch 
-                                checked={profile.automatic_payment} 
-                                disabled
-                              />
+                              <div className="flex items-center">
+                                <Switch
+                                  checked={profile.automatic_payment}
+                                  disabled={isProcessing || bulkProcessing}
+                                  onCheckedChange={(checked) => {
+                                    if (!isProcessing && !bulkProcessing) {
+                                      handleAutomaticPaymentChange(profile.id, checked);
+                                    }
+                                  }}
+                                />
+                                {isProcessing && <Loader2 className="ml-2 h-3 w-3 animate-spin" />}
+                              </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center">
