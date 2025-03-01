@@ -41,7 +41,7 @@ export const useRdv = () => {
     }
   }, [user]);
 
-  // Always fetch RDVs when component mounts, regardless of userRdv
+  // Always fetch RDVs when component mounts
   useEffect(() => {
     if (user) {
       fetchRdvs();
@@ -81,6 +81,7 @@ export const useRdv = () => {
 
   const fetchRdvs = async () => {
     try {
+      setIsLoading(true);
       console.log("Fetching available RDVs");
       const { data, error } = await supabase
         .from('rdv')
@@ -95,11 +96,6 @@ export const useRdv = () => {
       if (data) {
         setRdvList(data as unknown as Rdv[]);
         console.log("All available RDVs set:", data.length);
-        
-        // Update available slots if a date is already selected
-        if (selectedDate) {
-          filterSlotsByDate(selectedDate);
-        }
       }
     } catch (error) {
       console.error("Error fetching RDVs:", error);
@@ -108,8 +104,15 @@ export const useRdv = () => {
         description: "Impossible de charger les créneaux disponibles",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Update available slots when selected date changes
+  useEffect(() => {
+    filterSlotsByDate(selectedDate);
+  }, [selectedDate, rdvList]);
 
   const filterSlotsByDate = (date: Date | undefined) => {
     if (!date) {
@@ -128,14 +131,6 @@ export const useRdv = () => {
     console.log("Filtered slots:", filteredSlots);
     setAvailableSlots(filteredSlots);
   };
-
-  // Update available slots when selected date changes
-  useEffect(() => {
-    if (selectedDate) {
-      console.log("Date selection changed, filtering slots...");
-      filterSlotsByDate(selectedDate);
-    }
-  }, [selectedDate]);
 
   // Handle selecting a motif
   const handleMotifChange = (motif: string) => {

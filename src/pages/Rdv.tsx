@@ -12,6 +12,7 @@ export default function RdvPage() {
   const {
     loading,
     userRdv,
+    rdvList,
     selectedDate,
     setSelectedDate,
     availableSlots,
@@ -51,7 +52,7 @@ export default function RdvPage() {
           <RdvCalendar 
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
-            rdvList={availableSlots}
+            rdvList={rdvList}
             summerRange={summerRange}
           />
 

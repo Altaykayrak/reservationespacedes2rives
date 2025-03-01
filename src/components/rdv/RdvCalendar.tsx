@@ -25,9 +25,11 @@ export const RdvCalendar = ({
   // Use useMemo to create a set of dates with slots
   const datesWithSlots = useMemo(() => {
     const dateSet = new Set<string>();
+    
     rdvList.forEach(slot => {
       dateSet.add(slot.date);
     });
+    
     console.log("Dates with slots:", [...dateSet]);
     return dateSet;
   }, [rdvList]);

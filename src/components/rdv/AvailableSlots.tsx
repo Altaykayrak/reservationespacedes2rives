@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Rdv } from "@/types/rdv";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useMemo } from "react";
 
 interface AvailableSlotsProps {
   selectedDate: Date | undefined;
