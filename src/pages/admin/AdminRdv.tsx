@@ -54,7 +54,7 @@ const AdminRdv = () => {
           .order('heure_debut');
 
         if (error) throw error;
-        setRdvList(data || []);
+        setRdvList(data as Rdv[]);
       } catch (error) {
         console.error("Error fetching RDVs:", error);
         toast({
@@ -111,7 +111,7 @@ const AdminRdv = () => {
         .order('heure_debut');
 
       if (fetchError) throw fetchError;
-      setRdvList(newData || []);
+      setRdvList(newData as Rdv[]);
     } catch (error) {
       console.error("Error adding RDV:", error);
       toast({

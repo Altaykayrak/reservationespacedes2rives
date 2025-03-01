@@ -54,7 +54,7 @@ export default function RdvPage() {
         .order('heure_debut');
 
       if (error) throw error;
-      setRdvList(data || []);
+      setRdvList(data as Rdv[]);
     } catch (error) {
       console.error("Error fetching RDVs:", error);
       toast({
