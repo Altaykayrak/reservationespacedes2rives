@@ -127,6 +127,26 @@ const AdminRdv = () => {
     try {
       const formattedDate = format(date, 'yyyy-MM-dd');
       
+      // Vérifier si un rendez-vous existe déjà à la même date et heure
+      const { data: existingRdv, error: checkError } = await supabase
+        .from('rdv')
+        .select('*')
+        .eq('date', formattedDate)
+        .eq('heure_debut', heureDebut)
+        .eq('heure_fin', heureFin);
+        
+      if (checkError) throw checkError;
+      
+      if (existingRdv && existingRdv.length > 0) {
+        toast({
+          title: "Conflit d'horaire",
+          description: "Un rendez-vous existe déjà à cette date et cette heure",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Si aucun conflit, ajouter le nouveau rendez-vous
       const { data: newRdv, error } = await supabase
         .from('rdv')
         .insert([
