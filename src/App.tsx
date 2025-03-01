@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -36,8 +35,6 @@ import AdminHolidays from "./pages/admin/AdminHolidays";
 import AdminNewReservation from "./pages/admin/AdminNewReservation";
 import AdminNewHolidayReservation from "./pages/admin/AdminNewHolidayReservation";
 import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
-// import Rdv from "./pages/Rdv";
-// import AdminRdv from "./pages/admin/AdminRdv";
 
 const queryClient = new QueryClient({
   defaultOptions: {

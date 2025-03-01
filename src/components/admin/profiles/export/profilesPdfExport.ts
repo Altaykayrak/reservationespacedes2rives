@@ -73,14 +73,11 @@ export const exportProfilesToPDF = (profiles: ProfileData[]) => {
       fillColor: [240, 240, 240]
     },
     // Style the last row (totals) differently
-    rowStyles: (row) => {
-      if (row === tableData.length - 1) {
-        return {
-          fontStyle: 'bold',
-          fillColor: [220, 220, 220]
-        };
+    didParseCell: (data) => {
+      if (data.row.index === tableData.length - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [220, 220, 220];
       }
-      return {};
     }
   });
 
