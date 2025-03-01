@@ -46,7 +46,7 @@ export const LoginForm = ({
           <Link to="/register" className="text-primary hover:underline">
             Créer un compte
           </Link>
-          {" • "}
+          <span className="text-[#1F2937]"> • </span>
           <Link to="/forgot-password" className="text-primary hover:underline">
             Mot de passe oublié
           </Link>
