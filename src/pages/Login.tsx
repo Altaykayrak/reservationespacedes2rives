@@ -1,3 +1,4 @@
+
 import { AuthLayout } from "@/components/layouts/AuthLayout";
 import { LoginForm } from "@/components/forms/LoginForm";
 import { useLoginForm } from "@/hooks/useLoginForm";
@@ -16,7 +17,7 @@ const Login = () => {
   return (
     <AuthLayout
       title="Connexion"
-      description="Bienvenue sur L'espace des deux rives"
+      description="Bienvenue sur l'application de réservation de l'espace des 2 rives"
     >
       <LoginForm
         email={email}
