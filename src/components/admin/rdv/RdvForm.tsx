@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { format } from "date-fns";
+import { format, isWeekend } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,16 @@ const RdvForm: React.FC<RdvFormProps> = ({ onRdvAdded }) => {
       toast({
         title: "Formulaire incomplet",
         description: "Veuillez remplir tous les champs du formulaire",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Vérifier si la date est un weekend
+    if (isWeekend(date)) {
+      toast({
+        title: "Jour non valide",
+        description: "Les rendez-vous ne peuvent pas être programmés les samedis et dimanches",
         variant: "destructive",
       });
       return;
@@ -88,6 +98,11 @@ const RdvForm: React.FC<RdvFormProps> = ({ onRdvAdded }) => {
     }
   };
 
+  // Fonction pour désactiver les weekends dans le calendrier
+  const disableWeekends = (date: Date) => {
+    return isWeekend(date);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -103,6 +118,7 @@ const RdvForm: React.FC<RdvFormProps> = ({ onRdvAdded }) => {
               onSelect={setDate}
               locale={fr}
               className="mx-auto"
+              disabled={disableWeekends}
             />
           </div>
 
