@@ -1,20 +1,15 @@
+
 import { useState, useEffect } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 export function AdminNavbar() {
   const { signOut } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     setIsMounted(true);
@@ -38,43 +33,32 @@ export function AdminNavbar() {
   return (
     <div className="border-b">
       <div className="flex h-16 items-center px-4">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-full sm:w-60">
-            <SheetHeader>
-              <SheetTitle>Administration</SheetTitle>
-              <SheetDescription>
-                Gérez les différents aspects de l'application.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="py-4">
-              {menuItems.map((item) => (
+        <div className="font-semibold mr-8">Administration</div>
+        
+        <nav className="flex-1">
+          <ul className="flex space-x-4 overflow-x-auto">
+            {menuItems.map((item) => (
+              <li key={item.label}>
                 <Link
-                  key={item.label}
                   to={item.href}
-                  className="block py-2 px-4 rounded hover:bg-secondary"
+                  className={cn(
+                    "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    location.pathname === item.href
+                      ? "bg-indigo-600 text-white"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
                 >
                   {item.label}
                 </Link>
-              ))}
-            </div>
-            <SheetFooter>
-              <Button variant="destructive" onClick={signOut}>
-                Se déconnecter
-              </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-        <div className="ml-auto font-semibold">Administration</div>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        
+        <Button variant="destructive" onClick={signOut} className="ml-4">
+          Se déconnecter
+        </Button>
       </div>
     </div>
   );
 }
-
-const SheetFooter = ({ children }: { children: React.ReactNode }) => {
-  return <div className="mt-6 flex items-center justify-end">{children}</div>;
-};
