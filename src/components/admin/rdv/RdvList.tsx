@@ -6,6 +6,10 @@ import RdvItem from "./RdvItem";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from 'jspdf-autotable';
 import { format } from "date-fns";
 
 interface RdvListProps {
@@ -35,10 +39,74 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
     return dateMatches && statusMatches;
   });
 
+  const handleExportPdf = () => {
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const title = `Rendez-vous ${startDate ? `du ${format(new Date(startDate), 'dd/MM/yyyy')}` : ''} ${endDate ? `au ${format(new Date(endDate), 'dd/MM/yyyy')}` : ''}`;
+    doc.text(title, 14, 15);
+    
+    const statusLabel = status === "all" ? "Tous" : status === "disponible" ? "Disponibles" : "Réservés";
+    doc.text(`Statut: ${statusLabel}`, 14, 22);
+
+    const headers = [
+      "Date",
+      "Heure de début",
+      "Heure de fin",
+      "Statut",
+      "Nom",
+      "Prénom",
+      "Email",
+      "Motifs",
+    ];
+
+    const data = filteredRdvList.map(rdv => [
+      format(new Date(rdv.date), 'dd/MM/yyyy'),
+      rdv.heure_debut,
+      rdv.heure_fin,
+      rdv.status,
+      rdv.profiles?.last_name || "-",
+      rdv.profiles?.first_name || "-",
+      rdv.profiles?.email || "-",
+      rdv.motifs ? rdv.motifs.join(", ") : "-"
+    ]);
+
+    autoTable(doc, {
+      head: [headers],
+      body: data,
+      startY: 30,
+      styles: {
+        fontSize: 8,
+        cellPadding: 1
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 8,
+        fontStyle: 'bold',
+        halign: 'center'
+      }
+    });
+
+    doc.save("rendez-vous.pdf");
+  };
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Rendez-vous disponibles</CardTitle>
+        <Button
+          variant="outline"
+          onClick={handleExportPdf}
+          className="flex items-center gap-2"
+          disabled={filteredRdvList.length === 0}
+        >
+          <FileText className="h-4 w-4" />
+          Export PDF
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-4 mb-6">
