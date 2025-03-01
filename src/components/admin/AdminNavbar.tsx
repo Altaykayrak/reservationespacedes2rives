@@ -33,7 +33,6 @@ export function AdminNavbar() {
   return (
     <div className="border-b">
       <div className="flex h-16 items-center px-4">
-        <div className="font-semibold mr-8">Administration</div>
         
         <nav className="flex-1">
           <ul className="flex space-x-4 overflow-x-auto">
