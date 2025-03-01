@@ -22,6 +22,8 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { LoginForm } from "@/components/forms/LoginForm";
+import { AuthLayout } from "@/components/layouts/AuthLayout";
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -35,7 +37,6 @@ const AdminLoginPage = () => {
   useEffect(() => {
     const checkAdminAuth = async () => {
       try {
-        setIsLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
@@ -45,17 +46,24 @@ const AdminLoginPage = () => {
 
           if (adminError) {
             console.error("Error checking admin status:", adminError);
+            setIsLoading(false);
             return;
           }
 
           // Ne rediriger que si l'utilisateur est admin
           if (isAdmin) {
             navigate("/admin");
+            return;
           }
+          
+          // Si l'utilisateur est connecté mais n'est pas admin, on le laisse sur la page
+          setIsLoading(false);
+        } else {
+          // Pas de session, on laisse l'utilisateur sur la page de login
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error checking authentication:", error);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -84,12 +92,14 @@ const AdminLoginPage = () => {
         console.error("Authentication error:", authError);
         setError("Email ou mot de passe incorrect");
         setShowErrorDialog(true);
+        setIsLoading(false);
         return;
       }
 
       if (!authData.user) {
         setError("Utilisateur non trouvé");
         setShowErrorDialog(true);
+        setIsLoading(false);
         return;
       }
 
@@ -102,6 +112,7 @@ const AdminLoginPage = () => {
         setError("Une erreur est survenue lors de la vérification des droits d'accès");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
+        setIsLoading(false);
         return;
       }
 
@@ -109,6 +120,7 @@ const AdminLoginPage = () => {
         setError("Vous n'avez pas les droits d'accès administrateur");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
+        setIsLoading(false);
         return;
       }
 
@@ -123,52 +135,30 @@ const AdminLoginPage = () => {
       console.error("Connection error:", err);
       setError("Une erreur est survenue lors de la connexion");
       setShowErrorDialog(true);
-    } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-gray-600">Chargement...</p>
-      </div>
-    </div>;
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="w-[350px]">
-        <CardHeader>
-          <CardTitle>Administration</CardTitle>
-          <CardDescription>
-            Connectez-vous à l'interface d'administration
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <PasswordInput
-                placeholder="Mot de passe"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Connexion..." : "Se connecter"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <AuthLayout title="Administration" description="Connectez-vous à l'interface d'administration">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600">Chargement...</p>
+          </div>
+        </div>
+      ) : (
+        <LoginForm
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          isLoading={isLoading}
+          error={error}
+          onSubmit={handleSubmit}
+        />
+      )}
 
       <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
         <AlertDialogContent>
@@ -183,7 +173,7 @@ const AdminLoginPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AuthLayout>
   );
 };
 
