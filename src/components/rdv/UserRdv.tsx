@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/ui/navbar";
@@ -49,10 +48,9 @@ export const UserRdv = ({
     const start = formatDateForGCal(startDate);
     const end = formatDateForGCal(endDate);
     const title = "Rendez-vous inscription Espace des 2 rives";
-    const mapsUrl = "https://www.google.com/maps/place//data=!4m2!3m1!1s0x47e127d4acf81da1:0xf77c5488daee9f99?sa=X&ved=1t:8290&ictx=111";
     const phone = "02 32 68 32 10";
     const details = `Motif(s): ${rdv.motifs.join(", ")}\n\nDocuments à apporter:\n- Justificatif de domicile\n- Carnet de santé (si nouveaux vaccins)\n- Quotient familial CAF ou avis d'imposition N-2\n- Un moyen de règlement (chèque, carte de paiement, RIB si vous souhaitez mettre en place le prélèvement automatique)\n\nTéléphone: ${phone}`;
-    const location = `Service Enfance - Espace des 2 rives\n4 Pl. de la Fraternité, 27590 Pitres\n${mapsUrl}`;
+    const location = `4 Pl. de la Fraternité, 27590 Pitres`;
     const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
     return googleCalendarUrl;
   };
