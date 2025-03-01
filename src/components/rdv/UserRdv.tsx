@@ -54,6 +54,9 @@ export const UserRdv = ({
           <p className="text-gray-600">
             Voici les détails de votre rendez-vous confirmé
           </p>
+          <p className="text-gray-600 mt-2">
+            Pour toute annulation ou modification merci de nous contacter au 02 32 68 32 10 ou par mail : accueil@e2rives.fr
+          </p>
         </div>
 
         <Card className="max-w-3xl mx-auto">
