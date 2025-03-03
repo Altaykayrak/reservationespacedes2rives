@@ -47,22 +47,45 @@ const handler = async (req: Request): Promise<Response> => {
         
         // Generate email content for direct reservation
         const reservationType = requestData.reservationType === "holiday" ? "vacances" : "mercredi";
+        
+        // Create HTML table for the dates and options
+        let tableRows = '';
+        if (requestData.dates && requestData.dates.length > 0) {
+          requestData.dates.forEach((date, index) => {
+            const earlyDropoff = requestData.earlyDropoff && requestData.earlyDropoff[index] ? '✓' : '';
+            const withoutMeal = requestData.withoutMeal && requestData.withoutMeal[index] ? '✓' : '';
+            
+            tableRows += `
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${date}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${earlyDropoff}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${withoutMeal}</td>
+              </tr>
+            `;
+          });
+        }
+        
+        const tableHtml = `
+          <table style="border-collapse: collapse; width: 100%; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Date</th>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Arrivée avant 8h30</th>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Sans Repas</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+        `;
+        
         const emailHtml = `
           <h1>Nouvelle réservation de ${reservationType}</h1>
           ${requestData.childName ? `<p><strong>Enfant:</strong> ${requestData.childName}</p>` : ''}
           ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
-          ${requestData.dates && requestData.dates.length > 0 ? 
-            `<p><strong>Dates réservées:</strong></p>
-            <ul>
-              ${requestData.dates.map((date, index) => {
-                let options = [];
-                if (requestData.withoutMeal && requestData.withoutMeal[index]) options.push("Sans repas");
-                if (requestData.earlyDropoff && requestData.earlyDropoff[index]) options.push("Accueil anticipé");
-                
-                return `<li>${date} ${options.length > 0 ? `(${options.join(", ")})` : ''}</li>`;
-              }).join('')}
-            </ul>` : 
-            ''}
+          <p><strong>Dates réservées:</strong></p>
+          ${tableHtml}
         `;
         
         // Send direct reservation confirmation email
@@ -101,6 +124,38 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error("Error fetching user profile");
       }
 
+      // Create HTML table for the dates and options
+      let tableRows = '';
+      if (requestData.dates && requestData.dates.length > 0) {
+        requestData.dates.forEach((date, index) => {
+          const earlyDropoff = requestData.earlyDropoff && requestData.earlyDropoff[index] ? '✓' : '';
+          const withoutMeal = requestData.withoutMeal && requestData.withoutMeal[index] ? '✓' : '';
+          
+          tableRows += `
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;">${date}</td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${earlyDropoff}</td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${withoutMeal}</td>
+            </tr>
+          `;
+        });
+      }
+      
+      const tableHtml = `
+        <table style="border-collapse: collapse; width: 100%; margin-top: 10px;">
+          <thead>
+            <tr>
+              <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Date</th>
+              <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Arrivée avant 8h30</th>
+              <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Sans Repas</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      `;
+
       // Generate email content based on reservation type
       const reservationType = requestData.reservationType === "holiday" ? "vacances" : "mercredi";
       const emailHtml = `
@@ -109,18 +164,8 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>Email:</strong> ${profileData.email}</p>
         ${requestData.childName ? `<p><strong>Enfant:</strong> ${requestData.childName}</p>` : ''}
         ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
-        ${requestData.dates && requestData.dates.length > 0 ? 
-          `<p><strong>Dates réservées:</strong></p>
-          <ul>
-            ${requestData.dates.map((date, index) => {
-              let options = [];
-              if (requestData.withoutMeal && requestData.withoutMeal[index]) options.push("Sans repas");
-              if (requestData.earlyDropoff && requestData.earlyDropoff[index]) options.push("Accueil anticipé");
-              
-              return `<li>${date} ${options.length > 0 ? `(${options.join(", ")})` : ''}</li>`;
-            }).join('')}
-          </ul>` : 
-          ''}
+        <p><strong>Dates réservées:</strong></p>
+        ${tableHtml}
       `;
       
       // Send reservation confirmation email

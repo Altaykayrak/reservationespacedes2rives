@@ -113,7 +113,7 @@ export const useWednesdayReservationSubmission = (
         body: {
           childName: childFullName,
           dates: formattedDates,
-          type: 'wednesday',
+          reservationType: 'wednesday',
           withoutMeal: selectedDates.map(d => d.withoutMeal),
           earlyDropoff: selectedDates.map(d => d.earlyDropoff)
         }

@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -160,7 +159,6 @@ export const useReservationSubmission = (
       const childFullName = `${childData.first_name} ${childData.last_name}`;
       const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
       
-      // Fix: use reservationType instead of type
       await supabase.functions.invoke('send-reservation-email', {
         body: {
           childName: childFullName,
