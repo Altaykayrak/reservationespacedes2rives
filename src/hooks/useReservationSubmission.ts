@@ -160,11 +160,12 @@ export const useReservationSubmission = (
       const childFullName = `${childData.first_name} ${childData.last_name}`;
       const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
       
+      // Fix: use reservationType instead of type
       await supabase.functions.invoke('send-reservation-email', {
         body: {
           childName: childFullName,
           dates: formattedDates,
-          type: 'holiday',
+          reservationType: 'holiday',
           withoutMeal: selectedDates.map(d => d.withoutMeal),
           earlyDropoff: selectedDates.map(d => d.earlyDropoff)
         }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useChildrenData } from "./useChildrenData";
 import { useHolidayPeriods } from "./useHolidayPeriods";
@@ -103,11 +104,11 @@ export const useHolidayReservation = () => {
         body: {
           userId: user.id,
           reservationType: "holiday",
-          reservationDetails: {
-            childName,
-            dates: formattedDates,
-            period: periodName
-          }
+          childName: childName,
+          dates: formattedDates,
+          period: periodName,
+          withoutMeal: selectedDates.map(d => d.withoutMeal),
+          earlyDropoff: selectedDates.map(d => d.earlyDropoff)
         }
       });
 

@@ -13,11 +13,11 @@ interface ReservationEmailRequest {
   motifs?: string[];
   userId?: string;
   reservationType?: string;
-  reservationDetails?: {
-    childName?: string;
-    dates?: string[];
-    period?: string;
-  };
+  childName?: string;
+  dates?: string[];
+  period?: string;
+  withoutMeal?: boolean[];
+  earlyDropoff?: boolean[];
 }
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
@@ -41,14 +41,54 @@ const handler = async (req: Request): Promise<Response> => {
     if (requestData.reservationType === "holiday" || requestData.reservationType === "wednesday") {
       console.log("Processing a holiday or wednesday reservation");
       
-      if (!requestData.userId) {
-        throw new Error("User ID is required for reservation emails");
+      // For direct reservation emails without user ID
+      if (requestData.childName && requestData.dates) {
+        console.log("Processing direct reservation with child name");
+        
+        // Generate email content for direct reservation
+        const reservationType = requestData.reservationType === "holiday" ? "vacances" : "mercredi";
+        const emailHtml = `
+          <h1>Nouvelle réservation de ${reservationType}</h1>
+          ${requestData.childName ? `<p><strong>Enfant:</strong> ${requestData.childName}</p>` : ''}
+          ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
+          ${requestData.dates && requestData.dates.length > 0 ? 
+            `<p><strong>Dates réservées:</strong></p>
+            <ul>
+              ${requestData.dates.map((date, index) => {
+                let options = [];
+                if (requestData.withoutMeal && requestData.withoutMeal[index]) options.push("Sans repas");
+                if (requestData.earlyDropoff && requestData.earlyDropoff[index]) options.push("Accueil anticipé");
+                
+                return `<li>${date} ${options.length > 0 ? `(${options.join(", ")})` : ''}</li>`;
+              }).join('')}
+            </ul>` : 
+            ''}
+        `;
+        
+        // Send direct reservation confirmation email
+        const emailResponse = await resend.emails.send({
+          from: "Réservation <onboarding@resend.dev>",
+          to: ["accueil@e2rives.fr"],
+          subject: `Nouvelle réservation - ${requestData.reservationType === "holiday" ? "Vacances" : "Mercredi"} - ${requestData.childName}`,
+          html: emailHtml,
+        });
+
+        console.log("Email sent successfully:", emailResponse);
+        
+        return new Response(JSON.stringify({ success: true, data: emailResponse }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        });
       }
       
-      if (!requestData.reservationDetails) {
-        throw new Error("Reservation details are required");
+      // For user profile-based emails
+      if (!requestData.userId) {
+        throw new Error("User ID is required for reservation emails with profile information");
       }
-
+      
       // Fetch the user profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles_with_emails")
@@ -62,7 +102,26 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Generate email content based on reservation type
-      const emailHtml = generateReservationEmailHtml(requestData, profileData);
+      const reservationType = requestData.reservationType === "holiday" ? "vacances" : "mercredi";
+      const emailHtml = `
+        <h1>Nouvelle réservation de ${reservationType}</h1>
+        <p><strong>Parent:</strong> ${profileData.first_name} ${profileData.last_name}</p>
+        <p><strong>Email:</strong> ${profileData.email}</p>
+        ${requestData.childName ? `<p><strong>Enfant:</strong> ${requestData.childName}</p>` : ''}
+        ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
+        ${requestData.dates && requestData.dates.length > 0 ? 
+          `<p><strong>Dates réservées:</strong></p>
+          <ul>
+            ${requestData.dates.map((date, index) => {
+              let options = [];
+              if (requestData.withoutMeal && requestData.withoutMeal[index]) options.push("Sans repas");
+              if (requestData.earlyDropoff && requestData.earlyDropoff[index]) options.push("Accueil anticipé");
+              
+              return `<li>${date} ${options.length > 0 ? `(${options.join(", ")})` : ''}</li>`;
+            }).join('')}
+          </ul>` : 
+          ''}
+      `;
       
       // Send reservation confirmation email
       const emailResponse = await resend.emails.send({
@@ -168,25 +227,5 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 };
-
-// Helper function to generate HTML for reservation emails
-function generateReservationEmailHtml(requestData: ReservationEmailRequest, profileData: any): string {
-  const reservationType = requestData.reservationType === "holiday" ? "vacances" : "mercredi";
-  const { childName, dates, period } = requestData.reservationDetails || {};
-  
-  return `
-    <h1>Nouvelle réservation de ${reservationType}</h1>
-    <p><strong>Parent:</strong> ${profileData.first_name} ${profileData.last_name}</p>
-    <p><strong>Email:</strong> ${profileData.email}</p>
-    ${childName ? `<p><strong>Enfant:</strong> ${childName}</p>` : ''}
-    ${period ? `<p><strong>Période:</strong> ${period}</p>` : ''}
-    ${dates && dates.length > 0 ? 
-      `<p><strong>Dates réservées:</strong></p>
-      <ul>
-        ${dates.map(date => `<li>${date}</li>`).join('')}
-      </ul>` : 
-      ''}
-  `;
-}
 
 serve(handler);
