@@ -98,7 +98,7 @@ export const useHolidayReservation = () => {
         }
       });
 
-      // Send email notification
+      // Send email notification with explicit reservationType
       const response = await supabase.functions.invoke("send-reservation-email", {
         body: {
           userId: user.id,

@@ -99,6 +99,10 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Fetch the user profile
+      if (!requestData.userId) {
+        throw new Error("User ID is required for RDV emails");
+      }
+
       const { data: profileData, error: profileError } = await supabase
         .from("profiles_with_emails")
         .select("*")
@@ -150,6 +154,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     } else {
       // If neither reservationType nor rdvId is provided
+      console.error("Invalid request data, missing reservationType or rdvId:", requestData);
       throw new Error("Invalid request: Either reservationType or rdvId is required");
     }
   } catch (error: any) {
