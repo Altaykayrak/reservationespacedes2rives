@@ -70,6 +70,48 @@ export const useHolidayReservation = () => {
     setSelectedPeriod("");
   };
 
+  const sendConfirmationEmail = async (selectedDates: DateOption[], childName: string, periodName: string) => {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) {
+        console.error("Utilisateur non connecté");
+        return;
+      }
+
+      // Format dates for email
+      const formattedDates = selectedDates.map(dateOpt => {
+        const date = dateOpt.date;
+        return date.toLocaleDateString('fr-FR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+      });
+
+      // Send email notification
+      const response = await supabase.functions.invoke("send-reservation-email", {
+        body: {
+          userId: user.id,
+          reservationType: "holiday",
+          reservationDetails: {
+            childName,
+            dates: formattedDates,
+            period: periodName
+          }
+        }
+      });
+
+      if (response.error) {
+        console.error("Erreur lors de l'envoi de l'email:", response.error);
+      } else {
+        console.log("Email de confirmation envoyé avec succès");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'email de confirmation:", error);
+    }
+  };
+
   const { 
     handleSubmit: submit, 
     noSpotsDialog, 
@@ -83,6 +125,15 @@ export const useHolidayReservation = () => {
     isDateAlreadyReserved,
     async () => {
       await refetchReservations();
+      
+      // Get child name and period name for the email
+      const childRecord = children?.find(child => child.id === selectedChild);
+      const periodRecord = holidayPeriods?.find(period => period.id === selectedPeriod);
+      
+      if (childRecord && periodRecord) {
+        await sendConfirmationEmail(selectedDates, `${childRecord.first_name} ${childRecord.last_name}`, periodRecord.name);
+      }
+      
       setShowSuccessDialog(true);
       resetForm();
     },
@@ -153,3 +204,4 @@ export const useHolidayReservation = () => {
     setMinimumDaysDialog
   };
 };
+
