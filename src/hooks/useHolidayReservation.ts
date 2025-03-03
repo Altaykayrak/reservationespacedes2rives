@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useChildrenData } from "./useChildrenData";
 import { useHolidayPeriods } from "./useHolidayPeriods";
@@ -89,6 +88,16 @@ export const useHolidayReservation = () => {
         });
       });
 
+      console.log("Sending confirmation email with the following data:", {
+        userId: user.id,
+        reservationType: "holiday",
+        reservationDetails: {
+          childName,
+          dates: formattedDates,
+          period: periodName
+        }
+      });
+
       // Send email notification
       const response = await supabase.functions.invoke("send-reservation-email", {
         body: {
@@ -105,7 +114,7 @@ export const useHolidayReservation = () => {
       if (response.error) {
         console.error("Erreur lors de l'envoi de l'email:", response.error);
       } else {
-        console.log("Email de confirmation envoyé avec succès");
+        console.log("Email de confirmation envoyé avec succès", response.data);
       }
     } catch (error) {
       console.error("Erreur lors de l'envoi de l'email de confirmation:", error);
@@ -204,4 +213,3 @@ export const useHolidayReservation = () => {
     setMinimumDaysDialog
   };
 };
-

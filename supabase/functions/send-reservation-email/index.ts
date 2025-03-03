@@ -37,9 +37,10 @@ const handler = async (req: Request): Promise<Response> => {
     const requestData: ReservationEmailRequest = await req.json();
     console.log("Received request data:", JSON.stringify(requestData));
 
-    // Check if we're dealing with an RDV or a reservation
+    // Check if we're dealing with a holiday or wednesday reservation
     if (requestData.reservationType === "holiday" || requestData.reservationType === "wednesday") {
-      // Handle reservation email for holiday or wednesday
+      console.log("Processing a holiday or wednesday reservation");
+      
       if (!requestData.userId) {
         throw new Error("User ID is required for reservation emails");
       }
@@ -60,40 +61,36 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error("Error fetching user profile");
       }
 
+      // Generate email content based on reservation type
+      const emailHtml = generateReservationEmailHtml(requestData, profileData);
+      
       // Send reservation confirmation email
       const emailResponse = await resend.emails.send({
         from: "Réservation <onboarding@resend.dev>",
         to: ["accueil@e2rives.fr"],
         subject: `Nouvelle réservation - ${requestData.reservationType === "holiday" ? "Vacances" : "Mercredi"} - ${profileData.first_name} ${profileData.last_name}`,
-        html: generateReservationEmailHtml(requestData, profileData),
+        html: emailHtml,
       });
 
       console.log("Email sent successfully:", emailResponse);
       
-      return new Response(JSON.stringify(emailResponse), {
+      return new Response(JSON.stringify({ success: true, data: emailResponse }), {
         status: 200,
         headers: {
           "Content-Type": "application/json",
           ...corsHeaders,
         },
       });
-    } else {
-      // Legacy RDV email handling
-      const { rdvId, motifs, userId } = requestData;
+    } 
+    // Handle RDV email (legacy support)
+    else if (requestData.rdvId) {
+      console.log("Processing an RDV reservation");
       
-      if (!rdvId) {
-        throw new Error("RDV ID is required");
-      }
-      
-      if (!userId) {
-        throw new Error("User ID is required");
-      }
-
       // Fetch the rdv details
       const { data: rdvData, error: rdvError } = await supabase
         .from("rdv")
         .select("*")
-        .eq("id", rdvId)
+        .eq("id", requestData.rdvId)
         .single();
 
       if (rdvError) {
@@ -105,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
       const { data: profileData, error: profileError } = await supabase
         .from("profiles_with_emails")
         .select("*")
-        .eq("id", userId)
+        .eq("id", requestData.userId)
         .single();
 
       if (profileError) {
@@ -138,19 +135,22 @@ const handler = async (req: Request): Promise<Response> => {
           <p><strong>Email:</strong> ${profileData.email}</p>
           <p><strong>Date:</strong> ${formatDate(rdvData.date)}</p>
           <p><strong>Horaire:</strong> ${formatTime(rdvData.heure_debut)} - ${formatTime(rdvData.heure_fin)}</p>
-          <p><strong>Motifs:</strong> ${motifs?.join(", ") || "Non spécifié"}</p>
+          <p><strong>Motifs:</strong> ${requestData.motifs?.join(", ") || "Non spécifié"}</p>
         `,
       });
 
       console.log("Email sent successfully:", emailResponse);
 
-      return new Response(JSON.stringify(emailResponse), {
+      return new Response(JSON.stringify({ success: true, data: emailResponse }), {
         status: 200,
         headers: {
           "Content-Type": "application/json",
           ...corsHeaders,
         },
       });
+    } else {
+      // If neither reservationType nor rdvId is provided
+      throw new Error("Invalid request: Either reservationType or rdvId is required");
     }
   } catch (error: any) {
     console.error("Error in send-reservation-email function:", error);
@@ -185,4 +185,3 @@ function generateReservationEmailHtml(requestData: ReservationEmailRequest, prof
 }
 
 serve(handler);
-
