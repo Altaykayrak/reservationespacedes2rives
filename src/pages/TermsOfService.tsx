@@ -70,9 +70,8 @@ const TermsOfService = () => {
               <li>Les données sont conservées pendant 3 ans après la dernière activité sur le compte.</li>
               <li>Aucune donnée n'est transférée hors de l'Union européenne.</li>
               <li>L'Usager peut exercer ses droits (accès, rectification, suppression) en contactant le délégué à la protection des données :</li>
-              <li>
-            </li>
-              <li>Par courrier : L'Espace des 2 rives, 4 place de la Fraternité, Tel : 02 32 68 32 10</li>
+              
+              <li>Par courrier : L'Espace des 2 rives, 4 place de la Fraternité, 27590 Pîtres.</li>
             </ul>
           </section>
 
@@ -80,7 +79,7 @@ const TermsOfService = () => {
             <h2 className="text-xl font-semibold mb-4">7. Références légales</h2>
             <ul className="list-disc pl-5 space-y-2 text-gray-700 text-justify">
               <li>Loi n°78-17 du 6 janvier 1978 relative à l'informatique et aux libertés.</li>
-              <li>Ordonnance n°2005-1516 du 8 décembre 2005 concernant les échanges électroniques avec l'administration.</li>
+              
               <li>Règlement (UE) 2016/679 (RGPD) relatif à la protection des données personnelles.</li>
             </ul>
           </section>
