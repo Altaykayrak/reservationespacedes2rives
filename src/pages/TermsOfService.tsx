@@ -70,7 +70,8 @@ const TermsOfService = () => {
               <li>Les données sont conservées pendant 3 ans après la dernière activité sur le compte.</li>
               <li>Aucune donnée n'est transférée hors de l'Union européenne.</li>
               <li>L'Usager peut exercer ses droits (accès, rectification, suppression) en contactant le délégué à la protection des données :</li>
-              <li>Par e-mail : rgpd@e2rives.fr</li>
+              <li>
+            </li>
               <li>Par courrier : L'Espace des 2 rives, 4 place de la Fraternité, Tel : 02 32 68 32 10</li>
             </ul>
           </section>
