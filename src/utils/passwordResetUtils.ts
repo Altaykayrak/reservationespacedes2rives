@@ -22,7 +22,8 @@ export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEma
 };
 
 export const sendPasswordResetEmail = async (email: string) => {
-  const baseUrl = "https://reservationespacedes2rives.lovable.app";
+  // Utiliser l'URL courante du navigateur pour déterminer l'URL de base
+  const baseUrl = window.location.origin;
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${baseUrl}/reset-password`
   });
