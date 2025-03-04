@@ -22,14 +22,30 @@ export const checkAuthorizedEmail = async (email: string): Promise<AuthorizedEma
 };
 
 export const sendPasswordResetEmail = async (email: string) => {
-  // Utiliser l'URL courante du navigateur pour déterminer l'URL de base
-  const baseUrl = window.location.origin;
+  // Déterminer l'URL de redirection en fonction de l'environnement
+  let redirectUrl: string;
+  
+  // Liste des URL de production connues
+  const productionUrls = [
+    "https://e2r-reservation.netlify.app",
+    "https://reservationespacedes2rives.lovable.app"
+  ];
+  
+  // Vérifier si nous sommes dans un environnement de production connu
+  const currentOrigin = window.location.origin;
+  if (productionUrls.includes(currentOrigin)) {
+    redirectUrl = `${currentOrigin}/reset-password`;
+  } else {
+    // Pour les environnements de développement local ou autres
+    redirectUrl = `${window.location.origin}/reset-password`;
+  }
+  
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${baseUrl}/reset-password`
+    redirectTo: redirectUrl
   });
   
   if (error) throw error;
   
   // Log pour debug
-  console.log("Email de réinitialisation envoyé avec redirectTo:", `${baseUrl}/reset-password`);
+  console.log("Email de réinitialisation envoyé avec redirectTo:", redirectUrl);
 };
