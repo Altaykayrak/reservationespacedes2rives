@@ -2,6 +2,7 @@ import { Navbar } from "@/components/ui/navbar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+
 const TermsOfService = () => {
   const navigate = useNavigate();
   const handleBack = () => {
@@ -15,7 +16,7 @@ const TermsOfService = () => {
           Retour sur l'inscription
         </Button>
 
-        <div className="mb-12 border p-6 rounded-lg bg-gray-50">
+        <div className="mb-12 border p-6 rounded-lg bg-gray-50" id="reglement-fonctionnement">
           <h1 className="text-3xl font-bold mb-6 text-center">REGLEMENT DE FONCTIONNEMENT</h1>
           <h2 className="text-2xl font-bold mb-4 text-center">ACCUEILS DE LOISIRS MATERNELS ET ELEMENTAIRES</h2>
           
@@ -207,7 +208,7 @@ const TermsOfService = () => {
           <hr className="my-8 border-gray-300" />
         </div>
 
-        <div className="mb-12 border p-6 rounded-lg bg-gray-50">
+        <div className="mb-12 border p-6 rounded-lg bg-gray-50" id="cgu">
           <h1 className="text-3xl font-bold mb-6 text-center">CONDITIONS GÉNÉRALES D'UTILISATION</h1>
           
           <div className="space-y-8">
