@@ -280,12 +280,12 @@ const TermsOfService = () => {
           
           <div className="flex justify-between mt-8">
             <div>
-              <p className="font-semibold">Signature du vice-président de l'association</p>
-              <p>M. Daniel Bayart</p>
+              
+              
             </div>
             <div>
-              <p className="font-semibold">Signature de la directrice</p>
-              <p>Mme. Sabine Caillet</p>
+              
+              
             </div>
           </div>
         </div>
