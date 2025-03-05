@@ -1,13 +1,33 @@
 import { Navbar } from "@/components/ui/navbar";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 const TermsOfService = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const reglement = useRef<HTMLDivElement>(null);
+  const cgu = useRef<HTMLDivElement>(null);
+
   const handleBack = () => {
-    navigate(-1); // Utilise l'historique du navigateur pour revenir en arrière
+    navigate(-1);
   };
+
+  useEffect(() => {
+    // Scroll to the anchored element if hash exists in URL
+    if (location.hash) {
+      setTimeout(() => {
+        const hash = location.hash.replace('#', '');
+        if (hash === 'reglement-fonctionnement' && reglement.current) {
+          reglement.current.scrollIntoView({ behavior: 'smooth' });
+        } else if (hash === 'cgu' && cgu.current) {
+          cgu.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [location]);
+
   return <div className="min-h-screen bg-white">
       <Navbar />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -16,7 +36,7 @@ const TermsOfService = () => {
           Retour sur l'inscription
         </Button>
 
-        <div className="mb-12 border p-6 rounded-lg bg-gray-50" id="reglement-fonctionnement">
+        <div ref={reglement} className="mb-12 border p-6 rounded-lg bg-gray-50" id="reglement-fonctionnement">
           <h1 className="text-3xl font-bold mb-6 text-center">REGLEMENT DE FONCTIONNEMENT</h1>
           <h2 className="text-2xl font-bold mb-4 text-center">ACCUEILS DE LOISIRS MATERNELS ET ELEMENTAIRES</h2>
           
@@ -208,7 +228,7 @@ const TermsOfService = () => {
           <hr className="my-8 border-gray-300" />
         </div>
 
-        <div className="mb-12 border p-6 rounded-lg bg-gray-50" id="cgu">
+        <div ref={cgu} className="mb-12 border p-6 rounded-lg bg-gray-50" id="cgu">
           <h1 className="text-3xl font-bold mb-6 text-center">CONDITIONS GÉNÉRALES D'UTILISATION</h1>
           
           <div className="space-y-8">
