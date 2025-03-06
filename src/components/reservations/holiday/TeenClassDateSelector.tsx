@@ -1,9 +1,12 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useEffect, useState } from "react";
+
 interface TeenClassDateSelectorProps {
   selectedDates: {
     date: Date;
@@ -15,6 +18,7 @@ interface TeenClassDateSelectorProps {
   handleDateToggle: (date: Date) => void;
   periodId: string;
 }
+
 export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   selectedDates,
   isDateAlreadyReserved,
@@ -27,6 +31,17 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
     childInfo,
     isTeenClass
   } = useHolidayPeriodContext();
+  
+  const [isBlinking, setIsBlinking] = useState(true);
+  
+  // Effect to disable blinking after 6 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsBlinking(false);
+    }, 6000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Si ce n'est pas un adolescent ou si c'est la page des réservations normales, on ne devrait pas afficher ce composant
   if (!isTeenClass || !holidayPeriod || window.location.pathname === "/holiday-reservations") return null;
@@ -55,9 +70,12 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   const selectedDatesMap = new Map(selectedDates.map(d => [format(d.date, 'yyyy-MM-dd'), d]));
   console.log("TeenClassDateSelector - Period dates:", periodDates);
   console.log("TeenClassDateSelector - Selected dates:", selectedDates);
+  
   return <div className="space-y-4">
       <Alert>
-        <AlertDescription className="text-blue-600">Veuillez sélectionner au moins 3 jours par semaine. Par défaut, l'option "Sans repas" est activée. Les adolescents sont accueillis à 11h30 (avec un pique-nique à apporter) ou à 13h30, selon le programme. Une "Carte jeune" d'une valeur de 5 euros par enfant est facturée pour l'année civile.</AlertDescription>
+        <AlertDescription className={`text-[#ea384c] font-medium ${isBlinking ? 'animate-blink' : ''}`}>
+          Veuillez sélectionner au moins 3 jours par semaine. Par défaut, l'option "Sans repas" est activée. Les adolescents sont accueillis à 11h30 (avec un pique-nique à apporter) ou à 13h30, selon le programme. Une "Carte jeune" d'une valeur de 5 euros par enfant est facturée pour l'année civile.
+        </AlertDescription>
       </Alert>
       <ScrollArea className="h-[300px] pr-3">
         <div className="space-y-1">
