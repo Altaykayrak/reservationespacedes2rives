@@ -3,6 +3,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
+import { format, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface TeenClassDateSelectorProps {
   selectedDates: { date: Date; withoutMeal: boolean; earlyDropoff: boolean }[];
@@ -24,6 +26,38 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   // Si ce n'est pas un adolescent ou si c'est la page des réservations normales, on ne devrait pas afficher ce composant
   if (!isTeenClass || !holidayPeriod || window.location.pathname === "/holiday-reservations") return null;
 
+  // Générer les dates de la période
+  const generateDatesForPeriod = () => {
+    if (!holidayPeriod) return [];
+    
+    const startDate = parseISO(holidayPeriod.start_date);
+    const endDate = parseISO(holidayPeriod.end_date);
+    
+    const dateArray = [];
+    let currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+      // On ignore les samedis (6) et dimanches (0)
+      if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+        dateArray.push(new Date(currentDate));
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return dateArray;
+  };
+
+  // Obtenir toutes les dates de la période
+  const periodDates = generateDatesForPeriod();
+
+  // Convertir les selectedDates en format lisible pour la comparaison
+  const selectedDatesMap = new Map(
+    selectedDates.map(d => [format(d.date, 'yyyy-MM-dd'), d])
+  );
+
+  console.log("TeenClassDateSelector - Period dates:", periodDates);
+  console.log("TeenClassDateSelector - Selected dates:", selectedDates);
+
   return (
     <div className="space-y-4">
       <Alert>
@@ -33,21 +67,27 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
       </Alert>
       <ScrollArea className="h-[300px] pr-3">
         <div className="space-y-1">
-          {holidayPeriod && Array.isArray(selectedDates) && selectedDates.map((dateOption) => (
-            <DateItem
-              key={dateOption.date.toISOString()}
-              date={dateOption.date}
-              isSelected={selectedDates.some(d => d.date.getTime() === dateOption.date.getTime())}
-              isReserved={isDateAlreadyReserved(dateOption.date)}
-              withoutMeal={dateOption.withoutMeal}
-              earlyDropoff={dateOption.earlyDropoff}
-              onDateToggle={() => handleDateToggle(dateOption.date)}
-              onOptionChange={(option, value) => handleOptionChange(dateOption.date, option, value)}
-              isTeenClass={true}
-              periodId={periodId}
-              childSchoolClass={childInfo?.school_class || ''}
-            />
-          ))}
+          {periodDates.map(date => {
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const selectedDate = selectedDatesMap.get(dateStr);
+            const isSelected = !!selectedDate;
+            
+            return (
+              <DateItem
+                key={dateStr}
+                date={date}
+                isSelected={isSelected}
+                isReserved={isDateAlreadyReserved(date)}
+                withoutMeal={selectedDate?.withoutMeal || false}
+                earlyDropoff={selectedDate?.earlyDropoff || false}
+                onDateToggle={() => handleDateToggle(date)}
+                onOptionChange={(option, value) => handleOptionChange(date, option, value)}
+                isTeenClass={true}
+                periodId={periodId}
+                childSchoolClass={childInfo?.school_class || ''}
+              />
+            );
+          })}
         </div>
       </ScrollArea>
     </div>
