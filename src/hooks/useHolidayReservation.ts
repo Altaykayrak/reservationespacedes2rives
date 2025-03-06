@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useChildrenData } from "./useChildrenData";
 import { useHolidayPeriods } from "./useHolidayPeriods";
@@ -164,8 +163,6 @@ export const useHolidayReservation = () => {
                       window.location.pathname === "/admin/reservations/new-teen-holiday" ||
                       window.location.pathname === "/admin/new-teenholiday-reservation";
     
-    if (isTeenClass && isTeenPage) return;
-    
     if (isDateAlreadyReserved(date)) {
       return;
     }
@@ -174,9 +171,11 @@ export const useHolidayReservation = () => {
     if (existingDate) {
       setSelectedDates(selectedDates.filter(d => d.date.getTime() !== date.getTime()));
     } else {
+      // Pour les adolescents, on active "Sans repas" par défaut
+      const withoutMealByDefault = isTeenPage && isTeenClass;
       setSelectedDates([...selectedDates, { 
         date, 
-        withoutMeal: false, 
+        withoutMeal: withoutMealByDefault, 
         earlyDropoff: false 
       }]);
     }

@@ -59,7 +59,7 @@ const AdminNewTeenHolidayReservation = () => {
             </h1>
           </div>
           <p className="text-muted-foreground text-base md:text-lg">
-            Créez une nouvelle réservation pour les adolescents.
+            Créez une nouvelle réservation pour les adolescents. Minimum 3 jours par semaine.
           </p>
         </div>
 

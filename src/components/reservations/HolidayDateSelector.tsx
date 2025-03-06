@@ -54,28 +54,13 @@ export const HolidayDateSelector = ({
     if (!selectedChild) return;
 
     if (isTeenClass && holidayPeriod) {
-      // On applique la présélection sur la page teen et la page admin teen
+      // On applique seulement la présélection de "Sans repas" par défaut pour les adolescents
       const isTeenPage = window.location.pathname === "/teenholiday-reservations" || 
                         window.location.pathname === "/admin/reservations/new-teen-holiday" ||
                         window.location.pathname === "/admin/new-teenholiday-reservation";
       if (isTeenPage) {
-        console.log("Sélection des dates pour adolescent");
-        const dates: DateOption[] = [];
-        const startDate = new Date(holidayPeriod.start_date);
-        const endDate = new Date(holidayPeriod.end_date);
-        const currentDate = new Date(startDate);
-
-        while (currentDate <= endDate) {
-          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-            dates.push({
-              date: new Date(currentDate),
-              withoutMeal: true,
-              earlyDropoff: false
-            });
-          }
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        setSelectedDates(dates);
+        // On ne présélectionne plus automatiquement tous les jours de la semaine
+        setSelectedDates([]);
       }
     } else {
       // Si ce n'est pas un adolescent, on réinitialise les dates
@@ -85,13 +70,8 @@ export const HolidayDateSelector = ({
 
   // Effet pour réinitialiser les dates lors du changement de période
   useEffect(() => {
-    const isTeenPage = window.location.pathname === "/teenholiday-reservations" || 
-                      window.location.pathname === "/admin/reservations/new-teen-holiday" ||
-                      window.location.pathname === "/admin/new-teenholiday-reservation";
-    if (!isTeenClass || !isTeenPage) {
-      setSelectedDates([]);
-    }
-  }, [periodId, isTeenClass, setSelectedDates]);
+    setSelectedDates([]);
+  }, [periodId, setSelectedDates]);
 
   if (!holidayPeriod || !selectedChild) return null;
 
@@ -108,6 +88,7 @@ export const HolidayDateSelector = ({
           selectedDates={selectedDates}
           isDateAlreadyReserved={isDateAlreadyReserved}
           handleOptionChange={handleOptionChange}
+          handleDateToggle={handleDateToggle}
           periodId={periodId}
         />
       ) : (

@@ -1,3 +1,4 @@
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
@@ -23,9 +24,9 @@ export const DateOptions = ({
           id={`without-meal-${date.toISOString()}`}
           checked={withoutMeal}
           onCheckedChange={(checked) =>
-            !isTeenClass && onOptionChange('withoutMeal', checked as boolean)
+            onOptionChange('withoutMeal', checked as boolean)
           }
-          disabled={isTeenClass}
+          // Pour les ados, l'option est modifiable mais activée par défaut
           className="border-blue-200"
         />
         <Label 
@@ -35,24 +36,22 @@ export const DateOptions = ({
           Sans repas
         </Label>
       </div>
-      {!isTeenClass && (
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id={`early-dropoff-${date.toISOString()}`}
-            checked={earlyDropoff}
-            onCheckedChange={(checked) =>
-              onOptionChange('earlyDropoff', checked as boolean)
-            }
-            className="border-blue-200"
-          />
-          <Label 
-            htmlFor={`early-dropoff-${date.toISOString()}`}
-            className="text-sm text-blue-900"
-          >
-            Accueil avant 8h30
-          </Label>
-        </div>
-      )}
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id={`early-dropoff-${date.toISOString()}`}
+          checked={earlyDropoff}
+          onCheckedChange={(checked) =>
+            onOptionChange('earlyDropoff', checked as boolean)
+          }
+          className="border-blue-200"
+        />
+        <Label 
+          htmlFor={`early-dropoff-${date.toISOString()}`}
+          className="text-sm text-blue-900"
+        >
+          Accueil avant 8h30
+        </Label>
+      </div>
     </div>
   );
 };
