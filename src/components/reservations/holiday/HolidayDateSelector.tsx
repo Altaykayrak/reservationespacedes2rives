@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
@@ -138,6 +139,7 @@ export const HolidayDateSelector = ({
           selectedDates={selectedDates}
           isDateAlreadyReserved={isDateAlreadyReserved}
           handleOptionChange={handleOptionChange}
+          handleDateToggle={handleDateToggle}
           periodId={periodId}
         />
       ) : (

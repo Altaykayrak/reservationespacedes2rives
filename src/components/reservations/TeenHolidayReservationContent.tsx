@@ -51,6 +51,7 @@ export const TeenHolidayReservationContent = () => {
               selectedDates={selectedDates}
               isDateAlreadyReserved={isDateAlreadyReserved}
               handleOptionChange={handleOptionChange}
+              handleDateToggle={handleDateToggle}
               periodId={selectedPeriod}
             />
           )}
