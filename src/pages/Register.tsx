@@ -55,7 +55,7 @@ const Register = () => {
     <>
       <AuthLayout
         title="Inscription"
-        description="Créez votre compte pour accéder à L'espace des deux rives"
+        description="Créez votre compte pour accéder à l'Espace des 2 rives"
         subDescription="Merci de remplir tout les champs du formulaire."
       >
         <RegisterForm onSubmit={handleSubmit} isLoading={isLoading} />
