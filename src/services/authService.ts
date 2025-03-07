@@ -37,21 +37,33 @@ export const registerUser = async (formData: RegisterFormData) => {
     );
   }
 
-  const { data: authData, error: signUpError } = await supabase.auth.signUp({
-    email: formData.email,
-    password: formData.password,
-    options: {
-      data: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        automaticPayment: formData.automaticPayment,
-        acceptedCgu: formData.acceptedCgu,
+  try {
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          automaticPayment: formData.automaticPayment,
+          acceptedCgu: formData.acceptedCgu,
+        },
       },
-    },
-  });
+    });
 
-  if (signUpError) throw signUpError;
-  if (!authData.user) throw new Error("No user data returned");
+    if (signUpError) {
+      // Check if error is related to existing user
+      if (signUpError.message.includes("User already registered")) {
+        throw new Error("Il existe déjà un compte avec cette adresse email. Merci de cliquer sur le lien ci-dessous pour vous connecter.");
+      }
+      throw signUpError;
+    }
+    
+    if (!authData.user) throw new Error("No user data returned");
 
-  return authData.user;
+    return authData.user;
+  } catch (error) {
+    console.error("Registration error:", error);
+    throw error;
+  }
 };

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { AuthLayout } from "@/components/layouts/AuthLayout";
 import { RegisterForm } from "@/components/forms/RegisterForm";
@@ -21,6 +21,7 @@ const Register = () => {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isExistingUserError, setIsExistingUserError] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (values: RegisterFormData) => {
@@ -31,6 +32,9 @@ const Register = () => {
     } catch (error: any) {
       console.error("Registration error:", error);
       setErrorMessage(error.message || "Une erreur est survenue lors de l'inscription");
+      
+      // Check if this is an existing user error
+      setIsExistingUserError(error.message.includes("Il existe déjà un compte avec cette adresse email"));
       setShowErrorDialog(true);
     } finally {
       setIsLoading(false);
@@ -39,6 +43,11 @@ const Register = () => {
 
   const handleSuccessConfirm = () => {
     setShowSuccessDialog(false);
+    navigate("/login");
+  };
+
+  const handleLoginRedirect = () => {
+    setShowErrorDialog(false);
     navigate("/login");
   };
 
@@ -55,15 +64,28 @@ const Register = () => {
       <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Erreur d'inscription</AlertDialogTitle>
+            <AlertDialogTitle>
+              {isExistingUserError ? "Compte existant" : "Erreur d'inscription"}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-base">
               {errorMessage}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Button onClick={() => setShowErrorDialog(false)}>
-              D'accord
-            </Button>
+          <AlertDialogFooter className="flex gap-2">
+            {isExistingUserError ? (
+              <>
+                <Button variant="outline" onClick={() => setShowErrorDialog(false)}>
+                  Annuler
+                </Button>
+                <Button onClick={handleLoginRedirect}>
+                  Se connecter
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => setShowErrorDialog(false)}>
+                D'accord
+              </Button>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
