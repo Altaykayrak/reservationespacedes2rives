@@ -211,7 +211,7 @@ const TermsOfService = () => {
               <li>Pour les mercredis : sur présentation d'un certificat médical</li>
               <li>Une maladie supérieure à 3 jours (le délai de carence correspond au premier jour d'absence et les 2 jours calendaires qui suivent).</li>
             </ul>
-            <p>Par ailleurs, la directrice du centre social s'autorise la possibilité de fermer la structure pour des raisons exceptionnelles.</p>
+            <p className="text-justify">Par ailleurs, la directrice du centre social s'autorise la possibilité de fermer la structure pour des raisons exceptionnelles.</p>
             
             <div className="flex justify-between mt-8">
               <div>
