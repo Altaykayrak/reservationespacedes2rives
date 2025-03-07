@@ -251,7 +251,7 @@ const TermsOfService = () => {
 
             <section>
               <h2 className="text-xl font-semibold mb-4">3. Acceptation et opposabilité des CGU</h2>
-              <p className="text-gray-700">En utilisant le service, l'usager accepte les présentes CGU et s'engage à les respecter. L'association se réserve le droit de modifier ces conditions à tout moment et informera les usagers des mises à jour. L'usager peut décider de cesser l'utilisation du service à tout moment. De même, l'association pourra modifier, suspendre ou interrompre le service pour des raisons de maintenance ou d'évolution, sans que cela n'entraîne aucune indemnisation. Le service est accessible en continu, 24h/24 et 7j/7, sauf en cas d'interruption programmée pour maintenance.</p>
+              <p className="text-gray-700 text-justify">En utilisant le service, l'usager accepte les présentes CGU et s'engage à les respecter. L'association se réserve le droit de modifier ces conditions à tout moment et informera les usagers des mises à jour. L'usager peut décider de cesser l'utilisation du service à tout moment. De même, l'association pourra modifier, suspendre ou interrompre le service pour des raisons de maintenance ou d'évolution, sans que cela n'entraîne aucune indemnisation. Le service est accessible en continu, 24h/24 et 7j/7, sauf en cas d'interruption programmée pour maintenance.</p>
             </section>
 
             <section>
