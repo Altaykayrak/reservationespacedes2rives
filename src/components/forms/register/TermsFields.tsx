@@ -25,7 +25,7 @@ export const TermsFields = ({ form }: TermsFieldsProps) => {
                 onCheckedChange={field.onChange}
               />
             </FormControl>
-            <FormLabel className="text-sm font-normal">Je souhaite m'inscrire au prélèvement automatique</FormLabel>
+            <FormLabel className="text-sm font-normal">J'ai opté pour le prélèvement automatique (familles ayant fourni un RIB)</FormLabel>
           </FormItem>
         )}
       />
