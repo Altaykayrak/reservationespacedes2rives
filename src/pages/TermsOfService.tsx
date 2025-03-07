@@ -3,14 +3,21 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useRef } from "react";
+
 const TermsOfService = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const reglement = useRef<HTMLDivElement>(null);
   const cgu = useRef<HTMLDivElement>(null);
+  
   const handleBack = () => {
     navigate(-1);
   };
+
+  // Get previous path from state or referrer
+  const previousPath = location.state?.from || document.referrer;
+  const showBackButton = previousPath?.includes('/register');
+  
   useEffect(() => {
     // Scroll to the anchored element if hash exists in URL
     if (location.hash) {
@@ -28,13 +35,16 @@ const TermsOfService = () => {
       }, 100);
     }
   }, [location]);
+
   return <div className="min-h-screen bg-white">
       <Navbar />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Button onClick={handleBack} variant="outline" className="mb-6 flex items-center gap-2">
-          <ChevronLeft className="h-4 w-4" />
-          Retour sur l'inscription
-        </Button>
+        {showBackButton && (
+          <Button onClick={handleBack} variant="outline" className="mb-6 flex items-center gap-2">
+            <ChevronLeft className="h-4 w-4" />
+            Retour sur l'inscription
+          </Button>
+        )}
 
         <div ref={reglement} className="mb-12 border p-6 rounded-lg bg-gray-50" id="reglement-fonctionnement">
           <h1 className="text-3xl font-bold mb-6 text-center">REGLEMENT DE FONCTIONNEMENT</h1>
@@ -311,4 +321,6 @@ const TermsOfService = () => {
       </div>
     </div>;
 };
+
 export default TermsOfService;
+

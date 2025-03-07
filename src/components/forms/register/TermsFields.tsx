@@ -1,87 +1,70 @@
 
-import { Link } from "react-router-dom";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { Link, useLocation } from "react-router-dom";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { UseFormReturn } from "react-hook-form";
 import { RegisterFormData } from "@/schemas/registerSchema";
-import { useState, useEffect } from "react";
 
 interface TermsFieldsProps {
   form: UseFormReturn<RegisterFormData>;
 }
 
 export const TermsFields = ({ form }: TermsFieldsProps) => {
-  const [shouldShake, setShouldShake] = useState(false);
-  const acceptedCgu = form.watch("acceptedCgu");
-  const { isSubmitting } = form.formState;
-
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    if (shouldShake) {
-      timeout = setTimeout(() => {
-        setShouldShake(false);
-      }, 1000);
-    }
-    return () => clearTimeout(timeout);
-  }, [shouldShake]);
-
-  // Surveille l'état de soumission du formulaire
-  useEffect(() => {
-    if (isSubmitting && !acceptedCgu) {
-      setShouldShake(true);
-    }
-  }, [isSubmitting, acceptedCgu]);
-
+  const location = useLocation();
+  
   return (
-    <>
+    <div className="space-y-4">
       <FormField
         control={form.control}
         name="automaticPayment"
         render={({ field }) => (
           <FormItem className="flex flex-row items-start space-x-3 space-y-0">
             <FormControl>
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
             </FormControl>
-            <div className="leading-none">
-              <FormLabel>
-                Prélèvement automatique pour régler vos factures (familles ayant
-                fourni un RIB)
-              </FormLabel>
-            </div>
+            <FormLabel className="text-sm font-normal">Je souhaite m'inscrire au prélèvement automatique</FormLabel>
           </FormItem>
         )}
       />
-
+      
       <FormField
         control={form.control}
         name="acceptedCgu"
         render={({ field }) => (
           <FormItem className="flex flex-row items-start space-x-3 space-y-0">
             <FormControl>
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
             </FormControl>
-            <div 
-              className={`leading-none ${shouldShake && !acceptedCgu ? 'animate-shake text-destructive-foreground' : ''}`}
-              style={{
-                animation: shouldShake && !acceptedCgu ? 'shake 0.5s ease-in-out' : 'none',
-              }}
-            >
-              <FormLabel>
-                J'ai pris connaissance{" "}
-                <Link to="/terms-of-service" className="text-navy-800 text-[#0F2E68] underline font-medium hover:text-blue-900">
-                  des conditions générales d'utilisation et des règles de fonctionnement
-                </Link>{" "}
-                et je les approuve
+            <div className="space-y-1 leading-none">
+              <FormLabel className="text-sm font-normal">
+                J'ai lu et j'accepte les{" "}
+                <Link 
+                  to={{ pathname: "/terms-of-service", state: { from: location.pathname } }}
+                  className="text-primary hover:underline font-medium"
+                  target="_blank"
+                >
+                  conditions générales d'utilisation
+                </Link>
+                {" "}et le{" "}
+                <Link 
+                  to={{ pathname: "/terms-of-service#reglement-fonctionnement", state: { from: location.pathname } }}
+                  className="text-primary hover:underline font-medium"
+                  target="_blank"
+                >
+                  règlement de fonctionnement
+                </Link>
               </FormLabel>
+              <FormMessage />
             </div>
           </FormItem>
         )}
       />
-    </>
+    </div>
   );
 };
