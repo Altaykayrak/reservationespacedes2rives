@@ -45,7 +45,8 @@ export const TermsFields = ({ form }: TermsFieldsProps) => {
               <FormLabel className="text-sm font-normal">
                 J'ai lu et j'accepte les{" "}
                 <Link 
-                  to={{ pathname: "/terms-of-service", state: { from: location.pathname } }}
+                  to="/terms-of-service"
+                  state={{ from: location.pathname }}
                   className="text-primary hover:underline font-medium"
                   target="_blank"
                 >
@@ -53,7 +54,8 @@ export const TermsFields = ({ form }: TermsFieldsProps) => {
                 </Link>
                 {" "}et le{" "}
                 <Link 
-                  to={{ pathname: "/terms-of-service#reglement-fonctionnement", state: { from: location.pathname } }}
+                  to="/terms-of-service#reglement-fonctionnement"
+                  state={{ from: location.pathname }}
                   className="text-primary hover:underline font-medium"
                   target="_blank"
                 >
