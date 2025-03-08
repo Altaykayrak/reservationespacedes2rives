@@ -36,15 +36,15 @@ export function Navbar() {
     { label: "Réservations vacances", href: "/holiday-reservations" },
     { label: "Réservations Club Ado", href: "/teenholiday-reservations" },
     { label: "Programme vacances", href: "/holiday-program" },
-    { label: "Règlement de fonctionnement", href: "/terms-of-service#reglement-fonctionnement" },
-    { label: "CGU", href: "/terms-of-service#cgu" },
+    { label: "Règlement de fonctionnement", href: "/terms-of-operation" },
+    { label: "CGU", href: "/terms-of-service" },
   ];
 
   const publicMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
     { label: "Programme vacances", href: "/holiday-program" },
-    { label: "Règlement de fonctionnement", href: "/terms-of-service#reglement-fonctionnement" },
-    { label: "CGU", href: "/terms-of-service#cgu" },
+    { label: "Règlement de fonctionnement", href: "/terms-of-operation" },
+    { label: "CGU", href: "/terms-of-service" },
   ];
 
   const menuItems = isAuthenticated ? authenticatedMenuItems : publicMenuItems;

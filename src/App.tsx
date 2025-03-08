@@ -25,6 +25,7 @@ import HolidayReservations from "./pages/HolidayReservations";
 import TeenHolidayReservations from "./pages/TeenHolidayReservations";
 import HolidayProgram from "./pages/HolidayProgram";
 import TermsOfService from "./pages/TermsOfService";
+import TermsOfOperation from "./pages/TermsOfOperation";
 import { AdminPage } from "./pages/admin/AdminPage"; // Corrected import
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservations from "./pages/admin/AdminReservations";
@@ -80,6 +81,7 @@ function App() {
             
             <Route path="/holiday-program" element={<HolidayProgram />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/terms-of-operation" element={<TermsOfOperation />} />
             
             {/* Admin routes */}
             <Route path="/admin" element={<AdminPage />}>
@@ -95,7 +97,6 @@ function App() {
               <Route path="new-teenholiday-reservation" element={<AdminNewTeenHolidayReservation />} />
               {/* Added alias route for "reservations/new-holiday" */}
               <Route path="reservations/new-holiday" element={<AdminNewHolidayReservation />} />
-              {/* <Route path="rdv" element={<AdminRdv />} /> */}
             </Route>
 
             <Route path="*" element={<div>Page not found</div>} />

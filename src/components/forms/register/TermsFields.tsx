@@ -54,7 +54,7 @@ export const TermsFields = ({ form }: TermsFieldsProps) => {
                 </Link>
                 {" "}et le{" "}
                 <Link 
-                  to="/terms-of-service#reglement-fonctionnement"
+                  to="/terms-of-operation"
                   state={{ from: location.pathname }}
                   className="text-[#8B5CF6] hover:underline font-medium"
                   target="_blank"
