@@ -49,6 +49,7 @@ export const TermsFields = ({ form }: TermsFieldsProps) => {
                   state={{ from: location.pathname }}
                   className="text-[#8B5CF6] hover:underline font-medium"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   conditions générales d'utilisation
                 </Link>
@@ -58,6 +59,7 @@ export const TermsFields = ({ form }: TermsFieldsProps) => {
                   state={{ from: location.pathname }}
                   className="text-[#8B5CF6] hover:underline font-medium"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   règlement de fonctionnement
                 </Link>
