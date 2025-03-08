@@ -8,6 +8,8 @@ const TermsOfService = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
+  console.log("TermsOfService location state:", location.state);
+  
   const handleBack = () => {
     // If we have a stored "from" path in the location state, navigate to it
     if (location.state?.from) {
