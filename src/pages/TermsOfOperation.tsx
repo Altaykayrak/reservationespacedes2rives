@@ -1,3 +1,4 @@
+
 import { Navbar } from "@/components/ui/navbar";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -9,7 +10,7 @@ const TermsOfOperation = () => {
   
   const handleBack = () => {
     // If we have a stored "from" path in the location state, navigate to it
-    if (location.state?.from && location.state.from.includes('/register')) {
+    if (location.state?.from) {
       navigate(location.state.from);
     } else {
       // Otherwise, just go back in history
@@ -18,7 +19,7 @@ const TermsOfOperation = () => {
   };
 
   // Check if we came from registration page
-  const showBackButton = location.state?.from?.includes('/register');
+  const showBackButton = location.state?.from === "/register";
   
   return (
     <div className="min-h-screen bg-white">
