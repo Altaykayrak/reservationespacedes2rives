@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 
 export const useHolidayClassification = (selectedChild: string) => {
   const { data: childInfo } = useQuery({
@@ -19,22 +20,10 @@ export const useHolidayClassification = (selectedChild: string) => {
     enabled: !!selectedChild,
   });
 
-  const { data: schoolClassCategories } = useQuery({
-    queryKey: ["schoolClassCategories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("school_class_categories")
-        .select("*")
-        .eq("category", "adolescent");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
-    category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
-  );
-
-  return { childInfo, isTeenClass };
+  const { isTeenClass } = useSchoolClassUtils();
+  
+  return { 
+    childInfo, 
+    isTeenClass: childInfo?.school_class ? isTeenClass(childInfo.school_class) : false 
+  };
 };

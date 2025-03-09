@@ -1,10 +1,9 @@
 
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 
 interface ChildSelectorProps {
   selectedChild: string;
@@ -24,27 +23,7 @@ export const ChildSelector = ({
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
   const isAdminTeenHolidayReservation = location.pathname === "/admin/reservations/new-teen-holiday";
 
-  // Fetch school class categories to identify teen classes
-  const { data: schoolClassCategories } = useQuery({
-    queryKey: ["schoolClassCategories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("school_class_categories")
-        .select("*");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Function to check if a child is in the teen category
-  const isTeenClass = (schoolClass: string) => {
-    return schoolClassCategories?.some(
-      category => 
-        category.category === "adolescent" && 
-        schoolClass.toUpperCase() === category.name.toUpperCase()
-    );
-  };
+  const { isTeenClass } = useSchoolClassUtils();
 
   // Effect to handle child change
   useEffect(() => {

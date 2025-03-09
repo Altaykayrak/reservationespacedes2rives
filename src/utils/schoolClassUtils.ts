@@ -23,5 +23,7 @@ export const getGroupName = (schoolClass: string) => {
     return 'maternelle';
   if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) 
     return 'primaire';
+  if (["6ème", "5ème", "4ème", "3ème", "Seconde", "Première", "Terminale"].includes(normalizedClass))
+    return 'adolescent';
   return 'adolescent';
 };

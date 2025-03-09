@@ -74,7 +74,7 @@ export const useFilteredReservations = (
         const normalizedClass = schoolClass.toUpperCase();
         if (["PS", "MS", "GS"].includes(normalizedClass)) return "maternelle";
         if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) return "primaire";
-        if (["6EME", "5EME", "4EME", "3EME", "SECONDE", "PREMIERE", "TERMINALE", "6ÈME", "5ÈME", "4ÈME", "3ÈME"].includes(normalizedClass)) return "ado";
+        if (["6EME", "5EME", "4EME", "3EME", "SECONDE", "PREMIERE", "TERMINALE", "6ÈME", "5ÈME", "4ÈME", "3ÈME", "PREMIÈRE"].includes(normalizedClass)) return "ado";
         return "";
       };
 
