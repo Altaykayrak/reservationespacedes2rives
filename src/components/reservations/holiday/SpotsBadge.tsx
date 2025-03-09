@@ -25,6 +25,9 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
 export const SpotsBadge = ({ spots, schoolClass, isLoading }: SpotsBadgeProps) => {
   if (isLoading || !schoolClass) return null;
 
+  // Debug logging to help diagnose the issue
+  console.log(`BADGE RENDERING - Class: ${schoolClass}, Spots: ${spots}, SpotType: ${typeof spots}`);
+
   return (
     <Badge 
       variant="secondary" 

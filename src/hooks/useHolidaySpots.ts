@@ -78,7 +78,11 @@ export const useHolidaySpots = (
 
         console.log(`Résultat de la requête pour ${normalizedClass} le ${formattedDate}:`, spotCount);
         
-        // Ensure spotCount is a number
+        // Extra debugging to ensure spotCount is handled correctly
+        console.log(`Résultat brut: ${spotCount}, type: ${typeof spotCount}, null?: ${spotCount === null}, undefined?: ${spotCount === undefined}`);
+        
+        // Make sure we're handling the response correctly
+        // We should NEVER return undefined, always return a number or null
         const spots = typeof spotCount === 'number' ? spotCount : null;
         return spots;
       } catch (error) {
