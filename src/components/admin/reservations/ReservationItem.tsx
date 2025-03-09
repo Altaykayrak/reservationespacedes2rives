@@ -5,17 +5,22 @@ import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/ty
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ReservationItemProps {
   reservation: WednesdayReservationWithChild | HolidayReservationWithChild;
   onEdit: () => void;
   onDelete: () => void;
+  isSelected: boolean;
+  onSelectionChange: (isSelected: boolean) => void;
 }
 
 export const ReservationItem = ({
   reservation,
   onEdit,
-  onDelete
+  onDelete,
+  isSelected,
+  onSelectionChange
 }: ReservationItemProps) => {
   const formattedDate = format(
     new Date('wednesday_id' in reservation 
@@ -29,6 +34,11 @@ export const ReservationItem = ({
   return (
     <div className="flex items-center justify-between p-3 bg-white rounded-lg border hover:bg-gray-50 transition-colors">
       <div className="flex items-center gap-3 overflow-hidden">
+        <Checkbox 
+          checked={isSelected}
+          onCheckedChange={onSelectionChange}
+          aria-label="Sélectionner cette réservation"
+        />
         <div className="font-medium truncate">
           {reservation.children.last_name} {reservation.children.first_name}
         </div>

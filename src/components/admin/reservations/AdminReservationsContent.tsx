@@ -11,6 +11,10 @@ import { EditReservationDialog } from "./EditReservationDialog";
 import { DeleteReservationDialog } from "./DeleteReservationDialog";
 import { useState } from "react";
 import { useReservationActions } from "./ReservationActions";
+import { Button } from "@/components/ui/button";
+import { CheckSquare, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AdminReservationsContentProps {
   wednesdayReservations: WednesdayReservationWithChild[] | null;
@@ -53,6 +57,8 @@ export const AdminReservationsContent = ({
   const [editingWithoutMeal, setEditingWithoutMeal] = useState(false);
   const [editingEarlyDropoff, setEditingEarlyDropoff] = useState(false);
   const [activeTab, setActiveTab] = useState("wednesday");
+  const [selectedReservations, setSelectedReservations] = useState<string[]>([]);
+  const [isDeletingMultiple, setIsDeletingMultiple] = useState(false);
 
   const closeEditDialog = () => {
     setEditingReservation(null);
@@ -84,12 +90,84 @@ export const AdminReservationsContent = ({
     closeEditDialog();
   };
 
+  // Selection handling
+  const handleSelectionChange = (id: string, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedReservations(prev => [...prev, id]);
+    } else {
+      setSelectedReservations(prev => prev.filter(item => item !== id));
+    }
+  };
+
+  const handleSelectAll = () => {
+    const currentReservations = activeTab === "wednesday" 
+      ? filteredWednesdayReservations 
+      : filteredHolidayReservations;
+    
+    if (!currentReservations) return;
+    
+    if (selectedReservations.length === currentReservations.length) {
+      // Deselect all if all are already selected
+      setSelectedReservations([]);
+    } else {
+      // Select all
+      const allIds = currentReservations.map(res => res.id);
+      setSelectedReservations(allIds);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedReservations.length === 0 || isSubmitting) return;
+    
+    setIsDeletingMultiple(true);
+    
+    try {
+      const currentReservations = activeTab === "wednesday" 
+        ? filteredWednesdayReservations 
+        : filteredHolidayReservations;
+      
+      if (!currentReservations) return;
+      
+      const table = activeTab === "wednesday" ? 'wednesday_reservations' : 'holiday_reservations';
+      
+      // Delete all selected reservations in the current tab
+      const selectedIdsInCurrentTab = currentReservations
+        .filter(res => selectedReservations.includes(res.id))
+        .map(res => res.id);
+      
+      if (selectedIdsInCurrentTab.length === 0) {
+        toast.info("Aucune réservation sélectionnée dans cet onglet");
+        setIsDeletingMultiple(false);
+        return;
+      }
+      
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .in('id', selectedIdsInCurrentTab);
+      
+      if (error) throw error;
+      
+      await refetchReservations();
+      setSelectedReservations(prev => prev.filter(id => !selectedIdsInCurrentTab.includes(id)));
+      toast.success(`${selectedIdsInCurrentTab.length} réservation(s) supprimée(s) avec succès`);
+    } catch (error) {
+      console.error("Erreur lors de la suppression multiple:", error);
+      toast.error("Une erreur est survenue lors de la suppression des réservations");
+    } finally {
+      setIsDeletingMultiple(false);
+    }
+  };
+
   // Calculate the current reservation count based on active tab
   const activeReservations = activeTab === "wednesday" 
     ? filteredWednesdayReservations 
     : filteredHolidayReservations;
   
   const reservationCount = activeReservations?.length || 0;
+  const selectedCount = activeReservations 
+    ? activeReservations.filter(res => selectedReservations.includes(res.id)).length 
+    : 0;
 
   if (isLoading) {
     return (
@@ -125,14 +203,41 @@ export const AdminReservationsContent = ({
         />
       </div>
 
-      {/* Affichage du compteur de réservations */}
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+      {/* Information bar with reservation counts and selection actions */}
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 flex flex-wrap justify-between items-center gap-3">
         <p className="text-blue-800 font-medium">
           {reservationCount} réservation{reservationCount > 1 ? 's' : ''} affichée{reservationCount > 1 ? 's' : ''}
+          {selectedCount > 0 && ` (${selectedCount} sélectionnée${selectedCount > 1 ? 's' : ''})`}
         </p>
+        
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={handleSelectAll}
+            disabled={!activeReservations || activeReservations.length === 0}
+          >
+            <CheckSquare className="h-4 w-4 mr-1" />
+            {selectedCount === reservationCount && reservationCount > 0 
+              ? "Désélectionner tout" 
+              : "Sélectionner tout"}
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="destructive" 
+            onClick={handleDeleteSelected}
+            disabled={selectedCount === 0 || isDeletingMultiple}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Supprimer {selectedCount > 0 ? `(${selectedCount})` : ""}
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="wednesday" className="w-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue="wednesday" className="w-full" onValueChange={(value) => {
+        setActiveTab(value);
+      }}>
         <TabsList className="mb-4">
           <TabsTrigger value="wednesday">Mercredis</TabsTrigger>
           <TabsTrigger value="holiday">Vacances</TabsTrigger>
@@ -144,6 +249,8 @@ export const AdminReservationsContent = ({
               reservations={filteredWednesdayReservations}
               onEdit={handleEditClick}
               onDelete={handleDeleteClick}
+              selectedReservations={selectedReservations}
+              onSelectionChange={handleSelectionChange}
             />
           </ScrollArea>
         </TabsContent>
@@ -154,6 +261,8 @@ export const AdminReservationsContent = ({
               reservations={filteredHolidayReservations}
               onEdit={handleEditClick}
               onDelete={handleDeleteClick}
+              selectedReservations={selectedReservations}
+              onSelectionChange={handleSelectionChange}
             />
           </ScrollArea>
         </TabsContent>
