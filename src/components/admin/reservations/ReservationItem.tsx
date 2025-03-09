@@ -22,48 +22,48 @@ export const ReservationItem = ({
       ? reservation.available_wednesdays.date 
       : reservation.reservation_date
     ),
-    "EEEE d MMMM yyyy",
+    "dd/MM/yyyy",
     { locale: fr }
   );
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white rounded-lg border">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <h3 className="font-medium">
-            {reservation.children.last_name} {reservation.children.first_name}
-          </h3>
-          <Badge variant="outline">{reservation.children.school_class}</Badge>
+    <div className="flex items-center justify-between p-3 bg-white rounded-lg border hover:bg-gray-50 transition-colors">
+      <div className="flex items-center gap-3 overflow-hidden">
+        <div className="font-medium truncate">
+          {reservation.children.last_name} {reservation.children.first_name}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <Badge variant="outline" className="whitespace-nowrap">{reservation.children.school_class}</Badge>
+        <div className="text-sm text-muted-foreground whitespace-nowrap">
           {formattedDate}
-        </p>
-        <div className="flex gap-2">
+        </div>
+        <div className="flex gap-1 flex-wrap">
           {reservation.early_dropoff && (
-            <Badge variant="secondary">Accueil avant 8h30</Badge>
+            <Badge variant="secondary" className="text-xs">Accueil avant 8h30</Badge>
           )}
           {reservation.without_meal && (
-            <Badge variant="secondary">Sans repas</Badge>
+            <Badge variant="secondary" className="text-xs">Sans repas</Badge>
           )}
         </div>
       </div>
       
-      <div className="flex items-center gap-2 mt-2 sm:mt-0">
+      <div className="flex items-center gap-2 ml-4 shrink-0">
         <Button
           variant="outline"
           size="sm"
           onClick={onEdit}
+          className="whitespace-nowrap"
         >
-          <Edit className="h-4 w-4 mr-2" />
-          Modifier
+          <Edit className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Modifier</span>
         </Button>
         <Button
           variant="destructive"
           size="sm"
           onClick={onDelete}
+          className="whitespace-nowrap"
         >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Supprimer
+          <Trash2 className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Supprimer</span>
         </Button>
       </div>
     </div>
