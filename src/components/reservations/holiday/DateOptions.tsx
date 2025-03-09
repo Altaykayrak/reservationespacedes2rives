@@ -17,21 +17,28 @@ export const DateOptions = ({
   onOptionChange,
   isTeenClass = false 
 }: DateOptionsProps) => {
+  const isTeenPage = window.location.pathname === "/teenholiday-reservations" ||
+                      window.location.pathname === "/admin/reservations/new-teen-holiday" ||
+                      window.location.pathname === "/admin/new-teenholiday-reservation";
+  
+  // Pour les ados sur la page Club Ado, la case "Sans repas" est toujours cochée et non-modifiable
+  const isReadOnly = isTeenPage && isTeenClass;
+  
   return (
     <div className="ml-6 space-y-1 bg-white/50 p-2 rounded-md">
       <div className="flex items-center space-x-2">
         <Checkbox
           id={`without-meal-${date.toISOString()}`}
-          checked={withoutMeal}
+          checked={isReadOnly ? true : withoutMeal}
           onCheckedChange={(checked) =>
-            onOptionChange('withoutMeal', checked as boolean)
+            isReadOnly ? null : onOptionChange('withoutMeal', checked as boolean)
           }
-          // Pour les ados, l'option est modifiable mais activée par défaut
-          className="border-blue-200"
+          disabled={isReadOnly}
+          className={`border-blue-200 ${isReadOnly ? 'opacity-70' : ''}`}
         />
         <Label 
           htmlFor={`without-meal-${date.toISOString()}`}
-          className="text-sm text-blue-900"
+          className={`text-sm text-blue-900 ${isReadOnly ? 'opacity-70' : ''}`}
         >
           Sans repas
         </Label>
