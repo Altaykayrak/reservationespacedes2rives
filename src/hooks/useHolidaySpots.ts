@@ -13,6 +13,9 @@ export const useHolidaySpots = (
   const queryClient = useQueryClient();
   const normalizedClass = normalizeSchoolClass(childSchoolClass);
 
+  // Logging spécifique pour le debug du Club Ado
+  console.log(`useHolidaySpots - Input: Class=${childSchoolClass}, Normalized=${normalizedClass}, Date=${format(date, "yyyy-MM-dd")}`);
+
   useEffect(() => {
     const channel = supabase
       .channel('holiday-spots-changes')
@@ -81,10 +84,9 @@ export const useHolidaySpots = (
         // Vérification complète du résultat pour éviter les faux négatifs
         console.log(`Résultat détaillé: valeur=${spotCount}, type=${typeof spotCount}, null?=${spotCount === null}, undefined?=${spotCount === undefined}, est zéro?=${spotCount === 0}`);
         
-        // Garantir une valeur de retour cohérente
-        // Si spotCount est un nombre négatif (ce qui ne devrait pas arriver), on le traite comme 0
+        // Forcer un type de retour cohérent
         if (typeof spotCount === 'number') {
-          // Si le nombre est négatif (erreur de calcul), on considère qu'il n'y a pas de place
+          // Si le nombre est négatif (ce qui serait une erreur de calcul), on considère qu'il n'y a pas de place
           return spotCount < 0 ? 0 : spotCount;
         }
         
