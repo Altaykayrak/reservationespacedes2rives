@@ -39,6 +39,8 @@ export const DateItem = ({
   const normalizedClass = normalizeSchoolClass(childSchoolClass);
   const { data: spotsLeft, isLoading } = useHolidaySpots(periodId, date, normalizedClass);
   
+  console.log(`DateItem - Date: ${format(date, "yyyy-MM-dd")}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}`);
+  
   // Disabled si déjà réservé ou s'il n'y a STRICTEMENT aucune place disponible (spots === 0, pas spots <= 0)
   const isDisabled = isReserved || (spotsLeft !== null && spotsLeft === 0);
 

@@ -16,6 +16,7 @@ const getSpotsBadgeColor = (spots: number | null) => {
 };
 
 const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
+  console.log(`Displaying badge for ${schoolClass} with ${spots} spots`);
   if (spots === null) return "Vérification des places impossible";
   if (spots === 0) return `Groupe ${getGroupName(schoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
   return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;

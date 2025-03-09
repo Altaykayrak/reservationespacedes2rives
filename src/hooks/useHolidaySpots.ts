@@ -24,6 +24,7 @@ export const useHolidaySpots = (
           table: 'holiday_reservations'
         },
         (payload) => {
+          console.log("Holiday reservation change detected:", payload);
           queryClient.invalidateQueries({
             queryKey: ["spots_left", periodId, date.toISOString(), normalizedClass]
           });
@@ -75,8 +76,11 @@ export const useHolidaySpots = (
           throw error;
         }
 
-        console.log("Résultat de la requête:", spotCount);
-        return spotCount;
+        console.log(`Résultat de la requête pour ${normalizedClass} le ${formattedDate}:`, spotCount);
+        
+        // Ensure spotCount is a number
+        const spots = typeof spotCount === 'number' ? spotCount : null;
+        return spots;
       } catch (error) {
         console.error("Erreur lors de la vérification des places:", error);
         throw error;
