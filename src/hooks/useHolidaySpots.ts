@@ -14,7 +14,7 @@ export const useHolidaySpots = (
   const normalizedClass = normalizeSchoolClass(childSchoolClass);
 
   // Logging spécifique pour le debug du Club Ado
-  console.log(`useHolidaySpots - Input: Class=${childSchoolClass}, Normalized=${normalizedClass}, Date=${format(date, "yyyy-MM-dd")}`);
+  console.log(`useHolidaySpots - Input: Class=${childSchoolClass}, Normalized=${normalizedClass}, Date=${format(date, "yyyy-MM-dd")}, PeriodId=${periodId}`);
 
   useEffect(() => {
     const channel = supabase
@@ -62,6 +62,21 @@ export const useHolidaySpots = (
       });
 
       try {
+        // Récupérer d'abord la période pour obtenir le max spécifique
+        const { data: period, error: periodError } = await supabase
+          .from('available_holiday_periods')
+          .select('max_participants_kindergarten, max_participants_primary, max_participants_teen')
+          .eq('id', periodId)
+          .single();
+          
+        if (periodError) {
+          console.error("Erreur lors de la récupération de la période:", periodError);
+          throw periodError;
+        }
+        
+        console.log("Période récupérée:", period);
+        
+        // Appel à la fonction RPC pour vérifier les places disponibles
         const { data: spotCount, error } = await supabase
           .rpc('check_holiday_spots_available', {
             period_id: periodId,

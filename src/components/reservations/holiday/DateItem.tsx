@@ -34,12 +34,12 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
-  console.log("DateItem - Props:", { childSchoolClass, periodId, date: date.toISOString() });
+  console.log("DateItem - Props:", { childSchoolClass, periodId, date: date.toISOString(), isTeenClass });
   
   const normalizedClass = normalizeSchoolClass(childSchoolClass);
   const { data: spotsLeft, isLoading } = useHolidaySpots(periodId, date, normalizedClass);
   
-  console.log(`DateItem - Date: ${format(date, "yyyy-MM-dd")}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}`);
+  console.log(`DateItem - Date: ${format(date, "yyyy-MM-dd")}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}, isTeenClass: ${isTeenClass}`);
   
   // Debug renforcé
   console.log(`Date ${format(date, "yyyy-MM-dd")} - DISABLED CHECK: isReserved=${isReserved}, spotsLeft=${spotsLeft}, isStrict0=${spotsLeft === 0}`);
