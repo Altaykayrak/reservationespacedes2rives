@@ -17,15 +17,20 @@ const getSpotsBadgeColor = (spots: number | null) => {
 
 const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
   console.log(`Displaying badge for ${schoolClass} with ${spots} spots`);
+  
   if (spots === null) return "Vérification des places impossible";
-  if (spots === 0) return `Groupe ${getGroupName(schoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
+  
+  if (spots === 0) {
+    return `Groupe ${getGroupName(schoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
+  }
+  
   return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
 };
 
 export const SpotsBadge = ({ spots, schoolClass, isLoading }: SpotsBadgeProps) => {
   if (isLoading || !schoolClass) return null;
 
-  // Debug logging to help diagnose the issue
+  // Debug logging supplémentaire pour diagnostiquer
   console.log(`BADGE RENDERING - Class: ${schoolClass}, Spots: ${spots}, SpotType: ${typeof spots}`);
 
   return (

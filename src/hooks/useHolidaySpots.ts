@@ -78,13 +78,18 @@ export const useHolidaySpots = (
 
         console.log(`Résultat de la requête pour ${normalizedClass} le ${formattedDate}:`, spotCount);
         
-        // Extra debugging to ensure spotCount is handled correctly
-        console.log(`Résultat brut: ${spotCount}, type: ${typeof spotCount}, null?: ${spotCount === null}, undefined?: ${spotCount === undefined}`);
+        // Vérification complète du résultat pour éviter les faux négatifs
+        console.log(`Résultat détaillé: valeur=${spotCount}, type=${typeof spotCount}, null?=${spotCount === null}, undefined?=${spotCount === undefined}, est zéro?=${spotCount === 0}`);
         
-        // Make sure we're handling the response correctly
-        // We should NEVER return undefined, always return a number or null
-        const spots = typeof spotCount === 'number' ? spotCount : null;
-        return spots;
+        // Garantir une valeur de retour cohérente
+        // Si spotCount est un nombre négatif (ce qui ne devrait pas arriver), on le traite comme 0
+        if (typeof spotCount === 'number') {
+          // Si le nombre est négatif (erreur de calcul), on considère qu'il n'y a pas de place
+          return spotCount < 0 ? 0 : spotCount;
+        }
+        
+        // Si spotCount n'est pas un nombre, on retourne null
+        return null;
       } catch (error) {
         console.error("Erreur lors de la vérification des places:", error);
         throw error;

@@ -41,12 +41,12 @@ export const DateItem = ({
   
   console.log(`DateItem - Date: ${format(date, "yyyy-MM-dd")}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}`);
   
-  // Enhanced debug information
+  // Debug renforcé
   console.log(`Date ${format(date, "yyyy-MM-dd")} - DISABLED CHECK: isReserved=${isReserved}, spotsLeft=${spotsLeft}, isStrict0=${spotsLeft === 0}`);
   
-  // Disabled si déjà réservé ou s'il n'y a STRICTEMENT aucune place disponible (spots === 0)
-  // Make sure we're using strict equality here
-  const isDisabled = isReserved || (spotsLeft !== null && spotsLeft === 0);
+  // Désactivé UNIQUEMENT si déjà réservé OU si spotsLeft est STRICTEMENT 0
+  // Il est crucial d'utiliser une égalité stricte ici
+  const isDisabled = isReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
 
   return (
     <div 
