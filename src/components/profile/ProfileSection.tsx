@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Edit, User, Mail, CheckSquare, Square } from "lucide-react"
+import { Edit, User, Mail, CheckSquare, Square, Info } from "lucide-react"
 import { ProfileData } from "@/types/profile"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface ProfileSectionProps {
   profile: ProfileData
@@ -51,11 +52,23 @@ export function ProfileSection({ profile, onEdit }: ProfileSectionProps) {
         </div>
 
         <div className="flex items-start space-x-4 pt-4 border-t">
-          {profile?.automatic_payment ? (
-            <CheckSquare className="h-5 w-5 text-primary mt-1" />
-          ) : (
-            <Square className="h-5 w-5 text-muted-foreground mt-1" />
-          )}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center">
+                  {profile?.automatic_payment ? (
+                    <CheckSquare className="h-5 w-5 text-primary mt-1" />
+                  ) : (
+                    <Square className="h-5 w-5 text-muted-foreground mt-1" />
+                  )}
+                  <Info className="h-4 w-4 text-muted-foreground ml-1 cursor-help" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Cette option ne peut être modifiée que par un administrateur</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <div className="text-left">
             <p className="text-sm text-muted-foreground">Prélèvement automatique</p>
           </div>

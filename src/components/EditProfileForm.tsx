@@ -9,7 +9,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { ProfileData } from "@/types/profile"
@@ -41,7 +40,12 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
       setShowEmailDialog(true)
       return
     }
-    await updateProfile(values, initialData.email, () => {
+    // Ensure we preserve the original automatic_payment value
+    const dataToUpdate = {
+      ...values,
+      automatic_payment: initialData.automatic_payment,
+    }
+    await updateProfile(dataToUpdate, initialData.email, () => {
       onSuccess()
       window.location.reload()
     })
@@ -90,26 +94,7 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="automatic_payment"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Prélèvement automatique</FormLabel>
-                  <p className="text-sm text-muted-foreground">
-                    J'ai opté pour le prélèvement automatique de mes factures
-                  </p>
-                </div>
-              </FormItem>
-            )}
-          />
+          {/* Removed the automatic_payment form field */}
           <div className="flex justify-end gap-4">
             <Button type="submit">Enregistrer</Button>
           </div>
@@ -131,7 +116,12 @@ export function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps
               </Button>
               <Button onClick={() => {
                 const values = form.getValues()
-                updateProfile(values, initialData.email, () => {
+                // Ensure we preserve the original automatic_payment value
+                const dataToUpdate = {
+                  ...values,
+                  automatic_payment: initialData.automatic_payment,
+                }
+                updateProfile(dataToUpdate, initialData.email, () => {
                   setShowEmailDialog(false)
                   onSuccess()
                   window.location.reload()
