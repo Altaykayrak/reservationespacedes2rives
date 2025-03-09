@@ -52,6 +52,7 @@ export const AdminReservationsContent = ({
 
   const [editingWithoutMeal, setEditingWithoutMeal] = useState(false);
   const [editingEarlyDropoff, setEditingEarlyDropoff] = useState(false);
+  const [activeTab, setActiveTab] = useState("wednesday");
 
   const closeEditDialog = () => {
     setEditingReservation(null);
@@ -82,6 +83,13 @@ export const AdminReservationsContent = ({
     await handleUpdate();
     closeEditDialog();
   };
+
+  // Calculate the current reservation count based on active tab
+  const activeReservations = activeTab === "wednesday" 
+    ? filteredWednesdayReservations 
+    : filteredHolidayReservations;
+  
+  const reservationCount = activeReservations?.length || 0;
 
   if (isLoading) {
     return (
@@ -117,7 +125,14 @@ export const AdminReservationsContent = ({
         />
       </div>
 
-      <Tabs defaultValue="wednesday" className="w-full">
+      {/* Affichage du compteur de réservations */}
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <p className="text-blue-800 font-medium">
+          {reservationCount} réservation{reservationCount > 1 ? 's' : ''} affichée{reservationCount > 1 ? 's' : ''}
+        </p>
+      </div>
+
+      <Tabs defaultValue="wednesday" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="wednesday">Mercredis</TabsTrigger>
           <TabsTrigger value="holiday">Vacances</TabsTrigger>
