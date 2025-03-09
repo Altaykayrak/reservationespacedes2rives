@@ -10,14 +10,14 @@ interface SpotsBadgeProps {
 
 const getSpotsBadgeColor = (spots: number | null) => {
   if (spots === null) return "bg-gray-100 text-gray-600";
-  if (spots <= 0) return "bg-red-100 text-red-800";
+  if (spots === 0) return "bg-red-100 text-red-800";
   if (spots <= 5) return "bg-orange-100 text-orange-800";
   return "bg-green-100 text-green-800";
 };
 
 const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
   if (spots === null) return "Vérification des places impossible";
-  if (spots <= 0) return `Groupe ${getGroupName(schoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
+  if (spots === 0) return `Groupe ${getGroupName(schoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
   return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
 };
 

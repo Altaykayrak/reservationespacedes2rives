@@ -39,8 +39,8 @@ export const DateItem = ({
   const normalizedClass = normalizeSchoolClass(childSchoolClass);
   const { data: spotsLeft, isLoading } = useHolidaySpots(periodId, date, normalizedClass);
   
-  // Fix: Remove isTeenClass from the disabled condition
-  const isDisabled = isReserved || (spotsLeft !== null && spotsLeft <= 0);
+  // Disabled si déjà réservé ou s'il n'y a STRICTEMENT aucune place disponible (spots === 0, pas spots <= 0)
+  const isDisabled = isReserved || (spotsLeft !== null && spotsLeft === 0);
 
   return (
     <div 
