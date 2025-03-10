@@ -1,11 +1,9 @@
 
 import { Button } from "@/components/ui/button";
-import { EditProfileForm } from "@/components/EditProfileForm";
 import { ChildrenList } from "@/components/profile/ChildrenList";
 import { ProfileSection } from "@/components/profile/ProfileSection";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileData, Child } from "@/types/profile";
@@ -13,7 +11,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Navbar } from "@/components/ui/navbar";
 
 const Profile = () => {
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const navigate = useNavigate();
 
   // Check authentication status
@@ -131,25 +128,9 @@ const Profile = () => {
         </div>
 
         <div className="grid gap-8">
-          <ProfileSection 
-            profile={profile} 
-            onEdit={() => setShowEditDialog(true)} 
-          />
-
+          <ProfileSection profile={profile} />
           <ChildrenList children={children} />
         </div>
-
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Modifier mon profil</DialogTitle>
-            </DialogHeader>
-            <EditProfileForm 
-              initialData={profile} 
-              onSuccess={() => setShowEditDialog(false)} 
-            />
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );

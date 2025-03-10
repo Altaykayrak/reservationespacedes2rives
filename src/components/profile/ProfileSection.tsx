@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Edit, User, Mail, CheckSquare, Square } from "lucide-react"
+import { User, Mail, CheckSquare, Square } from "lucide-react"
 import { ProfileData } from "@/types/profile"
 
 interface ProfileSectionProps {
@@ -9,19 +8,11 @@ interface ProfileSectionProps {
   onEdit: () => void
 }
 
-export function ProfileSection({ profile, onEdit }: ProfileSectionProps) {
+export function ProfileSection({ profile }: ProfileSectionProps) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle>Mon Profil</CardTitle>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={onEdit}
-        >
-          <Edit className="mr-2 h-4 w-4" />
-          Modifier
-        </Button>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
