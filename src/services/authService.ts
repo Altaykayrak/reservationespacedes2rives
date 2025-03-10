@@ -3,10 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RegisterFormData } from "@/schemas/registerSchema";
 
 const checkAuthorizedEmail = async (email: string) => {
-  const cleanEmail = email.trim();
+  const cleanEmail = email.trim().toLowerCase();
   console.log("Checking email:", cleanEmail);
   
-  // Effectuer la recherche directement sur le champ 'email' plutôt que 'email_lower'
+  // Perform a case-insensitive search using ILIKE
   const { data, error } = await supabase
     .from("authorized_emails")
     .select("email")
@@ -20,6 +20,23 @@ const checkAuthorizedEmail = async (email: string) => {
   if (error) {
     console.error("Database error:", error);
     throw error;
+  }
+
+  // Alternative approach: if the first approach didn't work, try exact match
+  if (!data) {
+    // Try a direct select with exact match as fallback
+    const { data: exactData, error: exactError } = await supabase
+      .from("authorized_emails")
+      .select("email")
+      .eq("email", cleanEmail)
+      .maybeSingle();
+
+    console.log("Exact match fallback result:", { exactData, exactError });
+    if (exactError) console.error("Exact match error:", exactError);
+    
+    const isAuthorized = !!exactData;
+    console.log("Is email authorized (exact match)?", isAuthorized);
+    return isAuthorized;
   }
 
   const isAuthorized = !!data;
