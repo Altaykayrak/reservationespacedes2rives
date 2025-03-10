@@ -29,9 +29,9 @@ const resendApiKey = Deno.env.get("RESEND_API_KEY") || "";
 const resend = new Resend(resendApiKey);
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Create a cache to store recently processed request IDs
+// Create a cache to store recently processed request IDs with longer TTL
 const processedRequests = new Map<string, number>();
-const CACHE_TTL = 60 * 1000; // 1 minute TTL for cache entries
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes TTL for cache entries
 
 // Clean up expired cache entries periodically
 setInterval(() => {
@@ -41,7 +41,7 @@ setInterval(() => {
       processedRequests.delete(key);
     }
   }
-}, 30 * 1000); // Every 30 seconds
+}, 60 * 1000); // Every minute
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -51,15 +51,17 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const requestData: ReservationEmailRequest = await req.json();
-    console.log("Received request data:", JSON.stringify(requestData));
+    console.log(`[${Date.now()}] Received request data:`, JSON.stringify(requestData));
 
     // Générer un requestId plus détaillé si non fourni
     const requestId = requestData.requestId || 
       `${requestData.childName}-${requestData.reservationType}-${requestData.period}-${Date.now()}`;
 
+    console.log(`[${Date.now()}] Request ID:`, requestId);
+
     // Check if this request has been processed recently
     if (processedRequests.has(requestId)) {
-      console.log("Duplicate request detected. Skipping email send:", requestId);
+      console.log(`[${Date.now()}] Duplicate request detected. Skipping email send:`, requestId);
       return new Response(
         JSON.stringify({ success: true, message: "Duplicate request, email not sent" }),
         {
@@ -74,14 +76,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Mark this request as processed
     processedRequests.set(requestId, Date.now());
+    console.log(`[${Date.now()}] Request marked as processed:`, requestId);
+    console.log(`[${Date.now()}] Cache size:`, processedRequests.size);
 
     // Check if we're dealing with a holiday or wednesday reservation
     if (requestData.reservationType === "holiday" || requestData.reservationType === "wednesday") {
-      console.log("Processing a holiday or wednesday reservation");
+      console.log(`[${Date.now()}] Processing a ${requestData.reservationType} reservation`);
       
       // For direct reservation emails without user ID
       if (requestData.childName && requestData.dates) {
-        console.log("Processing direct reservation with child name");
+        console.log(`[${Date.now()}] Processing direct reservation for ${requestData.childName}`);
         
         // Generate email content for direct reservation
         const reservationType = requestData.reservationType === "holiday" ? "vacances" : "mercredi";
@@ -124,6 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
           ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
           <p><strong>Dates réservées:</strong></p>
           ${tableHtml}
+          <p><strong>ID de requête:</strong> ${requestId}</p>
         `;
         
         // Send direct reservation confirmation email
@@ -134,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
           html: emailHtml,
         });
 
-        console.log("Email sent successfully:", emailResponse);
+        console.log(`[${Date.now()}] Email sent successfully:`, emailResponse);
         
         return new Response(JSON.stringify({ success: true, data: emailResponse }), {
           status: 200,
@@ -296,11 +301,11 @@ const handler = async (req: Request): Promise<Response> => {
       });
     } else {
       // If neither reservationType nor rdvId is provided
-      console.error("Invalid request data, missing reservationType or rdvId:", requestData);
+      console.error(`[${Date.now()}] Invalid request data, missing reservationType or rdvId:`, requestData);
       throw new Error("Invalid request: Either reservationType or rdvId is required");
     }
   } catch (error: any) {
-    console.error("Error in send-reservation-email function:", error);
+    console.error(`[${Date.now()}] Error in send-reservation-email function:`, error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

@@ -41,9 +41,14 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
   // Use the filtered children if provided, otherwise use the children from the hook
   const childrenToDisplay = filteredChildren || children;
   
-  // Fonction pour éviter les doubles clics avec logging amélioré
-  const onSubmitClick = () => {
-    console.log("DEBUG: Bouton Confirmer réservation cliqué");
+  // Fonction pour éviter les doubles clics avec prévention de la propagation d'événement
+  const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Prévenir toute propagation d'événement qui pourrait causer des déclenchements multiples
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log("DEBUG: Bouton Confirmer réservation cliqué - timestamp:", Date.now());
+    
     if (!isSubmitting) {
       console.log("DEBUG: Soumission démarrée - isSubmitting:", isSubmitting);
       handleSubmit();
@@ -84,6 +89,7 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
           onClick={onSubmitClick}
           className="w-full"
           disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
+          type="button" // Spécifier explicitement le type button pour éviter soumission de formulaire implicite
         >
           {isSubmitting ? (
             <>

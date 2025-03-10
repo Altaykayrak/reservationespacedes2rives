@@ -4,7 +4,7 @@ import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { validateMinimumDaysPerWeek } from "@/utils/dateUtils";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DateOption {
@@ -44,22 +44,26 @@ export const useReservationSubmission = (
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
-  // Utiliser useRef au lieu de useState pour le flag de soumission en cours
-  const submissionInProgress = useRef<boolean>(false);
+  // Utiliser un état local pour suivre si une soumission est en cours
+  const [submissionInProgress, setSubmissionInProgress] = useState<boolean>(false);
 
   const handleSubmit = async () => {
-    console.log("DEBUG: Début de handleSubmit dans useReservationSubmission");
+    const submissionTimestamp = Date.now();
+    console.log(`DEBUG: Début de handleSubmit (timestamp: ${submissionTimestamp}) dans useReservationSubmission`);
     
     // Vérifier si une soumission est déjà en cours
-    if (submissionInProgress.current) {
-      console.log("DEBUG: Une soumission est déjà en cours via useRef, abandon");
+    if (submissionInProgress || isSubmitting) {
+      console.log(`DEBUG: Une soumission est déjà en cours, abandon (timestamp: ${submissionTimestamp})`);
       return;
     }
     
-    // Marquer le début d'une soumission
-    submissionInProgress.current = true;
-    
     try {
+      // Marquer le début d'une soumission avec les deux flags
+      setSubmissionInProgress(true);
+      setIsSubmitting(true);
+      
+      console.log(`DEBUG: Flags définis - submissionInProgress=true, isSubmitting=true (timestamp: ${submissionTimestamp})`);
+      
       if (!selectedChild) {
         toast({
           title: "Erreur",
@@ -101,8 +105,6 @@ export const useReservationSubmission = (
         setMinimumDaysDialog({ isOpen: true });
         return;
       }
-
-      setIsSubmitting(true);
       
       try {
         const { data: childData, error: childError } = await supabase
@@ -115,6 +117,7 @@ export const useReservationSubmission = (
 
         // Récupérer les informations de période pour l'email
         let periodName = "";
+        let periodId = "";
         if (holidayPeriods && selectedDates.length > 0) {
           const firstDate = selectedDates[0].date;
           const period = holidayPeriods.find(period => {
@@ -124,19 +127,23 @@ export const useReservationSubmission = (
           });
           
           if (period) {
+            periodId = period.id;
             periodName = `${format(new Date(period.start_date), "d MMMM yyyy", { locale: fr })} au ${format(new Date(period.end_date), "d MMMM yyyy", { locale: fr })}`;
-            console.log("DEBUG: Période identifiée:", periodName);
+            console.log(`DEBUG: Période identifiée: ${periodName}, ID: ${periodId} (timestamp: ${submissionTimestamp})`);
           }
         }
 
         // Generate a unique reservation number for this batch
         const reservationNumber = `HOL-${Date.now().toString().substring(5)}`;
-        console.log("DEBUG: Numéro de réservation généré:", reservationNumber);
+        console.log(`DEBUG: Numéro de réservation généré: ${reservationNumber} (timestamp: ${submissionTimestamp})`);
+
+        // Store successful reservations
+        const successfulReservations = [];
 
         // Check available spots for each date and create reservations
         for (const dateOption of selectedDates) {
           const dateStr = format(dateOption.date, "yyyy-MM-dd");
-          console.log("DEBUG: Traitement de la date", dateStr);
+          console.log(`DEBUG: Traitement de la date ${dateStr} (timestamp: ${submissionTimestamp})`);
           
           // Find the period for this date
           const period = holidayPeriods?.find(period => {
@@ -169,7 +176,7 @@ export const useReservationSubmission = (
               schoolClass: childData.school_class,
               date: dateOption.date
             });
-            setIsSubmitting(false);
+            console.log(`DEBUG: Pas de places disponibles pour ${dateStr} (timestamp: ${submissionTimestamp})`);
             return;
           }
 
@@ -189,8 +196,8 @@ export const useReservationSubmission = (
           }
 
           // Create the reservation in the database
-          console.log("DEBUG: Création de la réservation dans la base de données pour la date", dateStr);
-          const { error: insertError } = await supabase
+          console.log(`DEBUG: Création de la réservation dans la base de données pour la date ${dateStr} (timestamp: ${submissionTimestamp})`);
+          const { data: insertedReservation, error: insertError } = await supabase
             .from("holiday_reservations")
             .insert({
               child_id: selectedChild,
@@ -200,34 +207,45 @@ export const useReservationSubmission = (
               without_meal: dateOption.withoutMeal,
               early_dropoff: dateOption.earlyDropoff,
               status: "confirmed"
-            });
+            })
+            .select()
+            .single();
 
           if (insertError) throw insertError;
-          console.log("DEBUG: Réservation créée avec succès pour la date", dateStr);
+          
+          console.log(`DEBUG: Réservation créée avec succès pour la date ${dateStr}, ID: ${insertedReservation?.id} (timestamp: ${submissionTimestamp})`);
+          
+          if (insertedReservation) {
+            successfulReservations.push(insertedReservation);
+          }
         }
 
-        // Send notification email - une seule fois après toutes les insertions
-        const childFullName = `${childData.first_name} ${childData.last_name}`;
-        const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
-        
-        // Utiliser un requestId unique qui inclut toutes les informations pertinentes
-        const requestId = `holiday-${childFullName}-${reservationNumber}-${Date.now()}`;
-        console.log("DEBUG: Envoi d'email avec requestId:", requestId);
-        
-        await supabase.functions.invoke('send-reservation-email', {
-          body: {
-            childName: childFullName,
-            dates: formattedDates,
-            reservationType: 'holiday',
-            withoutMeal: selectedDates.map(d => d.withoutMeal),
-            earlyDropoff: selectedDates.map(d => d.earlyDropoff),
-            period: periodName, // Ajouter le nom de la période
-            requestId
-          }
-        });
+        if (successfulReservations.length > 0) {
+          // Send notification email - une seule fois après toutes les insertions
+          const childFullName = `${childData.first_name} ${childData.last_name}`;
+          const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
+          
+          // Créer un requestId unique qui inclut toutes les informations pertinentes
+          const requestId = `holiday-${childFullName}-${reservationNumber}-${periodId}-${submissionTimestamp}`;
+          console.log(`DEBUG: Envoi d'email avec requestId: ${requestId} (timestamp: ${submissionTimestamp})`);
+          
+          const emailResponse = await supabase.functions.invoke('send-reservation-email', {
+            body: {
+              childName: childFullName,
+              dates: formattedDates,
+              reservationType: 'holiday',
+              withoutMeal: selectedDates.map(d => d.withoutMeal),
+              earlyDropoff: selectedDates.map(d => d.earlyDropoff),
+              period: periodName,
+              requestId
+            }
+          });
+          
+          console.log(`DEBUG: Réponse de l'email: ${JSON.stringify(emailResponse)} (timestamp: ${submissionTimestamp})`);
+        } else {
+          console.error(`DEBUG: Aucune réservation n'a été créée avec succès (timestamp: ${submissionTimestamp})`);
+        }
 
-        console.log("DEBUG: Email envoyé avec succès");
-        
         toast({
           title: "Réservation confirmée",
           description: "Votre réservation a été enregistrée avec succès.",
@@ -237,21 +255,19 @@ export const useReservationSubmission = (
         resetForm();
 
       } catch (error: any) {
-        console.error("Erreur lors de la création des réservations:", error);
+        console.error(`DEBUG: Erreur lors de la création des réservations: ${error.message} (timestamp: ${submissionTimestamp})`);
         toast({
           title: "Erreur",
           description: error.message || "Une erreur est survenue lors de la création des réservations.",
           variant: "destructive",
         });
-      } finally {
-        setIsSubmitting(false);
       }
     } finally {
       // Marquer la fin de la soumission
-      submissionInProgress.current = false;
+      setIsSubmitting(false);
+      setSubmissionInProgress(false);
+      console.log(`DEBUG: Fin de handleSubmit - flags réinitialisés (timestamp: ${submissionTimestamp})`);
     }
-    
-    console.log("DEBUG: Fin de handleSubmit dans useReservationSubmission");
   };
 
   return { 
