@@ -5,28 +5,6 @@ import { useEffect } from "react";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { useToast } from "@/hooks/use-toast";
 
-interface HolidayReservationResponse {
-  id: string;
-  child_id: string;
-  period_id: string;
-  reservation_date: string;
-  reservation_number: string;
-  without_meal: boolean;
-  early_dropoff: boolean;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  children: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    school_class: string;
-    profile: {
-      school_city: string;
-    };
-  };
-}
-
 export const useHolidayReservations = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -81,10 +59,7 @@ export const useHolidayReservations = () => {
             first_name,
             last_name,
             school_class,
-            profile_id,
-            profile:profiles (
-              school_city
-            )
+            profile_id
           )
         `)
         .eq('status', 'confirmed')
@@ -129,7 +104,7 @@ export const useHolidayReservations = () => {
             last_name: reservation.children.last_name,
             school_class: reservation.children.school_class,
             profile: {
-              school_city: reservation.children.profile?.school_city || ''
+              school_city: '' // We don't have access to profile.school_city, setting a default empty string
             }
           }
         };

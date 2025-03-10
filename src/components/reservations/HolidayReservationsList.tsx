@@ -72,16 +72,6 @@ export const HolidayReservationsList = () => {
       return isTeenPage 
         ? isTeenClass(reservation.children.school_class) 
         : !isTeenClass(reservation.children.school_class);
-    })
-    .map(reservation => {
-      // Ensure consistent data structure
-      return {
-        ...reservation,
-        children: {
-          ...reservation.children,
-          profile: reservation.children.profile || { school_city: '' }
-        }
-      };
     });
 
   console.log("11. Nombre de réservations après filtrage:", filteredReservations.length);
