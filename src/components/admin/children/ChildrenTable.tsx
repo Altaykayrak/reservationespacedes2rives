@@ -3,14 +3,29 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Child } from "@/types/profile";
 import { PencilIcon, Trash2Icon } from "lucide-react";
+import { useState } from "react";
 
 interface ChildrenTableProps {
   children: Child[];
   onEdit: (child: Child) => void;
   onDelete: (child: Child) => void;
+  isLoading?: boolean;
 }
 
-export const ChildrenTable = ({ children, onEdit, onDelete }: ChildrenTableProps) => {
+export const ChildrenTable = ({ children, onEdit, onDelete, isLoading = false }: ChildrenTableProps) => {
+  const [editingChildId, setEditingChildId] = useState<string | null>(null);
+  const [deletingChildId, setDeletingChildId] = useState<string | null>(null);
+
+  const handleEdit = (child: Child) => {
+    setEditingChildId(child.id);
+    onEdit(child);
+  };
+
+  const handleDelete = (child: Child) => {
+    setDeletingChildId(child.id);
+    onDelete(child);
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -39,14 +54,16 @@ export const ChildrenTable = ({ children, onEdit, onDelete }: ChildrenTableProps
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onEdit(child)}
+                    onClick={() => handleEdit(child)}
+                    disabled={isLoading || editingChildId === child.id}
                   >
                     <PencilIcon className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => onDelete(child)}
+                    onClick={() => handleDelete(child)}
+                    disabled={isLoading || deletingChildId === child.id}
                   >
                     <Trash2Icon className="h-4 w-4" />
                   </Button>

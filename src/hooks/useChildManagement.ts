@@ -35,6 +35,7 @@ export function useChildManagement() {
 
       if (wednesdayReservations?.length > 0 || holidayReservations?.length > 0) {
         toast.error("Impossible de modifier un enfant qui a des réservations");
+        setIsChecking(false);
         return;
       }
 
@@ -81,6 +82,7 @@ export function useChildManagement() {
       if (wednesdayReservations?.length > 0 || holidayReservations?.length > 0) {
         toast.error("Impossible de supprimer un enfant qui a des réservations");
         setDeletingChild(null);
+        setIsDeleting(false);
         return;
       }
 
