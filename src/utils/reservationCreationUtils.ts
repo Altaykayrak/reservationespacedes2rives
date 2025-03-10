@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface DateOption {
   date: Date;
@@ -158,3 +159,4 @@ export const createHolidayReservations = async (
     };
   }
 };
+
