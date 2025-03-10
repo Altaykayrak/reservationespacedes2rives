@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.0";
 import { Resend } from "npm:resend@2.0.0";
@@ -127,6 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
           ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
           <p><strong>Dates réservées:</strong></p>
           ${tableHtml}
+          <p><strong>ID de requête:</strong> ${requestId}</p>
         `;
         
         // Send direct reservation confirmation email
@@ -207,6 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
         ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
         <p><strong>Dates réservées:</strong></p>
         ${tableHtml}
+        <p><strong>ID de requête:</strong> ${requestId}</p>
       `;
       
       // Send reservation confirmation email
@@ -285,6 +288,7 @@ const handler = async (req: Request): Promise<Response> => {
           <p><strong>Date:</strong> ${formatDate(rdvData.date)}</p>
           <p><strong>Horaire:</strong> ${formatTime(rdvData.heure_debut)} - ${formatTime(rdvData.heure_fin)}</p>
           <p><strong>Motifs:</strong> ${requestData.motifs?.join(", ") || "Non spécifié"}</p>
+          <p><strong>ID de requête:</strong> ${requestId}</p>
         `,
       });
 
