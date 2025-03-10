@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { HolidayReservationWithChild } from "@/types/reservations";
+import { useToast } from "@/hooks/use-toast";
 
 interface HolidayReservationResponse {
   id: string;
@@ -28,6 +29,7 @@ interface HolidayReservationResponse {
 
 export const useHolidayReservations = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: reservations, isError, error, refetch } = useQuery({
     queryKey: ["holiday_reservations"],
@@ -60,9 +62,31 @@ export const useHolidayReservations = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
+      // Ensure we're only getting confirmed reservations
       const { data: reservationsData, error: reservationsError } = await supabase
-        .from("holiday_reservations_with_children")
-        .select('*')
+        .from("holiday_reservations")
+        .select(`
+          id,
+          child_id,
+          period_id,
+          reservation_date,
+          reservation_number,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          children (
+            id,
+            first_name,
+            last_name,
+            school_class,
+            profile_id,
+            profile:profiles (
+              school_city
+            )
+          )
+        `)
         .eq('status', 'confirmed')
         .in('child_id', childrenIds)
         .order('reservation_date', { ascending: true });
@@ -79,9 +103,8 @@ export const useHolidayReservations = () => {
 
       console.log("I. Réservations brutes reçues:", JSON.stringify(reservationsData, null, 2));
 
-      // Cast the data to the correct type and transform
-      const typedData = reservationsData as unknown as HolidayReservationResponse[];
-      const transformedReservations = typedData.map(reservation => {
+      // Transform the data to match our expected structure
+      const transformedReservations = reservationsData.map(reservation => {
         console.log("Traitement de la réservation:", reservation.id);
         
         if (!reservation.children) {
@@ -118,6 +141,8 @@ export const useHolidayReservations = () => {
       console.log("J. Nombre de réservations transformées:", transformedReservations.length);
       return transformedReservations;
     },
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   useEffect(() => {

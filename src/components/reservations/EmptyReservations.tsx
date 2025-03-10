@@ -8,10 +8,10 @@ export const EmptyReservations = () => {
       <div>
         <h3 className="font-semibold">Aucune réservation trouvée</h3>
         <p className="text-sm text-muted-foreground">
-          Vous n'avez pas encore de réservations de vacances pour vos enfants.
+          Vous n'avez pas encore de réservations pour vos enfants.
         </p>
         <p className="text-sm text-muted-foreground mt-2">
-          Pour réserver des journées de vacances, veuillez sélectionner une période et un enfant ci-dessus.
+          Pour réserver des journées, veuillez sélectionner une période et un enfant ci-dessus.
         </p>
       </div>
     </div>

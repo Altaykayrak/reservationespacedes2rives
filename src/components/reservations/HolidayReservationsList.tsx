@@ -1,3 +1,4 @@
+
 import { EmptyReservations } from "./EmptyReservations";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
@@ -5,6 +6,7 @@ import { HolidayChildReservationCard } from "./holiday/HolidayChildReservationCa
 import { useHolidayReservations } from "@/hooks/useHolidayReservations";
 import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
 import { HolidayReservationWithChild } from "@/types/reservations";
+import { useToast } from "@/hooks/use-toast";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -14,6 +16,7 @@ type GroupedReservations = Record<string, {
 
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const isTeenPage = window.location.pathname === "/teenholiday-reservations";
   const { reservations, isError, error, refetch } = useHolidayReservations();
   const { isTeenClass } = useSchoolClassCategories();
@@ -48,6 +51,7 @@ export const HolidayReservationsList = () => {
     );
   }
 
+  // Add additional check for empty array, not just null or undefined
   if (!reservations || reservations.length === 0) {
     console.log("4. Aucune réservation trouvée");
     return <EmptyReservations />;
@@ -55,42 +59,30 @@ export const HolidayReservationsList = () => {
 
   console.log("5. Nombre de réservations avant filtrage:", reservations.length);
 
-  // Assurons-nous que les réservations ont la bonne structure
-  const filteredReservations = reservations.map(reservation => {
-    console.log("6. Traitement de la réservation:", reservation);
-    console.log("7. Données de l'enfant:", reservation.children);
-    
-    if (!reservation.children || !reservation.children.profile) {
-      console.warn("Données manquantes pour la réservation:", reservation.id);
-      return null;
-    }
-
-    // On s'assure que la structure correspond exactement au type HolidayReservationWithChild
-    return {
-      id: reservation.id,
-      child_id: reservation.child_id,
-      period_id: reservation.period_id,
-      reservation_date: reservation.reservation_date,
-      reservation_number: reservation.reservation_number,
-      without_meal: reservation.without_meal,
-      early_dropoff: reservation.early_dropoff,
-      status: reservation.status,
-      created_at: reservation.created_at,
-      updated_at: reservation.updated_at,
-      children: {
-        id: reservation.children.id,
-        first_name: reservation.children.first_name,
-        last_name: reservation.children.last_name,
-        school_class: reservation.children.school_class,
-        profile: {
-          school_city: reservation.children.profile.school_city
-        }
+  // Make sure we properly handle the reservation data structure
+  const filteredReservations = reservations
+    .filter(reservation => {
+      // Make sure the reservation and its children data exists
+      if (!reservation || !reservation.children || !reservation.children.school_class) {
+        console.warn("Données manquantes pour la réservation:", reservation?.id);
+        return false;
       }
-    } as HolidayReservationWithChild;
-  }).filter((reservation): reservation is HolidayReservationWithChild => {
-    if (!reservation) return false;
-    return isTeenPage ? isTeenClass(reservation.children.school_class) : !isTeenClass(reservation.children.school_class);
-  });
+      
+      // Filter based on page type
+      return isTeenPage 
+        ? isTeenClass(reservation.children.school_class) 
+        : !isTeenClass(reservation.children.school_class);
+    })
+    .map(reservation => {
+      // Ensure consistent data structure
+      return {
+        ...reservation,
+        children: {
+          ...reservation.children,
+          profile: reservation.children.profile || { school_city: '' }
+        }
+      };
+    });
 
   console.log("11. Nombre de réservations après filtrage:", filteredReservations.length);
 
