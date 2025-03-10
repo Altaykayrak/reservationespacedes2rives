@@ -69,56 +69,11 @@ export const useHolidayReservation = () => {
     setSelectedPeriod("");
   };
 
-  const sendConfirmationEmail = async (selectedDates: DateOption[], childName: string, periodName: string) => {
-    try {
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) {
-        console.error("Utilisateur non connecté");
-        return;
-      }
-
-      // Format dates for email
-      const formattedDates = selectedDates.map(dateOpt => {
-        const date = dateOpt.date;
-        return date.toLocaleDateString('fr-FR', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
-      });
-
-      console.log("Sending confirmation email with the following data:", {
-        userId: user.id,
-        reservationType: "holiday",
-        reservationDetails: {
-          childName,
-          dates: formattedDates,
-          period: periodName
-        }
-      });
-
-      // Send email notification with explicit reservationType
-      const response = await supabase.functions.invoke("send-reservation-email", {
-        body: {
-          userId: user.id,
-          reservationType: "holiday",
-          childName: childName,
-          dates: formattedDates,
-          period: periodName,
-          withoutMeal: selectedDates.map(d => d.withoutMeal),
-          earlyDropoff: selectedDates.map(d => d.earlyDropoff)
-        }
-      });
-
-      if (response.error) {
-        console.error("Erreur lors de l'envoi de l'email:", response.error);
-      } else {
-        console.log("Email de confirmation envoyé avec succès", response.data);
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'envoi de l'email de confirmation:", error);
-    }
+  // Remplacé par l'implémentation dans useReservationSubmission
+  // pour éviter les doubles appels
+  const sendConfirmationEmail = async () => {
+    // Cette fonction ne fait plus rien, la logique est dans useReservationSubmission
+    console.log("sendConfirmationEmail n'est plus utilisée directement");
   };
 
   const { 
@@ -135,22 +90,15 @@ export const useHolidayReservation = () => {
     isDateAlreadyReserved,
     async () => {
       await refetchReservations();
-      
-      // Get child name and period name for the email
-      const childRecord = children?.find(child => child.id === selectedChild);
-      const periodRecord = holidayPeriods?.find(period => period.id === selectedPeriod);
-      
-      if (childRecord && periodRecord) {
-        await sendConfirmationEmail(selectedDates, `${childRecord.first_name} ${childRecord.last_name}`, periodRecord.name);
-      }
-      
       setShowSuccessDialog(true);
       resetForm();
     },
     resetForm
   );
 
+  // Utilisez ce wrapper pour éviter les doubles exécutions
   const handleSubmit = async () => {
+    console.log("DEBUG: handleSubmit appelé depuis HolidayReservationContent");
     await submit();
   };
 

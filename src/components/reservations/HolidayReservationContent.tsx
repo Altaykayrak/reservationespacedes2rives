@@ -40,6 +40,16 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
 
   // Use the filtered children if provided, otherwise use the children from the hook
   const childrenToDisplay = filteredChildren || children;
+  
+  // Fonction pour éviter les doubles clics
+  const onSubmitClick = () => {
+    console.log("DEBUG: Bouton Confirmer réservation cliqué");
+    if (!isSubmitting) {
+      handleSubmit();
+    } else {
+      console.log("DEBUG: Soumission déjà en cours, ignoré");
+    }
+  };
 
   return (
     <Card className="p-6">
@@ -70,7 +80,7 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
         )}
 
         <Button
-          onClick={handleSubmit}
+          onClick={onSubmitClick}
           className="w-full"
           disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
         >
