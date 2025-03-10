@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.0";
 import { Resend } from "npm:resend@2.0.0";
@@ -18,7 +17,6 @@ interface ReservationEmailRequest {
   period?: string;  // Période de vacances
   withoutMeal?: boolean[];
   earlyDropoff?: boolean[];
-  // Add a unique identifier to prevent duplicate emails
   requestId?: string;
 }
 
@@ -29,11 +27,9 @@ const resendApiKey = Deno.env.get("RESEND_API_KEY") || "";
 const resend = new Resend(resendApiKey);
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Create a cache to store recently processed request IDs with longer TTL
 const processedRequests = new Map<string, number>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes TTL for cache entries
 
-// Clean up expired cache entries periodically
 setInterval(() => {
   const now = Date.now();
   for (const [key, timestamp] of processedRequests.entries()) {
@@ -44,7 +40,6 @@ setInterval(() => {
 }, 60 * 1000); // Every minute
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -53,13 +48,11 @@ const handler = async (req: Request): Promise<Response> => {
     const requestData: ReservationEmailRequest = await req.json();
     console.log(`[${Date.now()}] Received request data:`, JSON.stringify(requestData));
 
-    // Générer un requestId plus détaillé si non fourni
     const requestId = requestData.requestId || 
       `${requestData.childName}-${requestData.reservationType}-${requestData.period}-${Date.now()}`;
 
     console.log(`[${Date.now()}] Request ID:`, requestId);
 
-    // Check if this request has been processed recently
     if (processedRequests.has(requestId)) {
       console.log(`[${Date.now()}] Duplicate request detected. Skipping email send:`, requestId);
       return new Response(
@@ -74,23 +67,18 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Mark this request as processed
     processedRequests.set(requestId, Date.now());
     console.log(`[${Date.now()}] Request marked as processed:`, requestId);
     console.log(`[${Date.now()}] Cache size:`, processedRequests.size);
 
-    // Check if we're dealing with a holiday or wednesday reservation
     if (requestData.reservationType === "holiday" || requestData.reservationType === "wednesday") {
       console.log(`[${Date.now()}] Processing a ${requestData.reservationType} reservation`);
       
-      // For direct reservation emails without user ID
       if (requestData.childName && requestData.dates) {
         console.log(`[${Date.now()}] Processing direct reservation for ${requestData.childName}`);
         
-        // Generate email content for direct reservation
         const reservationType = requestData.reservationType === "holiday" ? "vacances" : "mercredi";
         
-        // Create HTML table for the dates and options
         let tableRows = '';
         if (requestData.dates && requestData.dates.length > 0) {
           requestData.dates.forEach((date, index) => {
@@ -131,7 +119,6 @@ const handler = async (req: Request): Promise<Response> => {
           <p><strong>ID de requête:</strong> ${requestId}</p>
         `;
         
-        // Send direct reservation confirmation email
         const emailResponse = await resend.emails.send({
           from: "Réservation <onboarding@resend.dev>",
           to: ["accueil@e2rives.fr"],
@@ -150,12 +137,10 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
       
-      // For user profile-based emails
       if (!requestData.userId) {
         throw new Error("User ID is required for reservation emails with profile information");
       }
       
-      // Fetch the user profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles_with_emails")
         .select("*")
@@ -167,7 +152,6 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error("Error fetching user profile");
       }
 
-      // Create HTML table for the dates and options
       let tableRows = '';
       if (requestData.dates && requestData.dates.length > 0) {
         requestData.dates.forEach((date, index) => {
@@ -199,8 +183,6 @@ const handler = async (req: Request): Promise<Response> => {
         </table>
       `;
 
-      // Generate email content based on reservation type
-      const reservationType = requestData.reservationType === "holiday" ? "vacances" : "mercredi";
       const emailHtml = `
         <h1>Nouvelle réservation de ${reservationType}</h1>
         <p><strong>Parent:</strong> ${profileData.first_name} ${profileData.last_name}</p>
@@ -212,7 +194,6 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>ID de requête:</strong> ${requestId}</p>
       `;
       
-      // Send reservation confirmation email
       const emailResponse = await resend.emails.send({
         from: "Réservation <onboarding@resend.dev>",
         to: ["accueil@e2rives.fr"],
@@ -230,11 +211,9 @@ const handler = async (req: Request): Promise<Response> => {
         },
       });
     } 
-    // Handle RDV email (legacy support)
     else if (requestData.rdvId) {
       console.log("Processing an RDV reservation");
       
-      // Fetch the rdv details
       const { data: rdvData, error: rdvError } = await supabase
         .from("rdv")
         .select("*")
@@ -246,7 +225,6 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error("Error fetching rdv details");
       }
 
-      // Fetch the user profile
       if (!requestData.userId) {
         throw new Error("User ID is required for RDV emails");
       }
@@ -276,7 +254,6 @@ const handler = async (req: Request): Promise<Response> => {
         return timeStr.substring(0, 5);
       };
 
-      // Send email
       const emailResponse = await resend.emails.send({
         from: "Réservation <onboarding@resend.dev>",
         to: ["accueil@e2rives.fr"],
@@ -293,7 +270,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       console.log("Email sent successfully:", emailResponse);
-
+      
       return new Response(JSON.stringify({ success: true, data: emailResponse }), {
         status: 200,
         headers: {
@@ -302,7 +279,6 @@ const handler = async (req: Request): Promise<Response> => {
         },
       });
     } else {
-      // If neither reservationType nor rdvId is provided
       console.error(`[${Date.now()}] Invalid request data, missing reservationType or rdvId:`, requestData);
       throw new Error("Invalid request: Either reservationType or rdvId is required");
     }
