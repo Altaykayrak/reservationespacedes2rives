@@ -5,10 +5,10 @@ import { ProfileData } from "@/types/profile"
 
 interface ProfileSectionProps {
   profile: ProfileData
-  onEdit: () => void
+  onEdit?: () => void  // Make onEdit optional with the ? operator
 }
 
-export function ProfileSection({ profile }: ProfileSectionProps) {
+export function ProfileSection({ profile, onEdit }: ProfileSectionProps) {
   return (
     <Card>
       <CardHeader>
