@@ -3,45 +3,89 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RegisterFormData } from "@/schemas/registerSchema";
 
 const checkAuthorizedEmail = async (email: string) => {
+  // Remove all whitespace and convert to lowercase for maximum compatibility
   const cleanEmail = email.trim().toLowerCase();
   console.log("Checking email:", cleanEmail);
   
-  // Perform a case-insensitive search using ILIKE
+  // First approach: Try a simple contains query
+  const { data: containsData, error: containsError } = await supabase
+    .from("authorized_emails")
+    .select("email")
+    .ilike("email", `%${cleanEmail}%`)
+    .maybeSingle();
+
+  console.log("Contains query results:", { containsData, containsError });
+  
+  if (containsError) {
+    console.error("Database error in contains query:", containsError);
+  }
+  
+  if (containsData) {
+    console.log("Email found with contains query:", containsData.email);
+    return true;
+  }
+
+  // Second approach: Try direct equality with ILIKE for case insensitivity
   const { data, error } = await supabase
     .from("authorized_emails")
     .select("email")
     .ilike("email", cleanEmail)
     .maybeSingle();
 
-  console.log("Query parameters:", { cleanEmail });
-  console.log("Full query result:", { data, error });
-  console.log("Raw data:", data);
+  console.log("ILIKE query parameters:", { cleanEmail });
+  console.log("ILIKE query result:", { data, error });
   
   if (error) {
-    console.error("Database error:", error);
-    throw error;
+    console.error("Database error in ILIKE query:", error);
+  }
+  
+  if (data) {
+    console.log("Email found with ILIKE query:", data.email);
+    return true;
   }
 
-  // Alternative approach: if the first approach didn't work, try exact match
-  if (!data) {
-    // Try a direct select with exact match as fallback
-    const { data: exactData, error: exactError } = await supabase
-      .from("authorized_emails")
-      .select("email")
-      .eq("email", cleanEmail)
-      .maybeSingle();
+  // Third approach: Try exact match as last resort
+  const { data: exactData, error: exactError } = await supabase
+    .from("authorized_emails")
+    .select("email")
+    .eq("email", cleanEmail)
+    .maybeSingle();
 
-    console.log("Exact match fallback result:", { exactData, exactError });
-    if (exactError) console.error("Exact match error:", exactError);
+  console.log("Exact match query result:", { exactData, exactError });
+  
+  if (exactError) {
+    console.error("Database error in exact match query:", exactError);
+  }
+  
+  if (exactData) {
+    console.log("Email found with exact match:", exactData.email);
+    return true;
+  }
+
+  // Final approach: Try to fetch all authorized emails and check manually
+  // This is a last resort to see what's in the table
+  const { data: allEmails, error: allEmailsError } = await supabase
+    .from("authorized_emails")
+    .select("email");
     
-    const isAuthorized = !!exactData;
-    console.log("Is email authorized (exact match)?", isAuthorized);
-    return isAuthorized;
+  if (allEmailsError) {
+    console.error("Error fetching all emails:", allEmailsError);
+  } else {
+    console.log("All authorized emails in the database:", allEmails);
+    console.log("Total count of authorized emails:", allEmails.length);
+    
+    // Try to find any similar emails for debugging purposes
+    const similarEmails = allEmails.filter(entry => 
+      entry.email.toLowerCase().includes(cleanEmail.split('@')[0].toLowerCase())
+    );
+    
+    if (similarEmails.length > 0) {
+      console.log("Similar emails found in database:", similarEmails);
+    }
   }
 
-  const isAuthorized = !!data;
-  console.log("Is email authorized?", isAuthorized);
-  return isAuthorized;
+  console.log("Email not found in any query. Not authorized.");
+  return false;
 };
 
 export const registerUser = async (formData: RegisterFormData) => {
