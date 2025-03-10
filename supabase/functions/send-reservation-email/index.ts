@@ -18,6 +18,8 @@ interface ReservationEmailRequest {
   period?: string;
   withoutMeal?: boolean[];
   earlyDropoff?: boolean[];
+  // Add a unique identifier to prevent duplicate emails
+  requestId?: string;
 }
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
@@ -26,6 +28,20 @@ const resendApiKey = Deno.env.get("RESEND_API_KEY") || "";
 
 const resend = new Resend(resendApiKey);
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Create a cache to store recently processed request IDs
+const processedRequests = new Map<string, number>();
+const CACHE_TTL = 60 * 1000; // 1 minute TTL for cache entries
+
+// Clean up expired cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, timestamp] of processedRequests.entries()) {
+    if (now - timestamp > CACHE_TTL) {
+      processedRequests.delete(key);
+    }
+  }
+}, 30 * 1000); // Every 30 seconds
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -36,6 +52,28 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const requestData: ReservationEmailRequest = await req.json();
     console.log("Received request data:", JSON.stringify(requestData));
+
+    // Generate a unique request ID if not provided
+    const requestId = requestData.requestId || 
+      `${requestData.childName}-${requestData.reservationType}-${JSON.stringify(requestData.dates)}`;
+
+    // Check if this request has been processed recently
+    if (processedRequests.has(requestId)) {
+      console.log("Duplicate request detected. Skipping email send:", requestId);
+      return new Response(
+        JSON.stringify({ success: true, message: "Duplicate request, email not sent" }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+    }
+
+    // Mark this request as processed
+    processedRequests.set(requestId, Date.now());
 
     // Check if we're dealing with a holiday or wednesday reservation
     if (requestData.reservationType === "holiday" || requestData.reservationType === "wednesday") {

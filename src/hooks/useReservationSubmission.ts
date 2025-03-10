@@ -129,35 +129,10 @@ export const useReservationSubmission = (
         }
       }
 
-      for (const dateOption of selectedDates) {
-        const dateStr = format(dateOption.date, "yyyy-MM-dd");
-        const period = holidayPeriods?.find(period => {
-          const startDate = new Date(period.start_date);
-          const endDate = new Date(period.end_date);
-          const currentDate = new Date(dateStr);
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(0, 0, 0, 0);
-          currentDate.setHours(0, 0, 0, 0);
-          return currentDate >= startDate && currentDate <= endDate;
-        });
-
-        const { error: reservationError } = await supabase
-          .from("holiday_reservations")
-          .insert({
-            child_id: selectedChild,
-            period_id: period!.id,
-            reservation_date: dateStr,
-            without_meal: dateOption.withoutMeal,
-            early_dropoff: dateOption.earlyDropoff,
-            status: 'confirmed',
-            reservation_number: `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          });
-
-        if (reservationError) throw reservationError;
-      }
-
       const childFullName = `${childData.first_name} ${childData.last_name}`;
       const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
+      
+      const requestId = `holiday-${childFullName}-${Date.now()}`;
       
       await supabase.functions.invoke('send-reservation-email', {
         body: {
@@ -165,7 +140,8 @@ export const useReservationSubmission = (
           dates: formattedDates,
           reservationType: 'holiday',
           withoutMeal: selectedDates.map(d => d.withoutMeal),
-          earlyDropoff: selectedDates.map(d => d.earlyDropoff)
+          earlyDropoff: selectedDates.map(d => d.earlyDropoff),
+          requestId
         }
       });
 

@@ -109,13 +109,17 @@ export const useWednesdayReservationSubmission = (
       const childFullName = `${childData.first_name} ${childData.last_name}`;
       const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
       
+      // Add a unique requestId to prevent duplicate emails
+      const requestId = `wednesday-${childFullName}-${Date.now()}`;
+      
       await supabase.functions.invoke('send-reservation-email', {
         body: {
           childName: childFullName,
           dates: formattedDates,
           reservationType: 'wednesday',
           withoutMeal: selectedDates.map(d => d.withoutMeal),
-          earlyDropoff: selectedDates.map(d => d.earlyDropoff)
+          earlyDropoff: selectedDates.map(d => d.earlyDropoff),
+          requestId
         }
       });
 
