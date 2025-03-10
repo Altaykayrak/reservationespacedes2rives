@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useChildrenData } from "./useChildrenData";
 import { useHolidayPeriods } from "./useHolidayPeriods";
@@ -17,7 +18,6 @@ export const useHolidayReservation = () => {
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { children } = useChildrenData();
   const { holidayPeriods } = useHolidayPeriods();
@@ -126,7 +126,8 @@ export const useHolidayReservation = () => {
     noSpotsDialog, 
     setNoSpotsDialog,
     minimumDaysDialog,
-    setMinimumDaysDialog 
+    setMinimumDaysDialog,
+    isSubmitting
   } = useReservationSubmission(
     selectedChild,
     selectedDates,
@@ -150,12 +151,7 @@ export const useHolidayReservation = () => {
   );
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      await submit();
-    } finally {
-      setIsSubmitting(false);
-    }
+    await submit();
   };
 
   const handleDateToggle = (date: Date) => {

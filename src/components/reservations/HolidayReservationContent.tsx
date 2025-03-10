@@ -9,6 +9,7 @@ import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
+import { Loader2 } from "lucide-react";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
@@ -73,7 +74,14 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
           className="w-full"
           disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
         >
-          {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Réservation en cours...
+            </>
+          ) : (
+            "Confirmer la réservation"
+          )}
         </Button>
       </div>
 

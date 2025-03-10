@@ -1,9 +1,11 @@
+
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { validateMinimumDaysPerWeek } from "@/utils/dateUtils";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface DateOption {
   date: Date;
@@ -39,14 +41,25 @@ export const useReservationSubmission = (
     isOpen: false
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
   const handleSubmit = async () => {
     if (!selectedChild) {
-      alert("Veuillez sélectionner un enfant.");
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un enfant.",
+        variant: "destructive",
+      });
       return;
     }
 
     if (selectedDates.length === 0) {
-      alert("Veuillez sélectionner au moins une date.");
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner au moins une date.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -59,7 +72,11 @@ export const useReservationSubmission = (
         .map(d => format(d.date, "d MMMM yyyy", { locale: fr }))
         .join(", ");
       
-      alert(`Les dates suivantes sont déjà réservées pour cet enfant : ${datesList}`);
+      toast({
+        title: "Dates déjà réservées",
+        description: `Les dates suivantes sont déjà réservées pour cet enfant : ${datesList}`,
+        variant: "destructive",
+      });
       return;
     }
 
@@ -70,6 +87,8 @@ export const useReservationSubmission = (
       return;
     }
 
+    setIsSubmitting(true);
+    
     try {
       const { data: childData, error: childError } = await supabase
         .from("children")
@@ -79,9 +98,14 @@ export const useReservationSubmission = (
 
       if (childError) throw childError;
 
+      // Generate a unique reservation number for this batch
+      const reservationNumber = `HOL-${Date.now().toString().substring(5)}`;
+
+      // Check available spots for each date and create reservations
       for (const dateOption of selectedDates) {
         const dateStr = format(dateOption.date, "yyyy-MM-dd");
         
+        // Find the period for this date
         const period = holidayPeriods?.find(period => {
           const startDate = new Date(period.start_date);
           const endDate = new Date(period.end_date);
@@ -96,6 +120,7 @@ export const useReservationSubmission = (
           throw new Error(`Période non trouvée pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
         }
 
+        // Check if there are spots available
         const { data: spotsLeft, error: spotsError } = await supabase
           .rpc('check_holiday_spots_available', {
             period_id: period.id,
@@ -111,9 +136,11 @@ export const useReservationSubmission = (
             schoolClass: childData.school_class,
             date: dateOption.date
           });
+          setIsSubmitting(false);
           return;
         }
 
+        // Check if reservation already exists
         const { data: existingReservation, error: checkError } = await supabase
           .from("holiday_reservations")
           .select()
@@ -127,8 +154,24 @@ export const useReservationSubmission = (
         if (existingReservation) {
           throw new Error(`Une réservation existe déjà pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
         }
+
+        // Create the reservation in the database
+        const { error: insertError } = await supabase
+          .from("holiday_reservations")
+          .insert({
+            child_id: selectedChild,
+            period_id: period.id,
+            reservation_date: dateStr,
+            reservation_number: reservationNumber,
+            without_meal: dateOption.withoutMeal,
+            early_dropoff: dateOption.earlyDropoff,
+            status: "confirmed"
+          });
+
+        if (insertError) throw insertError;
       }
 
+      // Send notification email
       const childFullName = `${childData.first_name} ${childData.last_name}`;
       const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
       
@@ -145,12 +188,23 @@ export const useReservationSubmission = (
         }
       });
 
+      toast({
+        title: "Réservation confirmée",
+        description: "Votre réservation a été enregistrée avec succès.",
+      });
+
       await refetchReservations();
       resetForm();
 
     } catch (error: any) {
       console.error("Erreur lors de la création des réservations:", error);
-      alert(error.message || "Une erreur est survenue lors de la création des réservations.");
+      toast({
+        title: "Erreur",
+        description: error.message || "Une erreur est survenue lors de la création des réservations.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -159,6 +213,7 @@ export const useReservationSubmission = (
     noSpotsDialog,
     setNoSpotsDialog,
     minimumDaysDialog,
-    setMinimumDaysDialog
+    setMinimumDaysDialog,
+    isSubmitting
   };
 };
