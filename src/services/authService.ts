@@ -6,10 +6,11 @@ const checkAuthorizedEmail = async (email: string) => {
   const cleanEmail = email.trim();
   console.log("Checking email:", cleanEmail);
   
+  // Effectuer la recherche directement sur le champ 'email' plutôt que 'email_lower'
   const { data, error } = await supabase
     .from("authorized_emails")
     .select("email")
-    .eq("email_lower", cleanEmail.toLowerCase())
+    .ilike("email", cleanEmail)
     .maybeSingle();
 
   console.log("Query parameters:", { cleanEmail });
