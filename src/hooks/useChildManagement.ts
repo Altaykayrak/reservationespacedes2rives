@@ -13,11 +13,11 @@ export function useChildManagement() {
   const queryClient = useQueryClient();
 
   const handleEditClick = async (child: Child) => {
-    console.log("Starting edit check for child:", child.id);
+    console.log("Starting edit check for child:", child);
     setIsChecking(true);
     
     try {
-      // Vérifier si l'enfant a des réservations
+      // Check for wednesday reservations
       const { data: wednesdayReservations, error: wednesdayError } = await supabase
         .from('wednesday_reservations')
         .select('id')
@@ -29,6 +29,7 @@ export function useChildManagement() {
         throw wednesdayError;
       }
 
+      // Check for holiday reservations
       const { data: holidayReservations, error: holidayError } = await supabase
         .from('holiday_reservations')
         .select('id')
@@ -43,6 +44,7 @@ export function useChildManagement() {
       console.log('Wednesday reservations:', wednesdayReservations);
       console.log('Holiday reservations:', holidayReservations);
 
+      // Block edit if child has reservations
       if ((wednesdayReservations && wednesdayReservations.length > 0) || 
           (holidayReservations && holidayReservations.length > 0)) {
         console.log("Child has reservations, blocking edit");
@@ -51,7 +53,7 @@ export function useChildManagement() {
         return;
       }
 
-      // Si pas de réservations, permettre la modification
+      // Allow edit if no reservations
       console.log("Child has no reservations, allowing edit");
       setEditingChild(child);
     } catch (error) {
@@ -63,8 +65,9 @@ export function useChildManagement() {
   };
 
   const handleSuccessfulEdit = () => {
+    console.log("Edit successful, closing dialog and refreshing data");
     setEditingChild(null);
-    // Invalider explicitement le cache pour forcer un re-fetch
+    // Force a refetch by invalidating the cache
     queryClient.invalidateQueries({ queryKey: ['children'] });
     toast.success("Enfant modifié avec succès");
   };
@@ -75,11 +78,11 @@ export function useChildManagement() {
       return;
     }
     
-    console.log("Starting deletion process for child:", deletingChild.id);
+    console.log("Starting deletion process for child:", deletingChild);
     setIsDeleting(true);
 
     try {
-      // Vérifier si l'enfant a des réservations
+      // Check for wednesday reservations
       const { data: wednesdayReservations, error: wednesdayError } = await supabase
         .from('wednesday_reservations')
         .select('id')
@@ -91,6 +94,7 @@ export function useChildManagement() {
         throw wednesdayError;
       }
 
+      // Check for holiday reservations
       const { data: holidayReservations, error: holidayError } = await supabase
         .from('holiday_reservations')
         .select('id')
@@ -105,6 +109,7 @@ export function useChildManagement() {
       console.log('Wednesday reservations:', wednesdayReservations);
       console.log('Holiday reservations:', holidayReservations);
 
+      // Block deletion if child has reservations
       if ((wednesdayReservations && wednesdayReservations.length > 0) || 
           (holidayReservations && holidayReservations.length > 0)) {
         console.log("Child has reservations, blocking deletion");
@@ -114,7 +119,7 @@ export function useChildManagement() {
         return;
       }
 
-      // Supprimer l'enfant
+      // Delete child if no reservations
       console.log("Proceeding with deletion for child:", deletingChild.id);
       const { error } = await supabase
         .from('children')
@@ -127,7 +132,7 @@ export function useChildManagement() {
       }
 
       console.log("Child deleted successfully");
-      // Invalider explicitement le cache pour forcer un re-fetch
+      // Force a refetch by invalidating the cache
       queryClient.invalidateQueries({ queryKey: ['children'] });
       toast.success("Enfant supprimé avec succès");
       setDeletingChild(null);
