@@ -5,14 +5,11 @@ import { ChildrenFilters } from "@/components/admin/children/ChildrenFilters";
 import { ChildrenTable } from "@/components/admin/children/ChildrenTable";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { getGroupName } from "@/utils/schoolClassUtils";
-import { Child } from "@/types/profile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddChildForm } from "@/components/profile/AddChildForm";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { FileText, Plus } from "lucide-react";
 import { exportChildrenToPdf } from "@/components/admin/children/export/childrenPdfExport";
-import { useChildManagement } from "@/hooks/useChildManagement";
 
 const AdminChildren = () => {
   const { children, isLoading } = useChildrenData();
@@ -20,18 +17,6 @@ const AdminChildren = () => {
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
-
-  const {
-    editingChild,
-    setEditingChild,
-    deletingChild,
-    setDeletingChild,
-    isDeleting,
-    isChecking,
-    handleEditClick,
-    handleSuccessfulEdit,
-    handleDeleteChild
-  } = useChildManagement();
 
   const filteredChildren = children?.filter((child) => {
     const matchesSearch = 
@@ -105,11 +90,7 @@ const AdminChildren = () => {
 
         <ChildrenTable
           children={filteredChildren || []}
-          onEdit={handleEditClick}
-          onDelete={setDeletingChild}
-          isLoading={isChecking || isDeleting}
-          editingChildId={editingChild?.id || null}
-          deletingChildId={deletingChild?.id || null}
+          isLoading={isLoading}
         />
 
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -122,45 +103,6 @@ const AdminChildren = () => {
             />
           </DialogContent>
         </Dialog>
-
-        <Dialog open={!!editingChild} onOpenChange={(open) => !isChecking && setEditingChild(open ? editingChild : null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Modifier l'enfant</DialogTitle>
-            </DialogHeader>
-            {editingChild && (
-              <AddChildForm
-                initialData={editingChild}
-                onSuccess={handleSuccessfulEdit}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-
-        <AlertDialog 
-          open={!!deletingChild} 
-          onOpenChange={(open) => !isDeleting && setDeletingChild(open ? deletingChild : null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Cette action est irréversible. L'enfant sera définitivement supprimé.
-                {isDeleting && <p className="mt-2">Vérification des réservations en cours...</p>}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleDeleteChild}
-                disabled={isDeleting}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {isDeleting ? "Suppression..." : "Supprimer"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </div>
   );
