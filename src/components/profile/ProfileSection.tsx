@@ -59,7 +59,12 @@ export function ProfileSection({ profile, onEdit }: ProfileSectionProps) {
             )}
           </div>
           <div className="text-left">
-            <p className="text-sm text-muted-foreground">Prélèvement automatique</p>
+            <p className="text-sm text-muted-foreground">
+              Prélèvement automatique 
+              <span className="text-xs block text-muted-foreground italic mt-1">
+                (Pour activer ou désactiver le prélèvement automatique de vos factures, merci de contacter l'accueil.)
+              </span>
+            </p>
           </div>
         </div>
       </CardContent>
