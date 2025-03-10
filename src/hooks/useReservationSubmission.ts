@@ -131,7 +131,8 @@ export const useReservationSubmission = (
           result.periodName || "",
           result.reservationNumber || "",
           result.periodId || "",
-          submissionTimestamp
+          submissionTimestamp,
+          result.childData.school_class // Passage de la classe de l'enfant
         );
       }
 

@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.0";
 import { Resend } from "npm:resend@2.0.0";
@@ -13,6 +14,7 @@ interface ReservationEmailRequest {
   userId?: string;
   reservationType?: string;
   childName?: string;
+  childClass?: string;  // Ajout de la classe scolaire
   dates?: string[];
   period?: string;  // Période de vacances
   withoutMeal?: boolean[];
@@ -113,6 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
         const emailHtml = `
           <h1>Nouvelle réservation de ${reservationType}</h1>
           ${requestData.childName ? `<p><strong>Enfant:</strong> ${requestData.childName}</p>` : ''}
+          ${requestData.childClass ? `<p><strong>Classe:</strong> ${requestData.childClass}</p>` : ''}
           ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
           <p><strong>Dates réservées:</strong></p>
           ${tableHtml}
@@ -188,6 +191,7 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>Parent:</strong> ${profileData.first_name} ${profileData.last_name}</p>
         <p><strong>Email:</strong> ${profileData.email}</p>
         ${requestData.childName ? `<p><strong>Enfant:</strong> ${requestData.childName}</p>` : ''}
+        ${requestData.childClass ? `<p><strong>Classe:</strong> ${requestData.childClass}</p>` : ''}
         ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
         <p><strong>Dates réservées:</strong></p>
         ${tableHtml}

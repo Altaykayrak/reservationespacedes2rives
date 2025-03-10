@@ -15,7 +15,8 @@ export const sendHolidayReservationEmail = async (
   periodName: string,
   reservationNumber: string,
   periodId: string,
-  submissionTimestamp: number
+  submissionTimestamp: number,
+  childSchoolClass: string // Ajout de la classe scolaire
 ) => {
   // Créer un requestId unique qui inclut toutes les informations pertinentes
   const requestId = `holiday-${childFullName}-${reservationNumber}-${periodId}-${submissionTimestamp}`;
@@ -26,6 +27,7 @@ export const sendHolidayReservationEmail = async (
   const emailResponse = await supabase.functions.invoke('send-reservation-email', {
     body: {
       childName: childFullName,
+      childClass: childSchoolClass, // Ajout de la classe de l'enfant
       dates: formattedDates,
       reservationType: 'holiday',
       withoutMeal: selectedDates.map(d => d.withoutMeal),
