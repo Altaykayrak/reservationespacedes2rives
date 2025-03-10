@@ -3,29 +3,24 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Child } from "@/types/profile";
 import { PencilIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
 
 interface ChildrenTableProps {
   children: Child[];
   onEdit: (child: Child) => void;
   onDelete: (child: Child) => void;
   isLoading?: boolean;
+  editingChildId?: string | null;
+  deletingChildId?: string | null;
 }
 
-export const ChildrenTable = ({ children, onEdit, onDelete, isLoading = false }: ChildrenTableProps) => {
-  const [editingChildId, setEditingChildId] = useState<string | null>(null);
-  const [deletingChildId, setDeletingChildId] = useState<string | null>(null);
-
-  const handleEdit = (child: Child) => {
-    setEditingChildId(child.id);
-    onEdit(child);
-  };
-
-  const handleDelete = (child: Child) => {
-    setDeletingChildId(child.id);
-    onDelete(child);
-  };
-
+export const ChildrenTable = ({ 
+  children, 
+  onEdit, 
+  onDelete, 
+  isLoading = false,
+  editingChildId = null,
+  deletingChildId = null
+}: ChildrenTableProps) => {
   return (
     <Table>
       <TableHeader>
@@ -54,7 +49,7 @@ export const ChildrenTable = ({ children, onEdit, onDelete, isLoading = false }:
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleEdit(child)}
+                    onClick={() => onEdit(child)}
                     disabled={isLoading || editingChildId === child.id}
                   >
                     <PencilIcon className="h-4 w-4" />
@@ -62,7 +57,7 @@ export const ChildrenTable = ({ children, onEdit, onDelete, isLoading = false }:
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleDelete(child)}
+                    onClick={() => onDelete(child)}
                     disabled={isLoading || deletingChildId === child.id}
                   >
                     <Trash2Icon className="h-4 w-4" />

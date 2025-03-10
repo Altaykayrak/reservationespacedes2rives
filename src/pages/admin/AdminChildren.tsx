@@ -108,6 +108,8 @@ const AdminChildren = () => {
           onEdit={handleEditClick}
           onDelete={setDeletingChild}
           isLoading={isChecking || isDeleting}
+          editingChildId={editingChild?.id || null}
+          deletingChildId={deletingChild?.id || null}
         />
 
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -121,7 +123,7 @@ const AdminChildren = () => {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!editingChild} onOpenChange={() => setEditingChild(null)}>
+        <Dialog open={!!editingChild} onOpenChange={(open) => !isChecking && setEditingChild(open ? editingChild : null)}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Modifier l'enfant</DialogTitle>
