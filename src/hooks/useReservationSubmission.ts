@@ -4,7 +4,7 @@ import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { validateMinimumDaysPerWeek } from "@/utils/dateUtils";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DateOption {
@@ -44,20 +44,20 @@ export const useReservationSubmission = (
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
-  // Ajouter une référence pour éviter les doubles appels
-  const submissionInProgress = useState<boolean>(false);
+  // Utiliser useRef au lieu de useState pour le flag de soumission en cours
+  const submissionInProgress = useRef<boolean>(false);
 
   const handleSubmit = async () => {
     console.log("DEBUG: Début de handleSubmit dans useReservationSubmission");
     
     // Vérifier si une soumission est déjà en cours
-    if (submissionInProgress[0]) {
-      console.log("DEBUG: Une soumission est déjà en cours, abandon");
+    if (submissionInProgress.current) {
+      console.log("DEBUG: Une soumission est déjà en cours via useRef, abandon");
       return;
     }
     
     // Marquer le début d'une soumission
-    submissionInProgress[0] = true;
+    submissionInProgress.current = true;
     
     try {
       if (!selectedChild) {
@@ -112,6 +112,22 @@ export const useReservationSubmission = (
           .single();
 
         if (childError) throw childError;
+
+        // Récupérer les informations de période pour l'email
+        let periodName = "";
+        if (holidayPeriods && selectedDates.length > 0) {
+          const firstDate = selectedDates[0].date;
+          const period = holidayPeriods.find(period => {
+            const startDate = new Date(period.start_date);
+            const endDate = new Date(period.end_date);
+            return firstDate >= startDate && firstDate <= endDate;
+          });
+          
+          if (period) {
+            periodName = `${format(new Date(period.start_date), "d MMMM yyyy", { locale: fr })} au ${format(new Date(period.end_date), "d MMMM yyyy", { locale: fr })}`;
+            console.log("DEBUG: Période identifiée:", periodName);
+          }
+        }
 
         // Generate a unique reservation number for this batch
         const reservationNumber = `HOL-${Date.now().toString().substring(5)}`;
@@ -194,7 +210,8 @@ export const useReservationSubmission = (
         const childFullName = `${childData.first_name} ${childData.last_name}`;
         const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
         
-        const requestId = `holiday-${childFullName}-${Date.now()}`;
+        // Utiliser un requestId unique qui inclut toutes les informations pertinentes
+        const requestId = `holiday-${childFullName}-${reservationNumber}-${Date.now()}`;
         console.log("DEBUG: Envoi d'email avec requestId:", requestId);
         
         await supabase.functions.invoke('send-reservation-email', {
@@ -204,6 +221,7 @@ export const useReservationSubmission = (
             reservationType: 'holiday',
             withoutMeal: selectedDates.map(d => d.withoutMeal),
             earlyDropoff: selectedDates.map(d => d.earlyDropoff),
+            period: periodName, // Ajouter le nom de la période
             requestId
           }
         });
@@ -230,7 +248,7 @@ export const useReservationSubmission = (
       }
     } finally {
       // Marquer la fin de la soumission
-      submissionInProgress[0] = false;
+      submissionInProgress.current = false;
     }
     
     console.log("DEBUG: Fin de handleSubmit dans useReservationSubmission");

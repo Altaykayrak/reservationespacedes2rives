@@ -15,7 +15,7 @@ interface ReservationEmailRequest {
   reservationType?: string;
   childName?: string;
   dates?: string[];
-  period?: string;
+  period?: string;  // Période de vacances
   withoutMeal?: boolean[];
   earlyDropoff?: boolean[];
   // Add a unique identifier to prevent duplicate emails
@@ -53,9 +53,9 @@ const handler = async (req: Request): Promise<Response> => {
     const requestData: ReservationEmailRequest = await req.json();
     console.log("Received request data:", JSON.stringify(requestData));
 
-    // Generate a unique request ID if not provided
+    // Générer un requestId plus détaillé si non fourni
     const requestId = requestData.requestId || 
-      `${requestData.childName}-${requestData.reservationType}-${JSON.stringify(requestData.dates)}`;
+      `${requestData.childName}-${requestData.reservationType}-${requestData.period}-${Date.now()}`;
 
     // Check if this request has been processed recently
     if (processedRequests.has(requestId)) {

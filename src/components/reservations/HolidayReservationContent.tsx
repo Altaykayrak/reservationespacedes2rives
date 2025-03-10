@@ -41,13 +41,14 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
   // Use the filtered children if provided, otherwise use the children from the hook
   const childrenToDisplay = filteredChildren || children;
   
-  // Fonction pour éviter les doubles clics
+  // Fonction pour éviter les doubles clics avec logging amélioré
   const onSubmitClick = () => {
     console.log("DEBUG: Bouton Confirmer réservation cliqué");
     if (!isSubmitting) {
+      console.log("DEBUG: Soumission démarrée - isSubmitting:", isSubmitting);
       handleSubmit();
     } else {
-      console.log("DEBUG: Soumission déjà en cours, ignoré");
+      console.log("DEBUG: Soumission déjà en cours (isSubmitting = true), clic ignoré");
     }
   };
 

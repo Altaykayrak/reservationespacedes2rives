@@ -69,13 +69,6 @@ export const useHolidayReservation = () => {
     setSelectedPeriod("");
   };
 
-  // Remplacé par l'implémentation dans useReservationSubmission
-  // pour éviter les doubles appels
-  const sendConfirmationEmail = async () => {
-    // Cette fonction ne fait plus rien, la logique est dans useReservationSubmission
-    console.log("sendConfirmationEmail n'est plus utilisée directement");
-  };
-
   const { 
     handleSubmit: submit, 
     noSpotsDialog, 
