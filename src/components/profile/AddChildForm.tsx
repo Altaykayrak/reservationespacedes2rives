@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Child } from "@/types/profile";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 interface AddChildFormProps {
   onSuccess: () => void;
@@ -18,12 +19,14 @@ export function AddChildForm({
   onSuccess,
   initialData
 }: AddChildFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<string>(initialData?.school_class || "");
+  
   const {
     register,
     handleSubmit,
     formState: {
-      errors,
-      isSubmitting
+      errors
     },
     setValue,
     watch
@@ -39,7 +42,8 @@ export function AddChildForm({
 
   // Fetch school classes
   const {
-    data: schoolClasses = []
+    data: schoolClasses = [],
+    isLoading: isLoadingClasses
   } = useQuery({
     queryKey: ['school-classes'],
     queryFn: async () => {
@@ -60,13 +64,17 @@ export function AddChildForm({
     school_class: string;
   }) => {
     try {
+      setIsSubmitting(true);
+      
       // Verify all fields are filled
-      if (!values.first_name.trim() || !values.last_name.trim() || !values.school_class) {
+      if (!values.first_name.trim() || !values.last_name.trim() || !selectedClass) {
         toast.error("Veuillez remplir tous les champs");
+        setIsSubmitting(false);
         return;
       }
       
       console.log("Form submission values:", values);
+      console.log("Selected class:", selectedClass);
 
       if (initialData) {
         console.log("Updating existing child:", initialData.id);
@@ -76,7 +84,7 @@ export function AddChildForm({
           .update({
             first_name: values.first_name.trim(),
             last_name: values.last_name.trim(),
-            school_class: values.school_class
+            school_class: selectedClass
           })
           .eq('id', initialData.id);
           
@@ -107,7 +115,7 @@ export function AddChildForm({
             profile_id: user.id,
             first_name: values.first_name.trim(),
             last_name: values.last_name.trim(),
-            school_class: values.school_class
+            school_class: selectedClass
           }]);
           
         if (error) {
@@ -125,14 +133,26 @@ export function AddChildForm({
         queryKey: ['children']
       });
       
-      onSuccess();
+      // Call onSuccess callback after a brief timeout to ensure state updates are processed
+      setTimeout(() => {
+        onSuccess();
+      }, 100);
     } catch (error) {
       console.error('Error saving child:', error);
       toast.error(initialData ? "Erreur lors de la modification de l'enfant" : "Erreur lors de l'ajout de l'enfant");
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
-  const schoolClass = watch('school_class');
+  // Handle class selection
+  const handleClassChange = (value: string) => {
+    setSelectedClass(value);
+    setValue('school_class', value, {
+      shouldValidate: true,
+      shouldDirty: true
+    });
+  };
   
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -162,29 +182,30 @@ export function AddChildForm({
 
       <div className="space-y-2">
         <Label htmlFor="school_class">Classe</Label>
-        <Select 
-          value={schoolClass} 
-          onValueChange={value => setValue('school_class', value, {
-            shouldValidate: true,
-            shouldDirty: true
-          })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Sélectionnez une classe" />
-          </SelectTrigger>
-          <SelectContent>
-            {schoolClasses.map(schoolClass => (
-              <SelectItem key={schoolClass.id} value={schoolClass.name}>
-                {schoolClass.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {!schoolClass && <p className="text-sm text-destructive-foreground">La classe est requise</p>}
+        {isLoadingClasses ? (
+          <p className="text-sm text-gray-500">Chargement des classes...</p>
+        ) : (
+          <Select 
+            value={selectedClass} 
+            onValueChange={handleClassChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionnez une classe" />
+            </SelectTrigger>
+            <SelectContent>
+              {schoolClasses.map((schoolClass: any) => (
+                <SelectItem key={schoolClass.id} value={schoolClass.name}>
+                  {schoolClass.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {!selectedClass && <p className="text-sm text-destructive-foreground">La classe est requise</p>}
       </div>
 
-      <Button type="submit" disabled={isSubmitting || !schoolClass}>
-        {initialData ? "Modifier" : "Ajouter"}
+      <Button type="submit" disabled={isSubmitting || !selectedClass}>
+        {isSubmitting ? "En cours..." : (initialData ? "Modifier" : "Ajouter")}
       </Button>
     </form>
   );
