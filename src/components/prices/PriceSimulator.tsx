@@ -14,16 +14,17 @@ interface PriceItem {
   name: string;
   percentageOfQF: number;
   description?: string;
+  color: string;
 }
 
 const priceItems: PriceItem[] = [
-  { name: "Garderie du matin", percentageOfQF: 0.15 },
-  { name: "Périscolaire du soir", percentageOfQF: 0.20 },
-  { name: "Accueil de loisirs du mercredi (avec repas)", percentageOfQF: 0.70 },
-  { name: "Accueil de loisirs du mercredi (sans repas)", percentageOfQF: 0.50 },
-  { name: "Accueil de loisirs vacances (avec repas)", percentageOfQF: 0.80 },
-  { name: "Accueil de loisirs vacances (sans repas)", percentageOfQF: 0.50 },
-  { name: "Club Ado journée (sans repas)", percentageOfQF: 0.50 },
+  { name: "Garderie du matin", percentageOfQF: 0.15, color: "text-blue-600" },
+  { name: "Périscolaire du soir", percentageOfQF: 0.20, color: "text-green-600" },
+  { name: "Accueil de loisirs du mercredi (avec repas)", percentageOfQF: 0.70, color: "text-purple-600" },
+  { name: "Accueil de loisirs du mercredi (sans repas)", percentageOfQF: 0.50, color: "text-indigo-600" },
+  { name: "Accueil de loisirs vacances (avec repas)", percentageOfQF: 0.80, color: "text-orange-600" },
+  { name: "Accueil de loisirs vacances (sans repas)", percentageOfQF: 0.50, color: "text-amber-600" },
+  { name: "Club Ado journée (sans repas)", percentageOfQF: 0.50, color: "text-teal-600" },
 ];
 
 export function PriceSimulator() {
@@ -116,7 +117,9 @@ export function PriceSimulator() {
               <TableBody>
                 {priceItems.map((item) => (
                   <TableRow key={item.name}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <span className={`font-bold ${item.color}`}>{item.name}</span>
+                    </TableCell>
                     <TableCell className="text-right">{calculatePrice(item.percentageOfQF)} €</TableCell>
                   </TableRow>
                 ))}
