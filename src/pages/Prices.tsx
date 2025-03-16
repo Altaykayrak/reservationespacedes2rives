@@ -1,4 +1,3 @@
-
 import { Navbar } from "@/components/ui/navbar";
 import { PriceSimulator } from "@/components/prices/PriceSimulator";
 
@@ -86,7 +85,7 @@ const Prices = () => {
             </p>
           </div>
           
-          <div className="mt-4 p-3 md:p-4 bg-muted rounded-lg text-sm">
+          <div id="info-importante-section" className="mt-4 p-3 md:p-4 bg-muted rounded-lg text-sm">
             <h3 className="font-semibold mb-2 text-blue-600">INFORMATION IMPORTANTE</h3>
             <p>
               Les tarifs affichés sont donnés à titre indicatif et calculés sur la base 

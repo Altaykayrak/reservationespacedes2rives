@@ -98,6 +98,13 @@ export function PriceSimulator() {
     }
   };
 
+  const scrollToInfoImportanteSection = () => {
+    const section = document.getElementById('info-importante-section');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="pb-3 md:pb-6">
@@ -189,7 +196,19 @@ export function PriceSimulator() {
         )}
       </CardContent>
       <CardFooter className="text-xs md:text-sm text-muted-foreground flex flex-wrap">
-        <p>Note: Ces tarifs sont calculés en fonction de votre quotient familial ({qf}€) et un taux d'effort.</p>
+        <p>
+          Note: Ces tarifs sont calculés en fonction de votre quotient familial ({qf}€) et un taux d'effort. 
+          <a 
+            href="#info-importante-section" 
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToInfoImportanteSection();
+            }}
+            className="ml-1 text-blue-600 font-semibold underline hover:text-blue-800"
+          >
+            Voir détails
+          </a>
+        </p>
       </CardFooter>
     </Card>
   );
