@@ -16,7 +16,7 @@ const Prices = () => {
           </div>
           <PriceSimulator />
           
-          <div className="mt-6 md:mt-8 p-3 md:p-4 bg-muted rounded-lg text-sm">
+          <div id="obtenir-qf-section" className="mt-6 md:mt-8 p-3 md:p-4 bg-muted rounded-lg text-sm">
             <div className="bg-green-50 p-3 rounded-lg">
               <p className="font-semibold text-blue-600">Comment obtenir votre Quotient Familial :</p>
               <p className="mt-1">

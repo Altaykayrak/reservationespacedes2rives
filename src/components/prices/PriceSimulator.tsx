@@ -90,6 +90,13 @@ export function PriceSimulator() {
       section.scrollIntoView({ behavior: 'smooth' });
     }
   };
+  
+  const scrollToObtenirQFSection = () => {
+    const section = document.getElementById('obtenir-qf-section');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
@@ -102,7 +109,16 @@ export function PriceSimulator() {
       <CardContent className="space-y-4 md:space-y-6">
         <div className="space-y-2">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-            <Label htmlFor="qf">Quotient Familial (QF)</Label>
+            <a
+              href="#obtenir-qf-section"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToObtenirQFSection();
+              }}
+              className="font-medium hover:text-blue-600 hover:underline cursor-pointer"
+            >
+              Quotient Familial (QF)
+            </a>
             <a 
               href="#plafond-plancher-section" 
               onClick={(e) => {
