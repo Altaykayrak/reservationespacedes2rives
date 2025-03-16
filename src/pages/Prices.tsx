@@ -15,22 +15,8 @@ const Prices = () => {
             </p>
           </div>
           <PriceSimulator />
-          <div className="mt-8 p-4 bg-muted rounded-lg text-sm">
-            <h3 className="font-semibold mb-2">Information importante</h3>
-            <p>
-              Les tarifs affichés sont donnés à titre indicatif et calculés sur la base 
-              de pourcentages du quotient familial :
-            </p>
-            <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li>Garderie du matin : 0.15% du QF</li>
-              <li>Périscolaire du soir : 0.20% du QF</li>
-              <li>Accueil de loisirs du mercredi : 0.70% du QF (avec repas) et 0.50% du QF (sans repas)</li>
-              <li>Accueil de loisirs pendant les vacances : 0.80% du QF (avec repas) et 0.50% du QF (sans repas)</li>
-              <li>Club Ado journée (sans repas) : 0.50% du QF</li>
-            </ul>
-          </div>
           
-          <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
+          <div className="mt-8 p-4 bg-muted rounded-lg text-sm">
             <h3 className="font-semibold mb-2">Plancher et plafond du quotient familial</h3>
             <p>
               Afin de garantir une tarification équitable et adaptée aux ressources de chaque famille, 
@@ -52,6 +38,21 @@ const Prices = () => {
               Ces limites permettent d'assurer une répartition équitable des tarifs tout en garantissant 
               un accès aux prestations pour toutes les familles.
             </p>
+          </div>
+          
+          <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
+            <h3 className="font-semibold mb-2">Information importante</h3>
+            <p>
+              Les tarifs affichés sont donnés à titre indicatif et calculés sur la base 
+              de pourcentages du quotient familial :
+            </p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+              <li>Garderie du matin : 0.15% du QF</li>
+              <li>Périscolaire du soir : 0.20% du QF</li>
+              <li>Accueil de loisirs du mercredi : 0.70% du QF (avec repas) et 0.50% du QF (sans repas)</li>
+              <li>Accueil de loisirs pendant les vacances : 0.80% du QF (avec repas) et 0.50% du QF (sans repas)</li>
+              <li>Club Ado journée (sans repas) : 0.50% du QF</li>
+            </ul>
           </div>
         </div>
       </div>
