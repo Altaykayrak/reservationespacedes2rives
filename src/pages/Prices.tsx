@@ -1,10 +1,7 @@
-
 import { Navbar } from "@/components/ui/navbar";
 import { PriceSimulator } from "@/components/prices/PriceSimulator";
-
 const Prices = () => {
-  return (
-    <div>
+  return <div>
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8 text-center">Simulation des tarifs</h1>
@@ -42,13 +39,13 @@ const Prices = () => {
           
           <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
             <div className="bg-green-50 p-3 rounded-lg">
-              <p className="font-medium">Comment obtenir votre quotient familial :</p>
+              <p className="font-semibold">Comment obtenir votre Quotient Familial :</p>
               <p className="mt-1">
                 Vous pouvez obtenir votre QF sur l'application ou le site internet de la CAF, menu "Mon Compte".
               </p>
             </div>
             
-            <h3 className="font-semibold mt-4 mb-2">Formule de calcul du quotient familial</h3>
+            <h3 className="font-semibold mt-4 mb-2">Formule de calcul du Quotient Familial</h3>
             
             <div className="mt-3 flex justify-center">
               <div className="bg-white p-3 rounded-lg text-center">
@@ -76,7 +73,7 @@ const Prices = () => {
             </div>
             
             <div className="mt-4 bg-blue-50 p-3 rounded-lg">
-              <p className="font-medium">Exemple de calcul :</p>
+              <p className="font-semibold">Exemple de calcul :</p>
               <p className="mt-1">Une famille avec 2 enfants et un revenu imposable annuel de 36 000 € :</p>
               <ul className="list-disc pl-8 mt-2 space-y-1">
                 <li>Revenus mensuels : 36 000 € ÷ 12 = 3 000 €</li>
@@ -104,8 +101,6 @@ const Prices = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Prices;
