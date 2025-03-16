@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 const MIN_QF = 300;
 const MAX_QF = 2000;
+
 interface PriceItem {
   name: string;
   percentageOfQF: number;
@@ -15,6 +17,7 @@ interface PriceItem {
   color: string;
   priceUnit: string;
 }
+
 const priceItems: PriceItem[] = [{
   name: "Garderie du matin",
   percentageOfQF: 0.15,
@@ -51,13 +54,16 @@ const priceItems: PriceItem[] = [{
   color: "text-teal-600",
   priceUnit: "par journée"
 }];
+
 export function PriceSimulator() {
   const [qf, setQf] = useState<number>(MIN_QF);
   const [showResults, setShowResults] = useState<boolean>(false);
+
   const handleQfChange = (value: number[]) => {
     setQf(value[0]);
     setShowResults(false);
   };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (!isNaN(value)) {
@@ -73,30 +79,51 @@ export function PriceSimulator() {
     }
     setShowResults(false);
   };
+
   const calculatePrice = (percentageOfQF: number) => {
     return (qf * percentageOfQF / 100).toFixed(2);
   };
-  return <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl">Simulateur de tarifs</CardTitle>
-        <CardDescription>
+
+  return (
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader className="pb-3 md:pb-6">
+        <CardTitle className="text-xl md:text-2xl">Simulateur de tarifs</CardTitle>
+        <CardDescription className="text-sm md:text-base">
           Saisissez votre quotient familial pour calculer les tarifs par enfant
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 md:space-y-6">
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <Label htmlFor="qf">Quotient Familial (QF)</Label>
-            <span className="text-sm font-semibold text-blue-600">
+            <span className="text-xs sm:text-sm font-semibold text-blue-600 mt-1 sm:mt-0">
               Plancher {MIN_QF}€ Plafond {MAX_QF}€
             </span>
           </div>
 
-          <div className="flex gap-4 items-center">
-            <Input id="qf" type="number" min={MIN_QF} max={MAX_QF} value={qf} onChange={handleInputChange} className="w-28" />
-            <span className="text-sm">€</span>
+          <div className="flex flex-col sm:flex-row sm:gap-4 sm:items-center">
+            <div className="flex items-center mb-2 sm:mb-0">
+              <Input 
+                id="qf" 
+                type="number" 
+                min={MIN_QF} 
+                max={MAX_QF} 
+                value={qf} 
+                onChange={handleInputChange} 
+                className="w-24 sm:w-28" 
+              />
+              <span className="text-sm ml-2">€</span>
+            </div>
             <div className="flex-1">
-              <Slider defaultValue={[qf]} min={MIN_QF} max={MAX_QF} step={10} value={[qf]} onValueChange={handleQfChange} className="my-2" />
+              <Slider 
+                defaultValue={[qf]} 
+                min={MIN_QF} 
+                max={MAX_QF} 
+                step={10} 
+                value={[qf]} 
+                onValueChange={handleQfChange} 
+                className="my-2" 
+              />
             </div>
           </div>
         </div>
@@ -105,27 +132,35 @@ export function PriceSimulator() {
           Calculer les tarifs
         </Button>
 
-        {showResults && <div className="rounded-md border mt-6">
+        {showResults && (
+          <div className="rounded-md border mt-4 md:mt-6 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[400px]">Prestation</TableHead>
+                  <TableHead className="w-[60%] md:w-[400px]">Prestation</TableHead>
                   <TableHead className="text-right">Prix par enfant</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {priceItems.map(item => <TableRow key={item.name}>
-                    <TableCell className="font-medium">
-                      <span className={`font-bold ${item.color}`}>{item.name}</span>
+                {priceItems.map(item => (
+                  <TableRow key={item.name}>
+                    <TableCell className="font-medium py-2 md:py-4">
+                      <span className={`font-bold ${item.color} text-xs sm:text-sm`}>{item.name}</span>
                     </TableCell>
-                    <TableCell className="text-right">{calculatePrice(item.percentageOfQF)} € <span className="text-xs text-muted-foreground">{item.priceUnit}</span></TableCell>
-                  </TableRow>)}
+                    <TableCell className="text-right py-2 md:py-4">
+                      {calculatePrice(item.percentageOfQF)} € 
+                      <span className="text-xs text-muted-foreground ml-1">{item.priceUnit}</span>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
-          </div>}
+          </div>
+        )}
       </CardContent>
-      <CardFooter className="text-sm text-muted-foreground">
+      <CardFooter className="text-xs md:text-sm text-muted-foreground flex flex-wrap">
         <p>Note: Ces tarifs sont calculés en fonction de votre quotient familial ({qf}€).</p>
       </CardFooter>
-    </Card>;
+    </Card>
+  );
 }

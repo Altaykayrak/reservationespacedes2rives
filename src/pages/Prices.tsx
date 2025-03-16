@@ -1,43 +1,22 @@
+
 import { Navbar } from "@/components/ui/navbar";
 import { PriceSimulator } from "@/components/prices/PriceSimulator";
+
 const Prices = () => {
-  return <div>
+  return (
+    <div>
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8 text-center">Simulation des tarifs</h1>
+      <div className="container mx-auto px-4 py-6 md:py-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-8 text-center">Simulation des tarifs</h1>
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8 text-center">
-            <p className="text-lg text-muted-foreground">
+          <div className="mb-6 md:mb-8 text-center">
+            <p className="text-base md:text-lg text-muted-foreground">
               Estimez les tarifs applicables en fonction de votre quotient familial.
             </p>
           </div>
           <PriceSimulator />
           
-          <div className="mt-8 p-4 bg-muted rounded-lg text-sm">
-            <h3 className="font-semibold mb-2 text-blue-600">Plancher et Plafond du Quotient Familial</h3>
-            <p>
-              Afin de garantir une tarification équitable et adaptée aux ressources de chaque famille, 
-              notre simulateur de tarifs prend en compte un quotient familial (QF) encadré par un plancher et un plafond.
-            </p>
-            <div className="mt-3 space-y-3">
-              <div>
-                <span className="text-blue-600 font-semibold">🔹 Le Plancher (300 €) :</span> Si votre quotient familial est inférieur à 300 €, 
-                le calcul des tarifs se fera sur cette base minimale. Cela signifie que même si votre QF est plus bas, 
-                les prix seront calculés comme si votre quotient était de 300 €.
-              </div>
-              <div>
-                <span className="text-blue-600 font-semibold">🔹 Le Plafond (2000 €) :</span> À l'inverse, si votre quotient familial dépasse 2000 €, 
-                les tarifs seront calculés sur cette base maximale. Ainsi, au-delà de ce montant, 
-                les prix n'augmenteront plus, même si votre QF est supérieur.
-              </div>
-            </div>
-            <p className="mt-3">
-              Ces limites permettent d'assurer une répartition équitable des tarifs tout en garantissant 
-              un accès aux prestations pour toutes les familles.
-            </p>
-          </div>
-          
-          <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
+          <div className="mt-6 md:mt-8 p-3 md:p-4 bg-muted rounded-lg text-sm">
             <div className="bg-green-50 p-3 rounded-lg">
               <p className="font-semibold text-blue-600">Comment obtenir votre Quotient Familial :</p>
               <p className="mt-1">
@@ -83,7 +62,31 @@ const Prices = () => {
             </div>
           </div>
           
-          <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
+          <div className="mt-4 p-3 md:p-4 bg-muted rounded-lg text-sm">
+            <h3 className="font-semibold mb-2 text-blue-600">Plancher et Plafond du Quotient Familial</h3>
+            <p>
+              Afin de garantir une tarification équitable et adaptée aux ressources de chaque famille, 
+              notre simulateur de tarifs prend en compte un quotient familial (QF) encadré par un plancher et un plafond.
+            </p>
+            <div className="mt-3 space-y-3">
+              <div>
+                <span className="text-blue-600 font-semibold">🔹 Le Plancher (300 €) :</span> Si votre quotient familial est inférieur à 300 €, 
+                le calcul des tarifs se fera sur cette base minimale. Cela signifie que même si votre QF est plus bas, 
+                les prix seront calculés comme si votre quotient était de 300 €.
+              </div>
+              <div>
+                <span className="text-blue-600 font-semibold">🔹 Le Plafond (2000 €) :</span> À l'inverse, si votre quotient familial dépasse 2000 €, 
+                les tarifs seront calculés sur cette base maximale. Ainsi, au-delà de ce montant, 
+                les prix n'augmenteront plus, même si votre QF est supérieur.
+              </div>
+            </div>
+            <p className="mt-3">
+              Ces limites permettent d'assurer une répartition équitable des tarifs tout en garantissant 
+              un accès aux prestations pour toutes les familles.
+            </p>
+          </div>
+          
+          <div className="mt-4 p-3 md:p-4 bg-muted rounded-lg text-sm">
             <h3 className="font-semibold mb-2 text-blue-600">INFORMATION IMPORTANTE</h3>
             <p>
               Les tarifs affichés sont donnés à titre indicatif et calculés sur la base 
@@ -101,6 +104,8 @@ const Prices = () => {
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Prices;
