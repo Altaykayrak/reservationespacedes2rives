@@ -41,14 +41,14 @@ const Prices = () => {
           </div>
           
           <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
-            <h3 className="font-semibold mb-2">Formule de calcul du quotient familial</h3>
-            
-            <div className="mt-2 bg-green-50 p-3 rounded-lg">
+            <div className="bg-green-50 p-3 rounded-lg">
               <p className="font-medium">Comment obtenir votre quotient familial :</p>
               <p className="mt-1">
                 Vous pouvez obtenir votre QF sur l'application ou le site internet de la CAF, menu "Mon Compte".
               </p>
             </div>
+            
+            <h3 className="font-semibold mt-4 mb-2">Formule de calcul du quotient familial</h3>
             
             <div className="mt-3 flex justify-center">
               <div className="bg-white p-3 rounded-lg text-center">
