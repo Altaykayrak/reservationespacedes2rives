@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,35 +13,43 @@ interface PriceItem {
   percentageOfQF: number;
   description?: string;
   color: string;
+  priceUnit: string;
 }
 const priceItems: PriceItem[] = [{
   name: "Garderie du matin",
   percentageOfQF: 0.15,
-  color: "text-blue-600"
+  color: "text-blue-600",
+  priceUnit: "par séance"
 }, {
   name: "Périscolaire du soir",
   percentageOfQF: 0.20,
-  color: "text-green-600"
+  color: "text-green-600",
+  priceUnit: "par séance"
 }, {
   name: "Accueil de loisirs du mercredi (avec repas)",
   percentageOfQF: 0.70,
-  color: "text-purple-600"
+  color: "text-purple-600",
+  priceUnit: "par journée"
 }, {
   name: "Accueil de loisirs du mercredi (sans repas)",
   percentageOfQF: 0.50,
-  color: "text-indigo-600"
+  color: "text-indigo-600",
+  priceUnit: "par journée"
 }, {
   name: "Accueil de loisirs vacances (avec repas)",
   percentageOfQF: 0.80,
-  color: "text-orange-600"
+  color: "text-orange-600",
+  priceUnit: "par journée"
 }, {
   name: "Accueil de loisirs vacances (sans repas)",
   percentageOfQF: 0.50,
-  color: "text-amber-600"
+  color: "text-amber-600",
+  priceUnit: "par journée"
 }, {
   name: "Club Ado journée (sans repas)",
   percentageOfQF: 0.50,
-  color: "text-teal-600"
+  color: "text-teal-600",
+  priceUnit: "par journée"
 }];
 export function PriceSimulator() {
   const [qf, setQf] = useState<number>(MIN_QF);
@@ -109,7 +118,7 @@ export function PriceSimulator() {
                     <TableCell className="font-medium">
                       <span className={`font-bold ${item.color}`}>{item.name}</span>
                     </TableCell>
-                    <TableCell className="text-right">{calculatePrice(item.percentageOfQF)} €</TableCell>
+                    <TableCell className="text-right">{calculatePrice(item.percentageOfQF)} € <span className="text-xs text-muted-foreground">{item.priceUnit}</span></TableCell>
                   </TableRow>)}
               </TableBody>
             </Table>
