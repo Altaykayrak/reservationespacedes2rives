@@ -45,7 +45,7 @@ const Prices = () => {
               </p>
             </div>
             
-            <h3 className="font-semibold mt-4 mb-2">Formule de calcul du Quotient Familial</h3>
+            <h3 className="font-semibold mt-4 mb-2 text-blue-600">Formule de calcul du Quotient Familial</h3>
             
             <div className="mt-3 flex justify-center">
               <div className="bg-white p-3 rounded-lg text-center">
