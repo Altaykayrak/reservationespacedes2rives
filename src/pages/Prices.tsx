@@ -55,7 +55,7 @@ const Prices = () => {
               </div>
             </div>
             
-            <p className="mt-4 font-medium">Explication des éléments :</p>
+            <p className="mt-4 font-semibold text-blue-600">Explication des éléments :</p>
             <div className="mt-2 space-y-3">
               <div>
                 <span className="text-blue-600 font-semibold">🔹 Revenus mensuels du foyer :</span> Il s'agit du revenu imposable annuel du foyer divisé par 12 mois. 
