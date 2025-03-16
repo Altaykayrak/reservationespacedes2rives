@@ -73,7 +73,7 @@ const Prices = () => {
             </div>
             
             <div className="mt-4 bg-blue-50 p-3 rounded-lg">
-              <p className="font-semibold">Exemple de calcul :</p>
+              <p className="font-semibold text-blue-600">Exemple de calcul :</p>
               <p className="mt-1">Une famille avec 2 enfants et un revenu imposable annuel de 36 000 € :</p>
               <ul className="list-disc pl-8 mt-2 space-y-1">
                 <li>Revenus mensuels : 36 000 € ÷ 12 = 3 000 €</li>
