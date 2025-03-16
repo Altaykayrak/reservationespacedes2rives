@@ -189,7 +189,7 @@ export function PriceSimulator() {
         )}
       </CardContent>
       <CardFooter className="text-xs md:text-sm text-muted-foreground flex flex-wrap">
-        <p>Note: Ces tarifs sont calculés en fonction de votre quotient familial ({qf}€).</p>
+        <p>Note: Ces tarifs sont calculés en fonction de votre quotient familial ({qf}€) et un taux d'effort.</p>
       </CardFooter>
     </Card>
   );
