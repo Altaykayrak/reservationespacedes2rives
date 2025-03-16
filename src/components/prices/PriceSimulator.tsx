@@ -5,8 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 const MIN_QF = 300;
 const MAX_QF = 2000;
+
 interface PriceItem {
   name: string;
   percentageOfQF: number;
@@ -42,13 +44,16 @@ const priceItems: PriceItem[] = [{
   percentageOfQF: 0.50,
   color: "text-teal-600"
 }];
+
 export function PriceSimulator() {
   const [qf, setQf] = useState<number>(MIN_QF);
   const [showResults, setShowResults] = useState<boolean>(false);
+
   const handleQfChange = (value: number[]) => {
     setQf(value[0]);
     setShowResults(false);
   };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (!isNaN(value)) {
@@ -64,9 +69,11 @@ export function PriceSimulator() {
     }
     setShowResults(false);
   };
+
   const calculatePrice = (percentageOfQF: number) => {
     return (qf * percentageOfQF / 100).toFixed(2);
   };
+
   return <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl">Simulateur de tarifs</CardTitle>
@@ -79,7 +86,7 @@ export function PriceSimulator() {
           <div className="flex justify-between items-center">
             <Label htmlFor="qf">Quotient Familial (QF)</Label>
             <span className="text-sm text-blue-700">
-              Entre {MIN_QF}€ et {MAX_QF}€
+              Plancher {MIN_QF}€ Plafond {MAX_QF}€
             </span>
           </div>
 
