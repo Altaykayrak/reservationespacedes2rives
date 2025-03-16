@@ -14,7 +14,7 @@ const Prices = () => {
           <PriceSimulator />
           
           <div className="mt-8 p-4 bg-muted rounded-lg text-sm">
-            <h3 className="font-semibold mb-2 text-blue-600">Plancher et plafond du quotient familial</h3>
+            <h3 className="font-semibold mb-2 text-blue-600">Plancher et Plafond du Quotient Familial</h3>
             <p>
               Afin de garantir une tarification équitable et adaptée aux ressources de chaque famille, 
               notre simulateur de tarifs prend en compte un quotient familial (QF) encadré par un plancher et un plafond.
