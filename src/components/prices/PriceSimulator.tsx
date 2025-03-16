@@ -84,6 +84,13 @@ export function PriceSimulator() {
     return (qf * percentageOfQF / 100).toFixed(2);
   };
 
+  const scrollToPlafondSection = () => {
+    const section = document.getElementById('plafond-plancher-section');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="pb-3 md:pb-6">
@@ -96,9 +103,16 @@ export function PriceSimulator() {
         <div className="space-y-2">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <Label htmlFor="qf">Quotient Familial (QF)</Label>
-            <span className="text-xs sm:text-sm font-semibold text-blue-600 mt-1 sm:mt-0">
+            <a 
+              href="#plafond-plancher-section" 
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToPlafondSection();
+              }}
+              className="text-xs sm:text-sm font-semibold text-blue-600 mt-1 sm:mt-0 underline hover:text-blue-800"
+            >
               Plancher {MIN_QF}€ Plafond {MAX_QF}€
-            </span>
+            </a>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:gap-4 sm:items-center">

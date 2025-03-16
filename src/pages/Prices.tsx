@@ -62,7 +62,7 @@ const Prices = () => {
             </div>
           </div>
           
-          <div className="mt-4 p-3 md:p-4 bg-muted rounded-lg text-sm">
+          <div id="plafond-plancher-section" className="mt-4 p-3 md:p-4 bg-muted rounded-lg text-sm">
             <h3 className="font-semibold mb-2 text-blue-600">Plancher et Plafond du Quotient Familial</h3>
             <p>
               Afin de garantir une tarification équitable et adaptée aux ressources de chaque famille, 
