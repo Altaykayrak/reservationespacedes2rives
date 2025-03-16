@@ -26,6 +26,7 @@ import TeenHolidayReservations from "./pages/TeenHolidayReservations";
 import HolidayProgram from "./pages/HolidayProgram";
 import TermsOfService from "./pages/TermsOfService";
 import TermsOfOperation from "./pages/TermsOfOperation";
+import Prices from "./pages/Prices"; // Ajout de la nouvelle page
 import { AdminPage } from "./pages/admin/AdminPage"; // Corrected import
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservations from "./pages/admin/AdminReservations";
@@ -66,6 +67,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/prices" element={<Prices />} /> {/* Nouvelle route */}
             
             {/* Rendez-vous - temporarily disabled */}
             {/* <Route path="/rdv" element={<Rdv />} /> */}

@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +31,7 @@ export function Navbar() {
     { label: "Accueil", href: "/" },
     { label: "Mon profil", href: "/profile" },
     { label: "Mes enfants", href: "/children" },
-    // "RDV Inscription" item removed
+    { label: "Tarifs", href: "/prices" }, // Ajout du lien vers la page des tarifs
     { label: "Réservations vacances", href: "/holiday-reservations" },
     { label: "Réservations Club Ado", href: "/teenholiday-reservations" },
     { label: "Programme vacances", href: "/holiday-program" },
@@ -42,6 +41,7 @@ export function Navbar() {
 
   const publicMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
+    { label: "Tarifs", href: "/prices" }, // Ajout du lien vers la page des tarifs
     { label: "Programme vacances", href: "/holiday-program" },
     { label: "Règlement de fonctionnement", href: "/terms-of-operation" },
     { label: "CGU", href: "/terms-of-service" },
