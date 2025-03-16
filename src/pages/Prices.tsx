@@ -41,6 +41,44 @@ const Prices = () => {
           </div>
           
           <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
+            <h3 className="font-semibold mb-2">Formule de calcul du quotient familial</h3>
+            <div className="mt-3 flex justify-center">
+              <div className="bg-white p-3 rounded-lg text-center">
+                <div className="text-lg font-medium">QF = <div className="border-t border-black mt-1 mb-1"></div></div>
+                <div className="text-sm">Revenus mensuels du foyer</div>
+                <div className="text-sm">Nombre de parts fiscales</div>
+              </div>
+            </div>
+            
+            <p className="mt-4 font-medium">Explication des éléments :</p>
+            <div className="mt-2 space-y-3">
+              <div>
+                <span className="text-blue-600">🔹 Revenus mensuels du foyer :</span> Il s'agit du revenu imposable annuel du foyer divisé par 12 mois. 
+                Il peut inclure les salaires, allocations et autres revenus.
+              </div>
+              <div>
+                <span className="text-blue-600">🔹 Nombre de parts fiscales :</span> Il correspond à la composition de votre foyer, définie selon la grille suivante :
+                <ul className="list-disc pl-8 mt-1 space-y-1">
+                  <li>1 part pour un parent isolé</li>
+                  <li>2 parts pour un couple</li>
+                  <li>+ 0.5 part par enfant à charge jusqu'au deuxième</li>
+                  <li>+ 1 part à partir du troisième enfant</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-blue-50 p-3 rounded-lg">
+              <p className="font-medium">Exemple de calcul :</p>
+              <p className="mt-1">Une famille avec 2 enfants et un revenu imposable annuel de 36 000 € :</p>
+              <ul className="list-disc pl-8 mt-2 space-y-1">
+                <li>Revenus mensuels : 36 000 € ÷ 12 = 3 000 €</li>
+                <li>Nombre de parts fiscales : 2 + 0.5 + 0.5 = 3 parts</li>
+                <li>Quotient familial : 3 000 € ÷ 3 = 1 000 €</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
             <h3 className="font-semibold mb-2">Information importante</h3>
             <p>
               Les tarifs affichés sont donnés à titre indicatif et calculés sur la base 
