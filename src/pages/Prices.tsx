@@ -85,11 +85,13 @@ const Prices = () => {
               de pourcentages du quotient familial :
             </p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li>Garderie du matin : 0.15% du QF</li>
-              <li>Périscolaire du soir : 0.20% du QF</li>
-              <li>Accueil de loisirs du mercredi : 0.70% du QF (avec repas) et 0.50% du QF (sans repas)</li>
-              <li>Accueil de loisirs pendant les vacances : 0.80% du QF (avec repas) et 0.50% du QF (sans repas)</li>
-              <li>Club Ado journée (sans repas) : 0.50% du QF</li>
+              <li><span className="font-bold text-blue-600">Garderie du matin :</span> 0.15% du QF</li>
+              <li><span className="font-bold text-green-600">Périscolaire du soir :</span> 0.20% du QF</li>
+              <li><span className="font-bold text-purple-600">Accueil de loisirs du mercredi (avec repas) :</span> 0.70% du QF</li>
+              <li><span className="font-bold text-indigo-600">Accueil de loisirs du mercredi (sans repas) :</span> 0.50% du QF</li>
+              <li><span className="font-bold text-orange-600">Accueil de loisirs vacances (avec repas) :</span> 0.80% du QF</li>
+              <li><span className="font-bold text-amber-600">Accueil de loisirs vacances (sans repas) :</span> 0.50% du QF</li>
+              <li><span className="font-bold text-teal-600">Club Ado journée (sans repas) :</span> 0.50% du QF</li>
             </ul>
           </div>
         </div>
