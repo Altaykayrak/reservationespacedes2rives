@@ -42,6 +42,14 @@ const Prices = () => {
           
           <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
             <h3 className="font-semibold mb-2">Formule de calcul du quotient familial</h3>
+            
+            <div className="mt-2 bg-green-50 p-3 rounded-lg">
+              <p className="font-medium">Comment obtenir votre quotient familial :</p>
+              <p className="mt-1">
+                Vous pouvez obtenir votre QF sur l'application ou le site internet de la CAF, menu "Mon Compte".
+              </p>
+            </div>
+            
             <div className="mt-3 flex justify-center">
               <div className="bg-white p-3 rounded-lg text-center">
                 <div className="text-lg font-medium">QF = <div className="border-t border-black mt-1 mb-1"></div></div>
@@ -75,13 +83,6 @@ const Prices = () => {
                 <li>Nombre de parts fiscales : 2 + 0.5 + 0.5 = 3 parts</li>
                 <li>Quotient familial : 3 000 € ÷ 3 = 1 000 €</li>
               </ul>
-            </div>
-            
-            <div className="mt-4 bg-green-50 p-3 rounded-lg">
-              <p className="font-medium">Comment obtenir votre quotient familial :</p>
-              <p className="mt-1">
-                Vous pouvez obtenir votre QF sur l'application ou le site internet de la CAF, menu "Mon Compte".
-              </p>
             </div>
           </div>
           
