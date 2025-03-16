@@ -78,7 +78,7 @@ export function PriceSimulator() {
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <Label htmlFor="qf">Quotient Familial (QF)</Label>
-            <span className="text-sm text-blue-700 font-semibold">
+            <span className="text-sm font-semibold text-blue-600">
               Plancher {MIN_QF}€ Plafond {MAX_QF}€
             </span>
           </div>
