@@ -115,7 +115,7 @@ export function PriceSimulator() {
                 e.preventDefault();
                 scrollToObtenirQFSection();
               }}
-              className="font-medium hover:text-blue-600 hover:underline cursor-pointer"
+              className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-800 underline"
             >
               Quotient Familial (QF)
             </a>
