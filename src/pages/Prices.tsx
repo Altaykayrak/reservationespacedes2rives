@@ -62,7 +62,7 @@ const Prices = () => {
                 Il peut inclure les salaires, allocations et autres revenus.
               </div>
               <div>
-                <span className="text-blue-600">🔹 Nombre de parts fiscales :</span> Il correspond à la composition de votre foyer, définie selon la grille suivante :
+                <span className="text-blue-600 font-semibold">🔹 Nombre de parts fiscales :</span> Il correspond à la composition de votre foyer, définie selon la grille suivante :
                 <ul className="list-disc pl-8 mt-1 space-y-1">
                   <li>1 part pour un parent isolé</li>
                   <li>2 parts pour un couple</li>
