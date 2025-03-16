@@ -84,7 +84,7 @@ const Prices = () => {
           </div>
           
           <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
-            <h3 className="font-semibold mb-2">Information importante</h3>
+            <h3 className="font-semibold mb-2">INFORMATION IMPORTANTE</h3>
             <p>
               Les tarifs affichés sont donnés à titre indicatif et calculés sur la base 
               de pourcentages du quotient familial :
