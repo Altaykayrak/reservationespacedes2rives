@@ -76,6 +76,13 @@ const Prices = () => {
                 <li>Quotient familial : 3 000 € ÷ 3 = 1 000 €</li>
               </ul>
             </div>
+            
+            <div className="mt-4 bg-green-50 p-3 rounded-lg">
+              <p className="font-medium">Comment obtenir votre quotient familial :</p>
+              <p className="mt-1">
+                Vous pouvez obtenir votre QF sur l'application ou le site internet de la CAF, menu "Mon Compte".
+              </p>
+            </div>
           </div>
           
           <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
