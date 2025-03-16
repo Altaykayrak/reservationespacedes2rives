@@ -21,12 +21,12 @@ const Prices = () => {
             </p>
             <div className="mt-3 space-y-3">
               <div>
-                <span className="text-blue-600">🔹 Le Plancher (300 €) :</span> Si votre quotient familial est inférieur à 300 €, 
+                <span className="text-blue-600 font-semibold">🔹 Le Plancher (300 €) :</span> Si votre quotient familial est inférieur à 300 €, 
                 le calcul des tarifs se fera sur cette base minimale. Cela signifie que même si votre QF est plus bas, 
                 les prix seront calculés comme si votre quotient était de 300 €.
               </div>
               <div>
-                <span className="text-blue-600">🔹 Le Plafond (2000 €) :</span> À l'inverse, si votre quotient familial dépasse 2000 €, 
+                <span className="text-blue-600 font-semibold">🔹 Le Plafond (2000 €) :</span> À l'inverse, si votre quotient familial dépasse 2000 €, 
                 les tarifs seront calculés sur cette base maximale. Ainsi, au-delà de ce montant, 
                 les prix n'augmenteront plus, même si votre QF est supérieur.
               </div>
