@@ -1,3 +1,4 @@
+
 import { Navbar } from "@/components/ui/navbar";
 import { PriceSimulator } from "@/components/prices/PriceSimulator";
 
@@ -28,7 +29,7 @@ const Prices = () => {
             <div className="mt-3 flex justify-center">
               <div className="bg-white p-3 rounded-lg text-center">
                 <div className="text-lg font-medium">QF = <div className="border-t border-black mt-1 mb-1"></div></div>
-                <div className="text-sm">Revenus mensuels du foyer</div>
+                <div className="text-sm">(Revenus bruts annuels ÷ 12) + Prestations mensuelles</div>
                 <div className="text-sm">Nombre de parts fiscales</div>
               </div>
             </div>
@@ -36,8 +37,10 @@ const Prices = () => {
             <p className="mt-4 font-semibold text-blue-600">Explication des éléments :</p>
             <div className="mt-2 space-y-3">
               <div>
-                <span className="text-blue-600 font-semibold">🔹 Revenus mensuels du foyer :</span> Il s'agit du revenu imposable annuel du foyer divisé par 12 mois. 
-                Il peut inclure les salaires, allocations et autres revenus.
+                <span className="text-blue-600 font-semibold">🔹 Revenus bruts annuels :</span> Ce sont vos revenus annuels avant tout abattement fiscal, divisés par 12 pour obtenir une moyenne mensuelle.
+              </div>
+              <div>
+                <span className="text-blue-600 font-semibold">🔹 Prestations mensuelles :</span> Il s'agit des allocations et aides versées mensuellement par la CAF ou autres organismes.
               </div>
               <div>
                 <span className="text-blue-600 font-semibold">🔹 Nombre de parts fiscales :</span> Il correspond à la composition de votre foyer, définie selon la grille suivante :
@@ -52,11 +55,13 @@ const Prices = () => {
             
             <div className="mt-4 bg-blue-50 p-3 rounded-lg">
               <p className="font-semibold text-blue-600">Exemple de calcul :</p>
-              <p className="mt-1">Une famille avec 2 enfants et un revenu imposable annuel de 36 000 € :</p>
+              <p className="mt-1">Une famille avec 2 enfants, un revenu brut annuel de 36 000 € et des prestations mensuelles de 300 € :</p>
               <ul className="list-disc pl-8 mt-2 space-y-1">
                 <li>Revenus mensuels : 36 000 € ÷ 12 = 3 000 €</li>
+                <li>Prestations mensuelles : 300 €</li>
+                <li>Ressources mensuelles totales : 3 000 € + 300 € = 3 300 €</li>
                 <li>Nombre de parts fiscales : 2 + 0.5 + 0.5 = 3 parts</li>
-                <li>Quotient familial : 3 000 € ÷ 3 = 1 000 €</li>
+                <li>Quotient familial : 3 300 € ÷ 3 = 1 100 €</li>
               </ul>
             </div>
           </div>
