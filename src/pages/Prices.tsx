@@ -25,9 +25,9 @@ const Prices = () => {
             
             <div className="mt-3 flex justify-center">
               <div className="p-3 rounded-lg text-center bg-green-50">
-                
+                <p className="font-semibold text-blue-600 mb-2">Formule de calcul du Quotient Familial :</p>
                 <div className="text-sm">(Revenus bruts annuels ÷ 12) + Prestations mensuelles</div>
-                <div className="text-sm">÷ Nombre de parts fiscales</div>
+                <div className="text-sm">÷ Nombre de parts fiscales</div>
               </div>
             </div>
             
