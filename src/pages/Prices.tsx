@@ -1,10 +1,7 @@
-
 import { Navbar } from "@/components/ui/navbar";
 import { PriceSimulator } from "@/components/prices/PriceSimulator";
-
 const Prices = () => {
-  return (
-    <div>
+  return <div>
       <Navbar />
       <div className="container mx-auto px-4 py-6 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-8 text-center">Simulation des tarifs</h1>
@@ -30,7 +27,7 @@ const Prices = () => {
               <div className="bg-white p-3 rounded-lg text-center">
                 <div className="text-lg font-medium">QF = <div className="border-t border-black mt-1 mb-1"></div></div>
                 <div className="text-sm">(Revenus bruts annuels ÷ 12) + Prestations mensuelles</div>
-                <div className="text-sm">Nombre de parts fiscales</div>
+                <div className="text-sm">÷ Nombre de parts fiscales</div>
               </div>
             </div>
             
@@ -108,8 +105,6 @@ const Prices = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Prices;
