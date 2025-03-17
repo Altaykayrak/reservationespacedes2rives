@@ -57,27 +57,55 @@ const priceItems: PriceItem[] = [{
 
 export function PriceSimulator() {
   const [qf, setQf] = useState<number>(MIN_QF);
+  const [inputValue, setInputValue] = useState<string>(MIN_QF.toString());
   const [showResults, setShowResults] = useState<boolean>(false);
 
   const handleQfChange = (value: number[]) => {
-    setQf(value[0]);
+    const newQf = value[0];
+    setQf(newQf);
+    setInputValue(newQf.toString());
     setShowResults(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value)) {
-      if (value < MIN_QF) {
+    const value = e.target.value;
+    // Allow empty input temporarily during typing
+    setInputValue(value);
+    
+    // Only update QF if it's a valid number within range
+    const numValue = parseInt(value);
+    if (!isNaN(numValue)) {
+      if (numValue < MIN_QF) {
         setQf(MIN_QF);
-      } else if (value > MAX_QF) {
+      } else if (numValue > MAX_QF) {
         setQf(MAX_QF);
       } else {
-        setQf(value);
+        setQf(numValue);
       }
-    } else {
-      setQf(MIN_QF);
     }
+    // Don't update QF if it's not a valid number
+    
     setShowResults(false);
+  };
+
+  const handleInputBlur = () => {
+    // When input loses focus, ensure the displayed value is valid
+    if (inputValue === '' || isNaN(parseInt(inputValue))) {
+      setInputValue(MIN_QF.toString());
+      setQf(MIN_QF);
+    } else {
+      const numValue = parseInt(inputValue);
+      if (numValue < MIN_QF) {
+        setInputValue(MIN_QF.toString());
+        setQf(MIN_QF);
+      } else if (numValue > MAX_QF) {
+        setInputValue(MAX_QF.toString());
+        setQf(MAX_QF);
+      } else {
+        setInputValue(numValue.toString());
+        setQf(numValue);
+      }
+    }
   };
 
   const calculatePrice = (percentageOfQF: number) => {
@@ -145,8 +173,9 @@ export function PriceSimulator() {
                 type="number" 
                 min={MIN_QF} 
                 max={MAX_QF} 
-                value={qf} 
-                onChange={handleInputChange} 
+                value={inputValue} 
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
                 className="w-24 sm:w-28" 
               />
               <span className="text-sm ml-2">€</span>
