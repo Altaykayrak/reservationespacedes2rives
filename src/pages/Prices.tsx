@@ -24,8 +24,8 @@ const Prices = () => {
             <h3 className="font-semibold mt-4 mb-2 text-blue-600">Formule de calcul du Quotient Familial</h3>
             
             <div className="mt-3 flex justify-center">
-              <div className="bg-white p-3 rounded-lg text-center">
-                <div className="text-lg font-medium">QF = <div className="border-t border-black mt-1 mb-1"></div></div>
+              <div className="p-3 rounded-lg text-center bg-green-50">
+                
                 <div className="text-sm">(Revenus bruts annuels ÷ 12) + Prestations mensuelles</div>
                 <div className="text-sm">÷ Nombre de parts fiscales</div>
               </div>
