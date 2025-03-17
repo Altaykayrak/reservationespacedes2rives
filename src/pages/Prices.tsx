@@ -1,3 +1,4 @@
+
 import { Navbar } from "@/components/ui/navbar";
 import { PriceSimulator } from "@/components/prices/PriceSimulator";
 const Prices = () => {
@@ -20,8 +21,6 @@ const Prices = () => {
                 Vous pouvez obtenir votre QF sur l'application ou le site internet de la CAF, menu "Mon Compte".
               </p>
             </div>
-            
-            
             
             <div className="mt-3 flex justify-center">
               <div className="p-3 rounded-lg text-center bg-green-50">

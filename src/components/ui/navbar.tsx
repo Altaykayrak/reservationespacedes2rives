@@ -32,7 +32,7 @@ export function Navbar() {
     { label: "Accueil", href: "/" },
     { label: "Mon profil", href: "/profile" },
     { label: "Mes enfants", href: "/children" },
-    // Removed { label: "Tarifs", href: "/prices" }
+    { label: "Simulateur de tarifs", href: "/prices" },
     { label: "Réservations vacances", href: "/holiday-reservations" },
     { label: "Réservations Club Ado", href: "/teenholiday-reservations" },
     { label: "Programme vacances", href: "/holiday-program" },
@@ -42,7 +42,7 @@ export function Navbar() {
 
   const publicMenuItems: NavItem[] = [
     { label: "Accueil", href: "/" },
-    // Removed { label: "Tarifs", href: "/prices" }
+    { label: "Simulateur de tarifs", href: "/prices" },
     { label: "Programme vacances", href: "/holiday-program" },
     { label: "Règlement de fonctionnement", href: "/terms-of-operation" },
     { label: "CGU", href: "/terms-of-service" },
