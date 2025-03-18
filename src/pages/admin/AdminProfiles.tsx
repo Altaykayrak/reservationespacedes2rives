@@ -32,7 +32,7 @@ const AdminProfiles = () => {
     setLoading(true);
     setError(null);
 
-    console.log("Fetching profiles from profiles_with_emails view");
+    console.log("Fetching profiles...");
 
     try {
       // Verify admin status first
@@ -43,48 +43,89 @@ const AdminProfiles = () => {
         return;
       }
 
+      console.log("Got session, checking admin status:", session.user.id);
       const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin', { user_id: session.user.id });
-      if (adminError || !isAdmin) {
-        console.error("Error checking admin status or user is not admin:", adminError);
+      
+      if (adminError) {
+        console.error("Error checking admin status:", adminError);
+        setError("Erreur lors de la vérification des droits administrateur");
+        setLoading(false);
+        return;
+      }
+      
+      console.log("Admin check result:", isAdmin);
+      
+      if (!isAdmin) {
+        console.error("User is not an admin");
         setError("Vous n'avez pas les droits d'administrateur");
         setLoading(false);
         return;
       }
 
-      console.log("Admin check passed, querying profiles_with_emails");
+      console.log("Admin check passed, fetching profiles directly");
 
-      // Query from profiles_with_emails view
-      let query = supabase
-        .from("profiles_with_emails")
+      // Fetch profiles data first
+      let profilesQuery = supabase
+        .from("profiles")
         .select("*");
 
       if (searchQuery) {
-        query = query.ilike("first_name", `%${searchQuery}%`);
+        profilesQuery = profilesQuery.ilike("first_name", `%${searchQuery}%`);
       }
 
-      query = query.order("created_at", { ascending: false });
+      profilesQuery = profilesQuery.order("created_at", { ascending: false });
 
       if (automaticPaymentFilter !== "all") {
-        query = query.eq("automatic_payment", automaticPaymentFilter);
+        profilesQuery = profilesQuery.eq("automatic_payment", automaticPaymentFilter);
       }
 
       if (waitingFilter !== "all") {
-        query = query.eq("is_waiting", waitingFilter);
+        profilesQuery = profilesQuery.eq("is_waiting", waitingFilter);
       }
 
       if (closedFilter !== "all") {
-        query = query.eq("is_closed", closedFilter);
+        profilesQuery = profilesQuery.eq("is_closed", closedFilter);
       }
 
-      const { data, error } = await query;
+      const { data: profilesData, error: profilesError } = await profilesQuery;
 
-      if (error) {
-        console.error("Error fetching profiles:", error);
-        setError(error.message);
-        toast.error(`Erreur lors de la récupération des profils: ${error.message}`);
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        setError(`Erreur lors de la récupération des profils: ${profilesError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      console.log("Profiles fetched successfully:", profilesData?.length || 0, "profiles");
+
+      // Now fetch emails from auth.users table using admin RPC function
+      if (profilesData && profilesData.length > 0) {
+        const userIds = profilesData.map(profile => profile.id);
+        console.log("Fetching emails for user IDs:", userIds);
+        
+        const { data: emailsData, error: emailsError } = await supabase.rpc('get_user_emails', { user_ids: userIds });
+        
+        if (emailsError) {
+          console.error("Error fetching emails:", emailsError);
+          // Continue with profiles data but no emails
+          setProfiles(profilesData);
+        } else if (emailsData) {
+          console.log("Emails fetched successfully:", emailsData.length, "emails");
+          // Combine profiles with emails
+          const profilesWithEmails = profilesData.map(profile => {
+            const userEmail = emailsData.find(item => item.id === profile.id);
+            return {
+              ...profile,
+              email: userEmail ? userEmail.email : 'Email non disponible'
+            };
+          });
+          setProfiles(profilesWithEmails);
+        } else {
+          // If no emails data, just use profiles
+          setProfiles(profilesData);
+        }
       } else {
-        console.log("Profiles fetched successfully:", data?.length || 0, "profiles");
-        setProfiles(data || []);
+        setProfiles([]);
       }
     } catch (error) {
       console.error("Exception in fetchProfiles:", error);
