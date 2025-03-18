@@ -48,7 +48,10 @@ export default function AdminLogin() {
 
           // Ne rediriger que si l'utilisateur est admin
           if (isAdmin) {
+            console.log("Admin user authenticated, redirecting to admin panel");
             navigate("/admin");
+          } else {
+            console.log("User authenticated but not admin, staying on login page");
           }
         }
         setIsLoading(false);

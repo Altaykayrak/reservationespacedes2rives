@@ -15,14 +15,26 @@ export function useRdvAdmin() {
     async function checkAdmin() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("No user found");
+        if (!user) {
+          console.error("No user found when checking admin status");
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
         
         const { data, error } = await supabase.rpc('is_admin', { user_id: user.id });
-        if (error) throw error;
-        setIsAdmin(!!data);
+        if (error) {
+          console.error("Error checking admin status:", error);
+          setIsAdmin(false);
+        } else {
+          console.log("Admin status check result:", data);
+          setIsAdmin(!!data);
+        }
       } catch (error) {
         console.error("Error checking admin status:", error);
         setIsAdmin(false);
+      } finally {
+        setLoading(false);
       }
     }
     
@@ -32,10 +44,16 @@ export function useRdvAdmin() {
   // Fetch all rdv
   useEffect(() => {
     async function fetchRdv() {
-      if (!isAdmin) return;
+      if (!isAdmin) {
+        console.log("User is not admin, not fetching RDV data");
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);
+        console.log("Fetching RDV data for admin user");
+        
         // Fetch RDV data without the profiles join
         const { data, error } = await supabase
           .from('rdv')
@@ -43,7 +61,12 @@ export function useRdvAdmin() {
           .order('date')
           .order('heure_debut');
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching RDVs:", error);
+          throw error;
+        }
+        
+        console.log("RDV data fetched successfully:", data?.length || 0, "records");
         
         // Now fetch user profiles data separately for reserved appointments
         const reservedRdvs = data.filter(rdv => rdv.status === 'réservé' && rdv.user_id);
@@ -53,6 +76,8 @@ export function useRdvAdmin() {
         
         // Only fetch profiles if there are any reserved appointments
         if (reservedRdvs.length > 0) {
+          console.log("Fetching profiles for", reservedRdvs.length, "reserved appointments");
+          
           // Fetch profiles for reserved appointments
           const userIds = reservedRdvs.map(rdv => rdv.user_id);
           const { data: profilesData, error: profilesError } = await supabase
@@ -63,6 +88,8 @@ export function useRdvAdmin() {
           if (profilesError) {
             console.error("Error fetching profiles:", profilesError);
           } else if (profilesData) {
+            console.log("Profile data fetched successfully:", profilesData.length, "profiles");
+            
             // Match profiles to RDVs
             results = data.map(rdv => {
               if (rdv.user_id) {
