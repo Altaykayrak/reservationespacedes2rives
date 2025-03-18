@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -33,35 +32,72 @@ const AdminProfiles = () => {
     setLoading(true);
     setError(null);
 
-    // Query from profiles_with_emails view instead of profiles table
-    let query = supabase
-      .from("profiles_with_emails")
-      .select("*")
-      .ilike("first_name", `%${searchQuery}%`)
-      .order("created_at", { ascending: false });
+    console.log("Fetching profiles from profiles_with_emails view");
 
-    if (automaticPaymentFilter !== "all") {
-      query = query.eq("automatic_payment", automaticPaymentFilter);
+    try {
+      // Verify admin status first
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setError("Aucune session utilisateur trouvée");
+        setLoading(false);
+        return;
+      }
+
+      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin', { user_id: session.user.id });
+      if (adminError || !isAdmin) {
+        console.error("Error checking admin status or user is not admin:", adminError);
+        setError("Vous n'avez pas les droits d'administrateur");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Admin check passed, querying profiles_with_emails");
+
+      // Query from profiles_with_emails view
+      let query = supabase
+        .from("profiles_with_emails")
+        .select("*");
+
+      if (searchQuery) {
+        query = query.ilike("first_name", `%${searchQuery}%`);
+      }
+
+      query = query.order("created_at", { ascending: false });
+
+      if (automaticPaymentFilter !== "all") {
+        query = query.eq("automatic_payment", automaticPaymentFilter);
+      }
+
+      if (waitingFilter !== "all") {
+        query = query.eq("is_waiting", waitingFilter);
+      }
+
+      if (closedFilter !== "all") {
+        query = query.eq("is_closed", closedFilter);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching profiles:", error);
+        setError(error.message);
+        toast.error(`Erreur lors de la récupération des profils: ${error.message}`);
+      } else {
+        console.log("Profiles fetched successfully:", data?.length || 0, "profiles");
+        setProfiles(data || []);
+      }
+    } catch (error) {
+      console.error("Exception in fetchProfiles:", error);
+      if (error instanceof Error) {
+        setError(error.message);
+        toast.error(`Erreur: ${error.message}`);
+      } else {
+        setError("Une erreur inconnue est survenue");
+        toast.error("Une erreur inconnue est survenue");
+      }
+    } finally {
+      setLoading(false);
     }
-
-    if (waitingFilter !== "all") {
-      query = query.eq("is_waiting", waitingFilter);
-    }
-
-    if (closedFilter !== "all") {
-      query = query.eq("is_closed", closedFilter);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      setError(error.message);
-      toast.error(`Erreur lors de la récupération des profils: ${error.message}`);
-    } else {
-      setProfiles(data || []);
-    }
-
-    setLoading(false);
   };
 
   const handleAutomaticPaymentChange = async (id: string, automatic_payment: boolean) => {

@@ -1,4 +1,3 @@
-
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,7 +41,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
             console.error("Error checking admin role:", adminError);
             setIsAuthenticated(false);
           } else {
-            setIsAuthenticated(isAdmin);
+            console.log("Admin check result in ProtectedRoute:", isAdmin);
+            setIsAuthenticated(!!isAdmin);
           }
           
           setLoading(false);
