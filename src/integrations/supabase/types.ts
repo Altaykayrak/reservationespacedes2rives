@@ -624,6 +624,15 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["school_class_group"]
       }
+      get_user_emails: {
+        Args: {
+          user_ids: string[]
+        }
+        Returns: {
+          id: string
+          email: string
+        }[]
+      }
       is_admin: {
         Args: {
           user_id: string

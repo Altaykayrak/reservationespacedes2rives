@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,6 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { exportProfilesToPDF } from "@/components/admin/profiles/export/profilesPdfExport";
+
+interface UserEmail {
+  id: string;
+  email: string;
+}
 
 const AdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
@@ -103,13 +109,21 @@ const AdminProfiles = () => {
         const userIds = profilesData.map(profile => profile.id);
         console.log("Fetching emails for user IDs:", userIds);
         
-        const { data: emailsData, error: emailsError } = await supabase.rpc('get_user_emails', { user_ids: userIds });
+        // Utilisation correcte de la fonction RPC en TypeScript
+        const { data: emailsData, error: emailsError } = await supabase.rpc<UserEmail>(
+          'get_user_emails', 
+          { user_ids: userIds }
+        );
         
         if (emailsError) {
           console.error("Error fetching emails:", emailsError);
           // Continue with profiles data but no emails
-          setProfiles(profilesData);
-        } else if (emailsData) {
+          const profilesWithDefaultEmails = profilesData.map(profile => ({
+            ...profile,
+            email: 'Email non disponible'
+          }));
+          setProfiles(profilesWithDefaultEmails);
+        } else if (emailsData && Array.isArray(emailsData)) {
           console.log("Emails fetched successfully:", emailsData.length, "emails");
           // Combine profiles with emails
           const profilesWithEmails = profilesData.map(profile => {
@@ -121,8 +135,12 @@ const AdminProfiles = () => {
           });
           setProfiles(profilesWithEmails);
         } else {
-          // If no emails data, just use profiles
-          setProfiles(profilesData);
+          // If no emails data, just use profiles with a default email
+          const profilesWithDefaultEmails = profilesData.map(profile => ({
+            ...profile,
+            email: 'Email non disponible'
+          }));
+          setProfiles(profilesWithDefaultEmails);
         }
       } else {
         setProfiles([]);
