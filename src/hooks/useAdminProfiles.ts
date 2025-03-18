@@ -98,8 +98,8 @@ export const useAdminProfiles = () => {
         const userIds = profilesData.map(profile => profile.id);
         console.log("Fetching emails for user IDs:", userIds);
         
-        // Utilisation correcte de la fonction RPC en TypeScript
-        const { data: emailsData, error: emailsError } = await supabase.rpc<UserEmail>(
+        // Correction: Ajouter le deuxième argument de type (ici void pour les paramètres de la fonction)
+        const { data: emailsData, error: emailsError } = await supabase.rpc<UserEmail[], { user_ids: string[] }>(
           'get_user_emails', 
           { user_ids: userIds }
         );
