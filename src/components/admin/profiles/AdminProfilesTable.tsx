@@ -23,7 +23,6 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
         <TableRow>
           <TableHead>Nom</TableHead>
           <TableHead>Prénom</TableHead>
-          <TableHead>Email</TableHead>
           <TableHead>Prélèvement automatique</TableHead>
           <TableHead>En attente</TableHead>
           <TableHead>Fermé</TableHead>
@@ -34,7 +33,6 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
           <TableRow key={profile.id}>
             <TableCell>{profile.last_name}</TableCell>
             <TableCell>{profile.first_name}</TableCell>
-            <TableCell>{profile.email}</TableCell>
             <TableCell>
               <Switch
                 checked={profile.automatic_payment}

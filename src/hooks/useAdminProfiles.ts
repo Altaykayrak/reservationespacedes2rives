@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
@@ -98,7 +97,7 @@ export const useAdminProfiles = () => {
         const userIds = profilesData.map(profile => profile.id);
         console.log("Fetching emails for user IDs:", userIds);
         
-        const { data: emailsData, error: emailsError } = await supabase.rpc<UserEmail[]>(
+        const { data: emailsData, error: emailsError } = await supabase.rpc<UserEmail>(
           'get_user_emails', 
           { user_ids: userIds }
         );
@@ -106,29 +105,13 @@ export const useAdminProfiles = () => {
         if (emailsError) {
           console.error("Error fetching emails:", emailsError);
           // Continue with profiles data but no emails
-          const profilesWithDefaultEmails = profilesData.map(profile => ({
-            ...profile,
-            email: 'Email non disponible'
-          }));
-          setProfiles(profilesWithDefaultEmails);
+          setProfiles(profilesData);
         } else if (emailsData && Array.isArray(emailsData)) {
           console.log("Emails fetched successfully:", emailsData.length, "emails");
-          // Combine profiles with emails
-          const profilesWithEmails = profilesData.map(profile => {
-            const userEmail = emailsData.find(item => item.id === profile.id);
-            return {
-              ...profile,
-              email: userEmail ? userEmail.email : 'Email non disponible'
-            };
-          });
-          setProfiles(profilesWithEmails);
+          // Since we're not displaying emails, we just set the profiles without emails
+          setProfiles(profilesData);
         } else {
-          // If no emails data, just use profiles with a default email
-          const profilesWithDefaultEmails = profilesData.map(profile => ({
-            ...profile,
-            email: 'Email non disponible'
-          }));
-          setProfiles(profilesWithDefaultEmails);
+          setProfiles(profilesData);
         }
       } else {
         setProfiles([]);

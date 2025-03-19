@@ -24,7 +24,6 @@ export const exportProfilesToPDF = (profiles: ProfileData[]) => {
   const headers = [
     "Nom",
     "Prénom",
-    "Email",
     "Prélèvement automatique",
     "En attente",
     "Fermé",
@@ -35,7 +34,6 @@ export const exportProfilesToPDF = (profiles: ProfileData[]) => {
   const tableData = profiles.map(profile => [
     profile.last_name || "-",
     profile.first_name || "-",
-    profile.email || "-",
     profile.automatic_payment ? "Oui" : "Non",
     profile.is_waiting ? "Oui" : "Non",
     profile.is_closed ? "Oui" : "Non",
@@ -47,7 +45,6 @@ export const exportProfilesToPDF = (profiles: ProfileData[]) => {
   tableData.push([
     "TOTAL",
     "",
-    `${profiles.length} utilisateurs`,
     `${totals.automaticPayment} prélèvements auto.`,
     `${totals.waiting} en attente`,
     `${totals.closed} fermés`,
