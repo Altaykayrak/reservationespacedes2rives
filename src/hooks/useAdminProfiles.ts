@@ -1,7 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { toast } from "sonner";
+
+interface UserEmail {
+  id: string;
+  email: string;
+}
 
 export const useAdminProfiles = () => {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
@@ -51,11 +57,11 @@ export const useAdminProfiles = () => {
         return;
       }
 
-      console.log("Admin check passed, fetching profiles from profiles_with_emails view");
+      console.log("Admin check passed, fetching profiles directly");
 
-      // Fetch profiles from the profiles_with_emails view which already includes email addresses
+      // Fetch profiles data first
       let profilesQuery = supabase
-        .from("profiles_with_emails")
+        .from("profiles")
         .select("*");
 
       if (searchQuery) {
@@ -86,10 +92,44 @@ export const useAdminProfiles = () => {
       }
 
       console.log("Profiles fetched successfully:", profilesData?.length || 0, "profiles");
-      
-      if (profilesData) {
-        // We already have the emails in the profiles_with_emails view
-        setProfiles(profilesData as ProfileData[]);
+
+      // Now fetch emails from auth.users table using admin RPC function
+      if (profilesData && profilesData.length > 0) {
+        const userIds = profilesData.map(profile => profile.id);
+        console.log("Fetching emails for user IDs:", userIds);
+        
+        const { data: emailsData, error: emailsError } = await supabase.rpc<UserEmail[]>(
+          'get_user_emails', 
+          { user_ids: userIds }
+        );
+        
+        if (emailsError) {
+          console.error("Error fetching emails:", emailsError);
+          // Continue with profiles data but no emails
+          const profilesWithDefaultEmails = profilesData.map(profile => ({
+            ...profile,
+            email: 'Email non disponible'
+          }));
+          setProfiles(profilesWithDefaultEmails);
+        } else if (emailsData && Array.isArray(emailsData)) {
+          console.log("Emails fetched successfully:", emailsData.length, "emails");
+          // Combine profiles with emails
+          const profilesWithEmails = profilesData.map(profile => {
+            const userEmail = emailsData.find(item => item.id === profile.id);
+            return {
+              ...profile,
+              email: userEmail ? userEmail.email : 'Email non disponible'
+            };
+          });
+          setProfiles(profilesWithEmails);
+        } else {
+          // If no emails data, just use profiles with a default email
+          const profilesWithDefaultEmails = profilesData.map(profile => ({
+            ...profile,
+            email: 'Email non disponible'
+          }));
+          setProfiles(profilesWithDefaultEmails);
+        }
       } else {
         setProfiles([]);
       }
