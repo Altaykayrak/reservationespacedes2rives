@@ -64,7 +64,8 @@ export const useAdminProfiles = () => {
         .select("*");
 
       if (searchQuery) {
-        profilesQuery = profilesQuery.ilike("first_name", `%${searchQuery}%`);
+        // Changed from first_name to last_name for search
+        profilesQuery = profilesQuery.ilike("last_name", `%${searchQuery}%`);
       }
 
       // Order by last_name alphabetically

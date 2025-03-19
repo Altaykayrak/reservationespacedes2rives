@@ -32,7 +32,7 @@ export const AdminProfilesFilters: React.FC<AdminProfilesFiltersProps> = ({
         <Input
           type="text"
           id="search"
-          placeholder="Rechercher..."
+          placeholder="Rechercher par nom..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
