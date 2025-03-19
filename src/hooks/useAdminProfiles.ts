@@ -67,7 +67,8 @@ export const useAdminProfiles = () => {
         profilesQuery = profilesQuery.ilike("first_name", `%${searchQuery}%`);
       }
 
-      profilesQuery = profilesQuery.order("created_at", { ascending: false });
+      // Order by last_name alphabetically
+      profilesQuery = profilesQuery.order("last_name", { ascending: true });
 
       if (automaticPaymentFilter !== "all") {
         profilesQuery = profilesQuery.eq("automatic_payment", automaticPaymentFilter);
@@ -97,22 +98,14 @@ export const useAdminProfiles = () => {
         const userIds = profilesData.map(profile => profile.id);
         console.log("Fetching emails for user IDs:", userIds);
         
-        const { data: emailsData, error: emailsError } = await supabase.rpc<UserEmail>(
-          'get_user_emails', 
-          { user_ids: userIds }
-        );
+        // We're not using the emails anymore, so we can skip this step,
+        // but we need to add the email property to satisfy the ProfileData type
+        const profilesWithEmails = profilesData.map(profile => ({
+          ...profile,
+          email: '' // Adding empty email to satisfy the ProfileData type
+        }));
         
-        if (emailsError) {
-          console.error("Error fetching emails:", emailsError);
-          // Continue with profiles data but no emails
-          setProfiles(profilesData);
-        } else if (emailsData && Array.isArray(emailsData)) {
-          console.log("Emails fetched successfully:", emailsData.length, "emails");
-          // Since we're not displaying emails, we just set the profiles without emails
-          setProfiles(profilesData);
-        } else {
-          setProfiles(profilesData);
-        }
+        setProfiles(profilesWithEmails);
       } else {
         setProfiles([]);
       }
