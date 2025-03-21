@@ -13,6 +13,8 @@ interface AdminProfilesFiltersProps {
   setWaitingFilter: (value: "all" | boolean) => void;
   closedFilter: "all" | boolean;
   setClosedFilter: (value: "all" | boolean) => void;
+  hasReservationsFilter: "all" | boolean;
+  setHasReservationsFilter: (value: "all" | boolean) => void;
 }
 
 export const AdminProfilesFilters: React.FC<AdminProfilesFiltersProps> = ({
@@ -24,9 +26,11 @@ export const AdminProfilesFilters: React.FC<AdminProfilesFiltersProps> = ({
   setWaitingFilter,
   closedFilter,
   setClosedFilter,
+  hasReservationsFilter,
+  setHasReservationsFilter,
 }) => {
   return (
-    <div className="grid gap-4 mb-4 grid-cols-1 md:grid-cols-4">
+    <div className="grid gap-4 mb-4 grid-cols-1 md:grid-cols-5">
       <div>
         <Label htmlFor="search">Rechercher par nom:</Label>
         <Input
@@ -74,6 +78,22 @@ export const AdminProfilesFilters: React.FC<AdminProfilesFiltersProps> = ({
         <Select 
           value={closedFilter.toString()} 
           onValueChange={(value) => setClosedFilter(value === "all" ? "all" : value === "true")}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Tous" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous</SelectItem>
+            <SelectItem value="true">Oui</SelectItem>
+            <SelectItem value="false">Non</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Avec réservations:</Label>
+        <Select 
+          value={hasReservationsFilter.toString()} 
+          onValueChange={(value) => setHasReservationsFilter(value === "all" ? "all" : value === "true")}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Tous" />

@@ -19,6 +19,8 @@ const AdminProfiles = () => {
     setWaitingFilter,
     closedFilter,
     setClosedFilter,
+    hasReservationsFilter,
+    setHasReservationsFilter,
     searchQuery,
     setSearchQuery,
     bulkActionLoading,
@@ -47,6 +49,8 @@ const AdminProfiles = () => {
               setWaitingFilter={setWaitingFilter}
               closedFilter={closedFilter}
               setClosedFilter={setClosedFilter}
+              hasReservationsFilter={hasReservationsFilter}
+              setHasReservationsFilter={setHasReservationsFilter}
             />
 
             <AdminProfilesStatus loading={loading} error={error} />

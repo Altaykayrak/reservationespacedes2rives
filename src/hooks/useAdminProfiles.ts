@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
@@ -15,12 +16,13 @@ export const useAdminProfiles = () => {
   const [automaticPaymentFilter, setAutomaticPaymentFilter] = useState<"all" | boolean>("all");
   const [waitingFilter, setWaitingFilter] = useState<"all" | boolean>("all");
   const [closedFilter, setClosedFilter] = useState<"all" | boolean>("all");
+  const [hasReservationsFilter, setHasReservationsFilter] = useState<"all" | boolean>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   useEffect(() => {
     fetchProfiles();
-  }, [automaticPaymentFilter, waitingFilter, closedFilter, searchQuery]);
+  }, [automaticPaymentFilter, waitingFilter, closedFilter, hasReservationsFilter, searchQuery]);
 
   const fetchProfiles = async () => {
     setLoading(true);
@@ -58,7 +60,70 @@ export const useAdminProfiles = () => {
 
       console.log("Admin check passed, fetching profiles directly");
 
-      // Fetch profiles data first
+      // Si le filtre de réservation est activé, nous devons faire une requête spéciale
+      if (hasReservationsFilter !== "all") {
+        // Récupérer les IDs des profils ayant des réservations
+        const { data: profilesWithReservations, error: reservationsError } = await supabase
+          .rpc('get_profiles_with_reservations', { has_reservations: hasReservationsFilter });
+
+        if (reservationsError) {
+          console.error("Error fetching profiles with reservations:", reservationsError);
+          setError(`Erreur lors de la récupération des profils avec réservations: ${reservationsError.message}`);
+          setLoading(false);
+          return;
+        }
+
+        if (!profilesWithReservations || profilesWithReservations.length === 0) {
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+
+        // Récupérer les données complètes des profils ayant des réservations
+        let profilesQuery = supabase
+          .from("profiles")
+          .select("*")
+          .in('id', profilesWithReservations);
+
+        if (searchQuery) {
+          profilesQuery = profilesQuery.ilike("last_name", `%${searchQuery}%`);
+        }
+
+        if (automaticPaymentFilter !== "all") {
+          profilesQuery = profilesQuery.eq("automatic_payment", automaticPaymentFilter);
+        }
+
+        if (waitingFilter !== "all") {
+          profilesQuery = profilesQuery.eq("is_waiting", waitingFilter);
+        }
+
+        if (closedFilter !== "all") {
+          profilesQuery = profilesQuery.eq("is_closed", closedFilter);
+        }
+
+        // Order by last_name alphabetically
+        profilesQuery = profilesQuery.order("last_name", { ascending: true });
+
+        const { data: profilesData, error: profilesError } = await profilesQuery;
+
+        if (profilesError) {
+          console.error("Error fetching filtered profiles:", profilesError);
+          setError(`Erreur lors de la récupération des profils: ${profilesError.message}`);
+          setLoading(false);
+          return;
+        }
+
+        const profilesWithEmails = profilesData?.map(profile => ({
+          ...profile,
+          email: '' // Adding empty email to satisfy the ProfileData type
+        })) || [];
+
+        setProfiles(profilesWithEmails);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch profiles data first (cas standard sans filtre de réservation)
       let profilesQuery = supabase
         .from("profiles")
         .select("*");
@@ -94,22 +159,13 @@ export const useAdminProfiles = () => {
 
       console.log("Profiles fetched successfully:", profilesData?.length || 0, "profiles");
 
-      // Now fetch emails from auth.users table using admin RPC function
-      if (profilesData && profilesData.length > 0) {
-        const userIds = profilesData.map(profile => profile.id);
-        console.log("Fetching emails for user IDs:", userIds);
-        
-        // We're not using the emails anymore, so we can skip this step,
-        // but we need to add the email property to satisfy the ProfileData type
-        const profilesWithEmails = profilesData.map(profile => ({
-          ...profile,
-          email: '' // Adding empty email to satisfy the ProfileData type
-        }));
-        
-        setProfiles(profilesWithEmails);
-      } else {
-        setProfiles([]);
-      }
+      // Ajouter un email vide pour satisfaire le type ProfileData
+      const profilesWithEmails = profilesData?.map(profile => ({
+        ...profile,
+        email: '' // Adding empty email to satisfy the ProfileData type
+      })) || [];
+      
+      setProfiles(profilesWithEmails);
     } catch (error) {
       console.error("Exception in fetchProfiles:", error);
       if (error instanceof Error) {
@@ -222,6 +278,8 @@ export const useAdminProfiles = () => {
     setWaitingFilter,
     closedFilter,
     setClosedFilter,
+    hasReservationsFilter,
+    setHasReservationsFilter,
     searchQuery,
     setSearchQuery,
     bulkActionLoading,
