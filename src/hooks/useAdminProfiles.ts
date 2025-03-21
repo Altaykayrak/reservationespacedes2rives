@@ -64,7 +64,7 @@ export const useAdminProfiles = () => {
       if (hasReservationsFilter !== "all") {
         // Récupérer les IDs des profils ayant des réservations
         const { data: profilesWithReservations, error: reservationsError } = await supabase
-          .rpc('get_profiles_with_reservations', { has_reservations: hasReservationsFilter });
+          .rpc('get_profiles_with_reservations', { has_reservations: hasReservationsFilter === true });
 
         if (reservationsError) {
           console.error("Error fetching profiles with reservations:", reservationsError);
@@ -73,7 +73,7 @@ export const useAdminProfiles = () => {
           return;
         }
 
-        if (!profilesWithReservations || profilesWithReservations.length === 0) {
+        if (!profilesWithReservations || (Array.isArray(profilesWithReservations) && profilesWithReservations.length === 0)) {
           setProfiles([]);
           setLoading(false);
           return;
@@ -82,8 +82,11 @@ export const useAdminProfiles = () => {
         // Récupérer les données complètes des profils ayant des réservations
         let profilesQuery = supabase
           .from("profiles")
-          .select("*")
-          .in('id', profilesWithReservations);
+          .select("*");
+
+        if (Array.isArray(profilesWithReservations)) {
+          profilesQuery = profilesQuery.in('id', profilesWithReservations);
+        }
 
         if (searchQuery) {
           profilesQuery = profilesQuery.ilike("last_name", `%${searchQuery}%`);

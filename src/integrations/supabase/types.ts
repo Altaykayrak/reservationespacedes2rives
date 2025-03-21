@@ -618,6 +618,12 @@ export type Database = {
         }
         Returns: number
       }
+      get_profiles_with_reservations: {
+        Args: {
+          has_reservations: boolean
+        }
+        Returns: string[]
+      }
       get_school_class_group: {
         Args: {
           school_class: string
