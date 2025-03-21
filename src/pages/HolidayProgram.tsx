@@ -1,8 +1,6 @@
-
 import { BookOpen, Calendar, Info } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useState, useEffect } from "react";
-
 const HolidayProgram = () => {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -17,15 +15,12 @@ const HolidayProgram = () => {
       clearInterval(interval);
       setIsVisible(true);
     }, 3000);
-    
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
     };
   }, []);
-
-  return (
-    <>
+  return <>
       <Navbar />
       <div className="container mx-auto p-4">
         <div className="flex items-center gap-2 mb-8">
@@ -38,17 +33,13 @@ const HolidayProgram = () => {
             <div className={`p-3 bg-blue-100 rounded-full transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-30'}`}>
               <Info className="h-8 w-8 text-blue-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800">
-              Le programme sera disponible dans quelques semaines.
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-800">Le programme sera disponible dans quelques jours.</h2>
             <p className="text-gray-600 max-w-2xl">
               Vous serez notifiée de sa mise en ligne par e-mail et via notre page Facebook.
             </p>
           </div>
         </div>
       </div>
-    </>
-  );
+    </>;
 };
-
 export default HolidayProgram;
