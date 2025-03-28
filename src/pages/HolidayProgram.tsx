@@ -1,6 +1,9 @@
+
 import { BookOpen, Calendar, Info } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+
 const HolidayProgram = () => {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -20,7 +23,9 @@ const HolidayProgram = () => {
       clearTimeout(timeout);
     };
   }, []);
-  return <>
+  
+  return (
+    <>
       <Navbar />
       <div className="container mx-auto p-4">
         <div className="flex items-center gap-2 mb-8">
@@ -28,8 +33,36 @@ const HolidayProgram = () => {
           <h1 className="text-3xl font-bold">Programme Vacances</h1>
         </div>
 
-        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardContent className="p-4">
+              <h2 className="text-xl font-bold mb-4">Programme Primaire</h2>
+              <div className="relative aspect-auto">
+                <img 
+                  src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgprimpaques.jpg" 
+                  alt="Programme de vacances primaire" 
+                  className="w-full h-auto rounded-lg shadow-md"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <h2 className="text-xl font-bold mb-4">Programme Adolescents</h2>
+              <div className="relative aspect-auto">
+                <img 
+                  src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgadopaques.png" 
+                  alt="Programme de vacances adolescents" 
+                  className="w-full h-auto rounded-lg shadow-md"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </>;
+    </>
+  );
 };
+
 export default HolidayProgram;
