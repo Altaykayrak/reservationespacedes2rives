@@ -1,3 +1,4 @@
+
 import { BookOpen } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useState, useEffect } from "react";
@@ -31,6 +32,32 @@ const HolidayProgram = () => {
       clearTimeout(timeout);
     };
   }, []);
+  
+  // Lors de l'ouverture d'une image, forcer le mode paysage si on est sur mobile
+  useEffect(() => {
+    // Vérifier si le navigateur supporte l'API d'orientation d'écran
+    if (isMobile && (openImagePrimary || openImageTeen) && window.screen.orientation) {
+      try {
+        // Demander le mode paysage
+        window.screen.orientation.lock('landscape').catch(err => {
+          console.log("Orientation lock not supported:", err);
+        });
+      } catch (error) {
+        console.log("Screen orientation API not supported");
+      }
+
+      return () => {
+        // Libérer le verrouillage d'orientation lorsque le dialogue est fermé
+        if (window.screen.orientation) {
+          try {
+            window.screen.orientation.unlock();
+          } catch (error) {
+            console.log("Error unlocking orientation:", error);
+          }
+        }
+      };
+    }
+  }, [openImagePrimary, openImageTeen, isMobile]);
   
   return (
     <>
@@ -79,12 +106,12 @@ const HolidayProgram = () => {
 
         {/* Dialogues pour l'affichage en plein écran sur mobile */}
         <Dialog open={openImagePrimary} onOpenChange={setOpenImagePrimary}>
-          <DialogContent className="sm:max-w-[95vw] max-h-[90vh] p-0 bg-black">
+          <DialogContent className="sm:max-w-[100vw] max-h-[100vh] w-screen h-screen p-0 bg-black">
             <div className="relative w-full h-full flex items-center justify-center">
               <img 
                 src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgprimpaques.jpg" 
                 alt="Programme de vacances primaire" 
-                className="max-w-full max-h-[90vh] object-contain"
+                className="max-w-full max-h-full w-auto h-auto object-contain"
               />
               <DialogClose className="absolute top-2 right-2 rounded-full h-8 w-8 bg-white/50 flex items-center justify-center">
                 ✕
@@ -94,12 +121,12 @@ const HolidayProgram = () => {
         </Dialog>
 
         <Dialog open={openImageTeen} onOpenChange={setOpenImageTeen}>
-          <DialogContent className="sm:max-w-[95vw] max-h-[90vh] p-0 bg-black">
+          <DialogContent className="sm:max-w-[100vw] max-h-[100vh] w-screen h-screen p-0 bg-black">
             <div className="relative w-full h-full flex items-center justify-center">
               <img 
                 src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgadopaques.png" 
                 alt="Programme de vacances adolescents" 
-                className="max-w-full max-h-[90vh] object-contain"
+                className="max-w-full max-h-full w-auto h-auto object-contain"
               />
               <DialogClose className="absolute top-2 right-2 rounded-full h-8 w-8 bg-white/50 flex items-center justify-center">
                 ✕
