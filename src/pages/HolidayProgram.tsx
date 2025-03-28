@@ -10,19 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Define the Screen Orientation interface that TypeScript doesn't fully recognize
-interface ScreenOrientationExtended {
-  lock(orientation: 'portrait' | 'landscape' | 'portrait-primary' | 'portrait-secondary' | 'landscape-primary' | 'landscape-secondary'): Promise<void>;
-  unlock(): void;
-  type: string;
-  angle: number;
-}
-
-// Extend the Screen interface
-interface ScreenExtended extends Screen {
-  orientation: ScreenOrientationExtended;
-}
-
 const HolidayProgram = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [openImagePrimary, setOpenImagePrimary] = useState(false);
@@ -51,11 +38,8 @@ const HolidayProgram = () => {
     // Vérifier si le navigateur supporte l'API d'orientation d'écran
     if (isMobile && (openImagePrimary || openImageTeen) && 'orientation' in window.screen) {
       try {
-        // Use type assertion to access the orientation lock method
-        const screenWithOrientation = window.screen as ScreenExtended;
-        
         // Demander le mode paysage
-        screenWithOrientation.orientation.lock('landscape').catch(err => {
+        window.screen.orientation?.lock('landscape').catch(err => {
           console.log("Orientation lock not supported:", err);
         });
       } catch (error) {
@@ -66,8 +50,7 @@ const HolidayProgram = () => {
         // Libérer le verrouillage d'orientation lorsque le dialogue est fermé
         if ('orientation' in window.screen) {
           try {
-            const screenWithOrientation = window.screen as ScreenExtended;
-            screenWithOrientation.orientation.unlock();
+            window.screen.orientation?.unlock();
           } catch (error) {
             console.log("Error unlocking orientation:", error);
           }
@@ -81,7 +64,7 @@ const HolidayProgram = () => {
       <Navbar />
       <div className="container mx-auto p-4">
         <div className="flex items-center gap-2 mb-8">
-          <BookOpen className="h-6 w-6" />
+          <BookOpen className={`h-6 w-6 ${isVisible ? 'opacity-100' : 'opacity-0'}`} />
           <h1 className="text-3xl font-bold">Programme Vacances</h1>
         </div>
 
