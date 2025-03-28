@@ -10,6 +10,19 @@ import {
 } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+// Define the Screen Orientation interface that TypeScript doesn't fully recognize
+interface ScreenOrientationExtended {
+  lock(orientation: 'portrait' | 'landscape' | 'portrait-primary' | 'portrait-secondary' | 'landscape-primary' | 'landscape-secondary'): Promise<void>;
+  unlock(): void;
+  type: string;
+  angle: number;
+}
+
+// Extend the Screen interface
+interface ScreenExtended extends Screen {
+  orientation: ScreenOrientationExtended;
+}
+
 const HolidayProgram = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [openImagePrimary, setOpenImagePrimary] = useState(false);
@@ -36,10 +49,13 @@ const HolidayProgram = () => {
   // Lors de l'ouverture d'une image, forcer le mode paysage si on est sur mobile
   useEffect(() => {
     // Vérifier si le navigateur supporte l'API d'orientation d'écran
-    if (isMobile && (openImagePrimary || openImageTeen) && window.screen.orientation) {
+    if (isMobile && (openImagePrimary || openImageTeen) && 'orientation' in window.screen) {
       try {
+        // Use type assertion to access the orientation lock method
+        const screenWithOrientation = window.screen as ScreenExtended;
+        
         // Demander le mode paysage
-        window.screen.orientation.lock('landscape').catch(err => {
+        screenWithOrientation.orientation.lock('landscape').catch(err => {
           console.log("Orientation lock not supported:", err);
         });
       } catch (error) {
@@ -48,9 +64,10 @@ const HolidayProgram = () => {
 
       return () => {
         // Libérer le verrouillage d'orientation lorsque le dialogue est fermé
-        if (window.screen.orientation) {
+        if ('orientation' in window.screen) {
           try {
-            window.screen.orientation.unlock();
+            const screenWithOrientation = window.screen as ScreenExtended;
+            screenWithOrientation.orientation.unlock();
           } catch (error) {
             console.log("Error unlocking orientation:", error);
           }
