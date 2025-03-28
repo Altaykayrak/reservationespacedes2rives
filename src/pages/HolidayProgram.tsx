@@ -1,19 +1,12 @@
 
-import { BookOpen } from "lucide-react";
+import { BookOpen, Download } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Dialog, 
-  DialogContent,
-  DialogClose
-} from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const HolidayProgram = () => {
   const [isVisible, setIsVisible] = useState(true);
-  const [openImagePrimary, setOpenImagePrimary] = useState(false);
-  const [openImageTeen, setOpenImageTeen] = useState(false);
   const isMobile = useIsMobile();
 
   // Effet de clignotement de l'icône au chargement
@@ -33,31 +26,16 @@ const HolidayProgram = () => {
     };
   }, []);
   
-  // Lors de l'ouverture d'une image, forcer le mode paysage si on est sur mobile
-  useEffect(() => {
-    // Vérifier si le navigateur supporte l'API d'orientation d'écran
-    if (isMobile && (openImagePrimary || openImageTeen) && 'orientation' in window.screen) {
-      try {
-        // Demander le mode paysage
-        window.screen.orientation?.lock('landscape').catch(err => {
-          console.log("Orientation lock not supported:", err);
-        });
-      } catch (error) {
-        console.log("Screen orientation API not supported");
-      }
-
-      return () => {
-        // Libérer le verrouillage d'orientation lorsque le dialogue est fermé
-        if ('orientation' in window.screen) {
-          try {
-            window.screen.orientation?.unlock();
-          } catch (error) {
-            console.log("Error unlocking orientation:", error);
-          }
-        }
-      };
-    }
-  }, [openImagePrimary, openImageTeen, isMobile]);
+  // Fonction pour télécharger une image
+  const downloadImage = (imageUrl: string, fileName: string) => {
+    // Créer un élément a temporaire
+    const a = document.createElement('a');
+    a.href = imageUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
   
   return (
     <>
@@ -76,12 +54,18 @@ const HolidayProgram = () => {
                 <img 
                   src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgprimpaques.jpg" 
                   alt="Programme de vacances primaire" 
-                  className={`w-full h-auto rounded-lg shadow-md ${isMobile ? "cursor-pointer" : ""}`}
-                  onClick={() => isMobile && setOpenImagePrimary(true)}
+                  className="w-full h-auto rounded-lg shadow-md"
                 />
-                {isMobile && <div className="absolute bottom-2 right-2 bg-white/70 text-xs font-medium py-1 px-2 rounded-full">
-                  Toucher pour agrandir
-                </div>}
+                <div 
+                  className="absolute bottom-2 right-2 bg-white/70 text-xs font-medium py-1 px-2 rounded-full flex items-center gap-1 cursor-pointer hover:bg-white"
+                  onClick={() => downloadImage(
+                    "https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgprimpaques.jpg", 
+                    "programme_primaire.jpg"
+                  )}
+                >
+                  <Download className="h-3 w-3" />
+                  Télécharger
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -93,47 +77,22 @@ const HolidayProgram = () => {
                 <img 
                   src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgadopaques.png" 
                   alt="Programme de vacances adolescents" 
-                  className={`w-full h-auto rounded-lg shadow-md ${isMobile ? "cursor-pointer" : ""}`}
-                  onClick={() => isMobile && setOpenImageTeen(true)}
+                  className="w-full h-auto rounded-lg shadow-md"
                 />
-                {isMobile && <div className="absolute bottom-2 right-2 bg-white/70 text-xs font-medium py-1 px-2 rounded-full">
-                  Toucher pour agrandir
-                </div>}
+                <div 
+                  className="absolute bottom-2 right-2 bg-white/70 text-xs font-medium py-1 px-2 rounded-full flex items-center gap-1 cursor-pointer hover:bg-white"
+                  onClick={() => downloadImage(
+                    "https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgadopaques.png", 
+                    "programme_adolescents.png"
+                  )}
+                >
+                  <Download className="h-3 w-3" />
+                  Télécharger
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Dialogues pour l'affichage en plein écran sur mobile */}
-        <Dialog open={openImagePrimary} onOpenChange={setOpenImagePrimary}>
-          <DialogContent className="sm:max-w-[100vw] max-h-[100vh] w-screen h-screen p-0 bg-black">
-            <div className="relative w-full h-full flex items-center justify-center">
-              <img 
-                src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgprimpaques.jpg" 
-                alt="Programme de vacances primaire" 
-                className="max-w-full max-h-full w-auto h-auto object-contain"
-              />
-              <DialogClose className="absolute top-2 right-2 rounded-full h-8 w-8 bg-white/50 flex items-center justify-center">
-                ✕
-              </DialogClose>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={openImageTeen} onOpenChange={setOpenImageTeen}>
-          <DialogContent className="sm:max-w-[100vw] max-h-[100vh] w-screen h-screen p-0 bg-black">
-            <div className="relative w-full h-full flex items-center justify-center">
-              <img 
-                src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgadopaques.png" 
-                alt="Programme de vacances adolescents" 
-                className="max-w-full max-h-full w-auto h-auto object-contain"
-              />
-              <DialogClose className="absolute top-2 right-2 rounded-full h-8 w-8 bg-white/50 flex items-center justify-center">
-                ✕
-              </DialogClose>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </>
   );
