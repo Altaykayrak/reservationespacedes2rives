@@ -46,7 +46,30 @@ const HolidayProgram = () => {
           <h1 className="text-3xl font-bold">Programme Vacances</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardContent className="p-4">
+              <h2 className="text-xl font-bold mb-4">Programme Maternelle</h2>
+              <div className="relative aspect-auto">
+                <img 
+                  src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgmaterpaques.png" 
+                  alt="Programme de vacances maternelle" 
+                  className="w-full h-auto rounded-lg shadow-md"
+                />
+                <div 
+                  className="absolute bottom-2 right-2 bg-white/70 text-xs font-medium py-1 px-2 rounded-full flex items-center gap-1 cursor-pointer hover:bg-white"
+                  onClick={() => downloadImage(
+                    "https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgmaterpaques.png", 
+                    "programme_maternelle.png"
+                  )}
+                >
+                  <Download className="h-3 w-3" />
+                  Télécharger
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="p-4">
               <h2 className="text-xl font-bold mb-4">Programme Primaire</h2>
