@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { fr } from "date-fns/locale";
+import { format } from "date-fns";
 
 interface Wednesday {
   id: string;
@@ -63,18 +65,17 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
 
       if (adminError) throw adminError;
 
-      const dateToInsert = new Date(Date.UTC(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate()
-      ));
+      // Format the date as YYYY-MM-DD to ensure it works correctly
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+      
+      console.log("Adding/updating Wednesday with date:", formattedDate);
 
       if (wednesdayToEdit) {
         // Update existing wednesday
         const { error } = await supabase
           .from("available_wednesdays")
           .update({
-            date: dateToInsert.toISOString().split("T")[0],
+            date: formattedDate,
             max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
             max_participants_primary: parseInt(maxParticipantsPrimary),
           })
@@ -89,7 +90,7 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
       } else {
         // Insert new wednesday
         const { error } = await supabase.from("available_wednesdays").insert({
-          date: dateToInsert.toISOString().split("T")[0],
+          date: formattedDate,
           max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
           max_participants_primary: parseInt(maxParticipantsPrimary),
         });
@@ -107,6 +108,7 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
       setMaxParticipantsKindergarten("");
       setMaxParticipantsPrimary("");
     } catch (error: any) {
+      console.error("Error adding/updating Wednesday:", error);
       toast({
         title: "Erreur",
         description: error.message,

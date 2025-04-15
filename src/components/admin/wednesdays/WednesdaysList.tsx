@@ -49,6 +49,7 @@ export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListP
 
       onDelete();
     } catch (error: any) {
+      console.error("Error deleting Wednesday:", error);
       toast({
         title: "Erreur",
         description: error.message,
@@ -72,12 +73,21 @@ export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListP
     return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
 
+  if (!sortedWednesdays || sortedWednesdays.length === 0) {
+    return (
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-4">Mercredis disponibles</h2>
+        <p className="text-muted-foreground">Aucun mercredi disponible pour le moment.</p>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-6">
       <h2 className="text-xl font-semibold mb-4">Mercredis disponibles</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sortedWednesdays?.map((wednesday) => (
+        {sortedWednesdays.map((wednesday) => (
           <WednesdayCard
             key={wednesday.id}
             wednesday={wednesday}
