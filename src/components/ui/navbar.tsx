@@ -32,7 +32,7 @@ export function Navbar() {
     { label: "Accueil", href: "/" },
     { label: "Mon profil", href: "/profile" },
     { label: "Mes enfants", href: "/children" },
-    // Removed "Réservations mercredis" item
+    { label: "Prise de rendez-vous", href: "/rdv" },
     { label: "Réservations vacances", href: "/holiday-reservations" },
     { label: "Réservations Club Ado", href: "/teenholiday-reservations" },
     { label: "Programme vacances", href: "/holiday-program" },
