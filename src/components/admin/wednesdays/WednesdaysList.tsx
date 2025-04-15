@@ -35,13 +35,18 @@ export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListP
         return;
       }
 
+      console.log("Deleting Wednesday with ID:", id);
       const { error } = await supabase
         .from("available_wednesdays")
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting Wednesday:", error);
+        throw error;
+      }
 
+      console.log("Successfully deleted Wednesday");
       toast({
         title: "Succès",
         description: "Le mercredi a été supprimé avec succès",
@@ -49,10 +54,10 @@ export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListP
 
       onDelete();
     } catch (error: any) {
-      console.error("Error deleting Wednesday:", error);
+      console.error("Error in handleDeleteWednesday:", error);
       toast({
         title: "Erreur",
-        description: error.message,
+        description: error.message || "Une erreur est survenue lors de la suppression",
         variant: "destructive",
       });
     }

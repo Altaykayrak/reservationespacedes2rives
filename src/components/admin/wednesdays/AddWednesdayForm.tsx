@@ -23,17 +23,24 @@ interface AddWednesdayFormProps {
 }
 
 export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFormProps) => {
-  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
   const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   // Effect to update form when wednesdayToEdit changes
   useEffect(() => {
     if (wednesdayToEdit) {
+      console.log("Editing Wednesday:", wednesdayToEdit);
       setSelectedDate(new Date(wednesdayToEdit.date));
       setMaxParticipantsKindergarten(wednesdayToEdit.max_participants_kindergarten.toString());
       setMaxParticipantsPrimary(wednesdayToEdit.max_participants_primary.toString());
+    } else {
+      // Reset form when not editing
+      setSelectedDate(undefined);
+      setMaxParticipantsKindergarten("");
+      setMaxParticipantsPrimary("");
     }
   }, [wednesdayToEdit]);
 
@@ -48,27 +55,13 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
     }
 
     try {
-      // Set admin username in session
-      const adminSession = localStorage.getItem('adminUsername');
-      if (!adminSession) {
-        toast({
-          title: "Erreur",
-          description: "Session admin non trouvée",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error: adminError } = await supabase.rpc('set_admin_username', {
-        username: adminSession
-      });
-
-      if (adminError) throw adminError;
-
+      setIsSubmitting(true);
       // Format the date as YYYY-MM-DD to ensure it works correctly
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       
-      console.log("Adding/updating Wednesday with date:", formattedDate);
+      console.log("Submitting Wednesday with date:", formattedDate);
+      console.log("Max participants kindergarten:", maxParticipantsKindergarten);
+      console.log("Max participants primary:", maxParticipantsPrimary);
 
       if (wednesdayToEdit) {
         // Update existing wednesday
@@ -81,7 +74,10 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
           })
           .eq("id", wednesdayToEdit.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating Wednesday:", error);
+          throw error;
+        }
 
         toast({
           title: "Succès",
@@ -89,31 +85,41 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
         });
       } else {
         // Insert new wednesday
-        const { error } = await supabase.from("available_wednesdays").insert({
-          date: formattedDate,
-          max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
-          max_participants_primary: parseInt(maxParticipantsPrimary),
-        });
+        const { error, data } = await supabase
+          .from("available_wednesdays")
+          .insert({
+            date: formattedDate,
+            max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
+            max_participants_primary: parseInt(maxParticipantsPrimary),
+          })
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error adding Wednesday:", error);
+          throw error;
+        }
 
+        console.log("Successfully added Wednesday:", data);
         toast({
           title: "Succès",
           description: "Le mercredi a été ajouté avec succès",
         });
       }
 
+      // Reset form and notify parent component
       onSuccess();
       setSelectedDate(undefined);
       setMaxParticipantsKindergarten("");
       setMaxParticipantsPrimary("");
     } catch (error: any) {
-      console.error("Error adding/updating Wednesday:", error);
+      console.error("Error in handleAddWednesday:", error);
       toast({
         title: "Erreur",
-        description: error.message,
+        description: error.message || "Une erreur est survenue",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -131,7 +137,16 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
             selected={selectedDate}
             onSelect={setSelectedDate}
             locale={fr}
+            disabled={(date) => {
+              // Only allow selecting Wednesdays
+              return date.getDay() !== 3;
+            }}
           />
+          {selectedDate && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Date sélectionnée: {format(selectedDate, 'dd/MM/yyyy')} ({format(selectedDate, 'EEEE', { locale: fr })})
+            </p>
+          )}
         </div>
 
         <div>
@@ -158,8 +173,19 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
           />
         </div>
 
-        <Button onClick={handleAddWednesday} className="w-full">
-          {wednesdayToEdit ? "Modifier" : "Ajouter"}
+        <Button 
+          onClick={handleAddWednesday} 
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <span className="animate-spin mr-2">⏳</span>
+              {wednesdayToEdit ? "Modification..." : "Ajout..."}
+            </>
+          ) : (
+            wednesdayToEdit ? "Modifier" : "Ajouter"
+          )}
         </Button>
       </div>
     </Card>

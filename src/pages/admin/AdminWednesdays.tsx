@@ -6,6 +6,7 @@ import { WednesdaysList } from "@/components/admin/wednesdays/WednesdaysList";
 import { useState } from "react";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 interface Wednesday {
   id: string;
@@ -17,17 +18,14 @@ interface Wednesday {
 const AdminWednesdays = () => {
   const [wednesdayToEdit, setWednesdayToEdit] = useState<Wednesday | null>(null);
   const { toast } = useToast();
+  const { data: isAdmin } = useAdminAuth();
 
   const { data: wednesdays, refetch, isLoading, error } = useQuery({
     queryKey: ["available_wednesdays"],
     queryFn: async () => {
       console.log("Fetching available Wednesdays...");
       
-      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin', {
-        user_id: (await supabase.auth.getUser()).data.user?.id
-      });
-
-      if (adminError || !isAdmin) {
+      if (!isAdmin) {
         toast({
           title: "Erreur",
           description: "Vous n'avez pas les droits administrateur",
@@ -38,7 +36,8 @@ const AdminWednesdays = () => {
 
       const { data, error } = await supabase
         .from("available_wednesdays")
-        .select("*");
+        .select("*")
+        .order('date', { ascending: true });
       
       if (error) {
         console.error("Error fetching Wednesdays:", error);
@@ -48,6 +47,7 @@ const AdminWednesdays = () => {
       console.log("Fetched Wednesdays:", data);
       return data;
     },
+    enabled: !!isAdmin,
   });
 
   const handleEdit = (wednesday: Wednesday) => {
@@ -55,6 +55,7 @@ const AdminWednesdays = () => {
   };
 
   const handleSuccess = () => {
+    console.log("Refreshing Wednesdays list after successful operation");
     refetch();
     setWednesdayToEdit(null);
   };
