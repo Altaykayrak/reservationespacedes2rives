@@ -26,8 +26,8 @@ import TeenHolidayReservations from "./pages/TeenHolidayReservations";
 import HolidayProgram from "./pages/HolidayProgram";
 import TermsOfService from "./pages/TermsOfService";
 import TermsOfOperation from "./pages/TermsOfOperation";
-import Prices from "./pages/Prices"; // Ajout de la nouvelle page
-import { AdminPage } from "./pages/admin/AdminPage"; // Corrected import
+import Prices from "./pages/Prices";
+import { AdminPage } from "./pages/admin/AdminPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservations from "./pages/admin/AdminReservations";
 import AdminProfiles from "./pages/admin/AdminProfiles";
@@ -67,10 +67,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/prices" element={<Prices />} /> {/* Nouvelle route */}
-            
-            {/* Rendez-vous - temporarily disabled */}
-            {/* <Route path="/rdv" element={<Rdv />} /> */}
+            <Route path="/prices" element={<Prices />} />
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
@@ -97,8 +94,9 @@ function App() {
               <Route path="new-reservation" element={<AdminNewReservation />} />
               <Route path="new-holiday-reservation" element={<AdminNewHolidayReservation />} />
               <Route path="new-teenholiday-reservation" element={<AdminNewTeenHolidayReservation />} />
-              {/* Added alias route for "reservations/new-holiday" */}
+              <Route path="reservations/new" element={<AdminNewReservation />} />
               <Route path="reservations/new-holiday" element={<AdminNewHolidayReservation />} />
+              <Route path="reservations/new-teen-holiday" element={<AdminNewTeenHolidayReservation />} />
             </Route>
 
             <Route path="*" element={<div>Page not found</div>} />
