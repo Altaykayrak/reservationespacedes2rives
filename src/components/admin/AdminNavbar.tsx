@@ -18,7 +18,6 @@ export function AdminNavbar() {
   const menuItems = [
     { label: "Dashboard", href: "/admin" },
     { label: "Réservations", href: "/admin/reservations" },
-    { label: "Rendez-vous", href: "/admin/rdv" },
     { label: "Utilisateurs", href: "/admin/profiles" },
     { label: "Enfants", href: "/admin/children" },
     { label: "Emails autorisés", href: "/admin/authorized-emails" },

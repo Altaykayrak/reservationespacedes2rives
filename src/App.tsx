@@ -27,7 +27,6 @@ import HolidayProgram from "./pages/HolidayProgram";
 import TermsOfService from "./pages/TermsOfService";
 import TermsOfOperation from "./pages/TermsOfOperation";
 import Prices from "./pages/Prices";
-import RdvPage from "./pages/Rdv";
 import { AdminPage } from "./pages/admin/AdminPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservations from "./pages/admin/AdminReservations";
@@ -36,7 +35,6 @@ import AdminChildren from "./pages/admin/AdminChildren";
 import AdminAuthorizedEmails from "./pages/admin/AdminAuthorizedEmails";
 import AdminWednesdays from "./pages/admin/AdminWednesdays";
 import AdminHolidays from "./pages/admin/AdminHolidays";
-import AdminRdv from "./pages/admin/AdminRdv";
 import AdminNewReservation from "./pages/admin/AdminNewReservation";
 import AdminNewHolidayReservation from "./pages/admin/AdminNewHolidayReservation";
 import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
@@ -78,7 +76,7 @@ function App() {
               <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
               <Route path="/holiday-reservations" element={<HolidayReservations />} />
               <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
-              <Route path="/rdv" element={<RdvPage />} />
+              {/* Removed RDV page route */}
             </Route>
             
             <Route path="/holiday-program" element={<HolidayProgram />} />
@@ -94,7 +92,7 @@ function App() {
               <Route path="authorized-emails" element={<AdminAuthorizedEmails />} />
               <Route path="wednesdays" element={<AdminWednesdays />} />
               <Route path="holidays" element={<AdminHolidays />} />
-              <Route path="rdv" element={<AdminRdv />} />
+              {/* Removed Admin RDV page route */}
               <Route path="new-reservation" element={<AdminNewReservation />} />
               <Route path="new-holiday-reservation" element={<AdminNewHolidayReservation />} />
               <Route path="new-teenholiday-reservation" element={<AdminNewTeenHolidayReservation />} />
