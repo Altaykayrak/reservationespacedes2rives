@@ -54,7 +54,7 @@ export const RdvCalendar = ({
           selected={selectedDate}
           onSelect={setSelectedDate}
           locale={fr}
-          className="mx-auto scale-95 transform origin-top-left"
+          className="mx-auto scale-95 transform origin-top-left pointer-events-auto"
           defaultMonth={new Date(2025, 6, 1)}
           disabled={(date) => {
             // Convert to midnight UTC to avoid timezone issues
