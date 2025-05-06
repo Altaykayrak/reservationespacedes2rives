@@ -83,11 +83,35 @@ function generateICalendarString(eventDetails: {
   ].join('\r\n');
 }
 
-// Function to create a "Add to Calendar" link using data URI scheme
-function generateAddToCalendarLink(icsData: string): string {
-  // Encode the iCalendar data as a base64 string for the data URI
-  const encodedICS = btoa(unescape(encodeURIComponent(icsData)));
-  return `data:text/calendar;charset=utf-8;base64,${encodedICS}`;
+// Fonction pour créer plusieurs boutons pour différents services de calendrier
+function generateCalendarButtons(icsContent: string, eventSummary: string, startDateTime: Date, endDateTime: Date, location: string, description: string): string {
+  // Créer l'objet du lien Google Calendar
+  const googleStartTime = startDateTime.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/g, '');
+  const googleEndTime = endDateTime.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/g, '');
+  
+  // Encodage URL pour Google Calendar
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventSummary)}&dates=${googleStartTime}/${googleEndTime}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+  
+  // Créer l'objet du lien ICS (pour Outlook, Apple Calendar et autres)
+  const icsBase64 = btoa(unescape(encodeURIComponent(icsContent)));
+  
+  return `
+    <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+      <p style="margin-bottom: 10px; font-weight: bold;">Ajouter à votre calendrier :</p>
+      
+      <a href="${googleCalendarUrl}" target="_blank" style="background-color: #4285F4; color: white; padding: 10px 15px; text-align: center; text-decoration: none; display: inline-block; font-size: 14px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">
+        Google Calendar
+      </a>
+      
+      <a href="data:text/calendar;charset=utf8;base64,${icsBase64}" download="rendez-vous-e2rives.ics" style="background-color: #0078d4; color: white; padding: 10px 15px; text-align: center; text-decoration: none; display: inline-block; font-size: 14px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">
+        Outlook / Apple Calendar (.ics)
+      </a>
+      
+      <p style="margin-top: 8px; font-size: 12px; color: #666;">
+        Pour Outlook sur le web ou sur mobile, téléchargez le fichier .ics et ouvrez-le avec votre application de calendrier
+      </p>
+    </div>
+  `;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -324,17 +348,15 @@ const handler = async (req: Request): Promise<Response> => {
         uid: `rdv-${rdvData.id}@e2rives.fr`
       });
       
-      // Créer le lien d'ajout au calendrier
-      const calendarLink = generateAddToCalendarLink(icsData);
-      
-      // Créer le bouton d'ajout au calendrier
-      const calendarButton = `
-        <div style="margin-top: 20px; margin-bottom: 20px;">
-          <a href="${calendarLink}" download="rendez-vous-e2rives.ics" style="background-color: #0078d4; color: white; padding: 12px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">
-            Ajouter à mon calendrier
-          </a>
-        </div>
-      `;
+      // Générer les boutons de calendrier
+      const calendarButtons = generateCalendarButtons(
+        icsData,
+        eventSummary,
+        startDateTime,
+        endDateTime,
+        eventLocation,
+        eventDescription
+      );
 
       const emailResponse = await resend.emails.send({
         from: "Réservation <onboarding@resend.dev>",
@@ -346,7 +368,7 @@ const handler = async (req: Request): Promise<Response> => {
           <p><strong>Date:</strong> ${formatDate(rdvData.date)}</p>
           <p><strong>Horaire:</strong> ${formatTime(rdvData.heure_debut)} - ${formatTime(rdvData.heure_fin)}</p>
           <p><strong>Motifs:</strong> ${requestData.motifs?.join(", ") || "Non spécifié"}</p>
-          ${calendarButton}
+          ${calendarButtons}
           <p><strong>ID de requête:</strong> ${requestId}</p>
         `,
       });
