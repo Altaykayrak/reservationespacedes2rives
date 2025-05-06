@@ -6,6 +6,7 @@ import { Rdv } from "@/types/rdv";
 import { useToast } from "../use-toast";
 import { format } from "date-fns";
 import { useState } from "react";
+import { useEmailNotification } from "../useEmailNotification";
 
 export const useRdvActions = (
   userRdv: Rdv | null,
@@ -99,6 +100,27 @@ export const useRdvActions = (
         motifs: motifs,
       };
       setUserRdv(updatedRdv);
+
+      // Envoi d'un email de notification
+      try {
+        const emailResponse = await supabase.functions.invoke('send-reservation-email', {
+          body: {
+            rdvId: selectedRdv.id,
+            motifs: motifs,
+            userId: user.id,
+            requestId: `rdv-${selectedRdv.id}-${Date.now()}`
+          }
+        });
+        
+        if (emailResponse.error) {
+          console.error("Error sending email notification:", emailResponse.error);
+        } else {
+          console.log("Email notification sent successfully");
+        }
+      } catch (emailError) {
+        console.error("Error in email notification:", emailError);
+        // Ne pas bloquer le flux principal si l'envoi d'email échoue
+      }
 
       toast({
         title: "Réservation réussie",
