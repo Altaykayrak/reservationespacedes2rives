@@ -43,6 +43,53 @@ setInterval(() => {
   }
 }, 60 * 1000); // Every minute
 
+// Function to generate iCalendar format string for calendar events
+function generateICalendarString(eventDetails: {
+  summary: string;
+  description: string;
+  location: string;
+  start: Date;
+  end: Date;
+  uid: string;
+}): string {
+  // Format date to iCalendar format: YYYYMMDDTHHMMSSZ
+  const formatDateToICS = (date: Date): string => {
+    return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/g, '');
+  };
+  
+  const now = new Date();
+  
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//E2Rives//Reservation System//FR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${eventDetails.uid}`,
+    `DTSTAMP:${formatDateToICS(now)}`,
+    `DTSTART:${formatDateToICS(eventDetails.start)}`,
+    `DTEND:${formatDateToICS(eventDetails.end)}`,
+    `SUMMARY:${eventDetails.summary}`,
+    `DESCRIPTION:${eventDetails.description}`,
+    `LOCATION:${eventDetails.location}`,
+    'BEGIN:VALARM',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Rappel',
+    'TRIGGER:-PT15M',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+}
+
+// Function to create a "Add to Calendar" link using data URI scheme
+function generateAddToCalendarLink(icsData: string): string {
+  // Encode the iCalendar data as a base64 string for the data URI
+  const encodedICS = btoa(unescape(encodeURIComponent(icsData)));
+  return `data:text/calendar;charset=utf-8;base64,${encodedICS}`;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -251,6 +298,43 @@ const handler = async (req: Request): Promise<Response> => {
       const formatTime = (timeStr: string) => {
         return timeStr.substring(0, 5);
       };
+      
+      // Créer des objets Date pour le début et la fin du rendez-vous
+      const appointmentDate = new Date(rdvData.date);
+      const startTime = rdvData.heure_debut.split(':');
+      const endTime = rdvData.heure_fin.split(':');
+      
+      const startDateTime = new Date(appointmentDate);
+      startDateTime.setHours(parseInt(startTime[0], 10), parseInt(startTime[1], 10), 0);
+      
+      const endDateTime = new Date(appointmentDate);
+      endDateTime.setHours(parseInt(endTime[0], 10), parseInt(endTime[1], 10), 0);
+      
+      // Générer le contenu iCalendar pour le rendez-vous
+      const eventSummary = `Rendez-vous E2Rives`;
+      const eventDescription = `Motifs: ${requestData.motifs?.join(", ") || "Non spécifié"}`;
+      const eventLocation = "Centre Entre 2 Rives";
+      
+      const icsData = generateICalendarString({
+        summary: eventSummary,
+        description: eventDescription,
+        location: eventLocation,
+        start: startDateTime,
+        end: endDateTime,
+        uid: `rdv-${rdvData.id}@e2rives.fr`
+      });
+      
+      // Créer le lien d'ajout au calendrier
+      const calendarLink = generateAddToCalendarLink(icsData);
+      
+      // Créer le bouton d'ajout au calendrier
+      const calendarButton = `
+        <div style="margin-top: 20px; margin-bottom: 20px;">
+          <a href="${calendarLink}" download="rendez-vous-e2rives.ics" style="background-color: #0078d4; color: white; padding: 12px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">
+            Ajouter à mon calendrier
+          </a>
+        </div>
+      `;
 
       const emailResponse = await resend.emails.send({
         from: "Réservation <onboarding@resend.dev>",
@@ -262,6 +346,7 @@ const handler = async (req: Request): Promise<Response> => {
           <p><strong>Date:</strong> ${formatDate(rdvData.date)}</p>
           <p><strong>Horaire:</strong> ${formatTime(rdvData.heure_debut)} - ${formatTime(rdvData.heure_fin)}</p>
           <p><strong>Motifs:</strong> ${requestData.motifs?.join(", ") || "Non spécifié"}</p>
+          ${calendarButton}
           <p><strong>ID de requête:</strong> ${requestId}</p>
         `,
       });
