@@ -145,8 +145,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
       
       const { data: profileData, error: profileError } = await supabase
-        .from("profiles_with_emails")
-        .select("*")
+        .from("profiles")
+        .select("first_name, last_name, email")
         .eq("id", requestData.userId)
         .single();
 
@@ -187,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
       `;
 
       const emailHtml = `
-        <h1>Nouvelle réservation de ${reservationType}</h1>
+        <h1>Nouvelle réservation de ${requestData.reservationType === "holiday" ? "vacances" : "mercredi"}</h1>
         <p><strong>Parent:</strong> ${profileData.first_name} ${profileData.last_name}</p>
         <p><strong>Email:</strong> ${profileData.email}</p>
         ${requestData.childName ? `<p><strong>Enfant:</strong> ${requestData.childName}</p>` : ''}
@@ -233,9 +233,10 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error("User ID is required for RDV emails");
       }
 
+      // Utilisation de la table profiles au lieu de profiles_with_emails
       const { data: profileData, error: profileError } = await supabase
-        .from("profiles_with_emails")
-        .select("*")
+        .from("profiles")
+        .select("first_name, last_name, email")
         .eq("id", requestData.userId)
         .single();
 
