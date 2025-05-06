@@ -15,7 +15,7 @@ export const useRdvActions = (
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleMotifChange = (motif: string) => {
-    setSelectedMotifs((prev: string[]) => {
+    setSelectedMotifs((prev) => {
       if (prev.includes(motif)) {
         return prev.filter((m) => m !== motif);
       } else {
