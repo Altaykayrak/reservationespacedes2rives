@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,7 +15,7 @@ export const useRdvActions = (
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleMotifChange = (motif: string) => {
-    setSelectedMotifs((prev) => {
+    setSelectedMotifs((prev: string[]) => {
       if (prev.includes(motif)) {
         return prev.filter((m) => m !== motif);
       } else {
@@ -37,17 +38,21 @@ export const useRdvActions = (
       const { data: userData } = await supabase.auth.getUser();
       
       // Get more user details from the profile
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("first_name, last_name, email")
+        .select("first_name, last_name")
         .eq("id", userData.user?.id)
         .single();
+      
+      if (profileError) {
+        console.error("Error fetching profile data:", profileError);
+      }
       
       const userName = profileData?.first_name && profileData?.last_name 
         ? `${profileData.first_name} ${profileData.last_name}` 
         : userData.user?.email?.split('@')[0] || 'Utilisateur';
       
-      const userEmail = profileData?.email || userData.user?.email;
+      const userEmail = userData.user?.email;
 
       // Update the RDV status to reserved
       const { error } = await supabase

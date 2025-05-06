@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.0";
 import { Resend } from "npm:resend@2.0.0";
@@ -99,21 +98,17 @@ function generateICalendarString(eventDetails: {
     `TRANSP:OPAQUE`,
   );
 
-  // Add organizer (Centre E2Rives as the organizer, not the user)
+  // Add organizer (the user as the organizer)
   if (eventDetails.organizer) {
     calendarLines.push(
       `ORGANIZER;CN=${eventDetails.organizer.name}:mailto:${eventDetails.organizer.email}`
     );
-  } else {
-    calendarLines.push(
-      `ORGANIZER;CN=Centre Entre 2 Rives:mailto:accueil@e2rives.fr`
-    );
   }
 
-  // Add attendee (the user)
+  // Add attendee (Centre E2Rives as the attendee)
   if (eventDetails.attendee) {
     calendarLines.push(
-      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${eventDetails.attendee.name}:mailto:${eventDetails.attendee.email}`
+      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE;CN=${eventDetails.attendee.name}:mailto:${eventDetails.attendee.email}`
     );
   }
 
@@ -338,7 +333,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (requestData.userId) {
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("first_name, last_name, email")
+          .select("first_name, last_name")
           .eq("id", requestData.userId)
           .single();
 
@@ -347,7 +342,6 @@ const handler = async (req: Request): Promise<Response> => {
           // Continue without profile data
         } else if (profileData) {
           userFullName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || "Utilisateur";
-          userEmail = profileData.email;
           console.log("Retrieved user profile:", profileData);
         }
       }
@@ -392,16 +386,16 @@ const handler = async (req: Request): Promise<Response> => {
       const eventDescription = `Motifs: ${requestData.motifs?.join(", ") || "Non spécifié"}`;
       const eventLocation = "Centre Entre 2 Rives";
       
-      // Définir l'organisateur (le centre) et le participant (l'utilisateur)
-      const organizer = {
-        email: "accueil@e2rives.fr",
-        name: "Centre Entre 2 Rives"
-      };
-      
-      const attendee = userEmail ? {
+      // Définir l'organisateur (l'utilisateur) et le participant (le centre)
+      const organizer = userEmail ? {
         email: userEmail,
         name: userFullName
       } : undefined;
+      
+      const attendee = {
+        email: "accueil@e2rives.fr",
+        name: "Centre Entre 2 Rives"
+      };
       
       const icsContent = generateICalendarString({
         summary: eventSummary,
@@ -446,32 +440,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       console.log("Email sent successfully:", emailResponse);
-      
-      // Si l'utilisateur a un email, on lui envoie également une confirmation
-      if (userEmail) {
-        await resend.emails.send({
-          from: "Centre Entre 2 Rives <onboarding@resend.dev>",
-          to: [userEmail],
-          subject: `Confirmation de votre rendez-vous - Centre Entre 2 Rives`,
-          html: `
-            <h1>Confirmation de votre rendez-vous</h1>
-            <p>Bonjour ${userFullName},</p>
-            <p>Votre rendez-vous au Centre Entre 2 Rives a été confirmé :</p>
-            <p><strong>Date:</strong> ${formatDate(rdvData.date)}</p>
-            <p><strong>Horaire:</strong> ${formatTime(rdvData.heure_debut)} - ${formatTime(rdvData.heure_fin)}</p>
-            <p><strong>Motifs:</strong> ${requestData.motifs?.join(", ") || "Non spécifié"}</p>
-            ${calendarButtons}
-            <p>À bientôt !</p>
-            <p>L'équipe du Centre Entre 2 Rives</p>
-          `,
-          attachments: [
-            {
-              filename: 'rendez-vous.ics',
-              content: icsContent
-            }
-          ]
-        });
-      }
       
       return new Response(JSON.stringify({ success: true, data: emailResponse }), {
         status: 200,
