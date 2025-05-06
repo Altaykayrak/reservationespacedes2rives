@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,6 +101,7 @@ export const useRdvActions = (
       setUserRdv(updatedRdv);
 
       // Envoi d'un email de notification avec uniquement les données essentielles
+      // y compris l'ID utilisateur pour récupérer les informations de profil
       try {
         const emailResponse = await supabase.functions.invoke('send-reservation-email', {
           body: {

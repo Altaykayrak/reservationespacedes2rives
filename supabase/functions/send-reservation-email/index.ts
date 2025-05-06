@@ -218,8 +218,25 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error("Error fetching rdv details");
       }
 
-      // Nous ne récupérons plus les données de profil à partir de la base de données
-      // à la place, nous utilisons directement les infos du RDV et les identifiants
+      // Récupérer les données du profil utilisateur à partir de la table profiles
+      let userFullName = "Utilisateur";
+      let userEmail = null;
+      
+      if (requestData.userId) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("first_name, last_name")
+          .eq("id", requestData.userId)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+          // Continue without profile data
+        } else if (profileData) {
+          userFullName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || "Utilisateur";
+          console.log("Retrieved user profile:", profileData);
+        }
+      }
 
       const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -238,15 +255,14 @@ const handler = async (req: Request): Promise<Response> => {
       const emailResponse = await resend.emails.send({
         from: "Réservation <onboarding@resend.dev>",
         to: ["accueil@e2rives.fr"],
-        subject: `Nouvelle réservation de rendez-vous - ID: ${requestData.userId}`,
+        subject: `Nouvelle réservation de rendez-vous - ${userFullName}`,
         html: `
           <h1>Nouvelle réservation de rendez-vous</h1>
-          <p><strong>ID Utilisateur:</strong> ${requestData.userId || "Non spécifié"}</p>
+          <p><strong>Utilisateur:</strong> ${userFullName}</p>
           <p><strong>Date:</strong> ${formatDate(rdvData.date)}</p>
           <p><strong>Horaire:</strong> ${formatTime(rdvData.heure_debut)} - ${formatTime(rdvData.heure_fin)}</p>
           <p><strong>Motifs:</strong> ${requestData.motifs?.join(", ") || "Non spécifié"}</p>
           <p><strong>ID de requête:</strong> ${requestId}</p>
-          <p><em>Note: Les données complètes du profil n'ont pas pu être récupérées.</em></p>
         `,
       });
 
