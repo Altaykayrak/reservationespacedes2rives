@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +5,6 @@ import { Rdv } from "@/types/rdv";
 import { useToast } from "../use-toast";
 import { format } from "date-fns";
 import { useState } from "react";
-import { useEmailNotification } from "../useEmailNotification";
 
 export const useRdvActions = (
   userRdv: Rdv | null,
@@ -74,7 +72,7 @@ export const useRdvActions = (
       const { error: updateError } = await supabase
         .from("rdv")
         .update({
-          status: "réservé" as const, // Using const assertion to match the literal type
+          status: "réservé" as const,
           user_id: user.id,
           motifs: motifs,
         })
@@ -95,13 +93,13 @@ export const useRdvActions = (
 
       const updatedRdv: Rdv = {
         ...selectedRdv,
-        status: "réservé", // This is typed correctly as the literal "réservé"
+        status: "réservé",
         user_id: user.id,
         motifs: motifs,
       };
       setUserRdv(updatedRdv);
 
-      // Envoi d'un email de notification
+      // Envoi d'un email de notification avec uniquement les données essentielles
       try {
         const emailResponse = await supabase.functions.invoke('send-reservation-email', {
           body: {
@@ -154,7 +152,7 @@ export const useRdvActions = (
       const { error } = await supabase
         .from("rdv")
         .update({
-          status: "disponible" as const, // Using const assertion to match the literal type
+          status: "disponible" as const,
           user_id: null,
           motifs: [],
         })

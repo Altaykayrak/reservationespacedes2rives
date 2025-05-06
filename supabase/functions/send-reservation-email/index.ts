@@ -14,12 +14,14 @@ interface ReservationEmailRequest {
   userId?: string;
   reservationType?: string;
   childName?: string;
-  childClass?: string;  // Ajout de la classe scolaire
+  childClass?: string;
   dates?: string[];
-  period?: string;  // Période de vacances
+  period?: string;
   withoutMeal?: boolean[];
   earlyDropoff?: boolean[];
   requestId?: string;
+  userEmail?: string;
+  userName?: string;
 }
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
@@ -140,20 +142,8 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
       
-      if (!requestData.userId) {
-        throw new Error("User ID is required for reservation emails with profile information");
-      }
-      
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles_with_emails")
-        .select("*")
-        .eq("id", requestData.userId)
-        .single();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw new Error("Error fetching user profile");
-      }
+      // Nous avons supprimé la récupération du profil utilisateur pour les autres cas
+      // et utilisé les données fournies directement via la requête
 
       let tableRows = '';
       if (requestData.dates && requestData.dates.length > 0) {
@@ -188,8 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       const emailHtml = `
         <h1>Nouvelle réservation de ${requestData.reservationType === "holiday" ? "vacances" : "mercredi"}</h1>
-        <p><strong>Parent:</strong> ${profileData.first_name} ${profileData.last_name}</p>
-        <p><strong>Email:</strong> ${profileData.email}</p>
+        <p><strong>ID Utilisateur:</strong> ${requestData.userId}</p>
         ${requestData.childName ? `<p><strong>Enfant:</strong> ${requestData.childName}</p>` : ''}
         ${requestData.childClass ? `<p><strong>Classe:</strong> ${requestData.childClass}</p>` : ''}
         ${requestData.period ? `<p><strong>Période:</strong> ${requestData.period}</p>` : ''}
@@ -201,7 +190,7 @@ const handler = async (req: Request): Promise<Response> => {
       const emailResponse = await resend.emails.send({
         from: "Réservation <onboarding@resend.dev>",
         to: ["accueil@e2rives.fr"],
-        subject: `Nouvelle réservation - ${requestData.reservationType === "holiday" ? "Vacances" : "Mercredi"} - ${profileData.first_name} ${profileData.last_name}`,
+        subject: `Nouvelle réservation - ${requestData.reservationType === "holiday" ? "Vacances" : "Mercredi"}`,
         html: emailHtml,
       });
 
@@ -229,20 +218,8 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error("Error fetching rdv details");
       }
 
-      if (!requestData.userId) {
-        throw new Error("User ID is required for RDV emails");
-      }
-
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles_with_emails")
-        .select("*")
-        .eq("id", requestData.userId)
-        .single();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw new Error("Error fetching user profile");
-      }
+      // Nous ne récupérons plus les données de profil à partir de la base de données
+      // à la place, nous utilisons directement les infos du RDV et les identifiants
 
       const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -261,15 +238,15 @@ const handler = async (req: Request): Promise<Response> => {
       const emailResponse = await resend.emails.send({
         from: "Réservation <onboarding@resend.dev>",
         to: ["accueil@e2rives.fr"],
-        subject: `Nouvelle réservation de rendez-vous - ${profileData.first_name} ${profileData.last_name}`,
+        subject: `Nouvelle réservation de rendez-vous - ID: ${requestData.userId}`,
         html: `
           <h1>Nouvelle réservation de rendez-vous</h1>
-          <p><strong>Nom et prénom:</strong> ${profileData.first_name} ${profileData.last_name}</p>
-          <p><strong>Email:</strong> ${profileData.email}</p>
+          <p><strong>ID Utilisateur:</strong> ${requestData.userId || "Non spécifié"}</p>
           <p><strong>Date:</strong> ${formatDate(rdvData.date)}</p>
           <p><strong>Horaire:</strong> ${formatTime(rdvData.heure_debut)} - ${formatTime(rdvData.heure_fin)}</p>
           <p><strong>Motifs:</strong> ${requestData.motifs?.join(", ") || "Non spécifié"}</p>
           <p><strong>ID de requête:</strong> ${requestId}</p>
+          <p><em>Note: Les données complètes du profil n'ont pas pu être récupérées.</em></p>
         `,
       });
 
