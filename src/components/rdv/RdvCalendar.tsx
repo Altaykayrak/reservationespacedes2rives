@@ -62,13 +62,14 @@ export const RdvCalendar = ({
             const rangeStart = new Date(summerRange.start.getFullYear(), summerRange.start.getMonth(), summerRange.start.getDate());
             const rangeEnd = new Date(summerRange.end.getFullYear(), summerRange.end.getMonth(), summerRange.end.getDate());
             
-            // Check if the date is in range and has slots
+            // Check if the date is outside range or doesn't have slots
             const isInRange = isWithinInterval(dateToCheck, { 
               start: rangeStart, 
               end: rangeEnd 
             });
             const hasSlots = isDayWithSlots(dateToCheck);
             
+            // For debugging specific dates
             if (dateToCheck.getDate() === 1 && dateToCheck.getMonth() === 6) { // July 1st for debugging
               console.log("July 1 evaluation:", { 
                 date: dateToCheck, 
@@ -79,7 +80,7 @@ export const RdvCalendar = ({
               });
             }
             
-            // Return true to disable dates not in range or without slots
+            // Return true to disable dates outside range or without slots
             return !isInRange || !hasSlots;
           }}
           modifiers={{
