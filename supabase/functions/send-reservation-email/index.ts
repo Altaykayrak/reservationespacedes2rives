@@ -52,12 +52,17 @@ function generateICalendarString(eventDetails: {
   end: Date;
   uid: string;
 }): string {
-  // Format date to iCalendar format: YYYYMMDDTHHMMSSZ
+  // Format date to iCalendar format: YYYYMMDDTHHMMSS
   const formatDateToICS = (date: Date): string => {
     return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/g, '');
   };
   
   const now = new Date();
+  
+  // Make sure the dates use proper UTC format for iCalendar
+  const startDate = formatDateToICS(eventDetails.start);
+  const endDate = formatDateToICS(eventDetails.end);
+  const createdDate = formatDateToICS(now);
   
   return [
     'BEGIN:VCALENDAR',
@@ -65,17 +70,23 @@ function generateICalendarString(eventDetails: {
     'PRODID:-//E2Rives//Reservation System//FR',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
+    `X-WR-CALNAME:Rendez-vous E2Rives`,
     'BEGIN:VEVENT',
-    `UID:${eventDetails.uid}`,
-    `DTSTAMP:${formatDateToICS(now)}`,
-    `DTSTART:${formatDateToICS(eventDetails.start)}`,
-    `DTEND:${formatDateToICS(eventDetails.end)}`,
-    `SUMMARY:${eventDetails.summary}`,
-    `DESCRIPTION:${eventDetails.description}`,
+    `DTSTAMP:${createdDate}`,
+    `DTSTART:${startDate}`,
+    `DTEND:${endDate}`,
+    `UID:${eventDetails.uid}@e2rives.fr`,
+    `CREATED:${createdDate}`,
+    `DESCRIPTION:${eventDetails.description.replace(/\n/g, '\\n')}`,
+    `LAST-MODIFIED:${createdDate}`,
     `LOCATION:${eventDetails.location}`,
+    `SEQUENCE:0`,
+    `STATUS:CONFIRMED`,
+    `SUMMARY:${eventDetails.summary}`,
+    `TRANSP:OPAQUE`,
     'BEGIN:VALARM',
     'ACTION:DISPLAY',
-    'DESCRIPTION:Rappel',
+    'DESCRIPTION:Rappel du rendez-vous',
     'TRIGGER:-PT15M',
     'END:VALARM',
     'END:VEVENT',
@@ -92,11 +103,8 @@ function generateCalendarButtons(icsContent: string, eventSummary: string, start
   // Encodage URL pour Google Calendar
   const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventSummary)}&dates=${googleStartTime}/${googleEndTime}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
   
-  // Créer l'objet du lien ICS inline avec le contenu encodé en base64
-  // Note: Nous utilisons l'attribut download qui force le téléchargement plutôt que l'ouverture
-  const icsBase64 = btoa(unescape(encodeURIComponent(icsContent)));
-  
-  // Pour le lien Outlook, on utilise une approche différente qui assure le téléchargement
+  // Au lieu d'utiliser data:URI qui peut causer des problèmes, on explique comment télécharger
+  // et importer le fichier .ics manuellement
   return `
     <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
       <p style="margin-bottom: 10px; font-weight: bold;">Ajouter à votre calendrier :</p>
@@ -105,13 +113,12 @@ function generateCalendarButtons(icsContent: string, eventSummary: string, start
         Google Calendar
       </a>
       
-      <a href="data:text/calendar;charset=utf8;base64,${icsBase64}" download="rendez-vous-e2rives.ics" style="background-color: #0078d4; color: white; padding: 10px 15px; text-align: center; text-decoration: none; display: inline-block; font-size: 14px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">
-        Outlook / Apple Calendar (.ics)
-      </a>
-      
-      <p style="margin-top: 8px; font-size: 12px; color: #666;">
-        Pour Outlook sur le web ou sur mobile, téléchargez le fichier .ics et ouvrez-le avec votre application de calendrier
-      </p>
+      <p style="margin-top: 15px; margin-bottom: 5px;">Pour Outlook, Apple Calendar ou autre :</p>
+      <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; background-color: #f9f9f9; text-align: left; max-width: 500px; margin: 0 auto;">
+        <p>1. Téléchargez le fichier calendrier ci-joint</p>
+        <p>2. Ouvrez votre application de calendrier (Outlook, Apple Calendar, etc.)</p>
+        <p>3. Importez le fichier calendrier téléchargé (Fichier > Importer)</p>
+      </div>
     </div>
   `;
 }
@@ -341,18 +348,18 @@ const handler = async (req: Request): Promise<Response> => {
       const eventDescription = `Motifs: ${requestData.motifs?.join(", ") || "Non spécifié"}`;
       const eventLocation = "Centre Entre 2 Rives";
       
-      const icsData = generateICalendarString({
+      const icsContent = generateICalendarString({
         summary: eventSummary,
         description: eventDescription,
         location: eventLocation,
         start: startDateTime,
         end: endDateTime,
-        uid: `rdv-${rdvData.id}@e2rives.fr`
+        uid: `rdv-${rdvData.id}`
       });
       
       // Générer les boutons de calendrier
       const calendarButtons = generateCalendarButtons(
-        icsData,
+        icsContent,
         eventSummary,
         startDateTime,
         endDateTime,
@@ -373,6 +380,12 @@ const handler = async (req: Request): Promise<Response> => {
           ${calendarButtons}
           <p><strong>ID de requête:</strong> ${requestId}</p>
         `,
+        attachments: [
+          {
+            filename: 'rendez-vous.ics',
+            content: icsContent
+          }
+        ]
       });
 
       console.log("Email sent successfully:", emailResponse);
