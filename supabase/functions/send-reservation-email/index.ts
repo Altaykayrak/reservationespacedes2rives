@@ -51,26 +51,39 @@ function generateICalendarString(eventDetails: {
   start: Date;
   end: Date;
   uid: string;
+  organizer?: {
+    email: string;
+    name: string;
+  };
+  attendee?: {
+    email: string;
+    name: string;
+  };
 }): string {
-  // Format date to iCalendar format: YYYYMMDDTHHMMSS
+  // Format date to iCalendar format: YYYYMMDDTHHMMSSZ (UTC)
   const formatDateToICS = (date: Date): string => {
     return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/g, '');
   };
   
   const now = new Date();
   
-  // Make sure the dates use proper UTC format for iCalendar
+  // Format dates in UTC to avoid timezone issues
   const startDate = formatDateToICS(eventDetails.start);
   const endDate = formatDateToICS(eventDetails.end);
   const createdDate = formatDateToICS(now);
   
-  return [
+  // Calendar fields
+  const calendarLines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//E2Rives//Reservation System//FR',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
     `X-WR-CALNAME:Rendez-vous E2Rives`,
+  ];
+
+  // Add event
+  calendarLines.push(
     'BEGIN:VEVENT',
     `DTSTAMP:${createdDate}`,
     `DTSTART:${startDate}`,
@@ -84,6 +97,28 @@ function generateICalendarString(eventDetails: {
     `STATUS:CONFIRMED`,
     `SUMMARY:${eventDetails.summary}`,
     `TRANSP:OPAQUE`,
+  );
+
+  // Add organizer (Centre E2Rives as the organizer, not the user)
+  if (eventDetails.organizer) {
+    calendarLines.push(
+      `ORGANIZER;CN=${eventDetails.organizer.name}:mailto:${eventDetails.organizer.email}`
+    );
+  } else {
+    calendarLines.push(
+      `ORGANIZER;CN=Centre Entre 2 Rives:mailto:accueil@e2rives.fr`
+    );
+  }
+
+  // Add attendee (the user)
+  if (eventDetails.attendee) {
+    calendarLines.push(
+      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${eventDetails.attendee.name}:mailto:${eventDetails.attendee.email}`
+    );
+  }
+
+  // Add alarm
+  calendarLines.push(
     'BEGIN:VALARM',
     'ACTION:DISPLAY',
     'DESCRIPTION:Rappel du rendez-vous',
@@ -91,7 +126,9 @@ function generateICalendarString(eventDetails: {
     'END:VALARM',
     'END:VEVENT',
     'END:VCALENDAR'
-  ].join('\r\n');
+  );
+
+  return calendarLines.join('\r\n');
 }
 
 // Fonction pour créer plusieurs boutons pour différents services de calendrier
@@ -113,12 +150,8 @@ function generateCalendarButtons(icsContent: string, eventSummary: string, start
         Google Calendar
       </a>
       
-      <p style="margin-top: 15px; margin-bottom: 5px;">Pour Outlook, Apple Calendar ou autre :</p>
-      <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; background-color: #f9f9f9; text-align: left; max-width: 500px; margin: 0 auto;">
-        <p>1. Téléchargez le fichier calendrier ci-joint</p>
-        <p>2. Ouvrez votre application de calendrier (Outlook, Apple Calendar, etc.)</p>
-        <p>3. Importez le fichier calendrier téléchargé (Fichier > Importer)</p>
-      </div>
+      <p style="margin-top: 15px; margin-bottom: 5px;">Le fichier calendrier est joint à cet email.</p>
+      <p style="font-size: 13px; color: #666;">Ouvrez le fichier .ics attaché pour l'ajouter à Outlook, Apple Calendar ou autre application de calendrier.</p>
     </div>
   `;
 }
@@ -305,7 +338,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (requestData.userId) {
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("first_name, last_name")
+          .select("first_name, last_name, email")
           .eq("id", requestData.userId)
           .single();
 
@@ -314,8 +347,19 @@ const handler = async (req: Request): Promise<Response> => {
           // Continue without profile data
         } else if (profileData) {
           userFullName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || "Utilisateur";
+          userEmail = profileData.email;
           console.log("Retrieved user profile:", profileData);
         }
+      }
+
+      // Si userEmail est null, on utilise celui fourni dans la requête s'il existe
+      if (!userEmail && requestData.userEmail) {
+        userEmail = requestData.userEmail;
+      }
+
+      // Si userFullName est "Utilisateur", on utilise celui fourni dans la requête s'il existe
+      if (userFullName === "Utilisateur" && requestData.userName) {
+        userFullName = requestData.userName;
       }
 
       const formatDate = (dateStr: string) => {
@@ -348,13 +392,26 @@ const handler = async (req: Request): Promise<Response> => {
       const eventDescription = `Motifs: ${requestData.motifs?.join(", ") || "Non spécifié"}`;
       const eventLocation = "Centre Entre 2 Rives";
       
+      // Définir l'organisateur (le centre) et le participant (l'utilisateur)
+      const organizer = {
+        email: "accueil@e2rives.fr",
+        name: "Centre Entre 2 Rives"
+      };
+      
+      const attendee = userEmail ? {
+        email: userEmail,
+        name: userFullName
+      } : undefined;
+      
       const icsContent = generateICalendarString({
         summary: eventSummary,
         description: eventDescription,
         location: eventLocation,
         start: startDateTime,
         end: endDateTime,
-        uid: `rdv-${rdvData.id}`
+        uid: `rdv-${rdvData.id}`,
+        organizer,
+        attendee
       });
       
       // Générer les boutons de calendrier
@@ -389,6 +446,32 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       console.log("Email sent successfully:", emailResponse);
+      
+      // Si l'utilisateur a un email, on lui envoie également une confirmation
+      if (userEmail) {
+        await resend.emails.send({
+          from: "Centre Entre 2 Rives <onboarding@resend.dev>",
+          to: [userEmail],
+          subject: `Confirmation de votre rendez-vous - Centre Entre 2 Rives`,
+          html: `
+            <h1>Confirmation de votre rendez-vous</h1>
+            <p>Bonjour ${userFullName},</p>
+            <p>Votre rendez-vous au Centre Entre 2 Rives a été confirmé :</p>
+            <p><strong>Date:</strong> ${formatDate(rdvData.date)}</p>
+            <p><strong>Horaire:</strong> ${formatTime(rdvData.heure_debut)} - ${formatTime(rdvData.heure_fin)}</p>
+            <p><strong>Motifs:</strong> ${requestData.motifs?.join(", ") || "Non spécifié"}</p>
+            ${calendarButtons}
+            <p>À bientôt !</p>
+            <p>L'équipe du Centre Entre 2 Rives</p>
+          `,
+          attachments: [
+            {
+              filename: 'rendez-vous.ics',
+              content: icsContent
+            }
+          ]
+        });
+      }
       
       return new Response(JSON.stringify({ success: true, data: emailResponse }), {
         status: 200,
