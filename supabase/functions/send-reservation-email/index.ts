@@ -92,9 +92,11 @@ function generateCalendarButtons(icsContent: string, eventSummary: string, start
   // Encodage URL pour Google Calendar
   const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventSummary)}&dates=${googleStartTime}/${googleEndTime}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
   
-  // Créer l'objet du lien ICS (pour Outlook, Apple Calendar et autres)
+  // Créer l'objet du lien ICS inline avec le contenu encodé en base64
+  // Note: Nous utilisons l'attribut download qui force le téléchargement plutôt que l'ouverture
   const icsBase64 = btoa(unescape(encodeURIComponent(icsContent)));
   
+  // Pour le lien Outlook, on utilise une approche différente qui assure le téléchargement
   return `
     <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
       <p style="margin-bottom: 10px; font-weight: bold;">Ajouter à votre calendrier :</p>
