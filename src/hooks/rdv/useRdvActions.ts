@@ -73,7 +73,7 @@ export const useRdvActions = (
       const { error: updateError } = await supabase
         .from("rdv")
         .update({
-          status: "réservé", // Updated from is_available: false
+          status: "réservé" as const, // Using const assertion to match the literal type
           user_id: user.id,
           motifs: motifs,
         })
@@ -92,9 +92,9 @@ export const useRdvActions = (
       setShowConfirmDialog(false);
       setReservationComplete(true);
 
-      const updatedRdv = {
+      const updatedRdv: Rdv = {
         ...selectedRdv,
-        status: "réservé", // Updated from is_available: false
+        status: "réservé", // This is typed correctly as the literal "réservé"
         user_id: user.id,
         motifs: motifs,
       };
@@ -132,7 +132,7 @@ export const useRdvActions = (
       const { error } = await supabase
         .from("rdv")
         .update({
-          status: "disponible", // Updated from is_available: true
+          status: "disponible" as const, // Using const assertion to match the literal type
           user_id: null,
           motifs: [],
         })
