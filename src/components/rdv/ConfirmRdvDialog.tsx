@@ -33,6 +33,11 @@ export const ConfirmRdvDialog = ({
   const formatTime = (timeStr: string) => {
     return timeStr.substring(0, 5);
   };
+  
+  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent form submission
+    handleReservation();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,12 +80,14 @@ export const ConfirmRdvDialog = ({
             variant="outline" 
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
+            type="button"
           >
             Annuler
           </Button>
           <Button 
-            onClick={handleReservation} 
+            onClick={handleSubmit}
             disabled={selectedMotifs.length === 0 || isLoading}
+            type="button"
           >
             {isLoading ? "Confirmation..." : "Confirmer la réservation"}
           </Button>

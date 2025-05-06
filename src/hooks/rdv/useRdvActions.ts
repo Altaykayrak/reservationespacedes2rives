@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,7 +73,7 @@ export const useRdvActions = (
       const { error: updateError } = await supabase
         .from("rdv")
         .update({
-          is_available: false,
+          status: "réservé", // Updated from is_available: false
           user_id: user.id,
           motifs: motifs,
         })
@@ -93,7 +94,7 @@ export const useRdvActions = (
 
       const updatedRdv = {
         ...selectedRdv,
-        is_available: false,
+        status: "réservé", // Updated from is_available: false
         user_id: user.id,
         motifs: motifs,
       };
@@ -131,7 +132,7 @@ export const useRdvActions = (
       const { error } = await supabase
         .from("rdv")
         .update({
-          is_available: true,
+          status: "disponible", // Updated from is_available: true
           user_id: null,
           motifs: [],
         })
