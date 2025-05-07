@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { WednesdayReservationWithChild, ChildWithProfile } from "@/types/reservations";
 import { useWednesdayReservationSubmission } from "./useWednesdayReservationSubmission";
 import { useChildrenData } from "./useChildrenData";
+import { useAvailableWednesdays } from "./useAvailableWednesdays";
 
 export const useReservations = () => {
   const queryClient = useQueryClient();
@@ -18,6 +19,9 @@ export const useReservations = () => {
 
   // Utiliser useChildrenData pour récupérer les enfants au lieu de dupliquer la requête
   const { children } = useChildrenData();
+
+  // Récupérer les mercredis disponibles pour la fonction selectAllDates
+  const { data: availableWednesdays = [] } = useAvailableWednesdays(false, false);
 
   const handleDateToggle = (date: Date) => {
     setSelectedDates(prev => {
@@ -36,6 +40,28 @@ export const useReservations = () => {
       }
       return d;
     }));
+  };
+
+  // Fonction pour sélectionner tous les mercredis disponibles
+  const selectAllDates = () => {
+    if (!selectedChild || availableWednesdays.length === 0) return;
+
+    const allAvailableDates = availableWednesdays
+      .filter(wednesday => {
+        // Ne pas inclure les dates déjà réservées
+        const date = new Date(wednesday.date);
+        return !isDateReservedForChild(selectedChild, date) && !wednesday.isFull;
+      })
+      .map(wednesday => {
+        const date = new Date(wednesday.date);
+        return {
+          date,
+          withoutMeal: false,
+          earlyDropoff: false
+        };
+      });
+
+    setSelectedDates(allAvailableDates);
   };
 
   const { data: wednesdayReservations = [], refetch: refetchReservations } = useQuery({
@@ -137,6 +163,7 @@ export const useReservations = () => {
     refetchReservations,
     isSubmitting,
     showSuccessDialog,
-    setShowSuccessDialog
+    setShowSuccessDialog,
+    selectAllDates
   };
 };
