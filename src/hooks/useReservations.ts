@@ -73,6 +73,31 @@ export const useReservations = () => {
     setSelectedDates(allAvailableDates);
   };
 
+  // Nouvelle fonction pour sélectionner tous les mercredis disponibles sans repas
+  const selectAllDatesWithoutMeal = () => {
+    if (!selectedChild || availableWednesdays.length === 0) return;
+    
+    console.log("Tentative de sélectionner tous les mercredis disponibles sans repas");
+
+    const allAvailableDates = availableWednesdays
+      .filter(wednesday => {
+        // Ne pas inclure les dates déjà réservées
+        const date = new Date(wednesday.date);
+        return !isDateAlreadyReserved(date) && !wednesday.isFull;
+      })
+      .map(wednesday => {
+        const date = new Date(wednesday.date);
+        return {
+          date,
+          withoutMeal: true,
+          earlyDropoff: false
+        };
+      });
+
+    console.log("Dates disponibles sélectionnées sans repas:", allAvailableDates);
+    setSelectedDates(allAvailableDates);
+  };
+
   const isDateReservedForChild = (childId: string, date: Date) => {
     if (childId !== selectedChild) return false;
     return isDateAlreadyReserved(date);
@@ -106,6 +131,7 @@ export const useReservations = () => {
     isSubmitting,
     showSuccessDialog,
     setShowSuccessDialog,
-    selectAllDates
+    selectAllDates,
+    selectAllDatesWithoutMeal
   };
 };
