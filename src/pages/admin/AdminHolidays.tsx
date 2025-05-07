@@ -10,8 +10,14 @@ import { Link } from "react-router-dom";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorFallback } from "@/components/ErrorFallback";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 const AdminHolidays = () => {
+  const { toast } = useToast();
+  const { data: isAdmin, isLoading: isAdminLoading } = useAdminAuth();
+  
   const { data: holidays, refetch, isLoading, error } = useQuery({
     queryKey: ["available_holiday_periods"],
     queryFn: async () => {
@@ -31,6 +37,38 @@ const AdminHolidays = () => {
     },
   });
 
+  // Vérification explicite du statut admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        console.log("Checking admin status for user:", session.user.id);
+        const { data: adminCheck, error: adminError } = await supabase
+          .rpc('is_admin', { user_id: session.user.id });
+          
+        console.log("Admin check result:", adminCheck);
+        
+        if (adminError) {
+          console.error("Error checking admin status:", adminError);
+          toast({
+            title: "Erreur d'autorisation",
+            description: "Impossible de vérifier les droits d'administration",
+            variant: "destructive"
+          });
+        } else if (!adminCheck) {
+          toast({
+            title: "Accès refusé",
+            description: "Vous n'avez pas les droits d'administration nécessaires",
+            variant: "destructive"
+          });
+        }
+      }
+    };
+    
+    checkAdminStatus();
+  }, [toast]);
+
   const handleHolidayAdded = async () => {
     console.log("Holiday added, refetching...");
     await refetch();
@@ -38,6 +76,28 @@ const AdminHolidays = () => {
 
   if (error) {
     console.error("Error in AdminHolidays:", error);
+  }
+
+  if (isAdminLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (isAdmin === false) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="p-6 bg-white rounded-lg shadow">
+          <h1 className="text-2xl font-bold text-red-600">Accès refusé</h1>
+          <p className="mt-2">Vous n'avez pas les droits nécessaires pour accéder à cette page.</p>
+          <Button asChild className="mt-4">
+            <Link to="/">Retour à l'accueil</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (

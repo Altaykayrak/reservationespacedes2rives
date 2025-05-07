@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +9,8 @@ import { useQuery } from "@tanstack/react-query";
 import HolidayDatePicker from "./form/HolidayDatePicker";
 import HolidayNameInput from "./form/HolidayNameInput";
 import ParticipantsInputs from "./form/ParticipantsInputs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const currentYear = new Date().getFullYear();
@@ -19,7 +21,39 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [maxParticipantsTeen, setMaxParticipantsTeen] = useState("");
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { toast } = useToast();
+
+  // Vérifier explicitement les droits d'administration
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          setIsAdmin(false);
+          return;
+        }
+        
+        console.log("Checking admin permissions for:", session.user.id);
+        const { data: adminStatus, error } = await supabase
+          .rpc('is_admin', { user_id: session.user.id });
+        
+        if (error) {
+          console.error("Error checking admin status:", error);
+          setIsAdmin(false);
+          return;
+        }
+        
+        console.log("Admin status result:", adminStatus);
+        setIsAdmin(!!adminStatus);
+      } catch (error) {
+        console.error("Error in admin check:", error);
+        setIsAdmin(false);
+      }
+    };
+    
+    checkAdminStatus();
+  }, []);
 
   // Fetch all school class categories
   const { data: schoolClasses } = useQuery({
@@ -61,6 +95,20 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
         maxParticipantsTeen: parseInt(maxParticipantsTeen)
       });
 
+      // Vérifier d'abord les permissions d'administration
+      const { data: adminCheck, error: adminError } = await supabase
+        .rpc('is_admin', { user_id: (await supabase.auth.getSession()).data.session?.user.id });
+      
+      if (adminError || !adminCheck) {
+        console.error("Admin permission check failed:", adminError || "User is not admin");
+        toast({
+          title: "Erreur d'autorisation",
+          description: "Vous n'avez pas les droits nécessaires pour cette action",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // 1. Insert the holiday period
       const { data: holidayPeriod, error: holidayError } = await supabase
         .from("available_holiday_periods")
@@ -77,7 +125,12 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
       if (holidayError) {
         console.error("Error creating holiday period:", holidayError);
-        throw holidayError;
+        toast({
+          title: "Erreur",
+          description: `Échec de création de la période: ${holidayError.message}`,
+          variant: "destructive",
+        });
+        return;
       }
 
       console.log("Created holiday period:", holidayPeriod);
@@ -97,7 +150,11 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
         if (allowedClassesError) {
           console.error("Error adding allowed classes:", allowedClassesError);
-          throw allowedClassesError;
+          toast({
+            title: "Attention",
+            description: "La période a été créée mais les classes autorisées n'ont pas été associées",
+            variant: "warning",
+          });
         }
       }
 
@@ -129,6 +186,20 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
   };
 
+  if (isAdmin === false) {
+    return (
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-4">Ajouter une période de vacances</h2>
+        <Alert variant="destructive" className="mb-4">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Vous n'avez pas les droits d'administration nécessaires pour ajouter des périodes de vacances.
+          </AlertDescription>
+        </Alert>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-6">
       <h2 className="text-xl font-semibold mb-4">Ajouter une période de vacances</h2>
@@ -159,7 +230,7 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
         <Button 
           onClick={handleAddHolidayPeriod} 
           className="w-full"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isAdmin === false || isAdmin === null}
         >
           {isSubmitting ? "Ajout en cours..." : "Ajouter"}
         </Button>
