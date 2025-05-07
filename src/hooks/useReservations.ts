@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +14,8 @@ export const useReservations = () => {
     earlyDropoff: boolean;
   }>>([]);
 
+  // Noter que nous ne récupérons pas les enfants directement ici
+  // car nous utilisons useChildrenData dans le composant
   const { data: children } = useQuery({
     queryKey: ["children"],
     queryFn: async () => {
@@ -42,6 +43,25 @@ export const useReservations = () => {
     staleTime: 30000,
     gcTime: 3600000,
   });
+
+  const handleDateToggle = (date: Date) => {
+    setSelectedDates(prev => {
+      const existing = prev.find(d => d.date.getTime() === date.getTime());
+      if (existing) {
+        return prev.filter(d => d.date.getTime() !== date.getTime());
+      }
+      return [...prev, { date, withoutMeal: false, earlyDropoff: false }];
+    });
+  };
+
+  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
+    setSelectedDates(prev => prev.map(d => {
+      if (d.date.getTime() === date.getTime()) {
+        return { ...d, [option]: value };
+      }
+      return d;
+    }));
+  };
 
   const { data: wednesdayReservations = [], refetch: refetchReservations } = useQuery({
     queryKey: ["wednesday_reservations"],
@@ -104,25 +124,6 @@ export const useReservations = () => {
     staleTime: 30000,
     gcTime: 3600000,
   });
-
-  const handleDateToggle = (date: Date) => {
-    setSelectedDates(prev => {
-      const existing = prev.find(d => d.date.getTime() === date.getTime());
-      if (existing) {
-        return prev.filter(d => d.date.getTime() !== date.getTime());
-      }
-      return [...prev, { date, withoutMeal: false, earlyDropoff: false }];
-    });
-  };
-
-  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
-    setSelectedDates(prev => prev.map(d => {
-      if (d.date.getTime() === date.getTime()) {
-        return { ...d, [option]: value };
-      }
-      return d;
-    }));
-  };
 
   const isDateReservedForChild = (childId: string, date: Date) => {
     if (!wednesdayReservations) return false;

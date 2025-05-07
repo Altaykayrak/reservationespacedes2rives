@@ -22,6 +22,7 @@ export const ChildSelector = ({
   const isHolidayReservation = location.pathname === "/holiday-reservations";
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
   const isAdminTeenHolidayReservation = location.pathname === "/admin/reservations/new-teen-holiday";
+  const isWednesdayReservation = location.pathname === "/wednesday-reservations";
 
   const { isTeenClass } = useSchoolClassUtils();
 
@@ -45,9 +46,12 @@ export const ChildSelector = ({
       } else if (isHolidayReservation) {
         // Pour les réservations vacances normales, exclure les ados et PS
         return !isTeen && !isPS;
-      } else {
+      } else if (isWednesdayReservation) {
         // Pour les réservations mercredis, exclure les ados et PS
         return !isTeen && !isPS;
+      } else {
+        // Comportement par défaut pour les autres pages
+        return true;
       }
     })
     ?.sort((a, b) => {

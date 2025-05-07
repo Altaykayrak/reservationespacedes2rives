@@ -22,11 +22,19 @@ export const useChildrenData = () => {
 
   const teenChildren = children?.filter(child => isTeenClass(child.school_class)) || [];
   const nonTeenChildren = children?.filter(child => !isTeenClass(child.school_class)) || [];
+  
+  // Ajout d'un filtre pour exclure les PS et les adolescents
+  const wednesdayEligibleChildren = children?.filter(child => {
+    const isPS = child.school_class.toUpperCase() === "PS";
+    const isTeen = isTeenClass(child.school_class);
+    return !isPS && !isTeen;
+  }) || [];
 
   return { 
     children,
     isLoading,
     teenChildren,
-    nonTeenChildren
+    nonTeenChildren,
+    wednesdayEligibleChildren
   };
 };

@@ -8,13 +8,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CalendarDays } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
+import { useChildrenData } from "@/hooks/useChildrenData";
 
 export const WednesdayReservationContent = () => {
   const {
     selectedDates,
     selectedChild,
     setSelectedChild,
-    children,
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
@@ -22,6 +22,8 @@ export const WednesdayReservationContent = () => {
     showSuccessDialog,
     setShowSuccessDialog
   } = useReservations();
+  
+  const { wednesdayEligibleChildren } = useChildrenData();
 
   return (
     <div className="space-y-6">
@@ -37,7 +39,7 @@ export const WednesdayReservationContent = () => {
           <ChildSelector
             selectedChild={selectedChild}
             setSelectedChild={setSelectedChild}
-            children={children}
+            children={wednesdayEligibleChildren}
           />
 
           <ScrollArea className="h-[400px]">

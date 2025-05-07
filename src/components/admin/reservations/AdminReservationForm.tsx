@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -52,7 +51,7 @@ export const AdminReservationForm = ({
   const [reservedDate, setReservedDate] = useState<Date | null>(null);
   const queryClient = useQueryClient();
 
-  const { children, isLoading } = useChildrenData();
+  const { children, isLoading, nonTeenChildren } = useChildrenData();
 
   // Requête pour récupérer les réservations existantes
   const { data: existingReservations } = useQuery({
@@ -113,11 +112,17 @@ export const AdminReservationForm = ({
     resetForm
   );
 
-  const filteredChildren = children?.filter(child => {
-    if (selectedGroup === "all") return true;
+  // Filtrer les enfants basés sur le groupe sélectionné et exclure les PS et les ados
+  const filteredChildren = nonTeenChildren?.filter(child => {
     const schoolClass = child.school_class.toUpperCase();
+    const isPS = schoolClass === "PS";
+    
+    // Toujours exclure les PS
+    if (isPS) return false;
+    
+    if (selectedGroup === "all") return true;
     if (selectedGroup === "maternelle") {
-      return ["PS", "MS", "GS"].includes(schoolClass);
+      return ["MS", "GS"].includes(schoolClass);
     }
     if (selectedGroup === "primaire") {
       return ["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass);
