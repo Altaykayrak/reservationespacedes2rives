@@ -22,8 +22,7 @@ export const ChildSelector = ({
   const isHolidayReservation = location.pathname === "/holiday-reservations";
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
   const isAdminTeenHolidayReservation = location.pathname === "/admin/reservations/new-teen-holiday";
-  const isWednesdayReservation = location.pathname === "/wednesday-reservations";
-
+  
   const { isTeenClass } = useSchoolClassUtils();
 
   // Effect to handle child change
@@ -34,35 +33,8 @@ export const ChildSelector = ({
     }
   }, [selectedChild, setSelectedDates]);
 
-  // Filter and sort children
-  const sortedAndFilteredChildren = children
-    ?.filter(child => {
-      const isTeen = isTeenClass(child.school_class);
-      const isPS = child.school_class.toUpperCase().includes("PS");
-      
-      if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
-        // Pour la page Club Ado (admin et public), montrer uniquement les adolescents
-        return isTeen;
-      } else if (isHolidayReservation) {
-        // Pour les réservations vacances normales, exclure les ados et PS
-        return !isTeen && !isPS;
-      } else if (isWednesdayReservation) {
-        // Pour les réservations mercredis, exclure les ados et PS
-        return !isTeen && !isPS;
-      } else {
-        // Comportement par défaut pour les autres pages
-        return true;
-      }
-    })
-    ?.sort((a, b) => {
-      // Trier d'abord par nom de famille
-      const lastNameComparison = a.last_name.localeCompare(b.last_name, 'fr');
-      // Si les noms sont identiques, trier par prénom
-      if (lastNameComparison === 0) {
-        return a.first_name.localeCompare(b.first_name, 'fr');
-      }
-      return lastNameComparison;
-    });
+  // Log pour déboguer
+  console.log("Children passed to ChildSelector:", children);
 
   return (
     <div>
@@ -74,14 +46,18 @@ export const ChildSelector = ({
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
       >
         <option value="">Choisir un enfant</option>
-        {sortedAndFilteredChildren?.map((child) => (
-          <option 
-            key={child.id} 
-            value={child.id}
-          >
-            {child.last_name} {child.first_name} ({child.school_class})
-          </option>
-        ))}
+        {children?.length ? (
+          children.map((child) => (
+            <option 
+              key={child.id} 
+              value={child.id}
+            >
+              {child.last_name} {child.first_name} ({child.school_class})
+            </option>
+          ))
+        ) : (
+          <option value="" disabled>Aucun enfant éligible trouvé</option>
+        )}
       </select>
     </div>
   );

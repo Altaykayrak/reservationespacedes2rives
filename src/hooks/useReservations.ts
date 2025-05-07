@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { WednesdayReservationWithChild, ChildWithProfile } from "@/types/reservations";
 import { useWednesdayReservationSubmission } from "./useWednesdayReservationSubmission";
+import { useChildrenData } from "./useChildrenData";
 
 export const useReservations = () => {
   const queryClient = useQueryClient();
@@ -14,35 +16,8 @@ export const useReservations = () => {
     earlyDropoff: boolean;
   }>>([]);
 
-  // Noter que nous ne récupérons pas les enfants directement ici
-  // car nous utilisons useChildrenData dans le composant
-  const { data: children } = useQuery({
-    queryKey: ["children"],
-    queryFn: async () => {
-      console.log("Fetching children...");
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        console.log("No session found");
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from("children")
-        .select(`
-          *,
-          profiles!children_profile_id_fkey (
-            school_city
-          )
-        `)
-        .eq('profile_id', session.user.id)
-        .order('created_at', { ascending: true });
-      
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 30000,
-    gcTime: 3600000,
-  });
+  // Utiliser useChildrenData pour récupérer les enfants au lieu de dupliquer la requête
+  const { children } = useChildrenData();
 
   const handleDateToggle = (date: Date) => {
     setSelectedDates(prev => {
