@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SchoolClassCategories from "@/components/admin/SchoolClassCategories";
-import AddHolidayPeriodForm from "@/components/admin/holidays/AddHolidayPeriodForm";
+import { AddHolidayPeriodForm } from "@/components/admin/holidays/AddHolidayPeriodForm";
 import HolidayPeriodsList from "@/components/admin/holidays/HolidayPeriodsList";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";

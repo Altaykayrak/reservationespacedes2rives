@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -246,3 +247,6 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
     </form>
   );
 };
+
+// Export the component as default for compatibility with the import in AdminHolidays.tsx
+export default AddHolidayPeriodForm;
