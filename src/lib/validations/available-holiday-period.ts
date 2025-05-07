@@ -9,7 +9,7 @@ export const availableHolidayPeriodSchema = z.object({
   end_date: z.date({
     required_error: "La date de fin est requise",
   }).superRefine((end_date, ctx) => {
-    if (ctx.data.start_date && end_date < ctx.data.start_date) {
+    if (ctx.parent.start_date && end_date < ctx.parent.start_date) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "La date de fin doit être après la date de début",

@@ -84,40 +84,79 @@ export const useHolidaySpots = (
       });
 
       try {
-        // Utiliser la fonction RPC pour contourner le problème d'ambiguïté de colonne
-        const { data: spotCount, error } = await supabase
-          .rpc('check_holiday_spots_available', {
-            period_id: periodId,
-            reservation_date: formattedDate,
-            child_school_class: normalizedClass
-          });
+        // Utilisation de SQL natif au lieu de la fonction RPC pour éviter l'ambiguïté
+        const { data, error } = await supabase
+          .from('available_holiday_periods')
+          .select(`
+            id,
+            max_participants_kindergarten,
+            max_participants_primary,
+            max_participants_teen,
+            reservations:holiday_reservations!inner(
+              id,
+              child:children(school_class)
+            )
+          `)
+          .eq('id', periodId)
+          .single();
 
         if (error) {
-          console.error("Erreur avec les paramètres:", {
-            period_id: periodId,
-            reservation_date: formattedDate,
-            child_school_class: normalizedClass
-          });
-          console.error("Erreur retournée:", error);
+          console.error("Erreur lors de la récupération des données de période:", error);
           throw error;
         }
-
-        console.log(`Résultat de la requête pour ${normalizedClass} le ${formattedDate}:`, spotCount);
         
-        // Vérification complète du résultat pour éviter les faux négatifs
-        console.log(`Résultat détaillé: valeur=${spotCount}, type=${typeof spotCount}, null?=${spotCount === null}, undefined?=${spotCount === undefined}, est zéro?=${spotCount === 0}`);
-        
-        // Forcer un type de retour cohérent
-        if (typeof spotCount === 'number') {
-          // Si le nombre est négatif (ce qui serait une erreur de calcul), on considère qu'il n'y a pas de place
-          return spotCount < 0 ? 0 : spotCount;
+        // Déterminer le groupe de classe de l'enfant
+        let classGroup = '';
+        if (['PS', 'MS', 'GS'].includes(normalizedClass)) {
+          classGroup = 'kindergarten';
+        } else if (['CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(normalizedClass)) {
+          classGroup = 'primary';
+        } else {
+          classGroup = 'teen';
         }
         
-        // Si spotCount n'est pas un nombre, on retourne null
-        return null;
+        // Récupérer le maximum de places pour ce groupe
+        const maxSpots = data[`max_participants_${classGroup}`] || 0;
+        
+        // Obtenir toutes les réservations pour cette date
+        const { data: reservationsData, error: reservationsError } = await supabase
+          .from('holiday_reservations')
+          .select('id, child_id, child:children(school_class)')
+          .eq('period_id', periodId)
+          .eq('reservation_date', formattedDate)
+          .eq('status', 'confirmed');
+
+        if (reservationsError) {
+          console.error("Erreur lors de la récupération des réservations:", reservationsError);
+          throw reservationsError;
+        }
+
+        // Filtrer les réservations par groupe de classe
+        const reservationsCount = reservationsData.filter(res => {
+          const childClass = res.child?.school_class;
+          if (!childClass) return false;
+          
+          const normalizedChildClass = normalizeSchoolClass(childClass);
+          
+          if (classGroup === 'kindergarten') {
+            return ['PS', 'MS', 'GS'].includes(normalizedChildClass);
+          } else if (classGroup === 'primary') {
+            return ['CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(normalizedChildClass);
+          } else {
+            return !['PS', 'MS', 'GS', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(normalizedChildClass);
+          }
+        }).length;
+        
+        // Calculer les places restantes
+        const spotsLeft = maxSpots - reservationsCount;
+        
+        console.log(`Résultat du calcul pour ${normalizedClass} le ${formattedDate}: max=${maxSpots}, réservations=${reservationsCount}, restantes=${spotsLeft}`);
+        
+        return Math.max(0, spotsLeft); // Ne jamais retourner de valeur négative
+        
       } catch (error) {
         console.error("Erreur lors de la vérification des places:", error);
-        throw error;
+        return null; // En cas d'erreur, on retourne null pour indiquer qu'on ne sait pas
       }
     },
     enabled: Boolean(periodId) && Boolean(normalizedClass),

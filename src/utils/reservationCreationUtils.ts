@@ -83,21 +83,61 @@ export const createHolidayReservations = async (
         throw new Error(`Période non trouvée pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
       }
 
-      // Check if there are spots available
-      const { data: spotsLeft, error: spotsError } = await supabase
-        .rpc('check_holiday_spots_available', {
-          period_id: period.id,
-          reservation_date: dateStr,
-          child_school_class: childData.school_class
-        });
-
-      if (spotsError) throw spotsError;
+      // Déterminer la catégorie de la classe (maternelle, primaire, ado)
+      let classGroup = '';
+      const schoolClass = childData.school_class;
+      
+      if (['PS', 'MS', 'GS'].includes(schoolClass)) {
+        classGroup = 'kindergarten';
+      } else if (['CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(schoolClass)) {
+        classGroup = 'primary';
+      } else {
+        classGroup = 'teen';
+      }
+      
+      // Récupérer le maximum de places pour ce groupe
+      const { data: periodData, error: periodError } = await supabase
+        .from("available_holiday_periods")
+        .select(`max_participants_${classGroup}`)
+        .eq("id", period.id)
+        .single();
+        
+      if (periodError) throw periodError;
+      
+      const maxSpots = periodData[`max_participants_${classGroup}`];
+      
+      // Vérifier les réservations existantes pour ce groupe et cette date
+      const { data: reservations, error: reservationsError } = await supabase
+        .from("holiday_reservations")
+        .select("id, child:children(school_class)")
+        .eq("period_id", period.id)
+        .eq("reservation_date", dateStr)
+        .eq("status", "confirmed");
+        
+      if (reservationsError) throw reservationsError;
+      
+      // Filtrer les réservations par groupe de classe
+      const reservationsCount = reservations.filter(res => {
+        const resClass = res.child?.school_class;
+        if (!resClass) return false;
+        
+        if (classGroup === 'kindergarten') {
+          return ['PS', 'MS', 'GS'].includes(resClass);
+        } else if (classGroup === 'primary') {
+          return ['CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(resClass);
+        } else {
+          return !['PS', 'MS', 'GS', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(resClass);
+        }
+      }).length;
+      
+      // Calculer les places restantes
+      const spotsLeft = maxSpots - reservationsCount;
 
       if (spotsLeft <= 0) {
         return {
           success: false,
           noSpots: {
-            schoolClass: childData.school_class,
+            schoolClass: schoolClass,
             date: dateOption.date
           }
         };
