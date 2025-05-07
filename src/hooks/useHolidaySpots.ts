@@ -80,7 +80,7 @@ export const useHolidaySpots = (
       });
 
       try {
-        // Utiliser une requête SQL directe pour contourner le problème d'ambiguïté de colonne
+        // Utiliser la fonction RPC pour contourner le problème d'ambiguïté de colonne
         const { data: spotCount, error } = await supabase
           .rpc('check_holiday_spots_available', {
             period_id: periodId,
