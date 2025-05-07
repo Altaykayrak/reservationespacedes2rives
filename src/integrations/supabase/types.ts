@@ -215,6 +215,41 @@ export type Database = {
           },
         ]
       }
+      holiday_period_class_mappings: {
+        Row: {
+          category: string
+          created_at: string
+          holiday_period_id: string
+          id: string
+          school_class: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          holiday_period_id: string
+          id?: string
+          school_class: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          holiday_period_id?: string
+          id?: string
+          school_class?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_period_class_mappings_holiday_period_id_fkey"
+            columns: ["holiday_period_id"]
+            isOneToOne: false
+            referencedRelation: "available_holiday_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       holiday_reservations: {
         Row: {
           child_id: string
@@ -618,6 +653,10 @@ export type Database = {
       }
       get_school_class_group: {
         Args: { school_class: string }
+        Returns: Database["public"]["Enums"]["school_class_group"]
+      }
+      get_school_class_group_for_period: {
+        Args: { period_id: string; school_class: string }
         Returns: Database["public"]["Enums"]["school_class_group"]
       }
       get_user_emails: {

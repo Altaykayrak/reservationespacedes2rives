@@ -40,12 +40,12 @@ const AdminHolidays = () => {
   // Vérification explicite du statut admin
   useEffect(() => {
     const checkAdminStatus = async () => {
-      const { data: session } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
       
-      if (session?.user) {
-        console.log("Checking admin status for user:", session.user.id);
+      if (data?.session?.user) {
+        console.log("Checking admin status for user:", data.session.user.id);
         const { data: adminCheck, error: adminError } = await supabase
-          .rpc('is_admin', { user_id: session.user.id });
+          .rpc('is_admin', { user_id: data.session.user.id });
           
         console.log("Admin check result:", adminCheck);
         

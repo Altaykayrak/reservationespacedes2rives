@@ -14,7 +14,7 @@ interface HolidayPeriodsListProps {
 }
 
 export const HolidayPeriodsList = ({ holidays, onDelete }: HolidayPeriodsListProps) => {
-  const { data: reservationCounts, isLoading } = useQuery({
+  const { data: reservationCounts, isLoading, refetch } = useQuery({
     queryKey: ["holiday_reservation_counts"],
     queryFn: async () => {
       try {
@@ -78,6 +78,17 @@ export const HolidayPeriodsList = ({ holidays, onDelete }: HolidayPeriodsListPro
         return;
       }
 
+      // Supprimer les mappings de classes spécifiques
+      const { error: mappingsError } = await supabase
+        .from('holiday_period_class_mappings')
+        .delete()
+        .eq('holiday_period_id', holidayId);
+
+      if (mappingsError) {
+        console.error("Error deleting holiday class mappings:", mappingsError);
+        return;
+      }
+
       // Ensuite supprimer la période de vacances
       const { error: deleteError } = await supabase
         .from('available_holiday_periods')
@@ -94,6 +105,11 @@ export const HolidayPeriodsList = ({ holidays, onDelete }: HolidayPeriodsListPro
     } catch (error) {
       console.error("Error in handleDelete:", error);
     }
+  };
+
+  // Rafraîchir les données après une modification de mapping
+  const handleMappingChange = () => {
+    refetch();
   };
 
   if (holidays.length === 0) {
@@ -121,6 +137,7 @@ export const HolidayPeriodsList = ({ holidays, onDelete }: HolidayPeriodsListPro
               reservationCount={getReservationCountForPeriod(holiday.id)}
               onEdit={() => {}} // Implémentation à venir si nécessaire
               onDelete={() => handleDelete(holiday.id)}
+              onMappingChange={handleMappingChange}
             />
           ))}
         </div>

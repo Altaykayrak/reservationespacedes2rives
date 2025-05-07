@@ -11,6 +11,7 @@ import HolidayNameInput from "./form/HolidayNameInput";
 import ParticipantsInputs from "./form/ParticipantsInputs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import ClassMappingManager from "./ClassMappingManager";
 
 const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const currentYear = new Date().getFullYear();
@@ -22,6 +23,7 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [createdHolidayId, setCreatedHolidayId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Vérifier explicitement les droits d'administration
@@ -134,6 +136,9 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
       }
 
       console.log("Created holiday period:", holidayPeriod);
+      
+      // Enregistrer l'ID de la période créée pour afficher le gestionnaire de mappings
+      setCreatedHolidayId(holidayPeriod.id);
 
       // 2. Add allowed classes based on categories
       if (schoolClasses && holidayPeriod) {
@@ -153,7 +158,7 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
           toast({
             title: "Attention",
             description: "La période a été créée mais les classes autorisées n'ont pas été associées",
-            variant: "warning",
+            variant: "destructive",
           });
         }
       }
@@ -163,12 +168,7 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
         description: "La période de vacances a été ajoutée avec succès",
       });
 
-      setStartDate(undefined);
-      setEndDate(undefined);
-      setMaxParticipantsKindergarten("");
-      setMaxParticipantsPrimary("");
-      setMaxParticipantsTeen("");
-      setName("");
+      // Ne réinitialisons pas les champs immédiatement pour permettre la configuration des catégories
       
       // Appel de la fonction de callback pour rafraîchir la liste
       if (onSuccess && typeof onSuccess === 'function') {
@@ -186,6 +186,17 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
   };
 
+  // Fonction pour réinitialiser le formulaire après sauvegarde des mappings
+  const handleReset = () => {
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setMaxParticipantsKindergarten("");
+    setMaxParticipantsPrimary("");
+    setMaxParticipantsTeen("");
+    setName("");
+    setCreatedHolidayId(null);
+  };
+
   if (isAdmin === false) {
     return (
       <Card className="p-6">
@@ -201,41 +212,62 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Ajouter une période de vacances</h2>
-      
-      <div className="space-y-4">
-        <HolidayNameInput
-          name={name}
-          currentYear={currentYear}
-          setName={setName}
-        />
+    <div className="space-y-4">
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-4">Ajouter une période de vacances</h2>
+        
+        <div className="space-y-4">
+          <HolidayNameInput
+            name={name}
+            currentYear={currentYear}
+            setName={setName}
+          />
 
-        <HolidayDatePicker
-          startDate={startDate}
-          endDate={endDate}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-        />
+          <HolidayDatePicker
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+          />
 
-        <ParticipantsInputs
-          maxParticipantsKindergarten={maxParticipantsKindergarten}
-          maxParticipantsPrimary={maxParticipantsPrimary}
-          maxParticipantsTeen={maxParticipantsTeen}
-          setMaxParticipantsKindergarten={setMaxParticipantsKindergarten}
-          setMaxParticipantsPrimary={setMaxParticipantsPrimary}
-          setMaxParticipantsTeen={setMaxParticipantsTeen}
-        />
+          <ParticipantsInputs
+            maxParticipantsKindergarten={maxParticipantsKindergarten}
+            maxParticipantsPrimary={maxParticipantsPrimary}
+            maxParticipantsTeen={maxParticipantsTeen}
+            setMaxParticipantsKindergarten={setMaxParticipantsKindergarten}
+            setMaxParticipantsPrimary={setMaxParticipantsPrimary}
+            setMaxParticipantsTeen={setMaxParticipantsTeen}
+          />
 
-        <Button 
-          onClick={handleAddHolidayPeriod} 
-          className="w-full"
-          disabled={isSubmitting || isAdmin === false || isAdmin === null}
-        >
-          {isSubmitting ? "Ajout en cours..." : "Ajouter"}
-        </Button>
-      </div>
-    </Card>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleAddHolidayPeriod} 
+              className="flex-1"
+              disabled={isSubmitting || isAdmin === false || isAdmin === null || !!createdHolidayId}
+            >
+              {isSubmitting ? "Ajout en cours..." : "Ajouter"}
+            </Button>
+            
+            {createdHolidayId && (
+              <Button 
+                variant="outline" 
+                onClick={handleReset}
+                className="flex-1"
+              >
+                Nouveau formulaire
+              </Button>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {createdHolidayId && (
+        <ClassMappingManager 
+          holidayPeriodId={createdHolidayId} 
+          onMappingChange={onSuccess} 
+        />
+      )}
+    </div>
   );
 };
 

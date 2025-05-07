@@ -4,7 +4,9 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, School } from "lucide-react";
+import { useState } from "react";
+import EditHolidayClassMappings from "./EditHolidayClassMappings";
 
 type HolidayPeriod = Tables<"available_holiday_periods">;
 
@@ -13,18 +15,25 @@ interface HolidayPeriodItemProps {
   reservationCount?: number;
   onEdit: () => void;
   onDelete: () => void;
+  onMappingChange?: () => void;
 }
 
 const HolidayPeriodItem = ({ 
   holiday, 
   reservationCount = 0, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onMappingChange
 }: HolidayPeriodItemProps) => {
+  const [showClassMappings, setShowClassMappings] = useState(false);
   const startDate = new Date(holiday.start_date);
   const endDate = new Date(holiday.end_date);
 
   const hasReservations = reservationCount > 0;
+
+  const handleMappingSuccess = () => {
+    if (onMappingChange) onMappingChange();
+  };
 
   return (
     <div className="p-4 border rounded-lg bg-white shadow-sm">
@@ -54,6 +63,14 @@ const HolidayPeriodItem = ({
           <Button
             variant="outline"
             size="icon"
+            onClick={() => setShowClassMappings(true)}
+            title="Configurer les classes"
+          >
+            <School className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
             onClick={onEdit}
           >
             <Edit className="h-4 w-4" />
@@ -69,6 +86,13 @@ const HolidayPeriodItem = ({
           </Button>
         </div>
       </div>
+
+      <EditHolidayClassMappings
+        open={showClassMappings}
+        onOpenChange={setShowClassMappings}
+        holiday={holiday}
+        onSuccess={handleMappingSuccess}
+      />
     </div>
   );
 };
