@@ -43,7 +43,7 @@ export const EditHolidayClassMappings = ({
         <DialogHeader>
           <DialogTitle>Configuration des classes pour {holiday.name}</DialogTitle>
           <DialogDescription>
-            Définissez la catégorie (maternelle, primaire, adolescent) pour chaque classe scolaire spécifiquement pour cette période de vacances.
+            Définissez la catégorie (maternelle, primaire, adolescent) pour chaque classe scolaire spécifiquement pour cette période de vacances. Utilisez "Aucune catégorie" pour exclure une classe de cette période.
           </DialogDescription>
         </DialogHeader>
 

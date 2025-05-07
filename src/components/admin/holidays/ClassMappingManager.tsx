@@ -178,6 +178,7 @@ export const ClassMappingManager = ({
                   <SelectItem value="maternelle">Maternelle</SelectItem>
                   <SelectItem value="primaire">Primaire</SelectItem>
                   <SelectItem value="adolescent">Adolescent</SelectItem>
+                  <SelectItem value="aucune">Aucune catégorie</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -46,6 +46,10 @@ export const getGroupNameForPeriod = async (schoolClass: string, periodId?: stri
       .maybeSingle();
 
     if (mapping) {
+      // Si la catégorie est "aucune", retourner null pour indiquer que cette classe n'a pas de catégorie
+      if (mapping.category === "aucune") {
+        return null;
+      }
       return mapping.category;
     }
   } catch (error) {

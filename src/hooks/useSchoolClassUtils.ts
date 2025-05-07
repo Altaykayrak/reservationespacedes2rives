@@ -18,6 +18,10 @@ export const useSchoolClassUtils = () => {
           .single();
         
         if (specificMapping) {
+          // Si la catégorie est "aucune", cette classe n'est pas accessible
+          if (specificMapping.category === "aucune") {
+            return false;
+          }
           return specificMapping.category === 'adolescent';
         }
       } catch (error) {

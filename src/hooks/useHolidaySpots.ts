@@ -55,6 +55,24 @@ export const useHolidaySpots = (
 
       const formattedDate = format(date, 'yyyy-MM-dd');
       
+      // Vérifier d'abord si cette classe a une catégorie pour cette période
+      try {
+        const { data: mapping } = await supabase
+          .from("holiday_period_class_mappings")
+          .select("category")
+          .eq("holiday_period_id", periodId)
+          .eq("school_class", normalizedClass)
+          .maybeSingle();
+          
+        // Si la classe est dans la catégorie "aucune", il n'y a pas de places disponibles
+        if (mapping && mapping.category === "aucune") {
+          console.log(`La classe ${normalizedClass} n'est pas disponible pour cette période (catégorie: aucune)`);
+          return 0;
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification du mapping de classe:", error);
+      }
+      
       console.log("Appel à check_holiday_spots_available avec:", {
         period_id: periodId,
         reservation_date: formattedDate,
