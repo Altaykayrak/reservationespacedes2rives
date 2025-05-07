@@ -5,7 +5,7 @@ import { useReservations } from "@/hooks/useReservations";
 import { ChildSelector } from "./ChildSelector";
 import { WednesdayDateSelector } from "./WednesdayDateSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CalendarDays, CheckSquare } from "lucide-react";
+import { CalendarDays, CheckSquare, Utensils } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { useChildrenData } from "@/hooks/useChildrenData";
@@ -21,7 +21,8 @@ export const WednesdayReservationContent = () => {
     isDateReservedForChild,
     showSuccessDialog,
     setShowSuccessDialog,
-    selectAllDates
+    selectAllDates,
+    selectAllDatesWithoutMeal
   } = useReservations();
   
   const { wednesdayEligibleChildren, isLoading } = useChildrenData();
@@ -52,15 +53,27 @@ export const WednesdayReservationContent = () => {
           />
 
           {selectedChild && (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={selectAllDates}
-            >
-              <CheckSquare className="h-4 w-4" />
-              Sélectionner tous les mercredis
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={selectAllDates}
+              >
+                <CheckSquare className="h-4 w-4" />
+                Sélectionner tous les mercredis
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={selectAllDatesWithoutMeal}
+              >
+                <Utensils className="h-4 w-4" />
+                Sélectionner tous les mercredis sans repas
+              </Button>
+            </>
           )}
 
           <ScrollArea className="h-[400px]">
