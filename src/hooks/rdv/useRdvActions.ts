@@ -10,7 +10,7 @@ export const useRdvActions = (
   setShowConfirmDialog: (show: boolean) => void,
   setReservationComplete: (complete: boolean) => void,
   setSelectedRdv: (rdv: Rdv | null) => void,
-  setSelectedMotifs: (motifs: string[]) => void
+  setSelectedMotifs: React.Dispatch<React.SetStateAction<string[]>>
 ) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
