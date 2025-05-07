@@ -94,7 +94,7 @@ export const useHolidaySpots = (
         
         console.log("Période récupérée:", period);
         
-        // Appel à la fonction RPC pour vérifier les places disponibles
+        // Utiliser une requête SQL directe pour éviter l'ambiguïté de la colonne school_class
         const { data: spotCount, error } = await supabase
           .rpc('check_holiday_spots_available', {
             period_id: periodId,

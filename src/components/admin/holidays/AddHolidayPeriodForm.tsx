@@ -1,184 +1,83 @@
-
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
-import HolidayDatePicker from "./form/HolidayDatePicker";
-import HolidayNameInput from "./form/HolidayNameInput";
-import ParticipantsInputs from "./form/ParticipantsInputs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
-import ClassMappingManager from "./ClassMappingManager";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarDays, Loader2 } from "lucide-react";
+import { availableHolidayPeriodSchema } from "@/lib/validations/available-holiday-period";
+import * as z from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Tables } from "@/integrations/supabase/types";
 
-const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
-  const currentYear = new Date().getFullYear();
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
-  const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
-  const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
-  const [maxParticipantsTeen, setMaxParticipantsTeen] = useState("");
-  const [name, setName] = useState("");
+interface AddHolidayPeriodFormProps {
+  onSuccess?: () => void;
+}
+
+export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [createdHolidayId, setCreatedHolidayId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Vérifier explicitement les droits d'administration
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-          setIsAdmin(false);
-          return;
-        }
-        
-        console.log("Checking admin permissions for:", session.user.id);
-        const { data: adminStatus, error } = await supabase
-          .rpc('is_admin', { user_id: session.user.id });
-        
-        if (error) {
-          console.error("Error checking admin status:", error);
-          setIsAdmin(false);
-          return;
-        }
-        
-        console.log("Admin status result:", adminStatus);
-        setIsAdmin(!!adminStatus);
-      } catch (error) {
-        console.error("Error in admin check:", error);
-        setIsAdmin(false);
-      }
-    };
-    
-    checkAdminStatus();
-  }, []);
-
-  // Fetch all school class categories
-  const { data: schoolClasses } = useQuery({
-    queryKey: ["school_class_categories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("school_class_categories")
-        .select("*");
-      
-      if (error) throw error;
-      return data;
+  const form = useForm<z.infer<typeof availableHolidayPeriodSchema>>({
+    resolver: zodResolver(availableHolidayPeriodSchema),
+    defaultValues: {
+      name: "",
+      start_date: undefined,
+      end_date: undefined,
+      max_participants_kindergarten: 40,
+      max_participants_primary: 40,
+      max_participants_teen: 40
     },
   });
 
-  const handleAddHolidayPeriod = async () => {
-    if (!startDate || !endDate || !maxParticipantsKindergarten || !maxParticipantsPrimary || !maxParticipantsTeen || !name) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const onSubmit = async (values: z.infer<typeof availableHolidayPeriodSchema>) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      // Format dates to YYYY-MM-DD to avoid timezone issues
-      const formattedStartDate = format(startDate, 'yyyy-MM-dd');
-      const formattedEndDate = format(endDate, 'yyyy-MM-dd');
-      const fullName = `${currentYear}-${name}`;
-
-      console.log("Submitting holiday period with:", {
-        start_date: formattedStartDate,
-        end_date: formattedEndDate,
-        name: fullName,
-        maxParticipantsKindergarten: parseInt(maxParticipantsKindergarten),
-        maxParticipantsPrimary: parseInt(maxParticipantsPrimary),
-        maxParticipantsTeen: parseInt(maxParticipantsTeen)
-      });
-
-      // Vérifier d'abord les permissions d'administration
-      const { data: adminCheck, error: adminError } = await supabase
-        .rpc('is_admin', { user_id: (await supabase.auth.getSession()).data.session?.user.id });
-      
-      if (adminError || !adminCheck) {
-        console.error("Admin permission check failed:", adminError || "User is not admin");
-        toast({
-          title: "Erreur d'autorisation",
-          description: "Vous n'avez pas les droits nécessaires pour cette action",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // 1. Insert the holiday period
-      const { data: holidayPeriod, error: holidayError } = await supabase
+      const { data, error } = await supabase
         .from("available_holiday_periods")
-        .insert({
-          start_date: formattedStartDate,
-          end_date: formattedEndDate,
-          name: fullName,
-          max_participants_kindergarten: parseInt(maxParticipantsKindergarten),
-          max_participants_primary: parseInt(maxParticipantsPrimary),
-          max_participants_teen: parseInt(maxParticipantsTeen),
-        })
-        .select()
-        .single();
+        .insert([
+          {
+            name: values.name,
+            start_date: format(values.start_date as Date, "yyyy-MM-dd"),
+            end_date: format(values.end_date as Date, "yyyy-MM-dd"),
+            max_participants_kindergarten: values.max_participants_kindergarten,
+            max_participants_primary: values.max_participants_primary,
+            max_participants_teen: values.max_participants_teen
+          },
+        ])
+        .select();
 
-      if (holidayError) {
-        console.error("Error creating holiday period:", holidayError);
+      if (error) {
         toast({
           title: "Erreur",
-          description: `Échec de création de la période: ${holidayError.message}`,
+          description: "Impossible d'ajouter la période de vacances",
           variant: "destructive",
         });
-        return;
+      } else {
+        toast({
+          title: "Succès",
+          description: "Période de vacances ajoutée avec succès",
+        });
+        form.reset();
+        if (onSuccess) onSuccess();
       }
-
-      console.log("Created holiday period:", holidayPeriod);
-      
-      // Enregistrer l'ID de la période créée pour afficher le gestionnaire de mappings
-      setCreatedHolidayId(holidayPeriod.id);
-
-      // 2. Add allowed classes based on categories
-      if (schoolClasses && holidayPeriod) {
-        const allowedClassesData = schoolClasses.map(schoolClass => ({
-          holiday_period_id: holidayPeriod.id,
-          school_class: schoolClass.name,
-        }));
-
-        console.log("Adding allowed classes:", allowedClassesData);
-
-        const { error: allowedClassesError } = await supabase
-          .from("holiday_allowed_classes")
-          .insert(allowedClassesData);
-
-        if (allowedClassesError) {
-          console.error("Error adding allowed classes:", allowedClassesError);
-          toast({
-            title: "Attention",
-            description: "La période a été créée mais les classes autorisées n'ont pas été associées",
-            variant: "destructive",
-          });
-        }
-      }
-
-      toast({
-        title: "Succès",
-        description: "La période de vacances a été ajoutée avec succès",
-      });
-
-      // Ne réinitialisons pas les champs immédiatement pour permettre la configuration des catégories
-      
-      // Appel de la fonction de callback pour rafraîchir la liste
-      if (onSuccess && typeof onSuccess === 'function') {
-        onSuccess();
-      }
-    } catch (error: any) {
-      console.error("Error in handleAddHolidayPeriod:", error);
+    } catch (error) {
       toast({
         title: "Erreur",
-        description: error.message,
+        description: "Une erreur est survenue lors de l'ajout de la période de vacances.",
         variant: "destructive",
       });
     } finally {
@@ -186,89 +85,164 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
   };
 
-  // Fonction pour réinitialiser le formulaire après sauvegarde des mappings
-  const handleReset = () => {
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setMaxParticipantsKindergarten("");
-    setMaxParticipantsPrimary("");
-    setMaxParticipantsTeen("");
-    setName("");
-    setCreatedHolidayId(null);
-  };
-
-  if (isAdmin === false) {
-    return (
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Ajouter une période de vacances</h2>
-        <Alert variant="destructive" className="mb-4">
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            Vous n'avez pas les droits d'administration nécessaires pour ajouter des périodes de vacances.
-          </AlertDescription>
-        </Alert>
-      </Card>
-    );
-  }
+  const handleSubmit = form.handleSubmit(onSubmit);
 
   return (
-    <div className="space-y-4">
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Ajouter une période de vacances</h2>
-        
-        <div className="space-y-4">
-          <HolidayNameInput
-            name={name}
-            currentYear={currentYear}
-            setName={setName}
-          />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nom</FormLabel>
+            <FormControl>
+              <Input placeholder="Nom de la période" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-          <HolidayDatePicker
-            startDate={startDate}
-            endDate={endDate}
-            setStartDate={setStartDate}
-            setEndDate={setEndDate}
-          />
-
-          <ParticipantsInputs
-            maxParticipantsKindergarten={maxParticipantsKindergarten}
-            maxParticipantsPrimary={maxParticipantsPrimary}
-            maxParticipantsTeen={maxParticipantsTeen}
-            setMaxParticipantsKindergarten={setMaxParticipantsKindergarten}
-            setMaxParticipantsPrimary={setMaxParticipantsPrimary}
-            setMaxParticipantsTeen={setMaxParticipantsTeen}
-          />
-
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleAddHolidayPeriod} 
-              className="flex-1"
-              disabled={isSubmitting || isAdmin === false || isAdmin === null || !!createdHolidayId}
-            >
-              {isSubmitting ? "Ajout en cours..." : "Ajouter"}
-            </Button>
-            
-            {createdHolidayId && (
-              <Button 
-                variant="outline" 
-                onClick={handleReset}
-                className="flex-1"
-              >
-                Nouveau formulaire
-              </Button>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {createdHolidayId && (
-        <ClassMappingManager 
-          holidayPeriodId={createdHolidayId} 
-          onMappingChange={onSuccess} 
+      <div className="flex items-center space-x-2">
+        <FormField
+          control={form.control}
+          name="start_date"
+          render={({ field }) => (
+            <FormItem className="flex-1">
+              <FormLabel>Date de début</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Choisir une date</span>
+                      )}
+                      <CalendarDays className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date < new Date()
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      )}
-    </div>
+
+        <FormField
+          control={form.control}
+          name="end_date"
+          render={({ field }) => (
+            <FormItem className="flex-1">
+              <FormLabel>Date de fin</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Choisir une date</span>
+                      )}
+                      <CalendarDays className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date < new Date()
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <FormField
+        control={form.control}
+        name="max_participants_kindergarten"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nombre maximum de participants (Maternelle)</FormLabel>
+            <FormControl>
+              <Input type="number" placeholder="40" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="max_participants_primary"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nombre maximum de participants (Primaire)</FormLabel>
+            <FormControl>
+              <Input type="number" placeholder="40" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="max_participants_teen"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nombre maximum de participants (Adolescent)</FormLabel>
+            <FormControl>
+              <Input type="number" placeholder="40" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <span className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Enregistrement en cours...
+          </span>
+        ) : "Enregistrer"}
+      </Button>
+    </form>
   );
 };
-
-export default AddHolidayPeriodForm;
