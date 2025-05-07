@@ -57,12 +57,16 @@ export const useHolidaySpots = (
       
       // Vérifier d'abord si cette classe a une catégorie pour cette période
       try {
-        const { data: mapping } = await supabase
+        const { data: mapping, error: mappingError } = await supabase
           .from("holiday_period_class_mappings")
           .select("category")
           .eq("holiday_period_id", periodId)
           .eq("school_class", normalizedClass)
           .maybeSingle();
+          
+        if (mappingError) {
+          console.error("Erreur lors de la vérification du mapping de classe:", mappingError);
+        }
           
         // Si la classe est dans la catégorie "aucune", il n'y a pas de places disponibles
         if (mapping && mapping.category === "aucune") {
