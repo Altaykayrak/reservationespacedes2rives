@@ -2,9 +2,11 @@
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyReservations } from "./EmptyReservations";
-import { useReservations } from "@/hooks/useReservations";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ChildWednesdayReservationCard } from "./ChildWednesdayReservationCard";
 import { WednesdayReservationWithChild } from "@/types/reservations";
+import { useChildrenData } from "@/hooks/useChildrenData";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -13,7 +15,71 @@ type GroupedReservations = Record<string, {
 }>;
 
 export const WednesdayReservationsList = () => {
-  const { wednesdayReservations, refetchReservations } = useReservations();
+  // Utiliser directement useQuery au lieu de passer par useReservations
+  // pour éviter les problèmes de hook order
+  const { data: wednesdayReservations = [], refetch: refetchReservations } = useQuery({
+    queryKey: ["wednesday_reservations"],
+    queryFn: async () => {
+      console.log("Récupération des réservations du mercredi...");
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("État de la session:", session);
+      
+      if (!session?.user?.id) {
+        console.log("Aucune session trouvée");
+        return [];
+      }
+
+      const { data: reservations, error: reservationsError } = await supabase
+        .from('wednesday_reservations_with_children')
+        .select(`
+          id,
+          child_id,
+          wednesday_id,
+          without_meal,
+          early_dropoff,
+          status,
+          created_at,
+          updated_at,
+          reservation_number,
+          children,
+          available_wednesdays!fk_wednesday_id (
+            id,
+            date,
+            max_participants_kindergarten,
+            max_participants_primary
+          )
+        `)
+        .eq('status', 'confirmed')
+        .not('children', 'is', null);
+
+      console.log("Réservations depuis la vue:", reservations);
+      if (reservationsError) {
+        console.error("Erreur lors de la récupération des réservations:", reservationsError);
+        throw reservationsError;
+      }
+
+      const { children } = useChildrenData();
+      
+      const filteredReservations = reservations?.filter(reservation => {
+        const childData = reservation.children as any;
+        return children?.some(child => child.id === childData.id);
+      }) || [];
+
+      const transformedData = filteredReservations.map(reservation => {
+        const childData = reservation.children as any;
+        return {
+          ...reservation,
+          children: childData,
+          available_wednesdays: reservation.available_wednesdays
+        } as WednesdayReservationWithChild;
+      });
+
+      console.log("Données finales transformées:", transformedData);
+      return transformedData;
+    },
+    staleTime: 30000,
+    gcTime: 3600000,
+  });
 
   console.log("Réservations du mercredi :", wednesdayReservations);
 
