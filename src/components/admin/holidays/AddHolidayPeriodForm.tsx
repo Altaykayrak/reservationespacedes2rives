@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,13 +11,14 @@ import HolidayNameInput from "./form/HolidayNameInput";
 import ParticipantsInputs from "./form/ParticipantsInputs";
 
 const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
-  const currentYear = new Date().getFullYear(); // 2025
+  const currentYear = new Date().getFullYear();
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
   const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
   const [maxParticipantsTeen, setMaxParticipantsTeen] = useState("");
   const [name, setName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   // Fetch all school class categories
@@ -43,10 +45,21 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
 
     try {
+      setIsSubmitting(true);
+      
       // Format dates to YYYY-MM-DD to avoid timezone issues
       const formattedStartDate = format(startDate, 'yyyy-MM-dd');
       const formattedEndDate = format(endDate, 'yyyy-MM-dd');
       const fullName = `${currentYear}-${name}`;
+
+      console.log("Submitting holiday period with:", {
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        name: fullName,
+        maxParticipantsKindergarten: parseInt(maxParticipantsKindergarten),
+        maxParticipantsPrimary: parseInt(maxParticipantsPrimary),
+        maxParticipantsTeen: parseInt(maxParticipantsTeen)
+      });
 
       // 1. Insert the holiday period
       const { data: holidayPeriod, error: holidayError } = await supabase
@@ -62,7 +75,12 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
         .select()
         .single();
 
-      if (holidayError) throw holidayError;
+      if (holidayError) {
+        console.error("Error creating holiday period:", holidayError);
+        throw holidayError;
+      }
+
+      console.log("Created holiday period:", holidayPeriod);
 
       // 2. Add allowed classes based on categories
       if (schoolClasses && holidayPeriod) {
@@ -71,11 +89,16 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
           school_class: schoolClass.name,
         }));
 
+        console.log("Adding allowed classes:", allowedClassesData);
+
         const { error: allowedClassesError } = await supabase
           .from("holiday_allowed_classes")
           .insert(allowedClassesData);
 
-        if (allowedClassesError) throw allowedClassesError;
+        if (allowedClassesError) {
+          console.error("Error adding allowed classes:", allowedClassesError);
+          throw allowedClassesError;
+        }
       }
 
       toast({
@@ -89,13 +112,20 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
       setMaxParticipantsPrimary("");
       setMaxParticipantsTeen("");
       setName("");
-      onSuccess();
+      
+      // Appel de la fonction de callback pour rafraîchir la liste
+      if (onSuccess && typeof onSuccess === 'function') {
+        onSuccess();
+      }
     } catch (error: any) {
+      console.error("Error in handleAddHolidayPeriod:", error);
       toast({
         title: "Erreur",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -126,8 +156,12 @@ const AddHolidayPeriodForm = ({ onSuccess }: { onSuccess: () => void }) => {
           setMaxParticipantsTeen={setMaxParticipantsTeen}
         />
 
-        <Button onClick={handleAddHolidayPeriod} className="w-full">
-          Ajouter
+        <Button 
+          onClick={handleAddHolidayPeriod} 
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Ajout en cours..." : "Ajouter"}
         </Button>
       </div>
     </Card>

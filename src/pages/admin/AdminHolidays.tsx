@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,18 +8,37 @@ import HolidayPeriodsList from "@/components/admin/holidays/HolidayPeriodsList";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorFallback } from "@/components/ErrorFallback";
 
 const AdminHolidays = () => {
-  const { data: holidays, refetch } = useQuery({
+  const { data: holidays, refetch, isLoading, error } = useQuery({
     queryKey: ["available_holiday_periods"],
     queryFn: async () => {
+      console.log("Fetching available holiday periods...");
       const { data, error } = await supabase
         .from("available_holiday_periods")
-        .select("*");
-      if (error) throw error;
+        .select("*")
+        .order('start_date', { ascending: false });
+        
+      if (error) {
+        console.error("Error fetching holiday periods:", error);
+        throw error;
+      }
+      
+      console.log("Fetched holiday periods:", data);
       return data;
     },
   });
+
+  const handleHolidayAdded = async () => {
+    console.log("Holiday added, refetching...");
+    await refetch();
+  };
+
+  if (error) {
+    console.error("Error in AdminHolidays:", error);
+  }
 
   return (
     <div>
@@ -35,9 +55,23 @@ const AdminHolidays = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <AddHolidayPeriodForm onSuccess={refetch} />
-          <SchoolClassCategories />
-          <HolidayPeriodsList holidays={holidays || []} onDelete={refetch} />
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <AddHolidayPeriodForm onSuccess={handleHolidayAdded} />
+          </ErrorBoundary>
+          
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <SchoolClassCategories />
+          </ErrorBoundary>
+          
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            {isLoading ? (
+              <div className="p-6 bg-white rounded-lg shadow flex justify-center items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <HolidayPeriodsList holidays={holidays || []} onDelete={handleHolidayAdded} />
+            )}
+          </ErrorBoundary>
         </div>
       </div>
     </div>

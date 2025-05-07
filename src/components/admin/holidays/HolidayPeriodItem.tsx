@@ -1,45 +1,73 @@
-import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
-import DeleteHolidayDialog from "./DeleteHolidayDialog";
 
-interface HolidayPeriod {
-  id: string;
-  name: string;
-  start_date: string;
-  end_date: string;
-  max_participants_kindergarten: number;
-  max_participants_primary: number;
-  max_participants_teen: number;
-}
+import { Tables } from "@/integrations/supabase/types";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
+
+type HolidayPeriod = Tables<"available_holiday_periods">;
 
 interface HolidayPeriodItemProps {
   holiday: HolidayPeriod;
-  onEdit: (holiday: HolidayPeriod) => void;
-  onDelete: (id: string, startDate: string, endDate: string) => void;
+  reservationCount?: number;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
-const HolidayPeriodItem = ({ holiday, onEdit, onDelete }: HolidayPeriodItemProps) => {
+const HolidayPeriodItem = ({ 
+  holiday, 
+  reservationCount = 0, 
+  onEdit, 
+  onDelete 
+}: HolidayPeriodItemProps) => {
+  const startDate = new Date(holiday.start_date);
+  const endDate = new Date(holiday.end_date);
+
+  const hasReservations = reservationCount > 0;
+
   return (
-    <div className="flex items-center justify-between p-2 border rounded">
-      <div className="space-y-1">
-        <p className="font-medium text-sm">{holiday.name}</p>
-        <p className="text-sm text-gray-600">
-          Du {new Date(holiday.start_date).toLocaleDateString("fr-FR")} au{" "}
-          {new Date(holiday.end_date).toLocaleDateString("fr-FR")}
-        </p>
-        <div className="text-xs text-gray-600 flex gap-3">
-          <span>Maternelle: {holiday.max_participants_kindergarten}</span>
-          <span>Primaire: {holiday.max_participants_primary}</span>
-          <span>Adolescent: {holiday.max_participants_teen}</span>
+    <div className="p-4 border rounded-lg bg-white shadow-sm">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-medium">{holiday.name}</h3>
+          <p className="text-sm text-gray-600">
+            Du {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
+            {format(endDate, "d MMMM yyyy", { locale: fr })}
+          </p>
+          <div className="flex gap-2 mt-1">
+            <Badge variant="outline">Maternelle: {holiday.max_participants_kindergarten}</Badge>
+            <Badge variant="outline">Primaire: {holiday.max_participants_primary}</Badge>
+            <Badge variant="outline">Adolescents: {holiday.max_participants_teen}</Badge>
+          </div>
+          {reservationCount !== undefined && (
+            <p className="text-sm mt-1">
+              {hasReservations ? (
+                <Badge variant="secondary">{reservationCount} réservation{reservationCount > 1 ? 's' : ''}</Badge>
+              ) : (
+                <span className="text-gray-500">Aucune réservation</span>
+              )}
+            </p>
+          )}
         </div>
-      </div>
-      <div className="flex gap-1">
-        <Button variant="outline" size="sm" onClick={() => onEdit(holiday)}>
-          <Edit className="h-3 w-3" />
-        </Button>
-        <DeleteHolidayDialog
-          onDelete={() => onDelete(holiday.id, holiday.start_date, holiday.end_date)}
-        />
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onEdit}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={hasReservations ? "outline" : "destructive"}
+            size="icon"
+            onClick={onDelete}
+            disabled={hasReservations}
+            title={hasReservations ? "Impossible de supprimer (des réservations existent)" : "Supprimer la période"}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
