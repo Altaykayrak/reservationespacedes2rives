@@ -80,21 +80,7 @@ export const useHolidaySpots = (
       });
 
       try {
-        // Récupérer d'abord la période pour obtenir le max spécifique
-        const { data: period, error: periodError } = await supabase
-          .from('available_holiday_periods')
-          .select('max_participants_kindergarten, max_participants_primary, max_participants_teen')
-          .eq('id', periodId)
-          .single();
-          
-        if (periodError) {
-          console.error("Erreur lors de la récupération de la période:", periodError);
-          throw periodError;
-        }
-        
-        console.log("Période récupérée:", period);
-        
-        // Utiliser une requête SQL directe pour éviter l'ambiguïté de la colonne school_class
+        // Utiliser une requête SQL directe pour contourner le problème d'ambiguïté de colonne
         const { data: spotCount, error } = await supabase
           .rpc('check_holiday_spots_available', {
             period_id: periodId,
