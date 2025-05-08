@@ -49,15 +49,13 @@ const HolidayPeriodItem = ({
             <Badge variant="outline">Primaire: {holiday.max_participants_primary}</Badge>
             <Badge variant="outline">Adolescents: {holiday.max_participants_teen}</Badge>
           </div>
-          {reservationCount !== undefined && (
-            <p className="text-sm mt-1">
-              {hasReservations ? (
-                <Badge variant="secondary">{reservationCount} réservation{reservationCount > 1 ? 's' : ''}</Badge>
-              ) : (
-                <span className="text-gray-500">Aucune réservation</span>
-              )}
-            </p>
-          )}
+          <div className="mt-1">
+            {hasReservations ? (
+              <Badge variant="secondary">{reservationCount} réservation{reservationCount > 1 ? 's' : ''}</Badge>
+            ) : (
+              <span className="text-gray-500">Aucune réservation</span>
+            )}
+          </div>
         </div>
         <div className="flex gap-2">
           <Button
