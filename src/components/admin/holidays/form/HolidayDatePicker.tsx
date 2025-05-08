@@ -1,3 +1,4 @@
+
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { fr } from "date-fns/locale";
@@ -24,6 +25,7 @@ const HolidayDatePicker = ({
           selected={startDate}
           onSelect={setStartDate}
           locale={fr}
+          weekStartsOn={1}
         />
       </div>
 
@@ -34,6 +36,7 @@ const HolidayDatePicker = ({
           selected={endDate}
           onSelect={setEndDate}
           locale={fr}
+          weekStartsOn={1}
         />
       </div>
     </>

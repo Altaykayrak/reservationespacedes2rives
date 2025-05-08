@@ -3,6 +3,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, FormProvider } from "react-hook-form";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
@@ -120,7 +121,7 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
                         )}
                       >
                         {field.value ? (
-                          format(field.value, "PPP")
+                          format(field.value, "PPP", { locale: fr })
                         ) : (
                           <span>Choisir une date</span>
                         )}
@@ -137,6 +138,8 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
                         date < new Date()
                       }
                       initialFocus
+                      locale={fr}
+                      weekStartsOn={1}
                     />
                   </PopoverContent>
                 </Popover>
@@ -162,7 +165,7 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
                         )}
                       >
                         {field.value ? (
-                          format(field.value, "PPP")
+                          format(field.value, "PPP", { locale: fr })
                         ) : (
                           <span>Choisir une date</span>
                         )}
@@ -179,6 +182,8 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
                         date < new Date()
                       }
                       initialFocus
+                      locale={fr}
+                      weekStartsOn={1}
                     />
                   </PopoverContent>
                 </Popover>
