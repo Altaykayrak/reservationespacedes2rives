@@ -15,6 +15,7 @@ export const useFilteredReservations = (
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("name");
+  const [selectedPeriod, setSelectedPeriod] = useState("all");
 
   const sortReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
     reservations: T[] | null | undefined
@@ -72,7 +73,7 @@ export const useFilteredReservations = (
 
       const getGroup = (schoolClass: string) => {
         const normalizedClass = schoolClass.toUpperCase();
-        if (["PS", "MS", "GS"].includes(normalizedClass)) return "maternelle";
+        if (["PS", "MS", "GS", "Petite Section", "Moyenne Section", "Grande Section"].includes(normalizedClass)) return "maternelle";
         if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) return "primaire";
         if (["6EME", "5EME", "4EME", "3EME", "SECONDE", "PREMIERE", "TERMINALE", "6ÈME", "5ÈME", "4ÈME", "3ÈME", "PREMIÈRE"].includes(normalizedClass)) return "ado";
         return "";
@@ -81,8 +82,15 @@ export const useFilteredReservations = (
       const groupMatch = selectedGroup === "all"
         ? true
         : getGroup(reservation.children?.school_class || "") === selectedGroup;
+      
+      // Filtre par période pour les réservations de vacances
+      let periodMatch = true;
+      if (!isWednesday && selectedPeriod !== "all") {
+        const holidayReservation = reservation as HolidayReservationWithChild;
+        periodMatch = holidayReservation.period_id === selectedPeriod;
+      }
 
-      return searchMatch && dateMatch && classMatch && groupMatch;
+      return searchMatch && dateMatch && classMatch && groupMatch && periodMatch;
     });
 
     return sortReservations(filteredReservations);
@@ -90,6 +98,19 @@ export const useFilteredReservations = (
 
   const filteredWednesdayReservations = filterReservations(wednesdayReservations, true);
   const filteredHolidayReservations = filterReservations(holidayReservations, false);
+
+  // Extrait les périodes uniques des réservations de vacances
+  const holidayPeriods = holidayReservations
+    ? [...new Set(holidayReservations.map(r => r.period_id))]
+        .filter(Boolean)
+        .map(periodId => {
+          const reservation = holidayReservations.find(r => r.period_id === periodId);
+          return {
+            id: periodId,
+            name: reservation?.available_holiday_periods?.name || "Période inconnue"
+          };
+        })
+    : [];
 
   return {
     searchQuery,
@@ -102,9 +123,12 @@ export const useFilteredReservations = (
     setSelectedClass,
     selectedGroup,
     setSelectedGroup,
+    selectedPeriod,
+    setSelectedPeriod,
     sortOrder,
     setSortOrder,
     filteredWednesdayReservations,
-    filteredHolidayReservations
+    filteredHolidayReservations,
+    holidayPeriods
   };
 };

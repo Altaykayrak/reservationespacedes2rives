@@ -12,9 +12,11 @@ import { DeleteReservationDialog } from "./DeleteReservationDialog";
 import { useState } from "react";
 import { useReservationActions } from "./ReservationActions";
 import { Button } from "@/components/ui/button";
-import { CheckSquare, Trash2 } from "lucide-react";
+import { CheckSquare, Trash2, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
 
 interface AdminReservationsContentProps {
   wednesdayReservations: WednesdayReservationWithChild[] | null;
@@ -40,9 +42,14 @@ export const AdminReservationsContent = ({
     setSelectedClass,
     selectedGroup,
     setSelectedGroup,
+    selectedPeriod,
+    setSelectedPeriod,
     filteredWednesdayReservations,
-    filteredHolidayReservations
+    filteredHolidayReservations,
+    holidayPeriods
   } = useFilteredReservations(wednesdayReservations, holidayReservations);
+
+  const { holidayPeriods: allHolidayPeriods } = useHolidayPeriods();
 
   const {
     reservationToDelete,
@@ -169,6 +176,21 @@ export const AdminReservationsContent = ({
     ? activeReservations.filter(res => selectedReservations.includes(res.id)).length 
     : 0;
 
+  // Combine the period lists from reservations and all available periods
+  const availablePeriods = [...holidayPeriods];
+  
+  // Add periods that might not have reservations yet
+  if (allHolidayPeriods) {
+    allHolidayPeriods.forEach(period => {
+      if (!availablePeriods.some(p => p.id === period.id)) {
+        availablePeriods.push({
+          id: period.id,
+          name: period.name
+        });
+      }
+    });
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -256,6 +278,24 @@ export const AdminReservationsContent = ({
         </TabsContent>
 
         <TabsContent value="holiday">
+          {/* Sélecteur de périodes de vacances */}
+          <div className="mb-4 flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-gray-500" />
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-[280px]">
+                <SelectValue placeholder="Filtrer par période" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les périodes</SelectItem>
+                {availablePeriods.map((period) => (
+                  <SelectItem key={period.id} value={period.id}>
+                    {period.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <ScrollArea className="h-[600px] pr-4">
             <ReservationList
               reservations={filteredHolidayReservations}
