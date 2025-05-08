@@ -1,9 +1,17 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 import { format } from "date-fns";
+import { getGroupNameForPeriod, getGroupName } from "@/utils/schoolClassUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 type SortOrder = "date" | "name";
+
+interface ClassMapping {
+  periodId: string;
+  schoolClass: string;
+  category: string | null;
+}
 
 export const useFilteredReservations = (
   wednesdayReservations: WednesdayReservationWithChild[] | null | undefined,
@@ -16,6 +24,52 @@ export const useFilteredReservations = (
   const [selectedGroup, setSelectedGroup] = useState("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("name");
   const [selectedPeriod, setSelectedPeriod] = useState("all");
+  const [classMappings, setClassMappings] = useState<ClassMapping[]>([]);
+  const [filteredWednesdayReservations, setFilteredWednesdayReservations] = useState<WednesdayReservationWithChild[] | null>(null);
+  const [filteredHolidayReservations, setFilteredHolidayReservations] = useState<HolidayReservationWithChild[] | null>(null);
+
+  // Charger tous les mappings de classes au démarrage
+  useEffect(() => {
+    const loadMappings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("holiday_period_class_mappings")
+          .select("*");
+
+        if (error) throw error;
+        
+        const mappings: ClassMapping[] = data.map(item => ({
+          periodId: item.holiday_period_id,
+          schoolClass: item.school_class,
+          category: item.category
+        }));
+        
+        setClassMappings(mappings);
+      } catch (error) {
+        console.error("Erreur lors du chargement des mappings de classes:", error);
+      }
+    };
+    
+    loadMappings();
+  }, []);
+
+  // Obtenir le groupe pour une classe et une période spécifique
+  const getClassGroup = (schoolClass: string, periodId?: string): string => {
+    if (!periodId) return getGroupName(schoolClass);
+    
+    // Chercher un mapping spécifique
+    const mapping = classMappings.find(m => 
+      m.periodId === periodId && 
+      m.schoolClass.toLowerCase() === schoolClass.toLowerCase()
+    );
+    
+    if (mapping) {
+      return mapping.category || ""; // Si category est null, retourner chaîne vide
+    }
+    
+    // Pas de mapping trouvé, utiliser la catégorisation par défaut
+    return getGroupName(schoolClass);
+  };
 
   const sortReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
     reservations: T[] | null | undefined
@@ -42,62 +96,90 @@ export const useFilteredReservations = (
     });
   };
 
-  const filterReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
-    reservations: T[] | null | undefined,
-    isWednesday: boolean
-  ) => {
-    const filteredReservations = reservations?.filter((reservation) => {
-      const fullName = `${reservation.children?.first_name} ${reservation.children?.last_name}`.toLowerCase();
-      const searchMatch = searchQuery 
-        ? fullName.includes(searchQuery.toLowerCase())
-        : true;
+  // Effet pour filtrer les réservations du mercredi
+  useEffect(() => {
+    if (wednesdayReservations) {
+      const filtered = wednesdayReservations.filter(reservation => {
+        const fullName = `${reservation.children?.first_name} ${reservation.children?.last_name}`.toLowerCase();
+        const searchMatch = searchQuery 
+          ? fullName.includes(searchQuery.toLowerCase())
+          : true;
 
-      const reservationDate = isWednesday 
-        ? (reservation as WednesdayReservationWithChild).available_wednesdays.date
-        : (reservation as HolidayReservationWithChild).reservation_date;
-      
-      const reservationDateStr = format(new Date(reservationDate), "yyyy-MM-dd");
+        const reservationDateStr = format(new Date(reservation.available_wednesdays.date), "yyyy-MM-dd");
 
-      let dateMatch = true;
-      if (startDate && endDate) {
-        dateMatch = reservationDateStr >= startDate && reservationDateStr <= endDate;
-      } else if (startDate) {
-        dateMatch = reservationDateStr >= startDate;
-      } else if (endDate) {
-        dateMatch = reservationDateStr <= endDate;
-      }
+        let dateMatch = true;
+        if (startDate && endDate) {
+          dateMatch = reservationDateStr >= startDate && reservationDateStr <= endDate;
+        } else if (startDate) {
+          dateMatch = reservationDateStr >= startDate;
+        } else if (endDate) {
+          dateMatch = reservationDateStr <= endDate;
+        }
 
-      const classMatch = selectedClass === "all"
-        ? true
-        : reservation.children?.school_class === selectedClass;
+        const classMatch = selectedClass === "all"
+          ? true
+          : reservation.children?.school_class === selectedClass;
 
-      const getGroup = (schoolClass: string) => {
-        const normalizedClass = schoolClass.toUpperCase();
-        if (["PS", "MS", "GS", "Petite Section", "Moyenne Section", "Grande Section"].includes(normalizedClass)) return "maternelle";
-        if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) return "primaire";
-        if (["6EME", "5EME", "4EME", "3EME", "SECONDE", "PREMIERE", "TERMINALE", "6ÈME", "5ÈME", "4ÈME", "3ÈME", "PREMIÈRE"].includes(normalizedClass)) return "ado";
-        return "";
-      };
+        // Pour les mercredis, utiliser le mapping standard
+        let groupMatch = selectedGroup === "all" ? true : false;
+        if (selectedGroup !== "all" && reservation.children?.school_class) {
+          const group = getGroupName(reservation.children.school_class);
+          groupMatch = group === selectedGroup;
+        }
 
-      const groupMatch = selectedGroup === "all"
-        ? true
-        : getGroup(reservation.children?.school_class || "") === selectedGroup;
-      
-      // Filtre par période pour les réservations de vacances
-      let periodMatch = true;
-      if (!isWednesday && selectedPeriod !== "all") {
-        const holidayReservation = reservation as HolidayReservationWithChild;
-        periodMatch = holidayReservation.period_id === selectedPeriod;
-      }
+        return searchMatch && dateMatch && classMatch && groupMatch;
+      });
 
-      return searchMatch && dateMatch && classMatch && groupMatch && periodMatch;
-    });
+      setFilteredWednesdayReservations(sortReservations(filtered));
+    } else {
+      setFilteredWednesdayReservations(null);
+    }
+  }, [wednesdayReservations, searchQuery, startDate, endDate, selectedClass, selectedGroup, sortOrder]);
 
-    return sortReservations(filteredReservations);
-  };
+  // Effet pour filtrer les réservations de vacances
+  useEffect(() => {
+    if (holidayReservations && classMappings.length > 0) {
+      const filtered = holidayReservations.filter(reservation => {
+        const fullName = `${reservation.children?.first_name} ${reservation.children?.last_name}`.toLowerCase();
+        const searchMatch = searchQuery 
+          ? fullName.includes(searchQuery.toLowerCase())
+          : true;
 
-  const filteredWednesdayReservations = filterReservations(wednesdayReservations, true);
-  const filteredHolidayReservations = filterReservations(holidayReservations, false);
+        const reservationDateStr = format(new Date(reservation.reservation_date), "yyyy-MM-dd");
+
+        let dateMatch = true;
+        if (startDate && endDate) {
+          dateMatch = reservationDateStr >= startDate && reservationDateStr <= endDate;
+        } else if (startDate) {
+          dateMatch = reservationDateStr >= startDate;
+        } else if (endDate) {
+          dateMatch = reservationDateStr <= endDate;
+        }
+
+        const classMatch = selectedClass === "all"
+          ? true
+          : reservation.children?.school_class === selectedClass;
+
+        // Pour les vacances, utiliser le mapping spécifique à la période
+        let groupMatch = selectedGroup === "all" ? true : false;
+        if (selectedGroup !== "all" && reservation.children?.school_class) {
+          const group = getClassGroup(reservation.children.school_class, reservation.period_id);
+          groupMatch = group === selectedGroup;
+        }
+        
+        // Filtre par période
+        const periodMatch = selectedPeriod === "all" 
+          ? true 
+          : reservation.period_id === selectedPeriod;
+
+        return searchMatch && dateMatch && classMatch && groupMatch && periodMatch;
+      });
+
+      setFilteredHolidayReservations(sortReservations(filtered));
+    } else {
+      setFilteredHolidayReservations(null);
+    }
+  }, [holidayReservations, classMappings, searchQuery, startDate, endDate, selectedClass, selectedGroup, selectedPeriod, sortOrder]);
 
   // Extrait les périodes uniques des réservations de vacances
   const holidayPeriods = holidayReservations
