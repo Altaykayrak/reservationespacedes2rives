@@ -8,21 +8,19 @@ export const availableHolidayPeriodSchema = z.object({
   }),
   end_date: z.date({
     required_error: "La date de fin est requise",
-  }).superRefine((end_date, ctx) => {
-    const startDate = ctx.parent.start_date;
-    
-    if (startDate && end_date < startDate) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "La date de fin doit être après la date de début",
-      });
-      return false;
-    }
-    return true;
   }),
   max_participants_kindergarten: z.number().min(0, "Le nombre ne peut pas être négatif"),
   max_participants_primary: z.number().min(0, "Le nombre ne peut pas être négatif"),
   max_participants_teen: z.number().min(0, "Le nombre ne peut pas être négatif"),
+}).refine(data => {
+  // Vérification que la date de fin est après la date de début
+  if (data.start_date && data.end_date) {
+    return data.end_date >= data.start_date;
+  }
+  return true;
+}, {
+  message: "La date de fin doit être après la date de début",
+  path: ["end_date"]
 });
 
 export type AvailableHolidayPeriod = z.infer<typeof availableHolidayPeriodSchema>;

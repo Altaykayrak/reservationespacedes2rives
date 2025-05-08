@@ -45,8 +45,18 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
   });
 
   const onSubmit = async (values: z.infer<typeof availableHolidayPeriodSchema>) => {
+    console.log("Fonction onSubmit déclenchée avec les valeurs:", values);
     setIsSubmitting(true);
     try {
+      console.log("Envoi des données à Supabase:", {
+        name: values.name,
+        start_date: format(values.start_date as Date, "yyyy-MM-dd"),
+        end_date: format(values.end_date as Date, "yyyy-MM-dd"),
+        max_participants_kindergarten: values.max_participants_kindergarten,
+        max_participants_primary: values.max_participants_primary,
+        max_participants_teen: values.max_participants_teen
+      });
+
       const { data, error } = await supabase
         .from("available_holiday_periods")
         .insert([
@@ -62,12 +72,14 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
         .select();
 
       if (error) {
+        console.error("Erreur lors de l'ajout de la période de vacances:", error);
         toast({
           title: "Erreur",
-          description: "Impossible d'ajouter la période de vacances",
+          description: "Impossible d'ajouter la période de vacances: " + error.message,
           variant: "destructive",
         });
       } else {
+        console.log("Période de vacances ajoutée avec succès:", data);
         toast({
           title: "Succès",
           description: "Période de vacances ajoutée avec succès",
@@ -76,6 +88,7 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
         if (onSuccess) onSuccess();
       }
     } catch (error) {
+      console.error("Exception lors de l'ajout de la période de vacances:", error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'ajout de la période de vacances.",
@@ -85,6 +98,8 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
       setIsSubmitting(false);
     }
   };
+
+  console.log("État du formulaire:", form.formState);
 
   return (
     <Form {...form}>
@@ -119,6 +134,7 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
                           "w-full pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground"
                         )}
+                        type="button"
                       >
                         {field.value ? (
                           format(field.value, "PPP", { locale: fr })
@@ -133,7 +149,10 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
+                      onSelect={(date) => {
+                        console.log("Date de début sélectionnée:", date);
+                        field.onChange(date);
+                      }}
                       disabled={(date) =>
                         date < new Date()
                       }
@@ -163,6 +182,7 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
                           "w-full pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground"
                         )}
+                        type="button"
                       >
                         {field.value ? (
                           format(field.value, "PPP", { locale: fr })
@@ -177,7 +197,10 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
+                      onSelect={(date) => {
+                        console.log("Date de fin sélectionnée:", date);
+                        field.onChange(date);
+                      }}
                       disabled={(date) =>
                         date < new Date()
                       }
@@ -239,6 +262,11 @@ export const AddHolidayPeriodForm = ({ onSuccess }: AddHolidayPeriodFormProps) =
           type="submit" 
           className="w-full" 
           disabled={isSubmitting}
+          onClick={() => {
+            console.log("Bouton de soumission cliqué");
+            console.log("Valeurs du formulaire:", form.getValues());
+            console.log("Erreurs du formulaire:", form.formState.errors);
+          }}
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">
