@@ -15,8 +15,10 @@ type GroupedReservations = Record<string, {
 }>;
 
 export const WednesdayReservationsList = () => {
-  // Utiliser directement useQuery au lieu de passer par useReservations
-  // pour éviter les problèmes de hook order
+  // Utiliser les données des enfants depuis le hook
+  const { children } = useChildrenData();
+  
+  // Utiliser directement useQuery pour récupérer les réservations
   const { data: wednesdayReservations = [], refetch: refetchReservations } = useQuery({
     queryKey: ["wednesday_reservations"],
     queryFn: async () => {
@@ -58,8 +60,7 @@ export const WednesdayReservationsList = () => {
         throw reservationsError;
       }
 
-      const { children } = useChildrenData();
-      
+      // Filtrer les réservations pour ne garder que celles des enfants de l'utilisateur courant
       const filteredReservations = reservations?.filter(reservation => {
         const childData = reservation.children as any;
         return children?.some(child => child.id === childData.id);
@@ -79,6 +80,7 @@ export const WednesdayReservationsList = () => {
     },
     staleTime: 30000,
     gcTime: 3600000,
+    enabled: !!children // Activer la requête uniquement si nous avons des données d'enfants
   });
 
   console.log("Réservations du mercredi :", wednesdayReservations);
