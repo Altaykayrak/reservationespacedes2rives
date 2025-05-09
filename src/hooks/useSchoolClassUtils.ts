@@ -1,8 +1,11 @@
 
 import { normalizeSchoolClass, getGroupName } from "@/utils/schoolClassUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { useSchoolClassCategories } from "./useSchoolClassCategories";
 
 export const useSchoolClassUtils = () => {
+  const { isTeenClass: isTeenClassFromCategories } = useSchoolClassCategories();
+  
   const isTeenClass = async (schoolClass: string, holidayPeriodId?: string) => {
     const normalizedClass = normalizeSchoolClass(schoolClass);
     
@@ -30,15 +33,12 @@ export const useSchoolClassUtils = () => {
     }
     
     // Si pas de mapping spécifique ou erreur, utiliser la catégorisation par défaut
-    const group = getGroupName(normalizedClass);
-    return group === 'adolescent';
+    return isTeenClassFromCategories(normalizedClass);
   };
 
   // Version synchrone pour compatibilité avec le code existant
   const isTeenClassSync = (schoolClass: string) => {
-    const normalizedClass = normalizeSchoolClass(schoolClass);
-    const group = getGroupName(normalizedClass);
-    return group === 'adolescent';
+    return isTeenClassFromCategories(schoolClass);
   };
 
   return { isTeenClass, isTeenClassSync };

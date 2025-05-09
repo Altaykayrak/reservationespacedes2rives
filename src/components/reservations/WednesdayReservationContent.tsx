@@ -35,6 +35,9 @@ export const WednesdayReservationContent = () => {
     );
   }
 
+  // Logs pour déboguer
+  console.log("wednesdayEligibleChildren:", wednesdayEligibleChildren);
+
   return (
     <div className="space-y-6">
       <Alert>
@@ -50,6 +53,7 @@ export const WednesdayReservationContent = () => {
             selectedChild={selectedChild}
             setSelectedChild={setSelectedChild}
             children={wednesdayEligibleChildren}
+            setSelectedDates={setSelectedDates}
           />
 
           {selectedChild && (
