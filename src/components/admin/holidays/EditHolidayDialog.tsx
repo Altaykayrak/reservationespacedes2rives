@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ const EditHolidayDialog = ({
             <Input
               id="maxParticipantsKindergarten"
               type="number"
+              placeholder="24"
               value={maxParticipantsKindergarten}
               onChange={(e) => setMaxParticipantsKindergarten(e.target.value)}
             />
@@ -51,6 +53,7 @@ const EditHolidayDialog = ({
             <Input
               id="maxParticipantsPrimary"
               type="number"
+              placeholder="38"
               value={maxParticipantsPrimary}
               onChange={(e) => setMaxParticipantsPrimary(e.target.value)}
             />

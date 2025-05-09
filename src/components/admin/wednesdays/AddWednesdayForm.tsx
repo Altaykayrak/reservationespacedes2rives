@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -24,8 +23,8 @@ interface AddWednesdayFormProps {
 
 export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFormProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("");
-  const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("");
+  const [maxParticipantsKindergarten, setMaxParticipantsKindergarten] = useState("24");
+  const [maxParticipantsPrimary, setMaxParticipantsPrimary] = useState("38");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -37,10 +36,10 @@ export const AddWednesdayForm = ({ onSuccess, wednesdayToEdit }: AddWednesdayFor
       setMaxParticipantsKindergarten(wednesdayToEdit.max_participants_kindergarten.toString());
       setMaxParticipantsPrimary(wednesdayToEdit.max_participants_primary.toString());
     } else {
-      // Reset form when not editing
+      // Reset form when not editing, but keep default values
       setSelectedDate(undefined);
-      setMaxParticipantsKindergarten("");
-      setMaxParticipantsPrimary("");
+      setMaxParticipantsKindergarten("24");
+      setMaxParticipantsPrimary("38");
     }
   }, [wednesdayToEdit]);
 
