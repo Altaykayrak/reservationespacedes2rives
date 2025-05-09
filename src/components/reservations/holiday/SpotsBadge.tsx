@@ -16,14 +16,16 @@ const getSpotsBadgeColor = (spots: number | null) => {
 };
 
 const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
-  console.log(`Displaying badge for ${schoolClass} with ${spots} spots`);
+  // La fonction getGroupName est utilisée uniquement pour obtenir le nom du groupe
+  // et non pour déterminer la disponibilité, qui est faite par useHolidaySpots
+  const groupName = getGroupName(schoolClass);
   
   if (spots === null || spots === undefined) {
     return "Vérification des places en cours...";
   }
   
   if (spots === 0) {
-    return `Groupe ${getGroupName(schoolClass)} complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
+    return `Groupe complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
   }
   
   return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
@@ -31,9 +33,6 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
 
 export const SpotsBadge = ({ spots, schoolClass, isLoading }: SpotsBadgeProps) => {
   if (isLoading || !schoolClass) return null;
-
-  // Debug logging supplémentaire pour diagnostiquer
-  console.log(`BADGE RENDERING - Class: ${schoolClass}, Spots: ${spots}, SpotType: ${typeof spots}`);
 
   return (
     <Badge 
