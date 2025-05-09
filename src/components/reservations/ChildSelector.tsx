@@ -22,6 +22,7 @@ export const ChildSelector = ({
   const isHolidayReservation = location.pathname === "/holiday-reservations";
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
   const isAdminTeenHolidayReservation = location.pathname === "/admin/reservations/new-teen-holiday";
+  const isWednesdayReservation = location.pathname === "/wednesday-reservations";
   
   const { isTeenClassSync } = useSchoolClassUtils();
 
@@ -33,28 +34,32 @@ export const ChildSelector = ({
     }
   }, [selectedChild, setSelectedDates]);
   
-  // Filter children based on the page we're on
-  const filteredChildren = children?.filter(child => {
-    const isChildTeen = isTeenClassSync(child.school_class);
-    
-    // For regular holiday reservations, exclude teen children
-    if (isHolidayReservation) {
-      return !isChildTeen;
-    }
-    
-    // For teen holiday reservations, only show teen children
-    if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
-      return isChildTeen;
-    }
-    
-    // For other pages, show all children
-    return true;
-  });
+  // Pour la page des mercredis, utiliser les enfants tels quels
+  // car ils sont déjà filtrés dans useChildrenData
+  const filteredChildren = isWednesdayReservation
+    ? children
+    : children?.filter(child => {
+        const isChildTeen = isTeenClassSync(child.school_class);
+        
+        // Pour les réservations de vacances normales, exclure les adolescents
+        if (isHolidayReservation) {
+          return !isChildTeen;
+        }
+        
+        // Pour les réservations de vacances ados, uniquement afficher les adolescents
+        if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
+          return isChildTeen;
+        }
+        
+        // Pour les autres pages, afficher tous les enfants
+        return true;
+      });
 
   // Log pour déboguer
   console.log("Children passed to ChildSelector:", children);
   console.log("Filtered children based on page type:", filteredChildren);
   console.log("Current path:", location.pathname);
+  console.log("isWednesdayReservation:", isWednesdayReservation);
 
   return (
     <div>

@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchoolClassUtils } from "./useSchoolClassUtils";
+import { useSchoolClassCategories } from "./useSchoolClassCategories";
 
 export const useChildrenData = () => {
   const { data: children, isLoading } = useQuery({
@@ -32,17 +33,35 @@ export const useChildrenData = () => {
     },
   });
 
-  const { isTeenClass } = useSchoolClassUtils();
+  const { isTeenClassSync } = useSchoolClassUtils();
+  const { schoolClassCategories } = useSchoolClassCategories();
 
-  const teenChildren = children?.filter(child => isTeenClass(child.school_class)) || [];
-  const nonTeenChildren = children?.filter(child => !isTeenClass(child.school_class)) || [];
+  // Filtre pour les adolescents
+  const teenChildren = children?.filter(child => isTeenClassSync(child.school_class)) || [];
   
-  // Filtre pour exclure les PS et les adolescents
+  // Filtre pour les non-adolescents
+  const nonTeenChildren = children?.filter(child => !isTeenClassSync(child.school_class)) || [];
+  
+  // Filtre pour les enfants éligibles aux mercredis (exclure PS et adolescents)
+  // Utiliser directement les catégories pour déterminer si c'est un adolescent
   const wednesdayEligibleChildren = children?.filter(child => {
+    // Exclure les PS directement
     const isPS = child.school_class.toUpperCase() === "PS";
-    const isTeen = isTeenClass(child.school_class);
+    
+    // Vérifier si c'est un adolescent en utilisant les catégories
+    const isTeen = schoolClassCategories?.some(
+      category => 
+        category.category === "adolescent" && 
+        child.school_class.toUpperCase() === category.name.toUpperCase()
+    );
+    
+    console.log(`Enfant ${child.first_name} ${child.last_name}, classe: ${child.school_class}, est PS: ${isPS}, est adolescent: ${isTeen}`);
+    
+    // Inclure uniquement si ce n'est ni PS ni adolescent
     return !isPS && !isTeen;
   }) || [];
+
+  console.log("Enfants éligibles pour le mercredi:", wednesdayEligibleChildren);
 
   return { 
     children,

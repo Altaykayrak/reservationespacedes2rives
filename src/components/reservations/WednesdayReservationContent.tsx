@@ -37,7 +37,7 @@ export const WednesdayReservationContent = () => {
   }
 
   // Logs pour déboguer
-  console.log("wednesdayEligibleChildren:", wednesdayEligibleChildren);
+  console.log("wednesdayEligibleChildren dans WednesdayReservationContent:", wednesdayEligibleChildren);
 
   return (
     <div className="space-y-6">
