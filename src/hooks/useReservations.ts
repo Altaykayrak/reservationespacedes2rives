@@ -118,6 +118,7 @@ export const useReservations = () => {
 
   return {
     selectedDates,
+    setSelectedDates, // Make sure this is exposed from the hook
     selectedChild,
     setSelectedChild,
     children,

@@ -13,6 +13,7 @@ import { useChildrenData } from "@/hooks/useChildrenData";
 export const WednesdayReservationContent = () => {
   const {
     selectedDates,
+    setSelectedDates,
     selectedChild,
     setSelectedChild,
     handleDateToggle,
