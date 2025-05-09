@@ -55,8 +55,8 @@ export const useHolidaySpots = (
 
       const formattedDate = format(date, 'yyyy-MM-dd');
       
-      // Vérifier d'abord si cette classe a une catégorie pour cette période
       try {
+        // Vérifier d'abord si cette classe a une catégorie pour cette période
         const { data: mapping, error: mappingError } = await supabase
           .from("holiday_period_class_mappings")
           .select("category")
@@ -64,7 +64,7 @@ export const useHolidaySpots = (
           .eq("school_class", normalizedClass)
           .maybeSingle();
           
-        if (mappingError) {
+        if (mappingError && mappingError.code !== 'PGRST116') {
           console.error("Erreur lors de la vérification du mapping de classe:", mappingError);
         }
           
@@ -84,27 +84,6 @@ export const useHolidaySpots = (
       });
 
       try {
-        // Utilisation de SQL natif au lieu de la fonction RPC pour éviter l'ambiguïté
-        const { data, error } = await supabase
-          .from('available_holiday_periods')
-          .select(`
-            id,
-            max_participants_kindergarten,
-            max_participants_primary,
-            max_participants_teen,
-            reservations:holiday_reservations!inner(
-              id,
-              child:children(school_class)
-            )
-          `)
-          .eq('id', periodId)
-          .single();
-
-        if (error) {
-          console.error("Erreur lors de la récupération des données de période:", error);
-          throw error;
-        }
-        
         // Déterminer le groupe de classe de l'enfant
         let classGroup = '';
         if (['PS', 'MS', 'GS'].includes(normalizedClass)) {
@@ -114,11 +93,38 @@ export const useHolidaySpots = (
         } else {
           classGroup = 'teen';
         }
+
+        // 1. Récupérer d'abord les informations sur la période
+        const { data: periodData, error: periodError } = await supabase
+          .from('available_holiday_periods')
+          .select(`
+            id,
+            max_participants_kindergarten,
+            max_participants_primary,
+            max_participants_teen
+          `)
+          .eq('id', periodId)
+          .maybeSingle();
+
+        if (periodError) {
+          console.error("Erreur lors de la récupération des données de période:", periodError);
+          if (periodError.code === 'PGRST116') {
+            // Si la période n'existe pas, on retourne null plutôt que de laisser l'erreur se propager
+            console.log("Période non trouvée, retour null");
+            return null;
+          }
+          throw periodError;
+        }
+        
+        if (!periodData) {
+          console.log("Aucune donnée de période trouvée pour", periodId);
+          return null;
+        }
         
         // Récupérer le maximum de places pour ce groupe
-        const maxSpots = data[`max_participants_${classGroup}`] || 0;
+        const maxSpots = periodData[`max_participants_${classGroup}`] || 0;
         
-        // Obtenir toutes les réservations pour cette date
+        // 2. Ensuite, récupérer les réservations pour cette date et période
         const { data: reservationsData, error: reservationsError } = await supabase
           .from('holiday_reservations')
           .select('id, child_id, child:children(school_class)')
@@ -131,26 +137,52 @@ export const useHolidaySpots = (
           throw reservationsError;
         }
 
-        // Filtrer les réservations par groupe de classe
+        // 3. Vérifier si on a besoin d'utiliser les mappings de classe spéciaux
+        const { data: mappingsData } = await supabase
+          .from('holiday_period_class_mappings')
+          .select('school_class, category')
+          .eq('holiday_period_id', periodId);
+          
+        const mappings = mappingsData || [];
+        console.log("Mappings de classe trouvés:", mappings.length);
+
+        // Fonction pour déterminer le groupe d'une classe avec mappings
+        const getClassGroupWithMapping = (schoolClass: string): string => {
+          // Chercher un mapping spécifique
+          const mapping = mappings.find(m => 
+            m.school_class.toLowerCase() === schoolClass.toLowerCase()
+          );
+          
+          if (mapping) {
+            // Si un mapping est trouvé, convertir sa catégorie en groupe interne
+            if (mapping.category === 'maternelle') return 'kindergarten';
+            if (mapping.category === 'primaire') return 'primary';
+            if (mapping.category === 'adolescent') return 'teen';
+            return '';
+          }
+          
+          // Groupes par défaut si pas de mapping
+          if (['PS', 'MS', 'GS'].includes(schoolClass)) return 'kindergarten';
+          if (['CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(schoolClass)) return 'primary';
+          return 'teen';
+        };
+
+        // Filtrer les réservations par groupe de classe avec mappings
         const reservationsCount = reservationsData.filter(res => {
           const childClass = res.child?.school_class;
           if (!childClass) return false;
           
           const normalizedChildClass = normalizeSchoolClass(childClass);
+          const resClassGroup = getClassGroupWithMapping(normalizedChildClass);
           
-          if (classGroup === 'kindergarten') {
-            return ['PS', 'MS', 'GS'].includes(normalizedChildClass);
-          } else if (classGroup === 'primary') {
-            return ['CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(normalizedChildClass);
-          } else {
-            return !['PS', 'MS', 'GS', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(normalizedChildClass);
-          }
+          // Compter seulement les réservations du même groupe
+          return resClassGroup === getClassGroupWithMapping(normalizedClass);
         }).length;
         
         // Calculer les places restantes
         const spotsLeft = maxSpots - reservationsCount;
         
-        console.log(`Résultat du calcul pour ${normalizedClass} le ${formattedDate}: max=${maxSpots}, réservations=${reservationsCount}, restantes=${spotsLeft}`);
+        console.log(`Résultat du calcul pour ${normalizedClass} le ${formattedDate}: max=${maxSpots}, réservations=${reservationsCount}, restantes=${spotsLeft}, groupe=${getClassGroupWithMapping(normalizedClass)}`);
         
         return Math.max(0, spotsLeft); // Ne jamais retourner de valeur négative
         
