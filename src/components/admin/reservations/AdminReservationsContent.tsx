@@ -1,22 +1,17 @@
 
 import { useQueryClient } from "@tanstack/react-query";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ReservationList } from "./ReservationList";
-import { ReservationFilters } from "./ReservationFilters";
-import { ExportButtons } from "./ExportButtons";
-import { useFilteredReservations } from "./hooks/useFilteredReservations";
-import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 import { EditReservationDialog } from "./EditReservationDialog";
 import { DeleteReservationDialog } from "./DeleteReservationDialog";
 import { useState } from "react";
 import { useReservationActions } from "./ReservationActions";
-import { Button } from "@/components/ui/button";
-import { CheckSquare, Trash2, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
+import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
+import { useFilteredReservations } from "./hooks/useFilteredReservations";
+import { ReservationToolbar } from "./components/ReservationToolbar";
+import { SelectionActions } from "./components/SelectionActions";
+import { ReservationTabsContainer } from "./components/ReservationTabsContainer";
 
 interface AdminReservationsContentProps {
   wednesdayReservations: WednesdayReservationWithChild[] | null;
@@ -204,109 +199,43 @@ export const AdminReservationsContent = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <ReservationFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          startDate={startDate}
-          onStartDateChange={setStartDate}
-          endDate={endDate}
-          onEndDateChange={setEndDate}
-          selectedClass={selectedClass}
-          onClassChange={setSelectedClass}
-          selectedGroup={selectedGroup}
-          onGroupChange={setSelectedGroup}
-        />
-        <ExportButtons
-          wednesdayReservations={filteredWednesdayReservations}
-          holidayReservations={filteredHolidayReservations}
-          startDate={startDate}
-          endDate={endDate}
-        />
-      </div>
+      <ReservationToolbar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        selectedClass={selectedClass}
+        setSelectedClass={setSelectedClass}
+        selectedGroup={selectedGroup}
+        setSelectedGroup={setSelectedGroup}
+        wednesdayReservations={filteredWednesdayReservations}
+        holidayReservations={filteredHolidayReservations}
+      />
 
-      {/* Information bar with reservation counts and selection actions */}
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 flex flex-wrap justify-between items-center gap-3">
-        <p className="text-blue-800 font-medium">
-          {reservationCount} réservation{reservationCount > 1 ? 's' : ''} affichée{reservationCount > 1 ? 's' : ''}
-          {selectedCount > 0 && ` (${selectedCount} sélectionnée${selectedCount > 1 ? 's' : ''})`}
-        </p>
-        
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={handleSelectAll}
-            disabled={!activeReservations || activeReservations.length === 0}
-          >
-            <CheckSquare className="h-4 w-4 mr-1" />
-            {selectedCount === reservationCount && reservationCount > 0 
-              ? "Désélectionner tout" 
-              : "Sélectionner tout"}
-          </Button>
-          
-          <Button 
-            size="sm" 
-            variant="destructive" 
-            onClick={handleDeleteSelected}
-            disabled={selectedCount === 0 || isDeletingMultiple}
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Supprimer {selectedCount > 0 ? `(${selectedCount})` : ""}
-          </Button>
-        </div>
-      </div>
+      <SelectionActions
+        selectedCount={selectedCount}
+        reservationCount={reservationCount}
+        onSelectAll={handleSelectAll}
+        onDeleteSelected={handleDeleteSelected}
+        isDeletingMultiple={isDeletingMultiple}
+        activeReservations={activeReservations}
+      />
 
-      <Tabs defaultValue="wednesday" className="w-full" onValueChange={(value) => {
-        setActiveTab(value);
-      }}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="wednesday">Mercredis</TabsTrigger>
-          <TabsTrigger value="holiday">Vacances</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="wednesday">
-          <ScrollArea className="h-[600px] pr-4">
-            <ReservationList
-              reservations={filteredWednesdayReservations}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
-              selectedReservations={selectedReservations}
-              onSelectionChange={handleSelectionChange}
-            />
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="holiday">
-          {/* Sélecteur de périodes de vacances */}
-          <div className="mb-4 flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-gray-500" />
-            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className="w-[280px]">
-                <SelectValue placeholder="Filtrer par période" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les périodes</SelectItem>
-                {availablePeriods.map((period) => (
-                  <SelectItem key={period.id} value={period.id}>
-                    {period.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <ScrollArea className="h-[600px] pr-4">
-            <ReservationList
-              reservations={filteredHolidayReservations}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
-              selectedReservations={selectedReservations}
-              onSelectionChange={handleSelectionChange}
-            />
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
+      <ReservationTabsContainer
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        wednesdayReservations={filteredWednesdayReservations}
+        holidayReservations={filteredHolidayReservations}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+        selectedReservations={selectedReservations}
+        onSelectionChange={handleSelectionChange}
+        selectedPeriod={selectedPeriod}
+        setSelectedPeriod={setSelectedPeriod}
+        availablePeriods={availablePeriods}
+      />
 
       <DeleteReservationDialog
         isOpen={!!reservationToDelete}
