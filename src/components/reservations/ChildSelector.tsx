@@ -23,7 +23,7 @@ export const ChildSelector = ({
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
   const isAdminTeenHolidayReservation = location.pathname === "/admin/reservations/new-teen-holiday";
   
-  const { isTeenClass } = useSchoolClassUtils();
+  const { isTeenClassSync } = useSchoolClassUtils();
 
   // Effect to handle child change
   useEffect(() => {
@@ -32,9 +32,29 @@ export const ChildSelector = ({
       setSelectedDates([]);
     }
   }, [selectedChild, setSelectedDates]);
+  
+  // Filter children based on the page we're on
+  const filteredChildren = children?.filter(child => {
+    const isChildTeen = isTeenClassSync(child.school_class);
+    
+    // For regular holiday reservations, exclude teen children
+    if (isHolidayReservation) {
+      return !isChildTeen;
+    }
+    
+    // For teen holiday reservations, only show teen children
+    if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
+      return isChildTeen;
+    }
+    
+    // For other pages, show all children
+    return true;
+  });
 
   // Log pour déboguer
   console.log("Children passed to ChildSelector:", children);
+  console.log("Filtered children based on page type:", filteredChildren);
+  console.log("Current path:", location.pathname);
 
   return (
     <div>
@@ -46,8 +66,8 @@ export const ChildSelector = ({
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
       >
         <option value="">Choisir un enfant</option>
-        {children?.length ? (
-          children.map((child) => (
+        {filteredChildren?.length ? (
+          filteredChildren.map((child) => (
             <option 
               key={child.id} 
               value={child.id}
