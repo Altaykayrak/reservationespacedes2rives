@@ -2,8 +2,10 @@
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
 import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 interface ChildSelectorProps {
   selectedChild: string;
@@ -25,6 +27,17 @@ export const ChildSelector = ({
   const isWednesdayReservation = location.pathname === "/wednesday-reservations";
   
   const { isTeenClassSync } = useSchoolClassUtils();
+  const [showCM2Message, setShowCM2Message] = useState(false);
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
+
+  // Listen for period selection from URL search parameters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const periodId = searchParams.get("periodId");
+    if (periodId) {
+      setSelectedPeriodId(periodId);
+    }
+  }, [location.search]);
 
   // Effect to handle child change
   useEffect(() => {
@@ -32,7 +45,32 @@ export const ChildSelector = ({
       // Reset dates when changing child
       setSelectedDates([]);
     }
-  }, [selectedChild, setSelectedDates]);
+
+    // Check if selected child is CM2 and on holiday reservation page
+    const checkCM2TeenMapping = async () => {
+      if (selectedChild && isHolidayReservation) {
+        const selectedChildData = children?.find(child => child.id === selectedChild);
+        
+        if (selectedChildData?.school_class === "CM2" && selectedPeriodId) {
+          // Dynamically import the isTeenClass function to avoid circular dependencies
+          try {
+            const { isTeenClass } = await import("@/hooks/useSchoolClassUtils").then(module => module.useSchoolClassUtils());
+            const isTeen = await isTeenClass(selectedChildData.school_class, selectedPeriodId);
+            setShowCM2Message(isTeen);
+          } catch (error) {
+            console.error("Error checking teen class status:", error);
+            setShowCM2Message(false);
+          }
+        } else {
+          setShowCM2Message(false);
+        }
+      } else {
+        setShowCM2Message(false);
+      }
+    };
+
+    checkCM2TeenMapping();
+  }, [selectedChild, setSelectedDates, children, isHolidayReservation, selectedPeriodId]);
   
   // Pour la page des mercredis, utiliser les enfants tels quels
   // car ils sont déjà filtrés dans useChildrenData
@@ -84,6 +122,15 @@ export const ChildSelector = ({
           <option value="" disabled>Aucun enfant éligible trouvé</option>
         )}
       </select>
+      
+      {showCM2Message && (
+        <Alert className="mt-3 bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4 text-blue-500" />
+          <AlertDescription className="text-sm text-blue-700">
+            Sur le mois de juillet, les enfants en CM2 seront accueilli avec les adolescents, vous pouvez faire votre réservation dans le menu "Club Ado"
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 };

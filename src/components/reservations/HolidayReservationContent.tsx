@@ -10,6 +10,8 @@ import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
@@ -37,9 +39,21 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
     minimumDaysDialog,
     setMinimumDaysDialog
   } = useHolidayReservation();
+  
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Use the filtered children if provided, otherwise use the children from the hook
   const childrenToDisplay = filteredChildren || children;
+  
+  // Update URL when period changes
+  useEffect(() => {
+    if (selectedPeriod) {
+      const searchParams = new URLSearchParams(location.search);
+      searchParams.set("periodId", selectedPeriod);
+      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+    }
+  }, [selectedPeriod, navigate, location.pathname, location.search]);
   
   // Fonction pour éviter les doubles clics avec prévention de la propagation d'événement
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
