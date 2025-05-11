@@ -27,6 +27,21 @@ export const useSchoolClassUtils = () => {
           }
           return specificMapping.category === 'adolescent';
         }
+        
+        // Vérifier si c'est une période spécifique d'été 2025
+        const { data: periodInfo } = await supabase
+          .from("available_holiday_periods")
+          .select("name")
+          .eq("id", holidayPeriodId)
+          .single();
+        
+        if (periodInfo && normalizedClass === "CM2" && 
+            (periodInfo.name === "2025-ETE01" || 
+             periodInfo.name === "2025-ETE02" || 
+             periodInfo.name === "2025-ETE03" || 
+             periodInfo.name === "2025-ETE04")) {
+          return true;
+        }
       } catch (error) {
         console.error("Erreur lors de la vérification du mapping spécifique:", error);
       }
