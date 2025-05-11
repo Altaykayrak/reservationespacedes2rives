@@ -33,6 +33,7 @@ export const ChildSelector = ({
   const { isTeenClassSync } = useSchoolClassUtils();
   const [showCM2Message, setShowCM2Message] = useState(false);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
+  const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
 
   // Requête pour obtenir les informations sur la période sélectionnée
   const { data: periodInfo } = useQuery({
@@ -78,13 +79,8 @@ export const ChildSelector = ({
         const selectedChildData = children?.find(child => child.id === selectedChild);
         
         if (selectedChildData?.school_class === "CM2" && selectedPeriodId) {
-          // Vérifier d'abord si c'est une période d'été 2025 spécifique
-          if (periodInfo?.name && (
-            periodInfo.name === "ETE-01" || 
-            periodInfo.name === "ETE-02" || 
-            periodInfo.name === "ETE-03" || 
-            periodInfo.name === "ETE-04"
-          )) {
+          // Vérifier d'abord si c'est une période d'été spécifique
+          if (periodInfo?.name && summerPeriods.includes(periodInfo.name)) {
             setShowCM2Message(true);
             if (onCM2SummerPeriodCheck) {
               onCM2SummerPeriodCheck(true);
@@ -122,7 +118,7 @@ export const ChildSelector = ({
     };
 
     checkCM2TeenMapping();
-  }, [selectedChild, setSelectedDates, children, isHolidayReservation, selectedPeriodId, periodInfo, onCM2SummerPeriodCheck]);
+  }, [selectedChild, setSelectedDates, children, isHolidayReservation, selectedPeriodId, periodInfo, onCM2SummerPeriodCheck, summerPeriods]);
   
   // Pour la page des mercredis, utiliser les enfants tels quels
   // car ils sont déjà filtrés dans useChildrenData
@@ -130,14 +126,19 @@ export const ChildSelector = ({
     ? children
     : children?.filter(child => {
         const isChildTeen = isTeenClassSync(child.school_class);
+        const isCM2 = child.school_class === "CM2";
         
         // Pour les réservations de vacances normales, exclure les adolescents
         if (isHolidayReservation) {
           return !isChildTeen;
         }
         
-        // Pour les réservations de vacances ados, uniquement afficher les adolescents
+        // Pour les réservations de vacances ados, afficher les adolescents et les CM2 pendant les périodes d'été
         if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
+          // Si c'est une période d'été spécifique, inclure également les CM2
+          if (periodInfo?.name && summerPeriods.includes(periodInfo.name)) {
+            return isChildTeen || isCM2;
+          }
           return isChildTeen;
         }
         
@@ -149,10 +150,10 @@ export const ChildSelector = ({
   console.log("Children passed to ChildSelector:", children);
   console.log("Filtered children based on page type:", filteredChildren);
   console.log("Current path:", location.pathname);
-  console.log("isWednesdayReservation:", isWednesdayReservation);
+  console.log("isTeenHolidayReservation:", isTeenHolidayReservation);
   console.log("Selected period ID:", selectedPeriodId);
   console.log("Period info:", periodInfo);
-  console.log("Show CM2 message:", showCM2Message);
+  console.log("Is summer period:", periodInfo?.name && summerPeriods.includes(periodInfo.name));
 
   return (
     <div>

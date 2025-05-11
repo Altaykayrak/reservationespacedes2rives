@@ -6,6 +6,7 @@ import { useReservationSubmission } from "./useReservationSubmission";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useExistingHolidayReservations } from "./useExistingHolidayReservations";
+import { useLocation } from "react-router-dom";
 
 interface DateOption {
   date: Date;
@@ -18,6 +19,7 @@ export const useHolidayReservation = () => {
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const location = useLocation();
 
   const { children } = useChildrenData();
   const { holidayPeriods } = useHolidayPeriods();
@@ -59,10 +61,35 @@ export const useHolidayReservation = () => {
       return data;
     },
   });
+  
+  const { data: periodInfo } = useQuery({
+    queryKey: ["period_details", selectedPeriod],
+    queryFn: async () => {
+      if (!selectedPeriod) return null;
+      
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("name")
+        .eq("id", selectedPeriod)
+        .single();
+      
+      if (error) {
+        console.error("Erreur lors de la récupération des informations de période:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!selectedPeriod
+  });
 
   const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
     category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
   );
+  
+  const isCM2InSummerPeriod = childInfo?.school_class === "CM2" && 
+    periodInfo?.name && 
+    ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(periodInfo.name);
 
   const resetForm = () => {
     setSelectedDates([]);
@@ -96,9 +123,9 @@ export const useHolidayReservation = () => {
   };
 
   const handleDateToggle = (date: Date) => {
-    const isTeenPage = window.location.pathname === "/teenholiday-reservations" ||
-                      window.location.pathname === "/admin/reservations/new-teen-holiday" ||
-                      window.location.pathname === "/admin/new-teenholiday-reservation";
+    const isTeenPage = location.pathname === "/teenholiday-reservations" ||
+                      location.pathname === "/admin/reservations/new-teen-holiday" ||
+                      location.pathname === "/admin/new-teenholiday-reservation";
     
     if (isDateAlreadyReserved(date)) {
       return;
@@ -108,8 +135,8 @@ export const useHolidayReservation = () => {
     if (existingDate) {
       setSelectedDates(selectedDates.filter(d => d.date.getTime() !== date.getTime()));
     } else {
-      // Pour les adolescents, on active "Sans repas" par défaut
-      const withoutMealByDefault = isTeenPage && isTeenClass;
+      // Pour les adolescents et CM2 en période d'été sur la page teen, on active "Sans repas" par défaut
+      const withoutMealByDefault = (isTeenPage && (isTeenClass || isCM2InSummerPeriod));
       setSelectedDates([...selectedDates, { 
         date, 
         withoutMeal: withoutMealByDefault, 
@@ -140,6 +167,7 @@ export const useHolidayReservation = () => {
     handleSubmit,
     isDateAlreadyReserved,
     isTeenClass,
+    isCM2InSummerPeriod,
     childInfo,
     showSuccessDialog,
     setShowSuccessDialog,

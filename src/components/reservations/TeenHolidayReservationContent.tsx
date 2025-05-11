@@ -7,8 +7,9 @@ import { PeriodSelector } from "./PeriodSelector";
 import { TeenClassDateSelector } from "./holiday/TeenClassDateSelector";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
+import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const TeenHolidayReservationContent = () => {
   const {
@@ -28,7 +29,9 @@ export const TeenHolidayReservationContent = () => {
     setShowSuccessDialog,
     isSubmitting,
     noSpotsDialog,
-    setNoSpotsDialog
+    setNoSpotsDialog,
+    minimumDaysDialog,
+    setMinimumDaysDialog
   } = useHolidayReservation();
 
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
@@ -99,6 +102,11 @@ export const TeenHolidayReservationContent = () => {
         onOpenChange={(open) => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })}
         schoolClass={noSpotsDialog.schoolClass}
         date={noSpotsDialog.date}
+      />
+      
+      <MinimumDaysDialog
+        open={minimumDaysDialog.isOpen}
+        onOpenChange={(open) => setMinimumDaysDialog({ isOpen: open })}
       />
     </>
   );
