@@ -10,7 +10,7 @@ import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface HolidayReservationContentProps {
@@ -40,6 +40,7 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
     setMinimumDaysDialog
   } = useHolidayReservation();
   
+  const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -79,6 +80,7 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
           setSelectedChild={setSelectedChild}
           children={childrenToDisplay}
           setSelectedDates={setSelectedDates}
+          onCM2SummerPeriodCheck={setIsCM2SummerPeriod}
         />
 
         <PeriodSelector
@@ -87,7 +89,7 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
           holidayPeriods={holidayPeriods}
         />
 
-        {selectedPeriod && (
+        {selectedPeriod && !isCM2SummerPeriod && (
           <HolidayDateSelector
             selectedDates={selectedDates}
             handleDateToggle={handleDateToggle}
@@ -102,7 +104,7 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
         <Button
           onClick={onSubmitClick}
           className="w-full"
-          disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
+          disabled={(!selectedChild || !selectedPeriod || (selectedDates.length === 0 && !isCM2SummerPeriod) || isSubmitting)}
           type="button" // Spécifier explicitement le type button pour éviter soumission de formulaire implicite
         >
           {isSubmitting ? (

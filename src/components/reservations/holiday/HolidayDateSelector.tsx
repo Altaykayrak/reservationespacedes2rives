@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { HolidayPeriodProvider } from "./HolidayPeriodContext";
 import { useHolidayClassification } from "./hooks/useHolidayClassification";
 import { TeenClassDateSelector } from "./TeenClassDateSelector";
@@ -33,6 +33,8 @@ export const HolidayDateSelector = ({
   selectedChild,
   setSelectedDates
 }: HolidayDateSelectorProps) => {
+  const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
+  
   const { data: holidayPeriod } = useQuery({
     queryKey: ["holiday_period", periodId],
     queryFn: async () => {
@@ -76,6 +78,33 @@ export const HolidayDateSelector = ({
     },
     enabled: Boolean(selectedChild)
   });
+
+  // Vérifier si la période est une période d'été spéciale pour les CM2
+  useEffect(() => {
+    const checkSummerPeriod = async () => {
+      if (periodId && childInfo?.school_class === "CM2") {
+        const { data } = await supabase
+          .from("available_holiday_periods")
+          .select("name")
+          .eq("id", periodId)
+          .single();
+        
+        if (data && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(data.name)) {
+          setIsCM2SummerPeriod(true);
+        } else {
+          setIsCM2SummerPeriod(false);
+        }
+      } else {
+        setIsCM2SummerPeriod(false);
+      }
+    };
+    
+    checkSummerPeriod();
+  }, [periodId, childInfo]);
+
+  const handleCM2SummerPeriodCheck = (isInSummerPeriod: boolean) => {
+    setIsCM2SummerPeriod(isInSummerPeriod);
+  };
 
   const { isTeenClass } = useHolidayClassification(selectedChild);
 
@@ -126,6 +155,12 @@ export const HolidayDateSelector = ({
         subtitle="La classe de l'enfant n'est pas définie. Veuillez contacter l'administration."
       />
     );
+  }
+  
+  // Si l'enfant est en CM2 et dans une période d'été spéciale,
+  // ne pas afficher le sélecteur de dates
+  if (isCM2SummerPeriod) {
+    return null;
   }
 
   return (

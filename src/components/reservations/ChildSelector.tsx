@@ -14,13 +14,15 @@ interface ChildSelectorProps {
   setSelectedChild: (childId: string) => void;
   children?: Tables<"children">[] | null;
   setSelectedDates?: (dates: any[]) => void;
+  onCM2SummerPeriodCheck?: (isInSummerPeriod: boolean) => void;
 }
 
 export const ChildSelector = ({
   selectedChild,
   setSelectedChild,
   children,
-  setSelectedDates
+  setSelectedDates,
+  onCM2SummerPeriodCheck
 }: ChildSelectorProps) => {
   const location = useLocation();
   const isHolidayReservation = location.pathname === "/holiday-reservations";
@@ -84,6 +86,9 @@ export const ChildSelector = ({
             periodInfo.name === "ETE-04"
           )) {
             setShowCM2Message(true);
+            if (onCM2SummerPeriodCheck) {
+              onCM2SummerPeriodCheck(true);
+            }
             return;
           }
           
@@ -92,20 +97,32 @@ export const ChildSelector = ({
             const { isTeenClass } = await import("@/hooks/useSchoolClassUtils").then(module => module.useSchoolClassUtils());
             const isTeen = await isTeenClass(selectedChildData.school_class, selectedPeriodId);
             setShowCM2Message(isTeen);
+            if (onCM2SummerPeriodCheck) {
+              onCM2SummerPeriodCheck(isTeen);
+            }
           } catch (error) {
             console.error("Error checking teen class status:", error);
             setShowCM2Message(false);
+            if (onCM2SummerPeriodCheck) {
+              onCM2SummerPeriodCheck(false);
+            }
           }
         } else {
           setShowCM2Message(false);
+          if (onCM2SummerPeriodCheck) {
+            onCM2SummerPeriodCheck(false);
+          }
         }
       } else {
         setShowCM2Message(false);
+        if (onCM2SummerPeriodCheck) {
+          onCM2SummerPeriodCheck(false);
+        }
       }
     };
 
     checkCM2TeenMapping();
-  }, [selectedChild, setSelectedDates, children, isHolidayReservation, selectedPeriodId, periodInfo]);
+  }, [selectedChild, setSelectedDates, children, isHolidayReservation, selectedPeriodId, periodInfo, onCM2SummerPeriodCheck]);
   
   // Pour la page des mercredis, utiliser les enfants tels quels
   // car ils sont déjà filtrés dans useChildrenData

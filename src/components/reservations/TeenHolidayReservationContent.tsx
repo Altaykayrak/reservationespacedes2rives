@@ -7,6 +7,8 @@ import { PeriodSelector } from "./PeriodSelector";
 import { TeenClassDateSelector } from "./holiday/TeenClassDateSelector";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export const TeenHolidayReservationContent = () => {
   const {
@@ -29,6 +31,18 @@ export const TeenHolidayReservationContent = () => {
     setNoSpotsDialog
   } = useHolidayReservation();
 
+  const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
+
+  // Fonction pour éviter les doubles clics
+  const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isSubmitting) {
+      handleSubmit();
+    }
+  };
+
   return (
     <>
       <Card className="p-6">
@@ -38,6 +52,7 @@ export const TeenHolidayReservationContent = () => {
             setSelectedChild={setSelectedChild}
             children={children}
             setSelectedDates={setSelectedDates}
+            onCM2SummerPeriodCheck={setIsCM2SummerPeriod}
           />
 
           <PeriodSelector
@@ -57,11 +72,19 @@ export const TeenHolidayReservationContent = () => {
           )}
 
           <Button
-            onClick={handleSubmit}
+            onClick={onSubmitClick}
             className="w-full"
             disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
+            type="button"
           >
-            {isSubmitting ? "Réservation en cours..." : "Confirmer la réservation"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Réservation en cours...
+              </>
+            ) : (
+              "Confirmer la réservation"
+            )}
           </Button>
         </div>
       </Card>
