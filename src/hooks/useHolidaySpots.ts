@@ -168,7 +168,7 @@ export const useHolidaySpots = (
           const normalizedChildClass = normalizeSchoolClass(childClass);
           let resClassGroup = '';
           
-          // Récupérer à nouveau les mappings pour chaque enfant (corriger la référence à mappings)
+          // Récupérer à nouveau les mappings pour chaque enfant - FIX: This is where the error was
           const { data: childMappings } = await supabase
             .from("holiday_period_class_mappings")
             .select("category, school_class, holiday_period_id");
