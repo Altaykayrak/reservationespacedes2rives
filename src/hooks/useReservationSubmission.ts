@@ -20,7 +20,7 @@ interface DateOption {
 interface NoSpotsDialogState {
   isOpen: boolean;
   schoolClass: string;
-  date: Date;
+  date: Date | null;
 }
 
 interface MinimumDaysDialogState {
@@ -38,7 +38,7 @@ export const useReservationSubmission = (
   const [noSpotsDialog, setNoSpotsDialog] = useState<NoSpotsDialogState>({
     isOpen: false,
     schoolClass: '',
-    date: new Date()
+    date: null
   });
 
   const [minimumDaysDialog, setMinimumDaysDialog] = useState<MinimumDaysDialogState>({
@@ -103,10 +103,15 @@ export const useReservationSubmission = (
 
       if (!result.success) {
         if (result.noSpots) {
+          // S'assurer que la date est valide
+          const safeDate = result.noSpots.date instanceof Date && !isNaN(result.noSpots.date.getTime())
+            ? result.noSpots.date
+            : null;
+            
           setNoSpotsDialog({
             isOpen: true,
-            schoolClass: result.noSpots.schoolClass,
-            date: result.noSpots.date
+            schoolClass: result.noSpots.schoolClass || '',
+            date: safeDate
           });
           return;
         }

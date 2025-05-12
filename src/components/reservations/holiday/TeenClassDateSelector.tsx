@@ -51,8 +51,32 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
     if (!holidayPeriod) return [];
     
     try {
-      const startDate = new Date(holidayPeriod.start_date);
-      const endDate = new Date(holidayPeriod.end_date);
+      // S'assurer que start_date et end_date sont des dates valides
+      let startDate: Date;
+      let endDate: Date;
+      
+      try {
+        startDate = new Date(holidayPeriod.start_date);
+        if (isNaN(startDate.getTime())) {
+          console.error("Start date invalide:", holidayPeriod.start_date);
+          return [];
+        }
+      } catch (err) {
+        console.error("Erreur lors du parsing de la start_date:", err);
+        return [];
+      }
+      
+      try {
+        endDate = new Date(holidayPeriod.end_date);
+        if (isNaN(endDate.getTime())) {
+          console.error("End date invalide:", holidayPeriod.end_date);
+          return [];
+        }
+      } catch (err) {
+        console.error("Erreur lors du parsing de la end_date:", err);
+        return [];
+      }
+      
       const dateArray = [];
       let currentDate = new Date(startDate);
       
@@ -76,6 +100,11 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   // Convertir les selectedDates en format lisible pour la comparaison
   const selectedDatesMap = new Map(
     selectedDates.map(d => {
+      // Vérifier que d.date est une instance valide de Date
+      if (!(d.date instanceof Date) || isNaN(d.date.getTime())) {
+        console.error("Date invalide détectée dans selectedDates:", d.date);
+        return ["invalid-date", d];
+      }
       const dateStr = format(new Date(d.date), 'yyyy-MM-dd');
       return [dateStr, d];
     })
@@ -86,12 +115,19 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   
   // Fonction pour vérifier explicitement si une date est sélectionnée
   const isDateSelected = (date: Date) => {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      return false;
+    }
     const dateStr = format(new Date(date), 'yyyy-MM-dd');
     return selectedDatesMap.has(dateStr);
   };
   
   // Fonction pour gérer le click sur une date
   const onDateToggle = (date: Date) => {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      console.error("Tentative de toggle sur une date invalide:", date);
+      return;
+    }
     console.log("Date toggle clicked for:", format(date, 'yyyy-MM-dd'));
     handleDateToggle(date);
   };
@@ -106,6 +142,11 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
       <ScrollArea className="h-[300px] pr-3">
         <div className="space-y-1">
           {periodDates.map(date => {
+            if (!(date instanceof Date) || isNaN(date.getTime())) {
+              console.error("Date invalide détectée dans periodDates:", date);
+              return null;
+            }
+            
             const dateStr = format(new Date(date), 'yyyy-MM-dd');
             const selectedDate = selectedDatesMap.get(dateStr);
             const isSelected = !!selectedDate;

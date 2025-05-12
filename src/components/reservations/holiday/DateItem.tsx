@@ -35,17 +35,28 @@ export const DateItem = ({
   childSchoolClass,
 }: DateItemProps) => {
   try {
+    // Vérifier si la date est une instance valide de Date
+    const isValidDate = date instanceof Date && !isNaN(date.getTime());
+    if (!isValidDate) {
+      console.error("DateItem - Date invalide reçue:", date);
+      return (
+        <div className="p-2 bg-red-50 rounded-lg">
+          <p className="text-red-500">Erreur: date invalide</p>
+        </div>
+      );
+    }
+    
     console.log("DateItem - Props:", { 
       childSchoolClass, 
       periodId, 
-      date: date instanceof Date ? date.toISOString() : String(date), 
+      date: date.toISOString(), 
       isTeenClass 
     });
     
     const normalizedClass = normalizeSchoolClass(childSchoolClass);
     
     // S'assurer que la date est une instance de Date
-    const safeDate = date instanceof Date ? date : new Date(date);
+    const safeDate = date;
     const formattedDate = format(safeDate, "yyyy-MM-dd");
     
     const { data: spotsLeft, isLoading } = useHolidaySpots(periodId, safeDate, normalizedClass);
