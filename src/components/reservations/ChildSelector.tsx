@@ -73,16 +73,27 @@ export const ChildSelector = ({
       setSelectedDates([]);
     }
 
-    // Check if selected child is CM2 and on holiday reservation page
+    // Check if selected child is CM2 and on correct page
     const checkCM2TeenMapping = async () => {
-      if (selectedChild && isHolidayReservation) {
+      if (selectedChild) {
         const selectedChildData = children?.find(child => child.id === selectedChild);
         
+        // Vérifier si c'est un CM2 et si on est sur une période d'été spécifique
         if (selectedChildData?.school_class === "CM2" && selectedPeriodId) {
-          // Vérifier d'abord si c'est une période d'été spécifique
+          // Vérifier si c'est une période d'été spécifique
           if (periodInfo?.name && summerPeriods.includes(periodInfo.name)) {
-            setShowCM2Message(true);
+            console.log(`CM2 sur période d'été spécifique: ${periodInfo.name}`);
+            
+            if (isHolidayReservation) {
+              // Sur la page de réservation normale, afficher le message de redirection vers Club Ado
+              setShowCM2Message(true);
+            } else if ((isTeenHolidayReservation || isAdminTeenHolidayReservation)) {
+              // Sur la page Club Ado, configurer pour permettre la réservation
+              setShowCM2Message(false);
+            }
+            
             if (onCM2SummerPeriodCheck) {
+              // Notifier que c'est une période d'été pour CM2
               onCM2SummerPeriodCheck(true);
             }
             return;
@@ -92,9 +103,9 @@ export const ChildSelector = ({
           try {
             const { isTeenClass } = await import("@/hooks/useSchoolClassUtils").then(module => module.useSchoolClassUtils());
             const isTeen = await isTeenClass(selectedChildData.school_class, selectedPeriodId);
-            setShowCM2Message(isTeen);
+            setShowCM2Message(isTeen && isHolidayReservation);
             if (onCM2SummerPeriodCheck) {
-              onCM2SummerPeriodCheck(isTeen);
+              onCM2SummerPeriodCheck(isTeen && (isTeenHolidayReservation || isAdminTeenHolidayReservation));
             }
           } catch (error) {
             console.error("Error checking teen class status:", error);
@@ -118,7 +129,7 @@ export const ChildSelector = ({
     };
 
     checkCM2TeenMapping();
-  }, [selectedChild, setSelectedDates, children, isHolidayReservation, selectedPeriodId, periodInfo, onCM2SummerPeriodCheck, summerPeriods]);
+  }, [selectedChild, setSelectedDates, children, isHolidayReservation, selectedPeriodId, periodInfo, onCM2SummerPeriodCheck, summerPeriods, isTeenHolidayReservation, isAdminTeenHolidayReservation]);
   
   // Pour la page des mercredis, utiliser les enfants tels quels
   // car ils sont déjà filtrés dans useChildrenData
@@ -146,7 +157,6 @@ export const ChildSelector = ({
         return true;
       });
 
-  // Log pour déboguer
   console.log("Children passed to ChildSelector:", children);
   console.log("Filtered children based on page type:", filteredChildren);
   console.log("Current path:", location.pathname);

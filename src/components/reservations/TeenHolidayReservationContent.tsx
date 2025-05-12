@@ -9,7 +9,7 @@ import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export const TeenHolidayReservationContent = () => {
   const {

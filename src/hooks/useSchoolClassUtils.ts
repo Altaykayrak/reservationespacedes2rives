@@ -26,7 +26,21 @@ export const useSchoolClassUtils = () => {
     // Si un ID de période est fourni, vérifier le mapping spécifique
     if (holidayPeriodId) {
       try {
-        // Vérifier d'abord s'il existe un mapping spécifique
+        // Vérifier d'abord les périodes d'été spéciales pour CM2
+        if (normalizedClass === "CM2") {
+          const { data: periodInfo } = await supabase
+            .from("available_holiday_periods")
+            .select("name")
+            .eq("id", holidayPeriodId)
+            .single();
+          
+          if (periodInfo && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(periodInfo.name)) {
+            console.log(`CM2 est considéré comme adolescent pour la période d'été: ${periodInfo.name}`);
+            return true;
+          }
+        }
+        
+        // Vérifier ensuite s'il existe un mapping spécifique
         const { data: specificMapping } = await supabase
           .from("holiday_period_class_mappings")
           .select("category")
@@ -40,22 +54,6 @@ export const useSchoolClassUtils = () => {
             return false;
           }
           return specificMapping.category === 'adolescent';
-        }
-        
-        // Vérifier si c'est une période spécifique d'été
-        const { data: periodInfo } = await supabase
-          .from("available_holiday_periods")
-          .select("name")
-          .eq("id", holidayPeriodId)
-          .single();
-        
-        if (periodInfo && normalizedClass === "CM2" && 
-            (periodInfo.name === "ETE-01" || 
-             periodInfo.name === "ETE-02" || 
-             periodInfo.name === "ETE-03" || 
-             periodInfo.name === "ETE-04")) {
-          console.log("CM2 mappé comme adolescent pour la période d'été:", periodInfo.name);
-          return true;
         }
       } catch (error) {
         console.error("Erreur lors de la vérification du mapping spécifique:", error);
