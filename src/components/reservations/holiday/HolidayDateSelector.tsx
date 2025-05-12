@@ -82,16 +82,24 @@ export const HolidayDateSelector = ({
   // Vérifier si la période est une période d'été spéciale pour les CM2
   useEffect(() => {
     const checkSummerPeriod = async () => {
-      if (periodId && childInfo?.school_class === "CM2") {
-        const { data } = await supabase
-          .from("available_holiday_periods")
-          .select("name")
-          .eq("id", periodId)
-          .single();
-        
-        if (data && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(data.name)) {
-          setIsCM2SummerPeriod(true);
-        } else {
+      if (!periodId || !childInfo) return;
+
+      if (childInfo.school_class === "CM2") {
+        try {
+          const { data } = await supabase
+            .from("available_holiday_periods")
+            .select("name")
+            .eq("id", periodId)
+            .single();
+          
+          if (data && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(data.name)) {
+            console.log("CM2 en période d'été détecté:", data.name);
+            setIsCM2SummerPeriod(true);
+          } else {
+            setIsCM2SummerPeriod(false);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la vérification de la période d'été:", error);
           setIsCM2SummerPeriod(false);
         }
       } else {
@@ -112,11 +120,13 @@ export const HolidayDateSelector = ({
   useEffect(() => {
     if (!selectedChild) return;
 
-    if (isTeenClass && holidayPeriod) {
+    const shouldUseSummerTeenLogic = (isTeenClass || isCM2SummerPeriod) && holidayPeriod;
+    
+    if (shouldUseSummerTeenLogic) {
       // On n'applique la présélection que sur la page teen
       const isTeenPage = window.location.pathname === "/teenholiday-reservations";
       if (isTeenPage) {
-        console.log("Sélection des dates pour adolescent");
+        console.log("Sélection des dates pour adolescent/CM2 en période d'été");
         const dates: DateOption[] = [];
         const startDate = new Date(holidayPeriod.start_date);
         const endDate = new Date(holidayPeriod.end_date);
@@ -137,7 +147,7 @@ export const HolidayDateSelector = ({
     } else {
       setSelectedDates([]);
     }
-  }, [selectedChild, isTeenClass, holidayPeriod, setSelectedDates]);
+  }, [selectedChild, isTeenClass, holidayPeriod, setSelectedDates, isCM2SummerPeriod]);
 
   if (!holidayPeriod || !selectedChild) {
     return (
@@ -156,20 +166,18 @@ export const HolidayDateSelector = ({
       />
     );
   }
-  
-  // Si l'enfant est en CM2 et dans une période d'été spéciale,
-  // ne pas afficher le sélecteur de dates
-  if (isCM2SummerPeriod) {
-    return null;
-  }
+
+  // Déterminer le composant de sélection de dates à utiliser
+  const isTeenHolidayPage = window.location.pathname === "/teenholiday-reservations";
+  const shouldUseTeenSelector = isTeenHolidayPage && (isTeenClass || isCM2SummerPeriod);
 
   return (
     <HolidayPeriodProvider 
       holidayPeriod={holidayPeriod} 
       childInfo={childInfo} 
-      isTeenClass={!!isTeenClass}
+      isTeenClass={isTeenClass || isCM2SummerPeriod}
     >
-      {window.location.pathname === "/teenholiday-reservations" && isTeenClass ? (
+      {shouldUseTeenSelector ? (
         <TeenClassDateSelector
           selectedDates={selectedDates}
           isDateAlreadyReserved={isDateAlreadyReserved}

@@ -59,9 +59,12 @@ export const DateItem = ({
     const safeDate = date;
     const formattedDate = format(safeDate, "yyyy-MM-dd");
     
+    // Pour les enfants CM2 pendant les périodes d'été, on force isTeenClass à true
+    let effectiveIsTeenClass = isTeenClass;
+    
     const { data: spotsLeft, isLoading } = useHolidaySpots(periodId, safeDate, normalizedClass);
     
-    console.log(`DateItem - Date: ${formattedDate}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}, isTeenClass: ${isTeenClass}`);
+    console.log(`DateItem - Date: ${formattedDate}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}, isTeenClass: ${effectiveIsTeenClass}`);
     
     // Debug renforcé
     console.log(`Date ${formattedDate} - DISABLED CHECK: isReserved=${isReserved}, spotsLeft=${spotsLeft}, isStrict0=${spotsLeft === 0}`);
@@ -114,7 +117,7 @@ export const DateItem = ({
             withoutMeal={withoutMeal}
             earlyDropoff={earlyDropoff}
             onOptionChange={onOptionChange}
-            isTeenClass={isTeenClass}
+            isTeenClass={effectiveIsTeenClass}
           />
         )}
       </div>

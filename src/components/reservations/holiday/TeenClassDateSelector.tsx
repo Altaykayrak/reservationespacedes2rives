@@ -3,9 +3,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TeenClassDateSelectorProps {
   selectedDates: {
@@ -33,6 +34,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   } = useHolidayPeriodContext();
   
   const [isBlinking, setIsBlinking] = useState(true);
+  const [isCM2InSummerPeriod, setIsCM2InSummerPeriod] = useState(false);
   
   // Effect to disable blinking after 6 seconds
   useEffect(() => {
@@ -43,8 +45,37 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Si ce n'est pas un adolescent ou si c'est la page des réservations normales, on ne devrait pas afficher ce composant
-  if (!holidayPeriod) return null;
+  // Vérifier si l'enfant est CM2 et si nous sommes dans une période d'été spéciale
+  useEffect(() => {
+    const checkCM2SummerPeriod = async () => {
+      if (!childInfo || !holidayPeriod || !periodId) return;
+      
+      if (childInfo.school_class === "CM2") {
+        const { data } = await supabase
+          .from("available_holiday_periods")
+          .select("name")
+          .eq("id", periodId)
+          .single();
+        
+        if (data && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(data.name)) {
+          setIsCM2InSummerPeriod(true);
+          console.log("CM2 en période d'été détecté, traité comme adolescent");
+        } else {
+          setIsCM2InSummerPeriod(false);
+        }
+      } else {
+        setIsCM2InSummerPeriod(false);
+      }
+    };
+    
+    checkCM2SummerPeriod();
+  }, [childInfo, holidayPeriod, periodId]);
+
+  // Si ce n'est pas un adolescent ni un CM2 en période d'été spéciale, 
+  // et si c'est la page des réservations normales, on ne devrait pas afficher ce composant
+  const shouldDisplayTeenSelector = isTeenClass || isCM2InSummerPeriod;
+  
+  if (!shouldDisplayTeenSelector || !holidayPeriod) return null;
 
   // Générer les dates de la période
   const generateDatesForPeriod = () => {
@@ -112,6 +143,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
 
   console.log("TeenClassDateSelector - Period dates:", periodDates);
   console.log("TeenClassDateSelector - Selected dates:", selectedDates);
+  console.log("TeenClassDateSelector - Child class:", childInfo?.school_class, "CM2 summer period:", isCM2InSummerPeriod);
   
   // Fonction pour vérifier explicitement si une date est sélectionnée
   const isDateSelected = (date: Date) => {
@@ -151,6 +183,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
             const selectedDate = selectedDatesMap.get(dateStr);
             const isSelected = !!selectedDate;
             
+            // Afficher toutes les dates disponibles pour l'enfant, qu'il soit classifié CM2 ou adolescent
             return (
               <DateItem 
                 key={dateStr} 
