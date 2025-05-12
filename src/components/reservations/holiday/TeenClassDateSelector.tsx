@@ -48,12 +48,6 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   console.log("TeenClassDateSelector - periodId:", periodId);
   console.log("TeenClassDateSelector - selectedDates:", selectedDates);
 
-  // Si ce n'est pas un adolescent selon le contexte, on ne devrait pas afficher ce composant
-  if (!isTeenClass || !holidayPeriod) {
-    console.log("TeenClassDateSelector - Early return: not a teen class or no holiday period");
-    return null;
-  }
-
   // Générer les dates de la période
   const generateDatesForPeriod = () => {
     if (!holidayPeriod) return [];

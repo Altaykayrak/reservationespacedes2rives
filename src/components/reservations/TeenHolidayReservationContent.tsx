@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 import { useEffect, useState } from "react";
 import { useChildrenData } from "@/hooks/useChildrenData";
+import { HolidayPeriodProvider } from "./holiday/HolidayPeriodContext";
 
 export const TeenHolidayReservationContent = () => {
   const {
@@ -40,6 +41,42 @@ export const TeenHolidayReservationContent = () => {
   const { children: allChildren } = useChildrenData();
   const [filteredChildren, setFilteredChildren] = useState<any[]>([]);
   const { isTeenClassSync } = useSchoolClassUtils();
+  
+  // Récupération des informations de l'enfant sélectionné
+  const { data: childInfo } = useQuery({
+    queryKey: ["child", selectedChild],
+    queryFn: async () => {
+      if (!selectedChild) return null;
+      
+      const { data, error } = await supabase
+        .from("children")
+        .select("school_class")
+        .eq("id", selectedChild)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedChild
+  });
+
+  // Récupération des informations de la période sélectionnée
+  const { data: holidayPeriod } = useQuery({
+    queryKey: ["holiday_period", selectedPeriod],
+    queryFn: async () => {
+      if (!selectedPeriod) return null;
+      
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("*")
+        .eq("id", selectedPeriod)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedPeriod
+  });
 
   // Récupérer les catégories des classes scolaires
   const { data: schoolClassCategories } = useQuery({
@@ -87,6 +124,9 @@ export const TeenHolidayReservationContent = () => {
     }
   };
 
+  // Déterminer si l'enfant est un adolescent
+  const isTeenClass = childInfo ? isTeenClassSync(childInfo.school_class, selectedPeriod) : false;
+
   return (
     <>
       <Card className="p-6">
@@ -105,14 +145,20 @@ export const TeenHolidayReservationContent = () => {
             filterTeenOnly={true}
           />
 
-          {selectedPeriod && selectedChild && (
-            <TeenClassDateSelector
-              selectedDates={selectedDates}
-              isDateAlreadyReserved={isDateAlreadyReserved}
-              handleOptionChange={handleOptionChange}
-              handleDateToggle={handleDateToggle}
-              periodId={selectedPeriod}
-            />
+          {selectedPeriod && selectedChild && childInfo && holidayPeriod && (
+            <HolidayPeriodProvider 
+              holidayPeriod={holidayPeriod} 
+              childInfo={childInfo} 
+              isTeenClass={isTeenClass}
+            >
+              <TeenClassDateSelector
+                selectedDates={selectedDates}
+                isDateAlreadyReserved={isDateAlreadyReserved}
+                handleOptionChange={handleOptionChange}
+                handleDateToggle={handleDateToggle}
+                periodId={selectedPeriod}
+              />
+            </HolidayPeriodProvider>
           )}
 
           <Button
