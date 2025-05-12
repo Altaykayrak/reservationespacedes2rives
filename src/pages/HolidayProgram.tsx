@@ -1,8 +1,9 @@
 
-import { BookOpen, Download } from "lucide-react";
+import { Info } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
-import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const HolidayProgram = () => {
@@ -26,96 +27,31 @@ const HolidayProgram = () => {
     };
   }, []);
   
-  // Fonction pour télécharger une image
-  const downloadImage = (imageUrl: string, fileName: string) => {
-    // Créer un élément a temporaire
-    const a = document.createElement('a');
-    a.href = imageUrl;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-  
   return (
     <>
       <Navbar />
       <div className="container mx-auto p-4">
         <div className="flex items-center gap-2 mb-8">
-          <BookOpen className={`h-6 w-6 ${isVisible ? 'opacity-100' : 'opacity-0'}`} />
+          <Info className={`h-6 w-6 ${isVisible ? 'opacity-100' : 'opacity-0'}`} />
           <h1 className="text-3xl font-bold">Programme Vacances</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardContent className="p-4">
-              <h2 className="text-xl font-bold mb-4">Programme Maternelle</h2>
-              <div className="relative aspect-auto">
-                <img 
-                  src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgmaterpaques.png" 
-                  alt="Programme de vacances maternelle" 
-                  className="w-full h-auto rounded-lg shadow-md"
-                />
-                <div 
-                  className="absolute bottom-2 right-2 bg-white/70 text-xs font-medium py-1 px-2 rounded-full flex items-center gap-1 cursor-pointer hover:bg-white"
-                  onClick={() => downloadImage(
-                    "https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgmaterpaques.png", 
-                    "programme_maternelle.png"
-                  )}
-                >
-                  <Download className="h-3 w-3" />
-                  Télécharger
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <Alert className="mb-6 bg-blue-50 border-blue-200">
+          <AlertTitle className="text-lg font-semibold text-blue-800">
+            Programmes à venir
+          </AlertTitle>
+          <AlertDescription className="text-blue-700">
+            Les programmes seront disponibles quelques semaines avant les vacances. 
+            Nous vous avertirons par email dès leur publication.
+          </AlertDescription>
+        </Alert>
 
-          <Card>
-            <CardContent className="p-4">
-              <h2 className="text-xl font-bold mb-4">Programme Primaire</h2>
-              <div className="relative aspect-auto">
-                <img 
-                  src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgprimpaques.jpg" 
-                  alt="Programme de vacances primaire" 
-                  className="w-full h-auto rounded-lg shadow-md"
-                />
-                <div 
-                  className="absolute bottom-2 right-2 bg-white/70 text-xs font-medium py-1 px-2 rounded-full flex items-center gap-1 cursor-pointer hover:bg-white"
-                  onClick={() => downloadImage(
-                    "https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgprimpaques.jpg", 
-                    "programme_primaire.jpg"
-                  )}
-                >
-                  <Download className="h-3 w-3" />
-                  Télécharger
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <h2 className="text-xl font-bold mb-4">Programme Adolescents</h2>
-              <div className="relative aspect-auto">
-                <img 
-                  src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgadopaques.png" 
-                  alt="Programme de vacances adolescents" 
-                  className="w-full h-auto rounded-lg shadow-md"
-                />
-                <div 
-                  className="absolute bottom-2 right-2 bg-white/70 text-xs font-medium py-1 px-2 rounded-full flex items-center gap-1 cursor-pointer hover:bg-white"
-                  onClick={() => downloadImage(
-                    "https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Prgadopaques.png", 
-                    "programme_adolescents.png"
-                  )}
-                >
-                  <Download className="h-3 w-3" />
-                  Télécharger
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <EmptyHolidayState 
+          message="Aucun programme disponible pour le moment"
+          subtitle="Les programmes d'activités pour les prochaines vacances seront publiés prochainement. 
+                    Merci de votre patience."
+          icon="info"
+        />
       </div>
     </>
   );
