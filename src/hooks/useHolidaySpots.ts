@@ -168,12 +168,17 @@ export const useHolidaySpots = (
           const normalizedChildClass = normalizeSchoolClass(childClass);
           let resClassGroup = '';
           
+          // Récupérer à nouveau les mappings pour chaque enfant (corriger la référence à mappings)
+          const { data: childMappings } = await supabase
+            .from("holiday_period_class_mappings")
+            .select("category, school_class, holiday_period_id");
+          
           // Appliquer le même traitement spécial pour les CM2 dans les périodes d'été
           if (normalizedChildClass === "CM2" && periodData.name && summerPeriods.includes(periodData.name)) {
             resClassGroup = 'teen';
           } else {
             // Vérifier le mapping spécifique pour cet enfant
-            const childMapping = mappings?.find(m => 
+            const childMapping = childMappings?.find(m => 
               m.holiday_period_id === periodId && 
               m.school_class.toUpperCase() === normalizedChildClass.toUpperCase()
             );
