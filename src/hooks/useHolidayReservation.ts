@@ -1,164 +1,381 @@
 
-import { useState, useEffect } from "react";
-import { useChildrenData } from "./useChildrenData";
-import { useHolidayPeriods } from "./useHolidayPeriods";
-import { useReservationSubmission } from "./useReservationSubmission";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useChildrenData } from "@/hooks/useChildrenData";
+import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { nanoid } from "nanoid";
+import { addDays, format, parseISO, getDay } from "date-fns";
+import { toast } from "sonner";
 import { useExistingHolidayReservations } from "./useExistingHolidayReservations";
-import { useLocation } from "react-router-dom";
-
-interface DateOption {
-  date: Date;
-  withoutMeal: boolean;
-  earlyDropoff: boolean;
-}
+import { getWeeksFromDates } from "@/utils/dateUtils";
 
 export const useHolidayReservation = () => {
-  const [selectedDates, setSelectedDates] = useState<DateOption[]>([]);
-  const [selectedChild, setSelectedChild] = useState<string>("");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  const [selectedDates, setSelectedDates] = useState<{
+    date: Date;
+    withoutMeal: boolean;
+    earlyDropoff: boolean;
+  }[]>([]);
+  
+  const [selectedChild, setSelectedChild] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState("");
+  
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const location = useLocation();
-
+  const [noSpotsDialog, setNoSpotsDialog] = useState({ 
+    isOpen: false, 
+    schoolClass: "", 
+    date: null as Date | null 
+  });
+  const [minimumDaysDialog, setMinimumDaysDialog] = useState({ 
+    isOpen: false 
+  });
+  
+  const queryClient = useQueryClient();
+  
+  // Récupérer les données des enfants et des périodes
   const { children } = useChildrenData();
   const { holidayPeriods } = useHolidayPeriods();
-  const { existingReservations, isDateAlreadyReserved, refetchReservations } = useExistingHolidayReservations(selectedChild);
+  const { existingReservations, refetchReservations, isDateAlreadyReserved } = 
+    useExistingHolidayReservations(selectedChild);
+  
+  // État pour suivre si le formulaire est en cours d'envoi
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Récupérer les informations sur l'enfant sélectionné
   const { data: childInfo } = useQuery({
-    queryKey: ["child", selectedChild],
+    queryKey: ["children", selectedChild],
     queryFn: async () => {
-      if (!selectedChild) {
-        console.log("Pas d'enfant sélectionné");
-        return null;
-      }
-      console.log("Récupération des informations de l'enfant:", selectedChild);
-      const { data, error } = await supabase
+      if (!selectedChild) return null;
+      
+      const { data } = await supabase
         .from("children")
-        .select("school_class")
+        .select("*")
         .eq("id", selectedChild)
         .single();
       
-      if (error) {
-        console.error("Erreur lors de la récupération des informations de l'enfant:", error);
-        throw error;
-      }
-      console.log("Informations de l'enfant récupérées:", data);
       return data;
     },
-    enabled: Boolean(selectedChild)
+    enabled: !!selectedChild
   });
+  
+  // Toggle date selection
+  const handleDateToggle = (date: Date) => {
+    console.log(`Toggle date: ${format(date, "yyyy-MM-dd")}`);
 
-  const { data: schoolClassCategories } = useQuery({
-    queryKey: ["schoolClassCategories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("school_class_categories")
-        .select("*")
-        .eq("category", "adolescent");
+    const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations" ||
+      location.pathname === "/admin/reservations/new-teen-holiday";
+
+    const existingDateIndex = selectedDates.findIndex(
+      d => format(d.date, "yyyy-MM-dd") === format(date, "yyyy-MM-dd")
+    );
+
+    if (existingDateIndex >= 0) {
+      // Si la date existe déjà, la supprimer
+      setSelectedDates(selectedDates.filter((_, i) => i !== existingDateIndex));
+    } else {
+      // Sinon, l'ajouter avec les options par défaut
+      // Pour le "Club Ado", l'option "Sans repas" est activée par défaut
+      setSelectedDates([
+        ...selectedDates,
+        {
+          date,
+          withoutMeal: isTeenHolidayReservation, // "Sans repas" activé par défaut pour les ados
+          earlyDropoff: false // "Accueil avant 8h30" désactivé par défaut
+        }
+      ]);
+    }
+  };
+
+  // Handle option changes
+  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
+    setSelectedDates(
+      selectedDates.map(d => 
+        format(d.date, "yyyy-MM-dd") === format(date, "yyyy-MM-dd")
+          ? { ...d, [option]: value }
+          : d
+      )
+    );
+  };
+  
+  // Create reservations mutation
+  const createReservations = useMutation({
+    mutationFn: async () => {
+      if (!selectedChild || !selectedPeriod || selectedDates.length === 0) return;
+      
+      // Générer un numéro de réservation unique
+      const reservationNumber = nanoid(8).toUpperCase();
+      
+      // Préparer les réservations
+      const reservations = selectedDates.map(d => ({
+        child_id: selectedChild,
+        period_id: selectedPeriod,
+        reservation_date: format(d.date, "yyyy-MM-dd"),
+        without_meal: d.withoutMeal,
+        early_dropoff: d.earlyDropoff,
+        reservation_number: reservationNumber,
+        status: "confirmed"
+      }));
+      
+      // Insérer les réservations dans la base de données
+      const { error } = await supabase
+        .from("holiday_reservations")
+        .insert(reservations);
       
       if (error) throw error;
-      return data;
+      
+      return { reservationNumber };
     },
+    onSuccess: () => {
+      // Rafraîchir les données des réservations
+      queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["existing_holiday_reservations"] });
+      
+      // Réinitialiser le formulaire
+      setSelectedDates([]);
+      setShowSuccessDialog(true);
+      refetchReservations();
+    }
   });
   
-  const { data: periodInfo } = useQuery({
-    queryKey: ["period_details", selectedPeriod],
-    queryFn: async () => {
-      if (!selectedPeriod) return null;
-      
-      const { data, error } = await supabase
-        .from("available_holiday_periods")
-        .select("name")
-        .eq("id", selectedPeriod)
-        .single();
-      
-      if (error) {
-        console.error("Erreur lors de la récupération des informations de période:", error);
-        return null;
+  // Vérifier les spots disponibles avant soumission
+  const checkAvailableSpots = async () => {
+    if (!selectedChild || !childInfo) return false;
+    
+    try {
+      for (const dateObj of selectedDates) {
+        const formattedDate = format(dateObj.date, "yyyy-MM-dd");
+        
+        // 1. Vérifier si cette date est déjà réservée
+        if (isDateAlreadyReserved(dateObj.date)) {
+          console.log(`Date ${formattedDate} déjà réservée, ignorée`);
+          continue; // On ignore cette date
+        }
+        
+        // 2. Obtenir les informations sur la période
+        const { data: periodData } = await supabase
+          .from("available_holiday_periods")
+          .select("*")
+          .eq("id", selectedPeriod)
+          .single();
+        
+        if (!periodData) {
+          console.error("Période introuvable");
+          return false;
+        }
+        
+        // 3. Déterminer la catégorie de l'enfant
+        const schoolClass = childInfo.school_class;
+        
+        let group = "";
+        
+        // Traitement spécial pour CM2 durant l'été
+        if (schoolClass === "CM2" && 
+            periodData.name && 
+            ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(periodData.name)) {
+          group = "teen";
+        } else {
+          // Vérifier s'il y a un mapping spécifique
+          const { data: mappings } = await supabase
+            .from("holiday_period_class_mappings")
+            .select("*")
+            .eq("holiday_period_id", selectedPeriod)
+            .eq("school_class", schoolClass);
+          
+          let category = "";
+          if (mappings && mappings.length > 0) {
+            category = mappings[0].category;
+          } else {
+            // Catégories par défaut
+            if (["PS", "MS", "GS"].includes(schoolClass)) {
+              category = "maternelle";
+            } else if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(schoolClass)) {
+              category = "primaire";
+            } else {
+              category = "adolescent";
+            }
+          }
+          
+          // Convertir la catégorie en groupe
+          if (category === "maternelle") group = "kindergarten";
+          else if (category === "primaire") group = "primary";
+          else if (category === "adolescent") group = "teen";
+        }
+        
+        console.log(`Groupe déterminé pour ${schoolClass} dans ${periodData.name}: ${group}`);
+        
+        if (!group) {
+          console.error(`Impossible de déterminer le groupe pour la classe ${schoolClass}`);
+          return false;
+        }
+        
+        // 4. Compter les places déjà réservées
+        const { data: reservationsData } = await supabase
+          .from("holiday_reservations")
+          .select("id, child_id, child:children(school_class)")
+          .eq("period_id", selectedPeriod)
+          .eq("reservation_date", formattedDate)
+          .eq("status", "confirmed");
+        
+        if (!reservationsData) {
+          console.error("Erreur lors de la récupération des réservations");
+          return false;
+        }
+        
+        // 5. Compter les réservations pour le même groupe
+        let reservationsCount = 0;
+        
+        for (const res of reservationsData || []) {
+          if (!res.child) continue;
+          
+          const resChildClass = res.child.school_class;
+          let resGroup = "";
+          
+          // Déterminer le groupe de cet enfant
+          if (resChildClass === "CM2" && 
+              periodData.name && 
+              ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(periodData.name)) {
+            resGroup = "teen";
+          } else {
+            // Vérifier s'il y a un mapping spécifique
+            const { data: resMappings } = await supabase
+              .from("holiday_period_class_mappings")
+              .select("*")
+              .eq("holiday_period_id", selectedPeriod)
+              .eq("school_class", resChildClass);
+            
+            let resCategory = "";
+            if (resMappings && resMappings.length > 0) {
+              resCategory = resMappings[0].category;
+            } else {
+              // Catégories par défaut
+              if (["PS", "MS", "GS"].includes(resChildClass)) {
+                resCategory = "maternelle";
+              } else if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(resChildClass)) {
+                resCategory = "primaire";
+              } else {
+                resCategory = "adolescent";
+              }
+            }
+            
+            // Convertir la catégorie en groupe
+            if (resCategory === "maternelle") resGroup = "kindergarten";
+            else if (resCategory === "primaire") resGroup = "primary";
+            else if (resCategory === "adolescent") resGroup = "teen";
+          }
+          
+          // Compter seulement si c'est le même groupe
+          if (resGroup === group) {
+            reservationsCount++;
+          }
+        }
+        
+        // 6. Vérifier si des places sont encore disponibles
+        const maxSpots = periodData[`max_participants_${group}`] || 0;
+        const spotsLeft = maxSpots - reservationsCount;
+        
+        console.log(`Vérification des places pour ${formattedDate}: max=${maxSpots}, réservées=${reservationsCount}, disponibles=${spotsLeft}`);
+        
+        if (spotsLeft <= 0) {
+          setNoSpotsDialog({
+            isOpen: true,
+            schoolClass: childInfo.school_class,
+            date: dateObj.date
+          });
+          return false;
+        }
       }
       
-      return data;
-    },
-    enabled: !!selectedPeriod
-  });
-
-  const isTeenClass = childInfo?.school_class && schoolClassCategories?.some(
-    category => category.name.toUpperCase() === childInfo.school_class.toUpperCase()
-  );
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la vérification des places:", error);
+      return false;
+    }
+  };
   
-  const isCM2InSummerPeriod = childInfo?.school_class === "CM2" && 
-    periodInfo?.name && 
-    ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(periodInfo.name);
-
-  const resetForm = () => {
-    setSelectedDates([]);
-    setSelectedPeriod("");
-  };
-
-  const { 
-    handleSubmit: submit, 
-    noSpotsDialog, 
-    setNoSpotsDialog,
-    minimumDaysDialog,
-    setMinimumDaysDialog,
-    isSubmitting
-  } = useReservationSubmission(
-    selectedChild,
-    selectedDates,
-    holidayPeriods,
-    isDateAlreadyReserved,
-    async () => {
-      await refetchReservations();
-      setShowSuccessDialog(true);
-      resetForm();
-    },
-    resetForm
-  );
-
-  // Utilisez ce wrapper pour éviter les doubles exécutions
-  const handleSubmit = async () => {
-    console.log("DEBUG: handleSubmit appelé depuis HolidayReservationContent");
-    await submit();
-  };
-
-  const handleDateToggle = (date: Date) => {
-    const isTeenPage = location.pathname === "/teenholiday-reservations" ||
-                      location.pathname === "/admin/reservations/new-teen-holiday" ||
-                      location.pathname === "/admin/new-teenholiday-reservation";
+  // Vérifier que le minimum de 3 jours par semaine est respecté
+  const checkMinimumDays = () => {
+    // Obtenir la liste des dates sélectionnées
+    const dates = selectedDates.map(d => d.date);
     
-    if (isDateAlreadyReserved(date)) {
+    // Vérifier s'il y a au moins une date sélectionnée
+    if (dates.length === 0) {
+      return false;
+    }
+    
+    // Obtenir les semaines avec leurs jours
+    const weeks = getWeeksFromDates(dates);
+    
+    // Vérifier chaque semaine pour le minimum de 3 jours
+    const isTeenReservation = window.location.pathname === "/teenholiday-reservations" || 
+                             window.location.pathname === "/admin/reservations/new-teen-holiday" ||
+                             window.location.pathname === "/admin/new-teenholiday-reservation";
+    
+    // Si c'est une réservation ado, on vérifie toutes les semaines
+    if (isTeenReservation) {
+      for (const weekDates of weeks) {
+        if (weekDates.length < 3) {
+          setMinimumDaysDialog({ isOpen: true });
+          return false;
+        }
+      }
+    }
+    
+    // Si on arrive ici, toutes les vérifications sont passées
+    return true;
+  };
+  
+  const handleSubmit = async () => {
+    console.log("Début de la soumission");
+    
+    // Éviter les soumissions multiples
+    if (isSubmitting) {
+      console.log("Déjà en cours de soumission, ignoré");
       return;
     }
     
-    const existingDate = selectedDates.find(d => d.date.getTime() === date.getTime());
-    if (existingDate) {
-      setSelectedDates(selectedDates.filter(d => d.date.getTime() !== date.getTime()));
-    } else {
-      // Pour les adolescents et CM2 en période d'été sur la page teen, on active "Sans repas" par défaut
-      const withoutMealByDefault = (isTeenPage && (isTeenClass || isCM2InSummerPeriod));
-      setSelectedDates([...selectedDates, { 
-        date, 
-        withoutMeal: withoutMealByDefault, 
-        earlyDropoff: false 
-      }]);
+    setIsSubmitting(true);
+    
+    try {
+      // Vérifications préalables
+      console.log("Vérification des jours minimums");
+      const minDaysOk = checkMinimumDays();
+      if (!minDaysOk) {
+        console.log("Validation échouée: minimum de jours non respecté");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      console.log("Vérification des places disponibles");
+      const spotsOk = await checkAvailableSpots();
+      if (!spotsOk) {
+        console.log("Validation échouée: places non disponibles");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      console.log("Toutes les vérifications OK, envoi de la réservation");
+      await createReservations.mutateAsync();
+      
+      console.log("Réservation créée avec succès");
+      
+      // Réinitialiser le formulaire
+      setSelectedDates([]);
+      
+      console.log("Formulaire réinitialisé");
+    } catch (error) {
+      console.error("Erreur lors de la soumission:", error);
+      toast.error("Une erreur est survenue lors de la réservation. Veuillez réessayer.");
+    } finally {
+      console.log("Fin de la soumission");
+      setIsSubmitting(false);
     }
   };
-
-  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
-    setSelectedDates(selectedDates.map(d => 
-      d.date.getTime() === date.getTime() 
-        ? { ...d, [option]: value }
-        : d
-    ));
-  };
-
+  
   return {
     selectedDates,
-    setSelectedDates,
     selectedChild,
-    setSelectedChild,
     selectedPeriod,
+    setSelectedChild,
     setSelectedPeriod,
     children,
     holidayPeriods,
@@ -166,15 +383,13 @@ export const useHolidayReservation = () => {
     handleOptionChange,
     handleSubmit,
     isDateAlreadyReserved,
-    isTeenClass,
-    isCM2InSummerPeriod,
-    childInfo,
+    setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
     isSubmitting,
     noSpotsDialog,
     setNoSpotsDialog,
-    minimumDaysDialog,
+    minimumDaysDialog, 
     setMinimumDaysDialog
   };
 };

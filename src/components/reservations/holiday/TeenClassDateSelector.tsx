@@ -68,8 +68,21 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
 
   // Convertir les selectedDates en format lisible pour la comparaison
   const selectedDatesMap = new Map(selectedDates.map(d => [format(d.date, 'yyyy-MM-dd'), d]));
+
   console.log("TeenClassDateSelector - Period dates:", periodDates);
   console.log("TeenClassDateSelector - Selected dates:", selectedDates);
+  
+  // Fonction pour vérifier explicitement si une date est sélectionnée
+  const isDateSelected = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return selectedDatesMap.has(dateStr);
+  };
+  
+  // Fonction pour gérer le click sur une date
+  const onDateToggle = (date: Date) => {
+    console.log("Date toggle clicked for:", format(date, 'yyyy-MM-dd'));
+    handleDateToggle(date);
+  };
   
   return (
     <div className="space-y-4">
@@ -93,7 +106,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
                 isReserved={isDateAlreadyReserved(date)} 
                 withoutMeal={selectedDate?.withoutMeal || false} 
                 earlyDropoff={selectedDate?.earlyDropoff || false} 
-                onDateToggle={() => handleDateToggle(date)} 
+                onDateToggle={() => onDateToggle(date)} 
                 onOptionChange={(option, value) => handleOptionChange(date, option, value)} 
                 isTeenClass={true} 
                 periodId={periodId} 
