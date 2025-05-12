@@ -95,12 +95,16 @@ export const useHolidaySpots = (
           classGroup = 'teen';
         } else {
           // 3. Sinon, récupérer le mapping spécifique
-          const { data: mapping } = await supabase
+          const { data: mappings } = await supabase
             .from("holiday_period_class_mappings")
-            .select("category")
-            .eq("holiday_period_id", periodId)
-            .eq("school_class", normalizedClass)
-            .maybeSingle();
+            .select("category, school_class, holiday_period_id");
+            
+          console.log("Mappings de classe trouvés:", mappings?.length);
+          
+          const mapping = mappings?.find(m => 
+            m.holiday_period_id === periodId && 
+            m.school_class.toUpperCase() === normalizedClass.toUpperCase()
+          );
             
           if (mapping) {
             // Si la classe est dans la catégorie "aucune", il n'y a pas de places disponibles
@@ -169,12 +173,10 @@ export const useHolidaySpots = (
             resClassGroup = 'teen';
           } else {
             // Vérifier le mapping spécifique pour cet enfant
-            const { data: childMapping } = await supabase
-              .from("holiday_period_class_mappings")
-              .select("category")
-              .eq("holiday_period_id", periodId)
-              .eq("school_class", normalizedChildClass)
-              .maybeSingle();
+            const childMapping = mappings?.find(m => 
+              m.holiday_period_id === periodId && 
+              m.school_class.toUpperCase() === normalizedChildClass.toUpperCase()
+            );
               
             let resClassCategory = '';
             if (childMapping) {

@@ -44,8 +44,7 @@ export const DateItem = ({
   // Debug renforcé
   console.log(`Date ${format(date, "yyyy-MM-dd")} - DISABLED CHECK: isReserved=${isReserved}, spotsLeft=${spotsLeft}, isStrict0=${spotsLeft === 0}`);
   
-  // Désactivé UNIQUEMENT si déjà réservé OU si spotsLeft est STRICTEMENT 0
-  // Il est crucial d'utiliser une égalité stricte ici
+  // La date doit être désactivée uniquement si elle est déjà réservée OU si spotsLeft est strictement égal à 0
   const isDisabled = isReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
 
   return (

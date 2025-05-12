@@ -45,12 +45,14 @@ export const useSchoolClassUtils = () => {
     // Si ce n'est pas un CM2 en période d'été, vérifier le mapping spécifique
     if (holidayPeriodId) {
       try {
-        const { data: specificMapping } = await supabase
+        const { data: mappings } = await supabase
           .from("holiday_period_class_mappings")
-          .select("category")
-          .eq("holiday_period_id", holidayPeriodId)
-          .eq("school_class", normalizedClass)
-          .single();
+          .select("category, school_class, holiday_period_id");
+          
+        const specificMapping = mappings?.find(m => 
+          m.holiday_period_id === holidayPeriodId && 
+          m.school_class.toUpperCase() === normalizedClass.toUpperCase()
+        );
         
         if (specificMapping) {
           // Si la catégorie est "aucune", cette classe n'est pas accessible

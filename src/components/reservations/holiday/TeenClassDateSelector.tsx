@@ -44,7 +44,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   }, []);
 
   // Si ce n'est pas un adolescent ou si c'est la page des réservations normales, on ne devrait pas afficher ce composant
-  if (!isTeenClass || !holidayPeriod || window.location.pathname === "/holiday-reservations") return null;
+  if (!holidayPeriod) return null;
 
   // Générer les dates de la période
   const generateDatesForPeriod = () => {
@@ -71,7 +71,8 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   console.log("TeenClassDateSelector - Period dates:", periodDates);
   console.log("TeenClassDateSelector - Selected dates:", selectedDates);
   
-  return <div className="space-y-4">
+  return (
+    <div className="space-y-4">
       <Alert>
         <AlertDescription className={`text-[#ea384c] font-medium ${isBlinking ? 'animate-blink' : ''}`}>
           Veuillez sélectionner au moins 3 jours par semaine. Par défaut, l'option "Sans repas" est activée. Les adolescents sont accueillis à 11h30 (avec un pique-nique à apporter) ou à 13h30, selon le programme. Une "Carte jeune" d'une valeur de 5 euros par enfant est facturée pour l'année civile.
@@ -80,12 +81,28 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
       <ScrollArea className="h-[300px] pr-3">
         <div className="space-y-1">
           {periodDates.map(date => {
-          const dateStr = format(date, 'yyyy-MM-dd');
-          const selectedDate = selectedDatesMap.get(dateStr);
-          const isSelected = !!selectedDate;
-          return <DateItem key={dateStr} date={date} isSelected={isSelected} isReserved={isDateAlreadyReserved(date)} withoutMeal={selectedDate?.withoutMeal || false} earlyDropoff={selectedDate?.earlyDropoff || false} onDateToggle={() => handleDateToggle(date)} onOptionChange={(option, value) => handleOptionChange(date, option, value)} isTeenClass={true} periodId={periodId} childSchoolClass={childInfo?.school_class || ''} />;
-        })}
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const selectedDate = selectedDatesMap.get(dateStr);
+            const isSelected = !!selectedDate;
+            
+            return (
+              <DateItem 
+                key={dateStr} 
+                date={date} 
+                isSelected={isSelected} 
+                isReserved={isDateAlreadyReserved(date)} 
+                withoutMeal={selectedDate?.withoutMeal || false} 
+                earlyDropoff={selectedDate?.earlyDropoff || false} 
+                onDateToggle={() => handleDateToggle(date)} 
+                onOptionChange={(option, value) => handleOptionChange(date, option, value)} 
+                isTeenClass={true} 
+                periodId={periodId} 
+                childSchoolClass={childInfo?.school_class || ''}
+              />
+            );
+          })}
         </div>
       </ScrollArea>
-    </div>;
+    </div>
+  );
 };
