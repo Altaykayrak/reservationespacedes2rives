@@ -7,6 +7,7 @@ import { useHolidayClassification } from "./hooks/useHolidayClassification";
 import { TeenClassDateSelector } from "./TeenClassDateSelector";
 import { WorkdayDateSelector } from "./WorkdayDateSelector";
 import { EmptyHolidayState } from "./EmptyHolidayState";
+import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 
 interface DateOption {
   date: Date;
@@ -79,6 +80,9 @@ export const HolidayDateSelector = ({
     enabled: Boolean(selectedChild)
   });
 
+  // Import our utility hook for teen class detection
+  const { isTeenClassSync } = useSchoolClassUtils();
+
   // Vérifier si la période est une période d'été spéciale pour les CM2
   useEffect(() => {
     const checkSummerPeriod = async () => {
@@ -110,17 +114,14 @@ export const HolidayDateSelector = ({
     checkSummerPeriod();
   }, [periodId, childInfo]);
 
-  const handleCM2SummerPeriodCheck = (isInSummerPeriod: boolean) => {
-    setIsCM2SummerPeriod(isInSummerPeriod);
-  };
-
-  const { isTeenClass } = useHolidayClassification(selectedChild);
+  // Using the synchronous version of isTeenClass
+  const isTeenClassValue = childInfo ? isTeenClassSync(childInfo.school_class, periodId) : false;
 
   // Effet pour réinitialiser les dates lors du changement d'enfant
   useEffect(() => {
     if (!selectedChild) return;
 
-    const shouldUseSummerTeenLogic = (isTeenClass || isCM2SummerPeriod) && holidayPeriod;
+    const shouldUseSummerTeenLogic = (isTeenClassValue || isCM2SummerPeriod) && holidayPeriod;
     
     if (shouldUseSummerTeenLogic) {
       // On n'applique la présélection que sur la page teen
@@ -147,7 +148,7 @@ export const HolidayDateSelector = ({
     } else {
       setSelectedDates([]);
     }
-  }, [selectedChild, isTeenClass, holidayPeriod, setSelectedDates, isCM2SummerPeriod]);
+  }, [selectedChild, isTeenClassValue, holidayPeriod, setSelectedDates, isCM2SummerPeriod]);
 
   if (!holidayPeriod || !selectedChild) {
     return (
@@ -169,13 +170,14 @@ export const HolidayDateSelector = ({
 
   // Déterminer le composant de sélection de dates à utiliser
   const isTeenHolidayPage = window.location.pathname === "/teenholiday-reservations";
-  const shouldUseTeenSelector = isTeenHolidayPage && (isTeenClass || isCM2SummerPeriod);
+  // Use the sync version here to avoid type issues
+  const shouldUseTeenSelector = isTeenHolidayPage && (isTeenClassValue || isCM2SummerPeriod);
 
   return (
     <HolidayPeriodProvider 
       holidayPeriod={holidayPeriod} 
       childInfo={childInfo} 
-      isTeenClass={isTeenClass || isCM2SummerPeriod}
+      isTeenClass={isTeenClassValue || isCM2SummerPeriod}
     >
       {shouldUseTeenSelector ? (
         <TeenClassDateSelector
