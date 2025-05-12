@@ -63,7 +63,10 @@ const AdminNewTeenHolidayReservation = () => {
           </p>
         </div>
 
-        <HolidayReservationContent filteredChildren={teenChildren} />
+        <HolidayReservationContent 
+          filteredChildren={teenChildren} 
+          filterTeenPeriods={true}
+        />
       </div>
     </div>
   );

@@ -15,9 +15,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
+  filterTeenPeriods?: boolean;
 }
 
-export const HolidayReservationContent = ({ filteredChildren }: HolidayReservationContentProps) => {
+export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods = false }: HolidayReservationContentProps) => {
   const {
     selectedDates,
     selectedChild,
@@ -87,6 +88,7 @@ export const HolidayReservationContent = ({ filteredChildren }: HolidayReservati
           selectedPeriod={selectedPeriod}
           setSelectedPeriod={setSelectedPeriod}
           holidayPeriods={holidayPeriods}
+          filterTeenOnly={filterTeenPeriods}
         />
 
         {selectedPeriod && !isCM2SummerPeriod && (

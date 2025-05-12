@@ -78,7 +78,7 @@ const TeenHolidayReservations = () => {
             />
           </div>
         ) : (
-          <HolidayReservationContent />
+          <HolidayReservationContent filterTeenPeriods={true} />
         )}
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">

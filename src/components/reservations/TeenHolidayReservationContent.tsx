@@ -62,6 +62,7 @@ export const TeenHolidayReservationContent = () => {
             selectedPeriod={selectedPeriod}
             setSelectedPeriod={setSelectedPeriod}
             holidayPeriods={holidayPeriods}
+            filterTeenOnly={true}
           />
 
           {selectedPeriod && (
