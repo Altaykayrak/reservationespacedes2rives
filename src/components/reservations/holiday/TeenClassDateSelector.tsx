@@ -49,32 +49,44 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   // Générer les dates de la période
   const generateDatesForPeriod = () => {
     if (!holidayPeriod) return [];
-    const startDate = parseISO(holidayPeriod.start_date);
-    const endDate = parseISO(holidayPeriod.end_date);
-    const dateArray = [];
-    let currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
-      // On ignore les samedis (6) et dimanches (0)
-      if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-        dateArray.push(new Date(currentDate));
+    
+    try {
+      const startDate = new Date(holidayPeriod.start_date);
+      const endDate = new Date(holidayPeriod.end_date);
+      const dateArray = [];
+      let currentDate = new Date(startDate);
+      
+      while (currentDate <= endDate) {
+        // On ignore les samedis (6) et dimanches (0)
+        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+          dateArray.push(new Date(currentDate));
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
       }
-      currentDate.setDate(currentDate.getDate() + 1);
+      return dateArray;
+    } catch (error) {
+      console.error("Erreur lors de la génération des dates:", error);
+      return [];
     }
-    return dateArray;
   };
 
   // Obtenir toutes les dates de la période
   const periodDates = generateDatesForPeriod();
 
   // Convertir les selectedDates en format lisible pour la comparaison
-  const selectedDatesMap = new Map(selectedDates.map(d => [format(d.date, 'yyyy-MM-dd'), d]));
+  const selectedDatesMap = new Map(
+    selectedDates.map(d => {
+      const dateStr = format(new Date(d.date), 'yyyy-MM-dd');
+      return [dateStr, d];
+    })
+  );
 
   console.log("TeenClassDateSelector - Period dates:", periodDates);
   console.log("TeenClassDateSelector - Selected dates:", selectedDates);
   
   // Fonction pour vérifier explicitement si une date est sélectionnée
   const isDateSelected = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
+    const dateStr = format(new Date(date), 'yyyy-MM-dd');
     return selectedDatesMap.has(dateStr);
   };
   
@@ -94,7 +106,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
       <ScrollArea className="h-[300px] pr-3">
         <div className="space-y-1">
           {periodDates.map(date => {
-            const dateStr = format(date, 'yyyy-MM-dd');
+            const dateStr = format(new Date(date), 'yyyy-MM-dd');
             const selectedDate = selectedDatesMap.get(dateStr);
             const isSelected = !!selectedDate;
             

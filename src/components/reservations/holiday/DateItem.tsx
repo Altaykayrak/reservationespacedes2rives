@@ -34,67 +34,86 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
-  console.log("DateItem - Props:", { childSchoolClass, periodId, date: date.toISOString(), isTeenClass });
-  
-  const normalizedClass = normalizeSchoolClass(childSchoolClass);
-  const { data: spotsLeft, isLoading } = useHolidaySpots(periodId, date, normalizedClass);
-  
-  console.log(`DateItem - Date: ${format(date, "yyyy-MM-dd")}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}, isTeenClass: ${isTeenClass}`);
-  
-  // Debug renforcé
-  console.log(`Date ${format(date, "yyyy-MM-dd")} - DISABLED CHECK: isReserved=${isReserved}, spotsLeft=${spotsLeft}, isStrict0=${spotsLeft === 0}`);
-  
-  // La date doit être désactivée uniquement si elle est déjà réservée OU si spotsLeft est strictement égal à 0
-  const isDisabled = isReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
+  try {
+    console.log("DateItem - Props:", { 
+      childSchoolClass, 
+      periodId, 
+      date: date instanceof Date ? date.toISOString() : String(date), 
+      isTeenClass 
+    });
+    
+    const normalizedClass = normalizeSchoolClass(childSchoolClass);
+    
+    // S'assurer que la date est une instance de Date
+    const safeDate = date instanceof Date ? date : new Date(date);
+    const formattedDate = format(safeDate, "yyyy-MM-dd");
+    
+    const { data: spotsLeft, isLoading } = useHolidaySpots(periodId, safeDate, normalizedClass);
+    
+    console.log(`DateItem - Date: ${formattedDate}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}, isTeenClass: ${isTeenClass}`);
+    
+    // Debug renforcé
+    console.log(`Date ${formattedDate} - DISABLED CHECK: isReserved=${isReserved}, spotsLeft=${spotsLeft}, isStrict0=${spotsLeft === 0}`);
+    
+    // La date doit être désactivée uniquement si elle est déjà réservée OU si spotsLeft est strictement égal à 0
+    const isDisabled = isReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
 
-  return (
-    <div 
-      className={`relative space-y-1 p-2 rounded-lg transition-colors ${
-        isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
-      }`}
-    >
-      <div className="flex items-start gap-2">
-        <Checkbox
-          id={date.toISOString()}
-          checked={isSelected}
-          onCheckedChange={onDateToggle}
-          disabled={isDisabled}
-          className={`mt-1 ${isReserved ? 'border-gray-300' : 'border-blue-200'}`}
-        />
-        <div className="flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <Label
-              htmlFor={date.toISOString()}
-              className={`cursor-pointer font-medium ${
-                isDisabled ? 'text-gray-500' : 'text-blue-900'
-              }`}
-            >
-              {format(date, "EEEE d MMMM yyyy", { locale: fr })}
-            </Label>
-            {isReserved && (
-              <Badge variant="outline" className="text-[10px] md:text-xs">
-                Déjà réservé
-              </Badge>
-            )}
-          </div>
-          <div className="mt-1 flex flex-wrap gap-2">
-            <SpotsBadge 
-              spots={spotsLeft}
-              schoolClass={normalizedClass}
-              isLoading={isLoading}
-            />
+    return (
+      <div 
+        className={`relative space-y-1 p-2 rounded-lg transition-colors ${
+          isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
+        }`}
+      >
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id={safeDate.toISOString()}
+            checked={isSelected}
+            onCheckedChange={onDateToggle}
+            disabled={isDisabled}
+            className={`mt-1 ${isReserved ? 'border-gray-300' : 'border-blue-200'}`}
+          />
+          <div className="flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <Label
+                htmlFor={safeDate.toISOString()}
+                className={`cursor-pointer font-medium ${
+                  isDisabled ? 'text-gray-500' : 'text-blue-900'
+                }`}
+              >
+                {format(safeDate, "EEEE d MMMM yyyy", { locale: fr })}
+              </Label>
+              {isReserved && (
+                <Badge variant="outline" className="text-[10px] md:text-xs">
+                  Déjà réservé
+                </Badge>
+              )}
+            </div>
+            <div className="mt-1 flex flex-wrap gap-2">
+              <SpotsBadge 
+                spots={spotsLeft}
+                schoolClass={normalizedClass}
+                isLoading={isLoading}
+              />
+            </div>
           </div>
         </div>
+        {isSelected && !isReserved && (
+          <DateOptions
+            date={safeDate}
+            withoutMeal={withoutMeal}
+            earlyDropoff={earlyDropoff}
+            onOptionChange={onOptionChange}
+            isTeenClass={isTeenClass}
+          />
+        )}
       </div>
-      {isSelected && !isReserved && (
-        <DateOptions
-          date={date}
-          withoutMeal={withoutMeal}
-          earlyDropoff={earlyDropoff}
-          onOptionChange={onOptionChange}
-          isTeenClass={isTeenClass}
-        />
-      )}
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error("Erreur dans le rendu de DateItem:", error);
+    return (
+      <div className="p-2 bg-red-50 rounded-lg">
+        <p className="text-red-500">Erreur d'affichage de la date</p>
+      </div>
+    );
+  }
 };
