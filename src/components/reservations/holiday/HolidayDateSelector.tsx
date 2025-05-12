@@ -125,25 +125,11 @@ export const HolidayDateSelector = ({
     
     if (shouldUseSummerTeenLogic) {
       // On n'applique la présélection que sur la page teen
-      const isTeenPage = window.location.pathname === "/teenholiday-reservations";
+      const isTeenPage = window.location.pathname.includes("teenholiday");
       if (isTeenPage) {
         console.log("Sélection des dates pour adolescent/CM2 en période d'été");
-        const dates: DateOption[] = [];
-        const startDate = new Date(holidayPeriod.start_date);
-        const endDate = new Date(holidayPeriod.end_date);
-        const currentDate = new Date(startDate);
-
-        while (currentDate <= endDate) {
-          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-            dates.push({
-              date: new Date(currentDate),
-              withoutMeal: true,
-              earlyDropoff: false
-            });
-          }
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        setSelectedDates([]);  // On ne présélectionne plus automatiquement les dates
+        // Ne pas présélectionner automatiquement les dates
+        setSelectedDates([]);
       }
     } else {
       setSelectedDates([]);
@@ -169,16 +155,16 @@ export const HolidayDateSelector = ({
   }
 
   // Déterminer le composant de sélection de dates à utiliser
-  const isTeenHolidayPage = window.location.pathname === "/teenholiday-reservations";
+  // Vérifier si nous sommes sur une page de réservation pour adolescents
+  const isTeenHolidayPage = window.location.pathname.includes("teenholiday");
   
-  // Afficher clairement les valeurs pour le debug
   console.log("HolidayDateSelector - isTeenHolidayPage:", isTeenHolidayPage);
   console.log("HolidayDateSelector - isTeenClassValue:", isTeenClassValue);
   console.log("HolidayDateSelector - isCM2SummerPeriod:", isCM2SummerPeriod);
   console.log("HolidayDateSelector - childInfo:", childInfo);
   console.log("HolidayDateSelector - Full pathname:", window.location.pathname);
   
-  // Use the sync version here to avoid type issues
+  // Déterminer si nous devons afficher le sélecteur pour adolescents
   const shouldUseTeenSelector = isTeenHolidayPage && (isTeenClassValue || isCM2SummerPeriod);
   console.log("HolidayDateSelector - shouldUseTeenSelector:", shouldUseTeenSelector);
 

@@ -83,8 +83,10 @@ export const useSchoolClassUtils = () => {
   const isTeenClassSync = (schoolClass: string, periodId?: string) => {
     if (!schoolClass) return false;
     
+    const normalizedClass = normalizeSchoolClass(schoolClass);
+    
     // Si c'est un CM2 et qu'on a un ID de période
-    if (schoolClass === "CM2" && periodId && summerPeriods) {
+    if (normalizedClass === "CM2" && periodId && summerPeriods) {
       // Vérifier si la période est dans notre liste de périodes d'été
       const isSummerPeriod = summerPeriods.some(p => p.id === periodId && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(p.name));
       
@@ -95,12 +97,12 @@ export const useSchoolClassUtils = () => {
     }
     
     // Si c'est un CM2, vérifier si des périodes d'été sont actives (pour l'affichage dans les listes)
-    if (schoolClass === "CM2" && summerPeriods?.length) {
+    if (normalizedClass === "CM2" && summerPeriods?.length) {
       console.log("Le CM2 peut être affiché comme ado car des périodes d'été sont disponibles");
       return true;
     }
     
-    return isTeenClassFromCategories(schoolClass);
+    return isTeenClassFromCategories(normalizedClass);
   };
 
   return { isTeenClass, isTeenClassSync };
