@@ -3,7 +3,6 @@ import { Info } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const HolidayProgram = () => {
@@ -36,21 +35,11 @@ const HolidayProgram = () => {
           <h1 className="text-3xl font-bold">Programme Vacances</h1>
         </div>
 
-        <Alert className="mb-6 bg-blue-50 border-blue-200">
-          <AlertTitle className="text-lg font-semibold text-blue-800">
-            Programmes à venir
-          </AlertTitle>
-          <AlertDescription className="text-blue-700">
-            Les programmes seront disponibles quelques semaines avant les vacances. 
-            Nous vous avertirons par email dès leur publication.
-          </AlertDescription>
-        </Alert>
-
         <EmptyHolidayState 
-          message="Aucun programme disponible pour le moment"
-          subtitle="Les programmes d'activités pour les prochaines vacances seront publiés prochainement. 
-                    Merci de votre patience."
+          message="Programmes à venir"
+          subtitle="Les programmes d'activités pour les prochaines vacances seront disponibles quelques semaines avant les périodes concernées. Nous vous avertirons par email dès leur publication. Merci de votre patience."
           icon="info"
+          className="bg-blue-50 border-blue-200"
         />
       </div>
     </>
