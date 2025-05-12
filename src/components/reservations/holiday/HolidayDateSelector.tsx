@@ -87,6 +87,7 @@ export const HolidayDateSelector = ({
   useEffect(() => {
     const checkSummerPeriod = async () => {
       if (!periodId || !childInfo) return;
+      console.log("Checking summer period for period:", periodId, "and class:", childInfo.school_class);
 
       if (childInfo.school_class === "CM2") {
         try {
@@ -96,10 +97,13 @@ export const HolidayDateSelector = ({
             .eq("id", periodId)
             .single();
           
+          console.log("Period info:", data);
+          
           if (data && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(data.name)) {
-            console.log("CM2 en période d'été détecté:", data.name);
+            console.log("Is summer period:", true);
             setIsCM2SummerPeriod(true);
           } else {
+            console.log("Is NOT summer period");
             setIsCM2SummerPeriod(false);
           }
         } catch (error) {

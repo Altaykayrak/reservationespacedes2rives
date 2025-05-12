@@ -6,7 +6,6 @@ import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface TeenClassDateSelectorProps {
   selectedDates: {
@@ -47,6 +46,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   console.log("TeenClassDateSelector - isTeenClass:", isTeenClass);
   console.log("TeenClassDateSelector - childInfo:", childInfo);
   console.log("TeenClassDateSelector - periodId:", periodId);
+  console.log("TeenClassDateSelector - selectedDates:", selectedDates);
 
   // Si ce n'est pas un adolescent selon le contexte, on ne devrait pas afficher ce composant
   if (!isTeenClass || !holidayPeriod) {
@@ -119,7 +119,6 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   );
 
   console.log("TeenClassDateSelector - Period dates:", periodDates);
-  console.log("TeenClassDateSelector - Selected dates:", selectedDates);
   console.log("TeenClassDateSelector - Child class:", childInfo?.school_class);
   
   // Fonction pour vérifier explicitement si une date est sélectionnée
@@ -160,7 +159,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
             const selectedDate = selectedDatesMap.get(dateStr);
             const isSelected = !!selectedDate;
             
-            // Afficher toutes les dates disponibles pour l'enfant, qu'il soit classifié CM2 ou adolescent
+            // Afficher toutes les dates disponibles pour l'enfant
             return (
               <DateItem 
                 key={dateStr} 

@@ -1,6 +1,6 @@
 
 import { useAuth } from "@/hooks/useAuth";
-import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
+import { TeenHolidayReservationContent } from "@/components/reservations/TeenHolidayReservationContent";
 import { HolidayReservationsList } from "@/components/reservations/HolidayReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
@@ -78,7 +78,7 @@ const TeenHolidayReservations = () => {
             />
           </div>
         ) : (
-          <HolidayReservationContent filterTeenPeriods={true} />
+          <TeenHolidayReservationContent />
         )}
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">

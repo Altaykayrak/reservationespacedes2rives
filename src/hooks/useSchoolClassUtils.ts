@@ -84,6 +84,7 @@ export const useSchoolClassUtils = () => {
     if (!schoolClass) return false;
     
     const normalizedClass = normalizeSchoolClass(schoolClass);
+    console.log("isTeenClassSync check for:", normalizedClass, "periodId:", periodId);
     
     // Si c'est un CM2 et qu'on a un ID de période
     if (normalizedClass === "CM2" && periodId && summerPeriods) {
@@ -91,7 +92,8 @@ export const useSchoolClassUtils = () => {
       const isSummerPeriod = summerPeriods.some(p => p.id === periodId && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(p.name));
       
       if (isSummerPeriod) {
-        console.log("CM2 sur période d'été spécifique:", summerPeriods.find(p => p.id === periodId)?.name);
+        const periodName = summerPeriods.find(p => p.id === periodId)?.name;
+        console.log("CM2 sur période d'été spécifique:", periodName);
         return true;
       }
     }

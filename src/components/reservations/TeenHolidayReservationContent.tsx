@@ -9,7 +9,11 @@ import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
+import { useEffect, useState } from "react";
+import { useChildrenData } from "@/hooks/useChildrenData";
 
 export const TeenHolidayReservationContent = () => {
   const {
@@ -18,7 +22,6 @@ export const TeenHolidayReservationContent = () => {
     selectedPeriod,
     setSelectedChild,
     setSelectedPeriod,
-    children,
     holidayPeriods,
     handleDateToggle,
     handleOptionChange,
@@ -34,7 +37,45 @@ export const TeenHolidayReservationContent = () => {
     setMinimumDaysDialog
   } = useHolidayReservation();
 
-  const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
+  const { children: allChildren } = useChildrenData();
+  const [filteredChildren, setFilteredChildren] = useState<any[]>([]);
+  const { isTeenClassSync } = useSchoolClassUtils();
+
+  // Récupérer les catégories des classes scolaires
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*")
+        .eq("category", "adolescent");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Filtrer les enfants en fonction de leur classe
+  useEffect(() => {
+    if (!allChildren) return;
+    
+    console.log("Children passed to ChildSelector:", allChildren);
+    
+    const filtered = allChildren.filter(child => {
+      // Vérifier si c'est un adolescent selon les catégories
+      const isTeenByCategory = schoolClassCategories?.some(category => 
+        category.name.toUpperCase() === child.school_class.toUpperCase()
+      );
+      
+      // Vérifier si c'est un CM2 (ils sont autorisés en été)
+      const isCM2 = child.school_class === "CM2";
+      
+      return isTeenByCategory || isCM2;
+    });
+    
+    console.log("Filtered children based on page type:", filtered);
+    setFilteredChildren(filtered);
+  }, [allChildren, schoolClassCategories]);
 
   // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -53,9 +94,8 @@ export const TeenHolidayReservationContent = () => {
           <ChildSelector
             selectedChild={selectedChild}
             setSelectedChild={setSelectedChild}
-            children={children}
+            children={filteredChildren}
             setSelectedDates={setSelectedDates}
-            onCM2SummerPeriodCheck={setIsCM2SummerPeriod}
           />
 
           <PeriodSelector
@@ -65,7 +105,7 @@ export const TeenHolidayReservationContent = () => {
             filterTeenOnly={true}
           />
 
-          {selectedPeriod && (
+          {selectedPeriod && selectedChild && (
             <TeenClassDateSelector
               selectedDates={selectedDates}
               isDateAlreadyReserved={isDateAlreadyReserved}
