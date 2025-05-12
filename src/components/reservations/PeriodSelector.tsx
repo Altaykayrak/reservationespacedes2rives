@@ -49,19 +49,22 @@ export const PeriodSelector = ({
       // Extraire les IDs de période qui ont des classes mappées comme adolescents
       const teenPeriodIds = classMappings.map(mapping => mapping.holiday_period_id);
       
-      // Période d'été spécifique pour les CM2 (toujours inclure les périodes d'été)
+      // Période d'été spécifique pour les CM2 (uniquement inclure ETE-01 à ETE-04)
+      const includedSummerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04"];
+      const excludedSummerPeriods = ["ETE-05", "ETE-06", "ETE-07", "ETE-08"];
+      
       const summerPeriods = holidayPeriods.filter(period => 
-        period.name && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(period.name)
+        period.name && includedSummerPeriods.includes(period.name)
       );
       
-      // Périodes avec mapping adolescent
+      // Périodes avec mapping adolescent (en excluant les périodes non désirées)
       const periodsWithTeenMapping = holidayPeriods.filter(period => 
-        teenPeriodIds.includes(period.id) || 
-        (period.name && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(period.name))
+        teenPeriodIds.includes(period.id) && 
+        !(period.name && excludedSummerPeriods.includes(period.name))
       );
       
       // Combiner et éliminer les doublons
-      const uniquePeriods = [...new Set([...periodsWithTeenMapping, ...summerPeriods])];
+      const uniquePeriods = [...new Map([...periodsWithTeenMapping, ...summerPeriods].map(item => [item.id, item])).values()];
       
       setFilteredPeriods(uniquePeriods);
     } else {
