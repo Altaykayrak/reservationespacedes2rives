@@ -89,7 +89,7 @@ export const useSchoolClassUtils = () => {
       const isSummerPeriod = summerPeriods.some(p => p.id === periodId && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(p.name));
       
       if (isSummerPeriod) {
-        console.log("CM2 en période d'été détecté via sync method");
+        console.log("CM2 sur période d'été spécifique:", summerPeriods.find(p => p.id === periodId)?.name);
         return true;
       }
     }

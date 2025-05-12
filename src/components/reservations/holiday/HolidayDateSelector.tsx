@@ -143,7 +143,7 @@ export const HolidayDateSelector = ({
           }
           currentDate.setDate(currentDate.getDate() + 1);
         }
-        setSelectedDates(dates);
+        setSelectedDates([]);  // On ne présélectionne plus automatiquement les dates
       }
     } else {
       setSelectedDates([]);
@@ -170,8 +170,17 @@ export const HolidayDateSelector = ({
 
   // Déterminer le composant de sélection de dates à utiliser
   const isTeenHolidayPage = window.location.pathname === "/teenholiday-reservations";
+  
+  // Afficher clairement les valeurs pour le debug
+  console.log("HolidayDateSelector - isTeenHolidayPage:", isTeenHolidayPage);
+  console.log("HolidayDateSelector - isTeenClassValue:", isTeenClassValue);
+  console.log("HolidayDateSelector - isCM2SummerPeriod:", isCM2SummerPeriod);
+  console.log("HolidayDateSelector - childInfo:", childInfo);
+  console.log("HolidayDateSelector - Full pathname:", window.location.pathname);
+  
   // Use the sync version here to avoid type issues
   const shouldUseTeenSelector = isTeenHolidayPage && (isTeenClassValue || isCM2SummerPeriod);
+  console.log("HolidayDateSelector - shouldUseTeenSelector:", shouldUseTeenSelector);
 
   return (
     <HolidayPeriodProvider 
