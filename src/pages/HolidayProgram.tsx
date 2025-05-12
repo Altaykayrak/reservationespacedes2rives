@@ -37,7 +37,7 @@ const HolidayProgram = () => {
 
         <EmptyHolidayState 
           message="Programmes à venir"
-          subtitle="Les programmes d'activités pour les prochaines vacances seront disponibles quelques semaines avant les périodes concernées. Nous vous avertirons par email dès leur publication. Merci de votre patience."
+          subtitle="Les programmes d'activités pour les prochaines vacances seront disponibles quelques semaines avant les dates prévues. Nous vous informerons par email dès leur mise en ligne. Merci de votre patience."
           icon="info"
           className="bg-blue-50 border-blue-200"
         />
