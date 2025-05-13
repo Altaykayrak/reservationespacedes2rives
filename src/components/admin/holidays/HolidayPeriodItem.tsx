@@ -62,7 +62,8 @@ const HolidayPeriodItem = ({
             variant="outline"
             size="icon"
             onClick={() => setShowClassMappings(true)}
-            title="Configurer les classes"
+            disabled={hasReservations}
+            title={hasReservations ? "Impossible de configurer les classes (des réservations existent)" : "Configurer les classes"}
           >
             <School className="h-4 w-4" />
           </Button>
