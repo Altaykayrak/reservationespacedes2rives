@@ -1,150 +1,69 @@
 
-import { normalizeSchoolClass, getGroupName } from "@/utils/schoolClassUtils";
+import { getGroupNameForPeriod } from "@/utils/schoolClassUtils";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useSchoolClassCategories } from "./useSchoolClassCategories";
-import { useQuery } from "@tanstack/react-query";
 
 export const useSchoolClassUtils = () => {
-  const { isTeenClass: isTeenClassFromCategories } = useSchoolClassCategories();
-  
-  // Utiliser useQuery pour récupérer les périodes d'été
-  const { data: summerPeriods } = useQuery({
-    queryKey: ["summer_periods"],
-    queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from("available_holiday_periods")
-          .select("id, name")
-          .in("name", ["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
-          
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.error("Erreur lors de la récupération des périodes d'été:", error);
-        return [];
-      }
-    },
-    staleTime: 5 * 60 * 1000 // 5 minutes
-  });
+  const [cache, setCache] = useState<Record<string, boolean>>({});
 
-  // Récupérer les mappings de classes spécifiques aux périodes
-  const { data: classMappings } = useQuery({
-    queryKey: ["holiday_period_class_mappings"],
-    queryFn: async () => {
-      try {
-        const { data, error } = await supabase
+  const isTeenClass = useCallback(async (schoolClass: string, periodId?: string): Promise<boolean> => {
+    // Créer une clé de cache unique pour cette combinaison classe/période
+    const cacheKey = `${schoolClass}-${periodId || 'default'}`;
+    
+    // Vérifier si le résultat est déjà en cache
+    if (cache[cacheKey] !== undefined) {
+      return cache[cacheKey];
+    }
+    
+    try {
+      // Si une période est spécifiée, vérifier s'il existe un mapping spécifique
+      if (periodId) {
+        const { data: mapping, error } = await supabase
           .from("holiday_period_class_mappings")
-          .select("*");
-          
+          .select("category")
+          .eq("holiday_period_id", periodId)
+          .eq("school_class", schoolClass)
+          .maybeSingle();
+        
         if (error) throw error;
-        console.log("Mappings de classes récupérés:", data);
-        return data || [];
-      } catch (error) {
-        console.error("Erreur lors de la récupération des mappings de classes:", error);
-        return [];
+        
+        // Si un mapping existe pour cette période
+        if (mapping) {
+          const isTeenResult = mapping.category === "adolescent";
+          // Mettre en cache le résultat
+          setCache(prev => ({ ...prev, [cacheKey]: isTeenResult }));
+          return isTeenResult;
+        }
       }
-    },
-    staleTime: 5 * 60 * 1000 // 5 minutes
-  });
+      
+      // Si aucun mapping n'a été trouvé ou aucune période n'a été spécifiée,
+      // utiliser la vérification par défaut
+      const group = await getGroupNameForPeriod(schoolClass, periodId);
+      const isTeenResult = group === "adolescent";
+      
+      // Mettre en cache le résultat
+      setCache(prev => ({ ...prev, [cacheKey]: isTeenResult }));
+      return isTeenResult;
+    } catch (error) {
+      console.error("Error in isTeenClass:", error);
+      return false;
+    }
+  }, [cache]);
+
+  // Version synchrone pour les cas où async n'est pas pratique
+  const isTeenClassSync = (schoolClass: string, periodId?: string): boolean => {
+    // Pour la version synchrone, nous utilisons uniquement les règles standards
+    // sans vérification des mappings spécifiques
+    const normalizedClass = schoolClass.toUpperCase();
+    
+    // Liste des classes d'adolescents
+    const teenClasses = [
+      "6EME", "6ÈME", "5EME", "5ÈME", "4EME", "4ÈME", "3EME", "3ÈME",
+      "SECONDE", "PREMIÈRE", "PREMIERE", "TERMINALE", "CAP"
+    ];
+    
+    return teenClasses.includes(normalizedClass);
+  };
   
-  const isTeenClass = async (schoolClass: string, holidayPeriodId?: string) => {
-    if (!schoolClass) return false;
-    
-    const normalizedClass = normalizeSchoolClass(schoolClass);
-    
-    // Traitement spécial pour CM2 durant les périodes d'été
-    if (normalizedClass === "CM2" && holidayPeriodId) {
-      try {
-        // Vérifier si c'est une période d'été (ETE-01 à ETE-04)
-        const { data: periodInfo } = await supabase
-          .from("available_holiday_periods")
-          .select("name")
-          .eq("id", holidayPeriodId)
-          .single();
-        
-        if (periodInfo && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(periodInfo.name)) {
-          console.log(`CM2 est considéré comme adolescent pour la période d'été: ${periodInfo.name}`);
-          return true;
-        }
-      } catch (error) {
-        console.error("Erreur lors de la vérification de la période:", error);
-      }
-    }
-    
-    // Si ce n'est pas un CM2 en période d'été, vérifier le mapping spécifique
-    if (holidayPeriodId) {
-      try {
-        const { data: mappings } = await supabase
-          .from("holiday_period_class_mappings")
-          .select("category, school_class, holiday_period_id");
-          
-        const specificMapping = mappings?.find(m => 
-          m.holiday_period_id === holidayPeriodId && 
-          m.school_class.toUpperCase() === normalizedClass.toUpperCase()
-        );
-        
-        if (specificMapping) {
-          // Si la catégorie est "aucune", cette classe n'est pas accessible
-          if (specificMapping.category === "aucune") {
-            return false;
-          }
-          return specificMapping.category === 'adolescent';
-        }
-      } catch (error) {
-        console.error("Erreur lors de la vérification du mapping spécifique:", error);
-      }
-    }
-    
-    // Si pas de mapping spécifique ou erreur, utiliser la catégorisation par défaut
-    return isTeenClassFromCategories(normalizedClass);
-  };
-
-  // Version synchrone pour compatibilité avec le code existant
-  const isTeenClassSync = (schoolClass: string, periodId?: string) => {
-    if (!schoolClass) return false;
-    
-    const normalizedClass = normalizeSchoolClass(schoolClass);
-    console.log("isTeenClassSync check for:", normalizedClass, "periodId:", periodId);
-    
-    // Si l'ID de période est fourni, chercher un mapping spécifique
-    if (periodId && classMappings) {
-      const specificMapping = classMappings.find(m => 
-        m.holiday_period_id === periodId && 
-        m.school_class.toUpperCase() === normalizedClass.toUpperCase()
-      );
-      
-      if (specificMapping) {
-        console.log(`Mapping spécifique trouvé pour ${normalizedClass} dans la période ${periodId}: catégorie ${specificMapping.category}`);
-        
-        // Si la catégorie est "aucune", cette classe n'est pas disponible pour cette période
-        if (specificMapping.category === "aucune") {
-          return false;
-        }
-        
-        return specificMapping.category === 'adolescent';
-      }
-    }
-    
-    // Si c'est un CM2 et qu'on a un ID de période
-    if (normalizedClass === "CM2" && periodId && summerPeriods) {
-      // Vérifier si la période est dans notre liste de périodes d'été
-      const isSummerPeriod = summerPeriods.some(p => p.id === periodId && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(p.name));
-      
-      if (isSummerPeriod) {
-        const periodName = summerPeriods.find(p => p.id === periodId)?.name;
-        console.log("CM2 sur période d'été spécifique:", periodName);
-        return true;
-      }
-    }
-    
-    // Si c'est un CM2, vérifier si des périodes d'été sont actives (pour l'affichage dans les listes)
-    if (normalizedClass === "CM2" && summerPeriods?.length) {
-      console.log("Le CM2 peut être affiché comme ado car des périodes d'été sont disponibles");
-      return true;
-    }
-    
-    return isTeenClassFromCategories(normalizedClass);
-  };
-
   return { isTeenClass, isTeenClassSync };
 };

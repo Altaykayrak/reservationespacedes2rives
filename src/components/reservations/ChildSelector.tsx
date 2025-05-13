@@ -57,6 +57,27 @@ export const ChildSelector = ({
     enabled: !!selectedPeriodId
   });
 
+  // Récupérer les mappings de classe pour la période sélectionnée
+  const { data: classMappings } = useQuery({
+    queryKey: ["holiday_class_mappings", selectedPeriodId],
+    queryFn: async () => {
+      if (!selectedPeriodId) return [];
+      
+      const { data, error } = await supabase
+        .from("holiday_period_class_mappings")
+        .select("school_class, category")
+        .eq("holiday_period_id", selectedPeriodId);
+      
+      if (error) {
+        console.error("Erreur lors de la récupération des mappings de classe:", error);
+        return [];
+      }
+      
+      return data;
+    },
+    enabled: !!selectedPeriodId
+  });
+
   // Listen for period selection from URL search parameters
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -133,36 +154,51 @@ export const ChildSelector = ({
   
   // Pour la page des mercredis, utiliser les enfants tels quels
   // car ils sont déjà filtrés dans useChildrenData
-  const filteredChildren = isWednesdayReservation
-    ? children
-    : children?.filter(child => {
-        const isChildTeen = isTeenClassSync(child.school_class);
-        const isCM2 = child.school_class === "CM2";
-        
-        // Pour les réservations de vacances normales, exclure les adolescents
-        if (isHolidayReservation) {
-          return !isChildTeen;
-        }
-        
-        // Pour les réservations de vacances ados, afficher les adolescents et les CM2 pendant les périodes d'été
-        if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
-          // Si c'est une période d'été spécifique, inclure également les CM2
-          if (periodInfo?.name && summerPeriods.includes(periodInfo.name)) {
-            return isChildTeen || isCM2;
-          }
-          return isChildTeen;
-        }
-        
-        // Pour les autres pages, afficher tous les enfants
-        return true;
-      });
+  let filteredChildren = children;
+
+  // Filtrage spécifique pour /holiday-reservations basé sur les mappings de classe
+  if (isHolidayReservation && classMappings && classMappings.length > 0 && selectedPeriodId) {
+    // Filtrer les enfants par catégorie primaire et maternelle selon les mappings
+    filteredChildren = children?.filter(child => {
+      // Chercher le mapping pour cette classe
+      const mapping = classMappings.find(
+        m => m.school_class.toLowerCase() === child.school_class.toLowerCase()
+      );
+      
+      // Si un mapping existe, vérifier si la catégorie est maternelle ou primaire
+      if (mapping) {
+        return mapping.category === 'maternelle' || mapping.category === 'primaire';
+      }
+      
+      // Si pas de mapping trouvé, utiliser la logique standard (exclure les adolescents)
+      return !isTeenClassSync(child.school_class);
+    });
+  } else if (isHolidayReservation) {
+    // Fallback à la logique standard si pas de mappings
+    filteredChildren = children?.filter(child => {
+      return !isTeenClassSync(child.school_class);
+    });
+  } else if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
+    // Pour les réservations de vacances ados, afficher les adolescents et les CM2 pendant les périodes d'été
+    filteredChildren = children?.filter(child => {
+      const isChildTeen = isTeenClassSync(child.school_class);
+      const isCM2 = child.school_class === "CM2";
+      
+      // Si c'est une période d'été spécifique, inclure également les CM2
+      if (periodInfo?.name && summerPeriods.includes(periodInfo.name)) {
+        return isChildTeen || isCM2;
+      }
+      return isChildTeen;
+    });
+  }
 
   console.log("Children passed to ChildSelector:", children);
   console.log("Filtered children based on page type:", filteredChildren);
   console.log("Current path:", location.pathname);
-  console.log("isTeenHolidayReservation:", isTeenHolidayReservation);
+  console.log("isHolidayReservation:", isHolidayReservation);
   console.log("Selected period ID:", selectedPeriodId);
   console.log("Period info:", periodInfo);
+  console.log("Class mappings:", classMappings);
   console.log("Is summer period:", periodInfo?.name && summerPeriods.includes(periodInfo.name));
 
   return (
