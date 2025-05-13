@@ -74,8 +74,10 @@ export const PeriodSelector = ({
 
   // Gestionnaire d'événements personnalisé pour la sélection de période
   const handlePeriodChange = (value: string) => {
-    // Éviter les actions par défaut du navigateur
-    setSelectedPeriod(value);
+    if (value !== selectedPeriod) {
+      // Utiliser le setter qui gère les paramètres URL
+      setSelectedPeriod(value);
+    }
   };
 
   return (

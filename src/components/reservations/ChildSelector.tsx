@@ -64,7 +64,11 @@ export const ChildSelector = ({
   const handleChildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault(); // Éviter le comportement par défaut
     const childId = e.target.value;
-    setSelectedChild(childId);
+    
+    // Appliquer le changement via le setter qui gère l'URL
+    if (childId !== selectedChild) {
+      setSelectedChild(childId);
+    }
   };
 
   return (

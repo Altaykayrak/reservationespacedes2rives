@@ -5,11 +5,13 @@ import { Outlet, ScrollRestoration } from "react-router-dom";
 export const Layout = () => {
   return (
     <div className="min-h-screen">
-      <ScrollRestoration getKey={(location) => {
-        // Utiliser le chemin de base pour la restauration du défilement
-        // sans inclure les paramètres de requête
-        return location.pathname;
-      }} />
+      <ScrollRestoration 
+        getKey={(location) => {
+          // Utiliser uniquement le chemin de base pour la restauration du défilement,
+          // en ignorant les paramètres de requête pour éviter des problèmes de rechargement
+          return location.pathname;
+        }} 
+      />
       <Outlet />
     </div>
   );

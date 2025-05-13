@@ -83,7 +83,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
     <Card className="p-6">
       <div className="space-y-6">
         <ChildSelector
-          selectedChild={selectedChild}
+          selectedChild={selectedChild || ""}
           setSelectedChild={setSelectedChild}
           children={childrenToDisplay}
           setSelectedDates={setSelectedDates}
@@ -91,7 +91,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
         />
 
         <PeriodSelector
-          selectedPeriod={selectedPeriod}
+          selectedPeriod={selectedPeriod || ""}
           setSelectedPeriod={setSelectedPeriod}
           holidayPeriods={holidayPeriods}
           filterTeenOnly={filterTeenPeriods}
@@ -105,7 +105,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
             handleOptionChange={handleOptionChange}
             isDateAlreadyReserved={isDateAlreadyReserved}
             periodId={selectedPeriod}
-            selectedChild={selectedChild}
+            selectedChild={selectedChild || ""}
             setSelectedDates={setSelectedDates}
           />
         )}
