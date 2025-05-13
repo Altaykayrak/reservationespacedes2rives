@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -16,7 +15,6 @@ import { useEffect, useState } from "react";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { HolidayPeriodProvider } from "./holiday/HolidayPeriodContext";
 import { eventBus } from "@/lib/utils";
-import { useSearchParams } from "react-router-dom";
 
 export const TeenHolidayReservationContent = () => {
   const {
@@ -43,7 +41,6 @@ export const TeenHolidayReservationContent = () => {
   const { children: allChildren } = useChildrenData();
   const [filteredChildren, setFilteredChildren] = useState<any[]>([]);
   const { isTeenClassSync } = useSchoolClassUtils();
-  const [searchParams, setSearchParams] = useSearchParams();
   
   // Récupération des informations de l'enfant sélectionné
   const { data: childInfo } = useQuery({
@@ -80,25 +77,6 @@ export const TeenHolidayReservationContent = () => {
     },
     enabled: !!selectedPeriod
   });
-
-  // Update URL when period changes without reloading page
-  useEffect(() => {
-    if (selectedPeriod) {
-      setSearchParams(prev => {
-        const newParams = new URLSearchParams(prev);
-        newParams.set("periodId", selectedPeriod);
-        return newParams;
-      }, { replace: true });
-    }
-  }, [selectedPeriod, setSearchParams]);
-  
-  // Get periodId from URL on initial load
-  useEffect(() => {
-    const periodId = searchParams.get("periodId");
-    if (periodId && !selectedPeriod) {
-      setSelectedPeriod(periodId);
-    }
-  }, [searchParams, selectedPeriod, setSelectedPeriod]);
 
   // Récupérer les catégories des classes scolaires
   const { data: schoolClassCategories } = useQuery({
