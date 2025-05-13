@@ -27,7 +27,11 @@ const TeenHolidayReservations = () => {
 
       if (error) {
         console.error('Error checking access:', error);
-        toast.error('Erreur lors de la vérification de l\'accès');
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la vérification de l'accès",
+          variant: "destructive"
+        });
         return;
       }
 

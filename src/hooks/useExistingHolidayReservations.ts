@@ -24,6 +24,9 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       
       // Transform the data to match our HolidayReservationWithChild type
       const transformedData = data?.map(reservation => {
+        // Safety check for children object
+        const childrenData = reservation.children as Record<string, any> | null;
+        
         return {
           id: reservation.id || '',
           child_id: reservation.child_id || '',
@@ -35,21 +38,13 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
           status: reservation.status || '',
           created_at: reservation.created_at || '',
           updated_at: reservation.updated_at || '',
-          children: typeof reservation.children === 'object' ? {
-            id: reservation.children?.id || '',
-            first_name: reservation.children?.first_name || '',
-            last_name: reservation.children?.last_name || '',
-            school_class: reservation.children?.school_class || '',
+          children: {
+            id: childrenData?.id || '',
+            first_name: childrenData?.first_name || '',
+            last_name: childrenData?.last_name || '',
+            school_class: childrenData?.school_class || '',
             profile: {
-              school_city: reservation.children?.profile?.school_city || ''
-            }
-          } : {
-            id: '',
-            first_name: '',
-            last_name: '',
-            school_class: '',
-            profile: {
-              school_city: ''
+              school_city: childrenData?.profile?.school_city || ''
             }
           }
         } as HolidayReservationWithChild;
