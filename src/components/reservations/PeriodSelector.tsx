@@ -75,15 +75,16 @@ export const PeriodSelector = memo(({
 
   // Gestionnaire d'événements optimisé pour la sélection de période
   const handlePeriodChange = useCallback((value: string) => {
+    // Arrêter tout événement de propagation potentiel
+    console.log("Sélection de période:", value);
+    
     if (value !== selectedPeriod) {
-      // Empêcher le comportement de formulaire par défaut
-      console.log("Sélection de période:", value);
       setSelectedPeriod(value);
     }
   }, [selectedPeriod, setSelectedPeriod]);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
       <label className="text-sm font-medium">Sélectionner une période</label>
       <Select value={selectedPeriod || ""} onValueChange={handlePeriodChange}>
         <SelectTrigger className="w-full">

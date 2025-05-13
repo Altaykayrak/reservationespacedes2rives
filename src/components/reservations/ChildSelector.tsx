@@ -63,6 +63,7 @@ export const ChildSelector = memo(({
   // Gestionnaire d'événements optimisé pour éviter les rechargements de page
   const handleChildChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault(); // Éviter le comportement par défaut
+    e.stopPropagation(); // Arrêter la propagation
     const childId = e.target.value;
     
     console.log("Sélection d'enfant:", childId);
@@ -81,6 +82,7 @@ export const ChildSelector = memo(({
         value={selectedChild || ""}
         onChange={handleChildChange}
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
+        onClick={(e) => e.stopPropagation()} // Empêcher la propagation
       >
         <option value="">Choisir un enfant</option>
         {filteredChildren?.length ? (

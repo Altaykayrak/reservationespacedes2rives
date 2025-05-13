@@ -1,4 +1,118 @@
 
-// Cette exportation maintient la compatibilité avec les composants existants
-// en réexportant l'hook depuis sa nouvelle localisation
-export { useHolidayReservation } from "./holiday/useHolidayReservation";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useDateSelection } from "./holiday/useDateSelection";
+import { useSelectionState } from "./holiday/useSelectionState";
+import { useReservationValidation } from "./holiday/useReservationValidation";
+import { useWeeklyDates } from "./holiday/useWeeklyDates";
+import { useSubmitReservation } from "./holiday/useSubmitReservation";
+import { useCallback } from "react";
+
+export const useHolidayReservation = () => {
+  // Import sub-hooks
+  const { 
+    selectedDates, 
+    setSelectedDates, 
+    handleDateToggle, 
+    handleOptionChange 
+  } = useDateSelection();
+
+  const {
+    selectedChild,
+    selectedPeriod,
+    setSelectedChild,
+    setSelectedPeriod,
+    showSuccessDialog,
+    setShowSuccessDialog,
+    isSubmitting,
+    setIsSubmitting,
+    noSpotsDialog,
+    setNoSpotsDialog,
+    minimumDaysDialog,
+    setMinimumDaysDialog
+  } = useSelectionState();
+
+  // Simple direct hook usage, avoiding circular dependencies
+  const { isDateAlreadyReserved } = useReservationValidation(selectedChild);
+  
+  const { getDatesPerWeek } = useWeeklyDates();
+
+  // Fetch children data
+  const { data: children } = useQuery({
+    queryKey: ["children"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch holiday periods data
+  const { data: holidayPeriods } = useQuery({
+    queryKey: ["available_holiday_periods"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Use the submit hook
+  const { handleSubmit } = useSubmitReservation(
+    selectedChild,
+    selectedDates,
+    selectedPeriod,
+    holidayPeriods,
+    setSelectedDates,
+    setShowSuccessDialog,
+    setNoSpotsDialog,
+    setMinimumDaysDialog,
+    setIsSubmitting
+  );
+
+  // Version optimisée pour éviter les rechargements
+  const safeSetSelectedChild = useCallback((childId: string) => {
+    setSelectedChild(childId);
+  }, [setSelectedChild]);
+
+  const safeSetSelectedPeriod = useCallback((periodId: string) => {
+    setSelectedPeriod(periodId);
+  }, [setSelectedPeriod]);
+
+  // Combine all hooks into a single interface
+  return {
+    // Date selection
+    selectedDates,
+    handleDateToggle,
+    handleOptionChange,
+    setSelectedDates,
+
+    // Selection state
+    selectedChild,
+    selectedPeriod,
+    setSelectedChild: safeSetSelectedChild,
+    setSelectedPeriod: safeSetSelectedPeriod,
+    showSuccessDialog,
+    setShowSuccessDialog,
+    isSubmitting,
+    noSpotsDialog,
+    setNoSpotsDialog,
+    minimumDaysDialog,
+    setMinimumDaysDialog,
+
+    // Data
+    children,
+    holidayPeriods,
+    
+    // Utility functions
+    isDateAlreadyReserved,
+    getDatesPerWeek,
+    
+    // Submission
+    handleSubmit
+  };
+};
