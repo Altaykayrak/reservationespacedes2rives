@@ -46,17 +46,30 @@ export const validateMinimumDays = (
   selectedDates: DateOption[],
   isAdminRoute: boolean
 ): boolean => {
-  // Ajouter des logs pour débogage
   console.log("validateMinimumDays - selectedDates:", selectedDates);
   console.log("validateMinimumDays - isAdminRoute:", isAdminRoute);
   
-  // S'assurer que les dates sont bien des objets Date
+  // Si le tableau est vide ou undefined, la validation échoue immédiatement
+  if (!selectedDates || selectedDates.length === 0) {
+    console.log("validateMinimumDays - pas de dates sélectionnées");
+    return false;
+  }
+  
+  // S'assurer que les dates sont bien des objets Date valides
   const validDates = selectedDates
     .filter(d => d && d.date instanceof Date && !isNaN(d.date.getTime()))
     .map(d => d.date);
   
   console.log("validateMinimumDays - validDates count:", validDates.length);
   
+  // Si pas de dates valides, la validation échoue
+  if (validDates.length === 0) {
+    console.log("validateMinimumDays - pas de dates valides");
+    return false;
+  }
+  
   // Utiliser la fonction existante avec les dates validées
-  return validateMinimumDaysPerWeek(validDates, isAdminRoute);
+  const result = validateMinimumDaysPerWeek(validDates, isAdminRoute);
+  console.log("validateMinimumDays - résultat:", result);
+  return result;
 };

@@ -7,6 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 interface MinimumDaysDialogProps {
   open: boolean;
@@ -19,12 +20,17 @@ export const MinimumDaysDialog = ({
 }: MinimumDaysDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sélection minimum requise</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <AlertTriangle className="h-5 w-5" />
+            Sélection minimum requise
+          </DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances.
+          <p className="text-sm text-gray-700">
+            Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances.
+          </p>
         </div>
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)}>

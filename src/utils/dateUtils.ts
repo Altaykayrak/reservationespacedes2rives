@@ -1,4 +1,3 @@
-
 import { startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -27,11 +26,13 @@ export const getWeeksFromDates = (dates: Date[]) => {
 export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = false): boolean => {
   // Si c'est un admin, on ne vérifie pas le minimum de jours
   if (isAdmin) {
+    console.log("validateMinimumDaysPerWeek - Admin détecté, validation ignorée");
     return true;
   }
   
   // Vérification plus stricte pour s'assurer qu'on a bien des dates
   if (!dates || dates.length === 0) {
+    console.log("validateMinimumDaysPerWeek - Pas de dates fournies");
     return false;
   }
   
@@ -47,7 +48,10 @@ export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = fal
     };
   }));
   
-  return weeks.every(weekDates => weekDates.length >= 3);
+  // Vérification finale: toutes les semaines doivent avoir au moins 3 jours
+  const result = weeks.every(weekDates => weekDates.length >= 3);
+  console.log("validateMinimumDaysPerWeek - Résultat final:", result);
+  return result;
 };
 
 interface HolidayPeriod {
