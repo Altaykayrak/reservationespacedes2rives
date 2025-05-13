@@ -2,13 +2,16 @@
 // Re-export from sonner to maintain API compatibility
 import { toast } from "sonner";
 
+// Define the return type to match what sonner actually returns
+type ToastReturnType = string | number;
+
 // Define a custom toast interface that explicitly includes the error method
 interface CustomToast {
-  (props: any): { id: string; dismiss: () => void; update: (props: any) => void };
-  error: (message: string, options?: any) => { id: string; dismiss: () => void; update: (props: any) => void };
-  success: (message: string, options?: any) => { id: string; dismiss: () => void; update: (props: any) => void };
-  info: (message: string, options?: any) => { id: string; dismiss: () => void; update: (props: any) => void };
-  warning: (message: string, options?: any) => { id: string; dismiss: () => void; update: (props: any) => void };
+  (props: any): ToastReturnType;
+  error: (message: string, options?: any) => ToastReturnType;
+  success: (message: string, options?: any) => ToastReturnType;
+  info: (message: string, options?: any) => ToastReturnType;
+  warning: (message: string, options?: any) => ToastReturnType;
 }
 
 // Cast the toast to our custom interface to ensure TypeScript recognizes the error method
