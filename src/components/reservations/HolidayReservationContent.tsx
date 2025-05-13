@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -9,8 +10,8 @@ import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
@@ -44,61 +45,64 @@ export const HolidayReservationContent = ({
   } = useHolidayReservation();
 
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
   const initialRender = useRef(true);
   const previousPeriod = useRef(selectedPeriod);
   const urlUpdating = useRef(false);
   const childrenToDisplay = filteredChildren || children;
+  const updateBlocked = useRef(false);
 
-  // Lire l'ID de période depuis l'URL lors du montage
+  // Lire l'ID de période depuis l'URL lors du montage (une seule fois)
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const periodId = searchParams.get("periodId");
-
-    if (periodId && periodId !== selectedPeriod) {
-      console.log("[HolidayReservationContent] Setting period from URL:", periodId);
-      setSelectedPeriod(periodId);
-      previousPeriod.current = periodId;
-    }
-  }, []); // run once on mount
-
-  // Mettre à jour l'URL quand la période change, éviter les rechargements
-  const updateUrlWithPeriod = useCallback((newPeriod: string | null) => {
-    if (!newPeriod || urlUpdating.current) return;
-
-    urlUpdating.current = true;
-
+    if (!initialRender.current) return;
+    
     try {
       const searchParams = new URLSearchParams(location.search);
-      searchParams.set("periodId", newPeriod);
-      const newUrl = `${location.pathname}?${searchParams.toString()}`;
-      const currentUrl = `${location.pathname}${location.search}`;
+      const periodId = searchParams.get("periodId");
 
-      if (newUrl !== currentUrl) {
-        console.log("[HolidayReservationContent] Updating URL with period:", newPeriod);
-        navigate(newUrl, { replace: true });
+      if (periodId && periodId !== selectedPeriod) {
+        console.log("[HolidayReservationContent] Setting period from URL:", periodId);
+        setSelectedPeriod(periodId);
+        previousPeriod.current = periodId;
       }
+    } catch (error) {
+      console.error("[HolidayReservationContent] Error reading URL:", error);
+    } finally {
+      initialRender.current = false;
+    }
+  }, [location.search, selectedPeriod, setSelectedPeriod]);
+
+  // Mise à jour synchronisée de l'URL (sans rechargement) uniquement quand nécessaire
+  useEffect(() => {
+    // Éviter les exécutions inutiles et les boucles
+    if (initialRender.current || !selectedPeriod || updateBlocked.current || 
+        urlUpdating.current || selectedPeriod === previousPeriod.current) {
+      return;
+    }
+    
+    // Appliquer les verrous pour éviter les mises à jour en cascade
+    urlUpdating.current = true;
+    updateBlocked.current = true;
+    console.log("[HolidayReservationContent] Period changed in state to:", selectedPeriod);
+    
+    try {
+      // Mise à jour de l'URL sans rechargement de la page
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("periodId", selectedPeriod);
+      window.history.replaceState({ path: newUrl.toString() }, "", newUrl.toString());
+      console.log("[HolidayReservationContent] URL updated without reload");
     } catch (error) {
       console.error("[HolidayReservationContent] Error updating URL:", error);
     } finally {
+      previousPeriod.current = selectedPeriod;
+      
+      // Débloquer après un délai pour éviter les effets de rebond
       setTimeout(() => {
         urlUpdating.current = false;
-      }, 100);
+        updateBlocked.current = false;
+      }, 200);
     }
-  }, [navigate, location.pathname, location.search]);
-
-  useEffect(() => {
-    if (initialRender.current) {
-      initialRender.current = false;
-      return;
-    }
-
-    if (selectedPeriod && selectedPeriod !== previousPeriod.current && !urlUpdating.current) {
-      previousPeriod.current = selectedPeriod;
-      updateUrlWithPeriod(selectedPeriod);
-    }
-  }, [selectedPeriod, updateUrlWithPeriod]);
+  }, [selectedPeriod]);
 
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();

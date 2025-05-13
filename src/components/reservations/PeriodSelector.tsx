@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,6 +21,7 @@ export const PeriodSelector = ({
   filterTeenOnly = false
 }: PeriodSelectorProps) => {
   const [filteredPeriods, setFilteredPeriods] = useState<Tables<"available_holiday_periods">[] | null | undefined>(holidayPeriods);
+  const valueChangeBlocked = useRef(false);
 
   // Récupérer les mappings de classes pour filtrer les périodes
   const { data: classMappings } = useQuery({
@@ -40,7 +41,8 @@ export const PeriodSelector = ({
       
       return data;
     },
-    enabled: filterTeenOnly
+    enabled: filterTeenOnly,
+    staleTime: 5 * 60 * 1000, // Cache pour 5 minutes
   });
 
   // Filtrer les périodes lorsque les mappings sont chargés
@@ -72,10 +74,33 @@ export const PeriodSelector = ({
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
 
+  // Handler sécurisé avec anti-rebond pour éviter les sélections multiples
+  const handlePeriodChange = (value: string) => {
+    if (valueChangeBlocked.current) return;
+    
+    console.log("[PeriodSelector] Changement de période sélectionné:", value);
+    valueChangeBlocked.current = true;
+    
+    // Utiliser setTimeout pour éviter les boucles React de mise à jour d'état
+    setTimeout(() => {
+      try {
+        setSelectedPeriod(value);
+        console.log("[PeriodSelector] Période mise à jour:", value);
+      } catch (error) {
+        console.error("[PeriodSelector] Erreur lors du changement de période:", error);
+      } finally {
+        // Débloquer après un délai pour éviter les mises à jour en cascade
+        setTimeout(() => {
+          valueChangeBlocked.current = false;
+        }, 100);
+      }
+    }, 0);
+  };
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" onClick={e => e.stopPropagation()}>
       <label className="text-sm font-medium">Sélectionner une période</label>
-      <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+      <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Choisir une période" />
         </SelectTrigger>

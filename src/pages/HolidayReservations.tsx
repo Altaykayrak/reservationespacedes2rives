@@ -4,7 +4,7 @@ import { HolidayReservationContent } from "@/components/reservations/HolidayRese
 import { HolidayReservationsList } from "@/components/reservations/HolidayReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
 import { useToast } from "@/hooks/use-toast";
@@ -14,10 +14,18 @@ const HolidayReservations = () => {
   const { toast } = useToast();
   const [isWaiting, setIsWaiting] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      if (!user?.id) return;
+  // Gérer les vérifications d'accès de manière isolée
+  const checkAccess = useCallback(async () => {
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      console.log('[HolidayReservations] Checking access status');
+      setIsLoading(true);
 
       // Récupérer les états directement de la base de données
       const { data, error } = await supabase
@@ -39,10 +47,16 @@ const HolidayReservations = () => {
       console.log('Profile data:', data);
       setIsWaiting(data?.is_waiting || false);
       setIsClosed(data?.is_closed || false);
-    };
-
-    checkAccess();
+    } catch (err) {
+      console.error('Unexpected error checking access:', err);
+    } finally {
+      setIsLoading(false);
+    }
   }, [user, toast]);
+
+  useEffect(() => {
+    checkAccess();
+  }, [checkAccess]);
 
   // Afficher le message d'attente et empêcher la création de nouvelles réservations
   if (isWaiting) {

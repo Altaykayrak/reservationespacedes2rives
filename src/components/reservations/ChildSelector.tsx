@@ -28,19 +28,26 @@ export const ChildSelector = ({
   const isInitialMount = useRef(true);
   const previousPeriodId = useRef(selectedPeriodId);
   const childSelectChanged = useRef(false);
+  const selectionInProgress = useRef(false);
 
   // Écouter la sélection de période à partir des paramètres de recherche d'URL
   useEffect(() => {
     // Ne mettre à jour que si les paramètres d'URL ont réellement changé pour éviter les boucles
-    const searchParams = new URLSearchParams(location.search);
-    const periodId = searchParams.get("periodId");
+    if (selectionInProgress.current) return;
     
-    if (periodId && periodId !== selectedPeriodId) {
-      console.log("[ChildSelector] Updating selected period from URL:", periodId);
-      setSelectedPeriodId(periodId);
-      previousPeriodId.current = periodId;
+    try {
+      const searchParams = new URLSearchParams(location.search);
+      const periodId = searchParams.get("periodId");
+      
+      if (periodId && periodId !== selectedPeriodId) {
+        console.log("[ChildSelector] Updating selected period from URL:", periodId);
+        setSelectedPeriodId(periodId);
+        previousPeriodId.current = periodId;
+      }
+    } catch (error) {
+      console.error("[ChildSelector] Error parsing URL parameters:", error);
     }
-  }, [location.search]);
+  }, [location.search, selectedPeriodId]);
 
   // Gérer le filtrage des enfants en fonction du type de page et de la période
   const {
@@ -69,27 +76,42 @@ export const ChildSelector = ({
 
   // Gérer la sélection d'un enfant avec protection anti-rebond
   const handleChildSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Empêcher toute propagation du formulaire
+    e.preventDefault();
+    e.stopPropagation();
+    
     const childId = e.target.value;
     if (childId !== selectedChild && !childSelectChanged.current) {
       childSelectChanged.current = true;
+      selectionInProgress.current = true;
       console.log("[ChildSelector] Changing selected child to:", childId);
-      setSelectedChild(childId);
       
-      // Réinitialiser l'indicateur après un bref délai
+      // Utiliser setTimeout pour éviter les boucles de mise à jour d'état
       setTimeout(() => {
-        childSelectChanged.current = false;
-      }, 100);
+        try {
+          setSelectedChild(childId);
+        } catch (error) {
+          console.error("[ChildSelector] Error setting child:", error);
+        } finally {
+          // Réinitialiser les indicateurs après un bref délai
+          setTimeout(() => {
+            childSelectChanged.current = false;
+            selectionInProgress.current = false;
+          }, 150);
+        }
+      }, 0);
     }
   };
 
   return (
-    <div>
+    <div onClick={e => e.stopPropagation()}>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
       <select
         id="child-select"
         value={selectedChild}
         onChange={handleChildSelect}
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
+        onClick={e => e.stopPropagation()}
       >
         <option value="">Choisir un enfant</option>
         {filteredChildren?.length ? (
