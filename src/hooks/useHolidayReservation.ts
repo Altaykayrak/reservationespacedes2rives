@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createHolidayReservations } from "@/utils/reservationCreationUtils";
 import { sendHolidayReservationEmail } from "@/utils/emailUtils";
 import { useHolidayReservations } from "./useHolidayReservations";
+import { validateMinimumDays } from "@/utils/reservationValidationUtils";
 
 interface DateOption {
   date: Date;
@@ -87,6 +89,9 @@ export const useHolidayReservation = () => {
     } else {
       setSelectedDates(prev => [...prev, { date: new Date(date), withoutMeal: isTeenPage, earlyDropoff: false }]);
     }
+    
+    // Log pour débogage
+    console.log(`Date ${dateStr} ${isSelected ? 'désélectionnée' : 'sélectionnée'}, nombre actuel: ${isSelected ? selectedDates.length - 1 : selectedDates.length + 1}`);
   };
 
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
@@ -106,16 +111,21 @@ export const useHolidayReservation = () => {
     // Generate a timestamp to trace this specific submission
     const submissionTimestamp = Date.now();
     console.log(`DEBUG: handleSubmit called - timestamp: ${submissionTimestamp}`);
+    console.log(`DEBUG: selectedDates.length = ${selectedDates.length}`);
     
     setIsSubmitting(true);
     
     try {
-      // Check if all selected dates are in the same week
-      const datesPerWeek = getDatesPerWeek(selectedDates.map(d => d.date));
-      const hasMinimumDaysPerWeek = Object.values(datesPerWeek).every(dates => dates.length >= 3);
+      // Détection de la route administrative
+      const isAdminRoute = window.location.pathname.includes('/admin/');
+      console.log("DEBUG: isAdminRoute détecté:", isAdminRoute, "pour pathname:", window.location.pathname);
       
-      // If it's a teen reservation and we don't have minimum 3 days per week, show dialog
-      if (isTeenPage && !hasMinimumDaysPerWeek) {
+      // Vérifier ici si les dates sélectionnées respectent la règle des 3 jours minimum
+      const hasMinimumDays = validateMinimumDays(selectedDates, isAdminRoute);
+      console.log(`DEBUG: Résultat validation minimum jours: ${hasMinimumDays}`);
+      
+      if (!hasMinimumDays) {
+        console.log("DEBUG: Validation des jours minimum échouée, affichage du dialogue");
         setMinimumDaysDialog({ isOpen: true });
         setIsSubmitting(false);
         return;

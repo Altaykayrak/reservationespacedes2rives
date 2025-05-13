@@ -119,6 +119,8 @@ export const TeenHolidayReservationContent = () => {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log(`DEBUG: Bouton cliqué - Nombre de dates sélectionnées: ${selectedDates.length}`);
+    
     if (!isSubmitting) {
       handleSubmit();
     }

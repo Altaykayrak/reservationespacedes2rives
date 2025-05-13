@@ -1,4 +1,5 @@
-import { startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
+
+import { startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval, format } from "date-fns";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export const getWorkdaysInWeek = (weekStart: Date) => {
@@ -11,6 +12,16 @@ export const getWorkdaysInWeek = (weekStart: Date) => {
 };
 
 export const getWeeksFromDates = (dates: Date[]) => {
+  if (!dates || dates.length === 0) {
+    console.log("getWeeksFromDates - Pas de dates fournies");
+    return [];
+  }
+  
+  // Debug logs
+  console.log("getWeeksFromDates - Dates reçues:", 
+    dates.map(d => format(d, 'yyyy-MM-dd'))
+  );
+  
   const weekMap = new Map<string, Date[]>();
 
   dates.forEach(date => {
@@ -20,10 +31,23 @@ export const getWeeksFromDates = (dates: Date[]) => {
     weekMap.set(weekKey, [...existingDates, date]);
   });
 
-  return Array.from(weekMap.values());
+  // Debug du résultat
+  const result = Array.from(weekMap.values());
+  console.log("getWeeksFromDates - Semaines générées:", 
+    result.map(week => ({
+      weekCount: week.length,
+      dates: week.map(d => format(d, 'yyyy-MM-dd'))
+    }))
+  );
+  
+  return result;
 };
 
 export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = false): boolean => {
+  // Vérifications de base
+  console.log("validateMinimumDaysPerWeek - dates:", dates ? dates.map(d => d.toISOString()) : "undefined");
+  console.log("validateMinimumDaysPerWeek - isAdmin:", isAdmin);
+  
   // Si c'est un admin, on ne vérifie pas le minimum de jours
   if (isAdmin) {
     console.log("validateMinimumDaysPerWeek - Admin détecté, validation ignorée");
@@ -36,20 +60,24 @@ export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = fal
     return false;
   }
   
+  // Si une seule date est sélectionnée, la validation échoue automatiquement car < 3
+  if (dates.length < 3) {
+    console.log("validateMinimumDaysPerWeek - Moins de 3 dates au total, validation impossible");
+    return false;
+  }
+  
   // Regrouper les dates par semaine
   const weeks = getWeeksFromDates(dates);
   
-  // Vérifier que chaque semaine contient au moins 3 jours
-  // Imprimer les semaines pour le débogage
-  console.log("Weeks validation:", weeks.map(weekDates => {
-    return {
-      count: weekDates.length,
-      dates: weekDates.map(d => d.toISOString().split('T')[0])
-    };
-  }));
+  // Vérification spécifique de chaque semaine
+  const weekValidations = weeks.map(weekDates => {
+    const isValid = weekDates.length >= 3;
+    console.log(`validateMinimumDaysPerWeek - Semaine avec ${weekDates.length} jour(s): ${isValid ? 'VALIDE' : 'INVALIDE'}`);
+    return isValid;
+  });
   
   // Vérification finale: toutes les semaines doivent avoir au moins 3 jours
-  const result = weeks.every(weekDates => weekDates.length >= 3);
+  const result = weeks.length > 0 && weekValidations.every(isValid => isValid);
   console.log("validateMinimumDaysPerWeek - Résultat final:", result);
   return result;
 };

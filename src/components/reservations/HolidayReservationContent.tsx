@@ -64,6 +64,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
     e.stopPropagation();
     
     console.log("DEBUG: Bouton Confirmer réservation cliqué - timestamp:", Date.now());
+    console.log(`DEBUG: Nombre de dates sélectionnées: ${selectedDates.length}`);
     
     if (!isSubmitting) {
       console.log("DEBUG: Soumission démarrée - isSubmitting:", isSubmitting);

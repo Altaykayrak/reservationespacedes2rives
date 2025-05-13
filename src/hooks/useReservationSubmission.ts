@@ -91,7 +91,7 @@ export const useReservationSubmission = (
       const isAdminRoute = window.location.pathname.includes('/admin/');
       console.log("DEBUG: isAdminRoute détecté:", isAdminRoute, "pour pathname:", window.location.pathname);
       
-      // Vérification explicite des 3 jours minimum par semaine
+      // Vérification explicite des 3 jours minimum par semaine - POINT CRITIQUE
       const hasMinimumDays = validateMinimumDays(selectedDates, isAdminRoute);
       console.log("DEBUG: Résultat de validateMinimumDays:", hasMinimumDays);
       
