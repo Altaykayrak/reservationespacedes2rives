@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, School } from "lucide-react";
+import { Trash2, School } from "lucide-react";
 import { useState } from "react";
 import EditHolidayClassMappings from "./EditHolidayClassMappings";
 
@@ -65,13 +65,6 @@ const HolidayPeriodItem = ({
             title="Configurer les classes"
           >
             <School className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onEdit}
-          >
-            <Edit className="h-4 w-4" />
           </Button>
           <Button
             variant={hasReservations ? "outline" : "destructive"}
