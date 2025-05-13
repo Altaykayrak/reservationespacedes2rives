@@ -1,22 +1,23 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export const useHolidayPeriods = () => {
-  const [initialized, setInitialized] = useState(false);
+  const initialized = useRef(false);
   
-  // Mark hook as initialized for debugging
+  // Log d'initialisation pour débogage
   useEffect(() => {
-    if (!initialized) {
-      console.log("Fetching holiday periods...");
-      setInitialized(true);
+    if (!initialized.current) {
+      console.log("[useHolidayPeriods] Hook initialized");
+      initialized.current = true;
     }
-  }, [initialized]);
+  }, []);
 
   const { data: holidayPeriods, isError, error, isLoading } = useQuery({
     queryKey: ["holidayPeriods"],
     queryFn: async () => {
+      console.log("[useHolidayPeriods] Récupération des périodes de vacances...");
       const { data, error } = await supabase
         .from("available_holiday_periods")
         .select("*")
@@ -27,11 +28,11 @@ export const useHolidayPeriods = () => {
         console.error("Error fetching holiday periods:", error);
         throw error;
       }
-      console.log("Retrieved holiday periods:", data?.length);
+      console.log("[useHolidayPeriods] Périodes de vacances récupérées:", data?.length);
       return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes cache
-    gcTime: 10 * 60 * 1000,    // 10 minutes garbage collection
+    gcTime: 10 * 60 * 1000,   // 10 minutes garbage collection
   });
 
   return { 

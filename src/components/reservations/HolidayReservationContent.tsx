@@ -10,7 +10,7 @@ import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface HolidayReservationContentProps {
@@ -46,42 +46,60 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
   const location = useLocation();
   const initialRender = useRef(true);
   const previousPeriod = useRef(selectedPeriod);
-  
-  // Use the filtered children if provided, otherwise use the children from the hook
+  const urlUpdating = useRef(false);
   const childrenToDisplay = filteredChildren || children;
   
-  // Update URL when period changes, but only after initial mount
+  // Lire l'ID de période depuis l'URL lors du montage du composant uniquement
   useEffect(() => {
-    // Skip on initial render to prevent loop
+    const searchParams = new URLSearchParams(location.search);
+    const periodId = searchParams.get("periodId");
+    
+    // Seulement si l'ID de période existe dans l'URL et est différent de la période sélectionnée
+    if (periodId && periodId !== selectedPeriod) {
+      console.log("[HolidayReservationContent] Setting period from URL:", periodId);
+      setSelectedPeriod(periodId);
+      previousPeriod.current = periodId;
+    }
+  }, []); // Dépendance vide pour exécuter uniquement au montage
+  
+  // Mettre à jour l'URL lorsque la période change, mais uniquement après le rendu initial
+  const updateUrlWithPeriod = useCallback((newPeriod: string | null) => {
+    if (!newPeriod || urlUpdating.current) return;
+    
+    urlUpdating.current = true;
+    
+    try {
+      console.log("[HolidayReservationContent] Updating URL with period:", newPeriod);
+      const searchParams = new URLSearchParams(location.search);
+      searchParams.set("periodId", newPeriod);
+      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+    } catch (error) {
+      console.error("[HolidayReservationContent] Error updating URL:", error);
+    } finally {
+      // Reset après un court délai pour permettre de futures mises à jour
+      setTimeout(() => {
+        urlUpdating.current = false;
+      }, 100);
+    }
+  }, [navigate, location.pathname, location.search]);
+  
+  useEffect(() => {
+    // Ignorer le premier rendu pour éviter les boucles
     if (initialRender.current) {
       initialRender.current = false;
       return;
     }
 
-    // Only update URL if period has actually changed to prevent loops
-    if (selectedPeriod && selectedPeriod !== previousPeriod.current) {
+    // Uniquement mettre à jour l'URL si la période a réellement changé
+    if (selectedPeriod && selectedPeriod !== previousPeriod.current && !urlUpdating.current) {
       previousPeriod.current = selectedPeriod;
-      
-      // Use replace instead of push to avoid browser history stack buildup
-      const searchParams = new URLSearchParams(location.search);
-      searchParams.set("periodId", selectedPeriod);
-      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+      updateUrlWithPeriod(selectedPeriod);
     }
-  }, [selectedPeriod, navigate, location.pathname, location.search]);
+  }, [selectedPeriod, updateUrlWithPeriod]);
   
-  // Read period ID from URL on component mount only
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const periodId = searchParams.get("periodId");
-    
-    if (periodId && periodId !== selectedPeriod) {
-      setSelectedPeriod(periodId);
-    }
-  }, []); // Empty dependency array ensures this runs only once on mount
-  
-  // Function to avoid double clicks with prevention of event propagation
+  // Fonction pour éviter les double-clics avec prévention de la propagation d'événements
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Prevent any event propagation that could cause multiple triggers
+    // Empêcher toute propagation d'événement qui pourrait provoquer plusieurs déclenchements
     e.preventDefault();
     e.stopPropagation();
     
@@ -130,7 +148,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
           onClick={onSubmitClick}
           className="w-full"
           disabled={(!selectedChild || !selectedPeriod || (selectedDates.length === 0 && !isCM2SummerPeriod) || isSubmitting)}
-          type="button" // Specify explicitly the button type to avoid implicit form submission
+          type="button" // Spécifier explicitement le type de bouton pour éviter la soumission implicite du formulaire
         >
           {isSubmitting ? (
             <>

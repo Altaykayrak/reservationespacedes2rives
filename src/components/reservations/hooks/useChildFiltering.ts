@@ -4,7 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 export const useChildFiltering = (
   children: Tables<"children">[] | null | undefined,
@@ -14,6 +14,7 @@ export const useChildFiltering = (
   const isHolidayReservation = location.pathname === "/holiday-reservations";
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
   const isAdminTeenHolidayReservation = location.pathname === "/admin/reservations/new-teen-holiday";
+  const pathRef = useRef(location.pathname);
   
   const { isTeenClassSync } = useSchoolClassUtils();
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
@@ -38,7 +39,7 @@ export const useChildFiltering = (
       return data;
     },
     enabled: !!selectedPeriodId,
-    staleTime: 60000, // Cache for 1 minute
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // Récupérer les mappings de classe pour la période sélectionnée
@@ -60,15 +61,21 @@ export const useChildFiltering = (
       return data;
     },
     enabled: !!selectedPeriodId,
-    staleTime: 60000, // Cache for 1 minute
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Memoize filtered children to prevent unnecessary recalculations
+  // Mémoriser les enfants filtrés pour éviter les recalculs inutiles
   const filteredChildren = useMemo(() => {
-    // For non-existent children array, return early
+    // Pour un tableau d'enfants inexistant, retourner rapidement
     if (!children) return null;
     
-    // For holiday reservations with class mappings
+    // Enregistrer le chemin pour le débogage
+    if (pathRef.current !== location.pathname) {
+      console.log("[useChildFiltering] Path changed from", pathRef.current, "to", location.pathname);
+      pathRef.current = location.pathname;
+    }
+    
+    // Pour les réservations de vacances avec mappages de classes
     if (isHolidayReservation && classMappings && classMappings.length > 0 && selectedPeriodId) {
       return children.filter(child => {
         const mapping = classMappings.find(
@@ -82,11 +89,11 @@ export const useChildFiltering = (
         return !isTeenClassSync(child.school_class);
       });
     } 
-    // For holiday reservations without mappings
+    // Pour les réservations de vacances sans mappages
     else if (isHolidayReservation) {
       return children.filter(child => !isTeenClassSync(child.school_class));
     } 
-    // For teen holiday reservations
+    // Pour les réservations de vacances pour adolescents
     else if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
       return children.filter(child => {
         const isChildTeen = isTeenClassSync(child.school_class);
@@ -99,13 +106,23 @@ export const useChildFiltering = (
       });
     }
     
-    // Default: return all children
+    // Par défaut : retourner tous les enfants
     return children;
-  }, [children, classMappings, selectedPeriodId, periodInfo, isHolidayReservation, isTeenHolidayReservation, isAdminTeenHolidayReservation, isTeenClassSync, summerPeriods]);
+  }, [children, classMappings, selectedPeriodId, periodInfo, isHolidayReservation, isTeenHolidayReservation, isAdminTeenHolidayReservation, isTeenClassSync, summerPeriods, location.pathname]);
 
   const isSummerPeriod = useMemo(() => {
     return periodInfo?.name && summerPeriods.includes(periodInfo.name);
   }, [periodInfo, summerPeriods]);
+
+  // Logging pour débogage
+  useEffect(() => {
+    console.log("Current path:", location.pathname);
+    console.log("isHolidayReservation:", isHolidayReservation);
+    console.log("Selected period ID:", selectedPeriodId);
+    console.log("Period info:", periodInfo);
+    console.log("Class mappings:", classMappings);
+    console.log("Is summer period:", isSummerPeriod);
+  }, [location.pathname, isHolidayReservation, selectedPeriodId, periodInfo, classMappings, isSummerPeriod]);
 
   return {
     filteredChildren,

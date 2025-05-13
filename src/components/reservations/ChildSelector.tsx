@@ -27,20 +27,22 @@ export const ChildSelector = ({
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
   const isInitialMount = useRef(true);
   const previousPeriodId = useRef(selectedPeriodId);
+  const childSelectChanged = useRef(false);
 
-  // Listen for period selection from URL search parameters
+  // Écouter la sélection de période à partir des paramètres de recherche d'URL
   useEffect(() => {
-    // Only update if URL params actually changed to prevent loops
+    // Ne mettre à jour que si les paramètres d'URL ont réellement changé pour éviter les boucles
     const searchParams = new URLSearchParams(location.search);
     const periodId = searchParams.get("periodId");
     
     if (periodId && periodId !== selectedPeriodId) {
+      console.log("[ChildSelector] Updating selected period from URL:", periodId);
       setSelectedPeriodId(periodId);
       previousPeriodId.current = periodId;
     }
   }, [location.search]);
 
-  // Handle child filtering based on page type and period
+  // Gérer le filtrage des enfants en fonction du type de page et de la période
   const {
     filteredChildren,
     periodInfo,
@@ -51,7 +53,7 @@ export const ChildSelector = ({
     isAdminTeenHolidayReservation
   } = useChildFiltering(children, selectedPeriodId);
 
-  // Handle CM2 child check for summer periods
+  // Gérer la vérification des enfants CM2 pour les périodes d'été
   const { showCM2Message } = useCM2ChildCheck(
     selectedChild,
     children,
@@ -65,20 +67,18 @@ export const ChildSelector = ({
     onCM2SummerPeriodCheck
   );
 
-  console.log("Children passed to ChildSelector:", children);
-  console.log("Filtered children based on page type:", filteredChildren);
-  console.log("Current path:", location.pathname);
-  console.log("isHolidayReservation:", isHolidayReservation);
-  console.log("Selected period ID:", selectedPeriodId);
-  console.log("Period info:", periodInfo);
-  console.log("Class mappings:", classMappings);
-  console.log("Is summer period:", isSummerPeriod);
-
-  // Handle child selection with anti-bounce protection
+  // Gérer la sélection d'un enfant avec protection anti-rebond
   const handleChildSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const childId = e.target.value;
-    if (childId !== selectedChild) {
+    if (childId !== selectedChild && !childSelectChanged.current) {
+      childSelectChanged.current = true;
+      console.log("[ChildSelector] Changing selected child to:", childId);
       setSelectedChild(childId);
+      
+      // Réinitialiser l'indicateur après un bref délai
+      setTimeout(() => {
+        childSelectChanged.current = false;
+      }, 100);
     }
   };
 
