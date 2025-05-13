@@ -37,10 +37,12 @@ export const HolidayDateSelector = ({
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
+  console.log("DEBUG HolidayDateSelector: rendu avec periodId=", periodId, "selectedChild=", selectedChild);
+  
   const { data: holidayPeriod, isLoading: isPeriodLoading } = useQuery({
     queryKey: ["holiday_period", periodId],
     queryFn: async () => {
-      console.log("Fetching holiday period for ID:", periodId);
+      console.log("DEBUG HolidayDateSelector: Fetching holiday period for ID:", periodId);
       const { data, error } = await supabase
         .from("available_holiday_periods")
         .select("*")
@@ -51,7 +53,7 @@ export const HolidayDateSelector = ({
         console.error("Error fetching holiday period:", error);
         throw error;
       }
-      console.log("Holiday period data:", data);
+      console.log("DEBUG HolidayDateSelector: Holiday period data:", data);
       return data;
     },
     enabled: !!periodId
@@ -62,7 +64,7 @@ export const HolidayDateSelector = ({
     queryKey: ["child", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return null;
-      console.log("Récupération des informations de l'enfant pour:", selectedChild);
+      console.log("DEBUG HolidayDateSelector: Récupération des informations de l'enfant pour:", selectedChild);
       
       const { data, error } = await supabase
         .from("children")
@@ -80,7 +82,7 @@ export const HolidayDateSelector = ({
         throw new Error("La classe scolaire est manquante");
       }
       
-      console.log("Informations de l'enfant récupérées:", data);
+      console.log("DEBUG HolidayDateSelector: Informations de l'enfant récupérées:", data);
       return data;
     },
     enabled: Boolean(selectedChild)
@@ -92,13 +94,18 @@ export const HolidayDateSelector = ({
   // Mise à jour de l'état de chargement
   useEffect(() => {
     setIsLoading(isPeriodLoading || isChildInfoLoading);
+    console.log("DEBUG HolidayDateSelector: État de chargement mis à jour:", {
+      isPeriodLoading,
+      isChildInfoLoading,
+      isLoading: isPeriodLoading || isChildInfoLoading
+    });
   }, [isPeriodLoading, isChildInfoLoading]);
 
   // Vérifier si la période est une période d'été spéciale pour les CM2
   useEffect(() => {
     const checkSummerPeriod = async () => {
       if (!periodId || !childInfo) return;
-      console.log("Checking summer period for period:", periodId, "and class:", childInfo.school_class);
+      console.log("DEBUG HolidayDateSelector: Checking summer period for period:", periodId, "and class:", childInfo.school_class);
 
       if (childInfo.school_class === "CM2") {
         try {
@@ -108,13 +115,13 @@ export const HolidayDateSelector = ({
             .eq("id", periodId)
             .single();
           
-          console.log("Period info:", data);
+          console.log("DEBUG HolidayDateSelector: Period info:", data);
           
           if (data && ["ETE-01", "ETE-02", "ETE-03", "ETE-04"].includes(data.name)) {
-            console.log("Is summer period:", true);
+            console.log("DEBUG HolidayDateSelector: Is summer period:", true);
             setIsCM2SummerPeriod(true);
           } else {
-            console.log("Is NOT summer period");
+            console.log("DEBUG HolidayDateSelector: Is NOT summer period");
             setIsCM2SummerPeriod(false);
           }
         } catch (error) {
@@ -132,9 +139,10 @@ export const HolidayDateSelector = ({
   // Using the synchronous version of isTeenClass
   const isTeenClassValue = childInfo ? isTeenClassSync(childInfo.school_class, periodId) : false;
 
-  // Effet pour réinitialiser les dates lors du changement d'enfant
+  // Effet pour réinitialiser les dates lors du changement d'enfant ou de période
   useEffect(() => {
-    if (!selectedChild) return;
+    if (!selectedChild || !periodId) return;
+    console.log("DEBUG HolidayDateSelector: Réinitialisation des dates sélectionnées suite au changement d'enfant/période");
 
     const shouldUseSummerTeenLogic = (isTeenClassValue || isCM2SummerPeriod) && holidayPeriod;
     
@@ -142,14 +150,15 @@ export const HolidayDateSelector = ({
       // On n'applique la présélection que sur la page teen
       const isTeenPage = window.location.pathname.includes("teenholiday");
       if (isTeenPage) {
-        console.log("Sélection des dates pour adolescent/CM2 en période d'été");
+        console.log("DEBUG HolidayDateSelector: Sélection des dates pour adolescent/CM2 en période d'été");
         // Ne pas présélectionner automatiquement les dates
         setSelectedDates([]);
       }
     } else {
+      console.log("DEBUG HolidayDateSelector: Réinitialisation complète des dates sélectionnées");
       setSelectedDates([]);
     }
-  }, [selectedChild, isTeenClassValue, holidayPeriod, setSelectedDates, isCM2SummerPeriod]);
+  }, [selectedChild, periodId, isTeenClassValue, holidayPeriod, setSelectedDates, isCM2SummerPeriod]);
 
   // Afficher un état de chargement
   if (isLoading) {
@@ -182,15 +191,15 @@ export const HolidayDateSelector = ({
   // Vérifier si nous sommes sur une page de réservation pour adolescents
   const isTeenHolidayPage = window.location.pathname.includes("teenholiday");
   
-  console.log("HolidayDateSelector - isTeenHolidayPage:", isTeenHolidayPage);
-  console.log("HolidayDateSelector - isTeenClassValue:", isTeenClassValue);
-  console.log("HolidayDateSelector - isCM2SummerPeriod:", isCM2SummerPeriod);
-  console.log("HolidayDateSelector - childInfo:", childInfo);
-  console.log("HolidayDateSelector - Full pathname:", window.location.pathname);
+  console.log("DEBUG HolidayDateSelector - isTeenHolidayPage:", isTeenHolidayPage);
+  console.log("DEBUG HolidayDateSelector - isTeenClassValue:", isTeenClassValue);
+  console.log("DEBUG HolidayDateSelector - isCM2SummerPeriod:", isCM2SummerPeriod);
+  console.log("DEBUG HolidayDateSelector - childInfo:", childInfo);
+  console.log("DEBUG HolidayDateSelector - Full pathname:", window.location.pathname);
   
   // Déterminer si nous devons afficher le sélecteur pour adolescents
   const shouldUseTeenSelector = isTeenHolidayPage && (isTeenClassValue || isCM2SummerPeriod);
-  console.log("HolidayDateSelector - shouldUseTeenSelector:", shouldUseTeenSelector);
+  console.log("DEBUG HolidayDateSelector - shouldUseTeenSelector:", shouldUseTeenSelector);
 
   return (
     <HolidayPeriodProvider 

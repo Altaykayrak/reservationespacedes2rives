@@ -25,7 +25,7 @@ export const PeriodSelector = ({
 }: PeriodSelectorProps) => {
   const [filteredPeriods, setFilteredPeriods] = useState<Tables<"available_holiday_periods">[] | null | undefined>(holidayPeriods);
   const [searchParams, setSearchParams] = useSearchParams();
-
+  
   // Récupérer les mappings de classes pour filtrer les périodes
   const { data: classMappings } = useQuery({
     queryKey: ["class_mappings_teen"],
@@ -78,14 +78,28 @@ export const PeriodSelector = ({
 
   // Gérer le changement de période sans recharger la page
   const handlePeriodChange = (newPeriodId: string) => {
-    // Mettre à jour l'état local
-    setSelectedPeriod(newPeriodId);
+    console.log("DEBUG PeriodSelector: Sélection de période changée à", newPeriodId);
     
-    // Mettre à jour l'URL sans recharger la page si demandé
-    if (updateUrlWithoutRefresh) {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("periodId", newPeriodId);
-      setSearchParams(newParams, { replace: true });
+    // Empêcher la propagation pour éviter les soumissions de formulaire non désirées
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        // Mettre à jour l'état local
+        setSelectedPeriod(newPeriodId);
+        
+        // Mettre à jour l'URL sans recharger la page si demandé
+        if (updateUrlWithoutRefresh) {
+          const newParams = new URLSearchParams(searchParams);
+          if (newPeriodId) {
+            newParams.set("periodId", newPeriodId);
+          } else {
+            newParams.delete("periodId");
+          }
+          setSearchParams(newParams, { replace: true });
+        }
+      });
+    } else {
+      // Fallback pour les environnements sans window
+      setSelectedPeriod(newPeriodId);
     }
   };
 
@@ -93,7 +107,10 @@ export const PeriodSelector = ({
   useEffect(() => {
     if (updateUrlWithoutRefresh) {
       const periodIdFromUrl = searchParams.get("periodId");
+      console.log("DEBUG PeriodSelector: periodId depuis URL =", periodIdFromUrl, "selectedPeriod =", selectedPeriod);
+      
       if (periodIdFromUrl && periodIdFromUrl !== selectedPeriod) {
+        console.log("DEBUG PeriodSelector: Mise à jour de selectedPeriod depuis URL à", periodIdFromUrl);
         setSelectedPeriod(periodIdFromUrl);
       }
     }
@@ -106,7 +123,10 @@ export const PeriodSelector = ({
         value={selectedPeriod} 
         onValueChange={handlePeriodChange}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full" onClick={(e) => {
+          // Empêcher la soumission du formulaire
+          e.preventDefault();
+        }}>
           <SelectValue placeholder="Choisir une période" />
         </SelectTrigger>
         <SelectContent>

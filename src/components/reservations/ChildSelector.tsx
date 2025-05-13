@@ -31,6 +31,7 @@ export const ChildSelector = ({
     const searchParams = new URLSearchParams(location.search);
     const periodId = searchParams.get("periodId");
     if (periodId) {
+      console.log("DEBUG ChildSelector: selectedPeriodId mis à jour depuis URL à", periodId);
       setSelectedPeriodId(periodId);
     }
   }, [location.search]);
@@ -73,17 +74,23 @@ export const ChildSelector = ({
   const handleChildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     // Empêcher tout comportement de soumission
     e.preventDefault();
-    setSelectedChild(e.target.value);
+    
+    // Utiliser requestAnimationFrame pour éviter les problèmes de synchronisation
+    window.requestAnimationFrame(() => {
+      console.log("DEBUG ChildSelector: sélection d'enfant changée à", e.target.value);
+      setSelectedChild(e.target.value);
+    });
   };
 
   return (
-    <div>
+    <div onClick={(e) => e.stopPropagation()}>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
       <select
         id="child-select"
         value={selectedChild}
         onChange={handleChildChange}
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
+        onClick={(e) => e.stopPropagation()}
       >
         <option value="">Choisir un enfant</option>
         {filteredChildren?.length ? (

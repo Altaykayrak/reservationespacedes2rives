@@ -44,20 +44,34 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
   
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [renderKey, setRenderKey] = useState(0);
 
   // Utiliser les enfants filtrés si fournis, sinon utiliser les enfants du hook
   const childrenToDisplay = filteredChildren || children;
   
+  // Log pour déboguer
+  useEffect(() => {
+    console.log("DEBUG HolidayReservationContent: selectedPeriod =", selectedPeriod);
+    console.log("DEBUG HolidayReservationContent: selectedChild =", selectedChild);
+    console.log("DEBUG HolidayReservationContent: selectedDates =", selectedDates);
+  }, [selectedPeriod, selectedChild, selectedDates]);
+
   // Synchroniser l'URL avec l'état de période sélectionnée sans recharger la page
   useEffect(() => {
     const periodIdFromUrl = searchParams.get("periodId");
     
+    console.log("DEBUG HolidayReservationContent: synchronisation URL <-> état");
+    console.log("  - periodIdFromUrl =", periodIdFromUrl);
+    console.log("  - selectedPeriod =", selectedPeriod);
+    
     // Si l'URL a un periodId et qu'il est différent de l'état actuel, mettre à jour l'état
     if (periodIdFromUrl && periodIdFromUrl !== selectedPeriod) {
+      console.log("  - Mise à jour de selectedPeriod depuis URL");
       setSelectedPeriod(periodIdFromUrl);
     } 
     // Si l'état a un periodId et qu'il est différent de l'URL, mettre à jour l'URL
     else if (selectedPeriod && periodIdFromUrl !== selectedPeriod) {
+      console.log("  - Mise à jour de l'URL depuis selectedPeriod");
       searchParams.set("periodId", selectedPeriod);
       setSearchParams(searchParams, { replace: true });
     }
@@ -85,7 +99,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
     const unsubscribe = eventBus.subscribe('holiday-reservation-created', () => {
       console.log("HolidayReservationContent: Received holiday-reservation-created event");
       // Force a re-render
-      setForceUpdate(prev => prev + 1);
+      setRenderKey(prev => prev + 1);
     });
     
     return () => {
@@ -93,15 +107,29 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
     };
   }, []);
   
-  // Add a state to force re-renders
-  const [forceUpdate, setForceUpdate] = useState(0);
+  // Forcer le rafraîchissement du sélecteur de dates quand une période est sélectionnée
+  useEffect(() => {
+    if (selectedPeriod) {
+      setRenderKey(prev => prev + 1);
+    }
+  }, [selectedPeriod]);
+  
+  // Forcer le rafraîchissement du sélecteur de dates quand un enfant est sélectionné
+  useEffect(() => {
+    if (selectedChild) {
+      setRenderKey(prev => prev + 1);
+    }
+  }, [selectedChild]);
   
   return (
     <Card className="p-6">
       <div className="space-y-6">
         <ChildSelector
           selectedChild={selectedChild}
-          setSelectedChild={setSelectedChild}
+          setSelectedChild={(childId) => {
+            console.log("DEBUG ChildSelector: sélection d'enfant changée à", childId);
+            setSelectedChild(childId);
+          }}
           children={childrenToDisplay}
           setSelectedDates={setSelectedDates}
           onCM2SummerPeriodCheck={setIsCM2SummerPeriod}
@@ -109,15 +137,18 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
 
         <PeriodSelector
           selectedPeriod={selectedPeriod}
-          setSelectedPeriod={setSelectedPeriod}
+          setSelectedPeriod={(periodId) => {
+            console.log("DEBUG HolidayReservationContent: setPeriod appelé avec", periodId);
+            setSelectedPeriod(periodId);
+          }}
           holidayPeriods={holidayPeriods}
           filterTeenOnly={filterTeenPeriods}
           updateUrlWithoutRefresh={true}
         />
 
-        {selectedPeriod && !isCM2SummerPeriod && (
+        {selectedPeriod && selectedChild && !isCM2SummerPeriod && (
           <HolidayDateSelector
-            key={`holiday-selector-${forceUpdate}-${selectedChild}-${selectedPeriod}`}
+            key={`holiday-selector-${renderKey}-${selectedChild}-${selectedPeriod}`}
             selectedDates={selectedDates}
             handleDateToggle={handleDateToggle}
             handleOptionChange={handleOptionChange}
