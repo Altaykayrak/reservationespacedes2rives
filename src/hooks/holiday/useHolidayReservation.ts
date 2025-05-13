@@ -32,9 +32,8 @@ export const useHolidayReservation = () => {
     setMinimumDaysDialog
   } = useSelectionState();
 
-  // Use memo for the validation to prevent circular dependencies
-  const validationHook = useMemo(() => useReservationValidation(selectedChild), [selectedChild]);
-  const { isDateAlreadyReserved } = validationHook;
+  // Use validation hook with stable selectedChild reference
+  const { isDateAlreadyReserved } = useReservationValidation(selectedChild);
   
   const { getDatesPerWeek } = useWeeklyDates();
 

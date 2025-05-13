@@ -21,7 +21,7 @@ export const PeriodSelector = memo(({
   holidayPeriods,
   filterTeenOnly = false
 }: PeriodSelectorProps) => {
-  const [filteredPeriods, setFilteredPeriods] = useState<Tables<"available_holiday_periods">[] | null | undefined>(holidayPeriods);
+  const [filteredPeriods, setFilteredPeriods] = useState<Tables<"available_holiday_periods">[] | null | undefined>([]);
 
   // Récupérer les mappings de classes pour filtrer les périodes
   const { data: classMappings } = useQuery({
@@ -69,7 +69,7 @@ export const PeriodSelector = memo(({
       
       setFilteredPeriods(uniquePeriods);
     } else {
-      setFilteredPeriods(holidayPeriods);
+      setFilteredPeriods(holidayPeriods || []);
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
 
@@ -77,7 +77,6 @@ export const PeriodSelector = memo(({
   const handlePeriodChange = useCallback((value: string) => {
     if (value !== selectedPeriod) {
       // Empêcher le comportement de formulaire par défaut
-      // Utiliser le setter qui gère les paramètres URL de façon asynchrone
       console.log("Sélection de période:", value);
       setSelectedPeriod(value);
     }
@@ -91,7 +90,7 @@ export const PeriodSelector = memo(({
           <SelectValue placeholder="Choisir une période" />
         </SelectTrigger>
         <SelectContent className="bg-white z-[100]">
-          {filteredPeriods?.length ? (
+          {filteredPeriods && filteredPeriods.length > 0 ? (
             filteredPeriods.map((period) => (
               <SelectItem key={period.id} value={period.id}>
                 {format(new Date(period.start_date), "d MMMM yyyy", { locale: fr })} au{" "}
@@ -108,4 +107,3 @@ export const PeriodSelector = memo(({
 });
 
 PeriodSelector.displayName = "PeriodSelector";
-

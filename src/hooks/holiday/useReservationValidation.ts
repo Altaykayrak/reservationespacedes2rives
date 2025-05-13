@@ -10,7 +10,7 @@ export const useReservationValidation = (childId: string | null) => {
     queryFn: async () => {
       if (!childId) return [];
       
-      console.log("Current existingReservations:", existingReservations);
+      console.log("Fetching existing reservations for child:", childId);
       
       const { data, error } = await supabase
         .from("holiday_reservations")
@@ -32,6 +32,7 @@ export const useReservationValidation = (childId: string | null) => {
   // Utiliser useMemo pour mémoriser la fonction isDateAlreadyReserved
   const isDateAlreadyReserved = useMemo(() => {
     return (date: Date) => {
+      // Ensure existingReservations is defined, otherwise return false
       if (!existingReservations || existingReservations.length === 0) return false;
       
       // Normaliser la date à minuit UTC
@@ -51,7 +52,7 @@ export const useReservationValidation = (childId: string | null) => {
   }, [existingReservations]);
   
   return {
-    existingReservations,
+    existingReservations: existingReservations || [],
     isDateAlreadyReserved,
   };
 };
