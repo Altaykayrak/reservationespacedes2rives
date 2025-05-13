@@ -21,7 +21,7 @@
 }
 
 .animate-blink {
-  animation: blink 0.8s ease-in-out 7.5 forwards; /* 0.8s x 7.5 = 6 seconds */
+  animation: blink 0.8s ease-in-out 3 forwards; /* 0.8s x 3 = 2.4 seconds (approximately 3 seconds) */
 }
 
 @layer base {
