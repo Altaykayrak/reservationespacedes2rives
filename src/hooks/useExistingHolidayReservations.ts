@@ -1,9 +1,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { HolidayReservationWithChild } from "@/types/reservations";
+import { RefetchOptions } from "@tanstack/react-query";
 
 export const useExistingHolidayReservations = (selectedChild: string) => {
-  const { data: existingReservations, refetch: refetchReservations } = useQuery({
+  const { data: existingReservations, refetch: refetchReservations } = useQuery<HolidayReservationWithChild[]>({
     queryKey: ["existing_holiday_reservations", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return [];
@@ -28,7 +30,7 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
     refetchOnWindowFocus: true // Recharge quand la fenêtre reprend le focus
   });
 
-  const isDateAlreadyReserved = (date: Date) => {
+  const isDateAlreadyReserved = (date: Date): boolean => {
     if (!existingReservations) return false;
     try {
       console.log("Checking date:", date.toISOString(), "against reservations:", existingReservations);
