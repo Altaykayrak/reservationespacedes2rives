@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -10,7 +11,7 @@ import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { eventBus } from "@/lib/utils";
 
 interface HolidayReservationContentProps {
@@ -42,20 +43,29 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
   } = useHolidayReservation();
   
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Use the filtered children if provided, otherwise use the children from the hook
   const childrenToDisplay = filteredChildren || children;
   
-  // Update URL when period changes
+  // Update URL when period changes without reloading page
   useEffect(() => {
     if (selectedPeriod) {
-      const searchParams = new URLSearchParams(location.search);
-      searchParams.set("periodId", selectedPeriod);
-      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+      setSearchParams(prev => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set("periodId", selectedPeriod);
+        return newParams;
+      }, { replace: true });
     }
-  }, [selectedPeriod, navigate, location.pathname, location.search]);
+  }, [selectedPeriod, setSearchParams]);
+  
+  // Get periodId from URL on initial load
+  useEffect(() => {
+    const periodId = searchParams.get("periodId");
+    if (periodId && !selectedPeriod) {
+      setSelectedPeriod(periodId);
+    }
+  }, [searchParams, selectedPeriod, setSelectedPeriod]);
   
   // Fonction pour éviter les doubles clics avec prévention de la propagation d'événement
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {

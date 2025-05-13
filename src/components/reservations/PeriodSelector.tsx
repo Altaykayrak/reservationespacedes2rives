@@ -72,10 +72,16 @@ export const PeriodSelector = ({
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
 
+  // Gérer le changement de période sans recharger la page
+  const handlePeriodChange = (value: string) => {
+    // Prévenir le rechargement de page
+    setSelectedPeriod(value);
+  };
+
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Sélectionner une période</label>
-      <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+      <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Choisir une période" />
         </SelectTrigger>
