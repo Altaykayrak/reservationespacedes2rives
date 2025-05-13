@@ -26,6 +26,26 @@ export const useSchoolClassUtils = () => {
     },
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
+
+  // Récupérer les mappings de classes spécifiques aux périodes
+  const { data: classMappings } = useQuery({
+    queryKey: ["holiday_period_class_mappings"],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from("holiday_period_class_mappings")
+          .select("*");
+          
+        if (error) throw error;
+        console.log("Mappings de classes récupérés:", data);
+        return data || [];
+      } catch (error) {
+        console.error("Erreur lors de la récupération des mappings de classes:", error);
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
   
   const isTeenClass = async (schoolClass: string, holidayPeriodId?: string) => {
     if (!schoolClass) return false;
@@ -85,6 +105,25 @@ export const useSchoolClassUtils = () => {
     
     const normalizedClass = normalizeSchoolClass(schoolClass);
     console.log("isTeenClassSync check for:", normalizedClass, "periodId:", periodId);
+    
+    // Si l'ID de période est fourni, chercher un mapping spécifique
+    if (periodId && classMappings) {
+      const specificMapping = classMappings.find(m => 
+        m.holiday_period_id === periodId && 
+        m.school_class.toUpperCase() === normalizedClass.toUpperCase()
+      );
+      
+      if (specificMapping) {
+        console.log(`Mapping spécifique trouvé pour ${normalizedClass} dans la période ${periodId}: catégorie ${specificMapping.category}`);
+        
+        // Si la catégorie est "aucune", cette classe n'est pas disponible pour cette période
+        if (specificMapping.category === "aucune") {
+          return false;
+        }
+        
+        return specificMapping.category === 'adolescent';
+      }
+    }
     
     // Si c'est un CM2 et qu'on a un ID de période
     if (normalizedClass === "CM2" && periodId && summerPeriods) {

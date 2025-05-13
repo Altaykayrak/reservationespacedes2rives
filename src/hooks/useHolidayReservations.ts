@@ -59,7 +59,10 @@ export const useHolidayReservations = () => {
             first_name,
             last_name,
             school_class,
-            profile_id
+            profile_id,
+            profile (
+              school_city
+            )
           )
         `)
         .eq('status', 'confirmed')
@@ -87,6 +90,9 @@ export const useHolidayReservations = () => {
           return null;
         }
 
+        // Ensure we're handling the children data correctly
+        const childData = reservation.children;
+
         const transformedReservation: HolidayReservationWithChild = {
           id: reservation.id,
           child_id: reservation.child_id,
@@ -99,12 +105,12 @@ export const useHolidayReservations = () => {
           created_at: reservation.created_at,
           updated_at: reservation.updated_at,
           children: {
-            id: reservation.children.id,
-            first_name: reservation.children.first_name,
-            last_name: reservation.children.last_name,
-            school_class: reservation.children.school_class,
+            id: childData.id,
+            first_name: childData.first_name,
+            last_name: childData.last_name,
+            school_class: childData.school_class,
             profile: {
-              school_city: '' // We don't have access to profile.school_city, setting a default empty string
+              school_city: childData.profile?.school_city || ''
             }
           }
         };

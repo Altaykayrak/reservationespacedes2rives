@@ -7,6 +7,7 @@ import { useHolidayReservations } from "@/hooks/useHolidayReservations";
 import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { useToast } from "@/hooks/use-toast";
+import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -19,7 +20,7 @@ export const HolidayReservationsList = () => {
   const { toast } = useToast();
   const isTeenPage = window.location.pathname === "/teenholiday-reservations";
   const { reservations, isError, error, refetch } = useHolidayReservations();
-  const { isTeenClass } = useSchoolClassCategories();
+  const { isTeenClassSync } = useSchoolClassUtils();
 
   console.log("1. Réservations reçues du hook:", reservations);
   console.log("2. Est-ce une erreur ?", isError);
@@ -63,15 +64,15 @@ export const HolidayReservationsList = () => {
   const filteredReservations = reservations
     .filter(reservation => {
       // Make sure the reservation and its children data exists
-      if (!reservation || !reservation.children || !reservation.children.school_class) {
+      if (!reservation || !reservation.children || !reservation.children.school_class || !reservation.period_id) {
         console.warn("Données manquantes pour la réservation:", reservation?.id);
         return false;
       }
       
-      // Filter based on page type
+      // Filter based on page type and period-specific class mappings
       return isTeenPage 
-        ? isTeenClass(reservation.children.school_class) 
-        : !isTeenClass(reservation.children.school_class);
+        ? isTeenClassSync(reservation.children.school_class, reservation.period_id) 
+        : !isTeenClassSync(reservation.children.school_class, reservation.period_id);
     });
 
   console.log("11. Nombre de réservations après filtrage:", filteredReservations.length);
