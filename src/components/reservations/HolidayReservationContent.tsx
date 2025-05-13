@@ -116,7 +116,11 @@ export const HolidayReservationContent = ({
   };
 
   return (
-    <Card className="p-6">
+    return (
+  <Card className="p-6">
+    {/* ... */}
+  </Card>
+);
       <div className="space-y-6">
         <ChildSelector
           selectedChild={selectedChild}
