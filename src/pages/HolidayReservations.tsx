@@ -4,7 +4,7 @@ import { HolidayReservationContent } from "@/components/reservations/HolidayRese
 import { HolidayReservationsList } from "@/components/reservations/HolidayReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
 import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
@@ -16,6 +16,7 @@ const HolidayReservations = () => {
   const [isClosed, setIsClosed] = useState(false);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const { holidayPeriods, isLoading: periodsLoading, error: periodsError } = useHolidayPeriods();
+  const profileCheckCompleted = useRef(false);
 
   console.log("[HolidayReservations] Rendering with:", {
     isWaiting,
@@ -27,9 +28,10 @@ const HolidayReservations = () => {
   });
 
   useEffect(() => {
-    const checkAccess = async () => {
-      if (!user?.id) return;
+    // Skip profile checks if already completed to prevent repeated fetches
+    if (!user?.id || profileCheckCompleted.current) return;
 
+    const checkAccess = async () => {
       try {
         // Récupérer les états directement de la base de données
         const { data, error } = await supabase
@@ -48,9 +50,13 @@ const HolidayReservations = () => {
         setIsWaiting(data?.is_waiting || false);
         setIsClosed(data?.is_closed || false);
         setIsProfileLoaded(true);
+        // Mark profile check as completed to prevent repeated fetches
+        profileCheckCompleted.current = true;
       } catch (err) {
         console.error('[HolidayReservations] Exception:', err);
         setIsProfileLoaded(true); // Still mark as loaded so UI can proceed
+        // Mark profile check as completed to prevent repeated fetches
+        profileCheckCompleted.current = true;
       }
     };
 
