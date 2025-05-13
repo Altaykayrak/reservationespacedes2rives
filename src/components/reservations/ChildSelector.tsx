@@ -69,13 +69,20 @@ export const ChildSelector = ({
   console.log("Class mappings:", classMappings);
   console.log("Is summer period:", isSummerPeriod);
 
+  // Fonction pour mettre à jour l'enfant sélectionné sans soumettre le formulaire
+  const handleChildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Empêcher tout comportement de soumission
+    e.preventDefault();
+    setSelectedChild(e.target.value);
+  };
+
   return (
     <div>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
       <select
         id="child-select"
         value={selectedChild}
-        onChange={(e) => setSelectedChild(e.target.value)}
+        onChange={handleChildChange}
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
       >
         <option value="">Choisir un enfant</option>

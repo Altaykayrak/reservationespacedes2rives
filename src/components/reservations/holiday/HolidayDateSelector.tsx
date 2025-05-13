@@ -35,24 +35,30 @@ export const HolidayDateSelector = ({
   setSelectedDates
 }: HolidayDateSelectorProps) => {
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const { data: holidayPeriod } = useQuery({
+  const { data: holidayPeriod, isLoading: isPeriodLoading } = useQuery({
     queryKey: ["holiday_period", periodId],
     queryFn: async () => {
+      console.log("Fetching holiday period for ID:", periodId);
       const { data, error } = await supabase
         .from("available_holiday_periods")
         .select("*")
         .eq("id", periodId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching holiday period:", error);
+        throw error;
+      }
+      console.log("Holiday period data:", data);
       return data;
     },
     enabled: !!periodId
   });
 
   // Récupérer les informations de l'enfant, y compris la classe
-  const { data: childInfo, isError: isChildInfoError } = useQuery({
+  const { data: childInfo, isLoading: isChildInfoLoading } = useQuery({
     queryKey: ["child", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return null;
@@ -82,6 +88,11 @@ export const HolidayDateSelector = ({
 
   // Import our utility hook for teen class detection
   const { isTeenClassSync } = useSchoolClassUtils();
+
+  // Mise à jour de l'état de chargement
+  useEffect(() => {
+    setIsLoading(isPeriodLoading || isChildInfoLoading);
+  }, [isPeriodLoading, isChildInfoLoading]);
 
   // Vérifier si la période est une période d'été spéciale pour les CM2
   useEffect(() => {
@@ -140,6 +151,15 @@ export const HolidayDateSelector = ({
     }
   }, [selectedChild, isTeenClassValue, holidayPeriod, setSelectedDates, isCM2SummerPeriod]);
 
+  // Afficher un état de chargement
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   if (!holidayPeriod || !selectedChild) {
     return (
       <EmptyHolidayState 
@@ -149,7 +169,7 @@ export const HolidayDateSelector = ({
     );
   }
 
-  if (!childInfo || isChildInfoError || !childInfo.school_class) {
+  if (!childInfo || !childInfo.school_class) {
     return (
       <EmptyHolidayState 
         message="Information manquante"

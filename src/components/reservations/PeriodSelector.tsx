@@ -6,21 +6,25 @@ import { Tables } from "@/integrations/supabase/types";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSearchParams } from "react-router-dom";
 
 interface PeriodSelectorProps {
   selectedPeriod: string;
   setSelectedPeriod: (periodId: string) => void;
   holidayPeriods?: Tables<"available_holiday_periods">[] | null;
   filterTeenOnly?: boolean;
+  updateUrlWithoutRefresh?: boolean;
 }
 
 export const PeriodSelector = ({
   selectedPeriod,
   setSelectedPeriod,
   holidayPeriods,
-  filterTeenOnly = false
+  filterTeenOnly = false,
+  updateUrlWithoutRefresh = false
 }: PeriodSelectorProps) => {
   const [filteredPeriods, setFilteredPeriods] = useState<Tables<"available_holiday_periods">[] | null | undefined>(holidayPeriods);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Récupérer les mappings de classes pour filtrer les périodes
   const { data: classMappings } = useQuery({
@@ -72,10 +76,36 @@ export const PeriodSelector = ({
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
 
+  // Gérer le changement de période sans recharger la page
+  const handlePeriodChange = (newPeriodId: string) => {
+    // Mettre à jour l'état local
+    setSelectedPeriod(newPeriodId);
+    
+    // Mettre à jour l'URL sans recharger la page si demandé
+    if (updateUrlWithoutRefresh) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("periodId", newPeriodId);
+      setSearchParams(newParams, { replace: true });
+    }
+  };
+
+  // Initialiser depuis les paramètres d'URL au chargement
+  useEffect(() => {
+    if (updateUrlWithoutRefresh) {
+      const periodIdFromUrl = searchParams.get("periodId");
+      if (periodIdFromUrl && periodIdFromUrl !== selectedPeriod) {
+        setSelectedPeriod(periodIdFromUrl);
+      }
+    }
+  }, [searchParams, setSelectedPeriod, selectedPeriod, updateUrlWithoutRefresh]);
+
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Sélectionner une période</label>
-      <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+      <Select 
+        value={selectedPeriod} 
+        onValueChange={handlePeriodChange}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Choisir une période" />
         </SelectTrigger>

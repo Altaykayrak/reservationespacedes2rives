@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -10,7 +11,7 @@ import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { eventBus } from "@/lib/utils";
 
 interface HolidayReservationContentProps {
@@ -42,20 +43,25 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
   } = useHolidayReservation();
   
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Use the filtered children if provided, otherwise use the children from the hook
+  // Utiliser les enfants filtrés si fournis, sinon utiliser les enfants du hook
   const childrenToDisplay = filteredChildren || children;
   
-  // Update URL when period changes
+  // Synchroniser l'URL avec l'état de période sélectionnée sans recharger la page
   useEffect(() => {
-    if (selectedPeriod) {
-      const searchParams = new URLSearchParams(location.search);
+    const periodIdFromUrl = searchParams.get("periodId");
+    
+    // Si l'URL a un periodId et qu'il est différent de l'état actuel, mettre à jour l'état
+    if (periodIdFromUrl && periodIdFromUrl !== selectedPeriod) {
+      setSelectedPeriod(periodIdFromUrl);
+    } 
+    // Si l'état a un periodId et qu'il est différent de l'URL, mettre à jour l'URL
+    else if (selectedPeriod && periodIdFromUrl !== selectedPeriod) {
       searchParams.set("periodId", selectedPeriod);
-      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+      setSearchParams(searchParams, { replace: true });
     }
-  }, [selectedPeriod, navigate, location.pathname, location.search]);
+  }, [selectedPeriod, searchParams, setSearchParams, setSelectedPeriod]);
   
   // Fonction pour éviter les doubles clics avec prévention de la propagation d'événement
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -106,11 +112,12 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
           setSelectedPeriod={setSelectedPeriod}
           holidayPeriods={holidayPeriods}
           filterTeenOnly={filterTeenPeriods}
+          updateUrlWithoutRefresh={true}
         />
 
         {selectedPeriod && !isCM2SummerPeriod && (
           <HolidayDateSelector
-            key={`holiday-selector-${forceUpdate}`}
+            key={`holiday-selector-${forceUpdate}-${selectedChild}-${selectedPeriod}`}
             selectedDates={selectedDates}
             handleDateToggle={handleDateToggle}
             handleOptionChange={handleOptionChange}
