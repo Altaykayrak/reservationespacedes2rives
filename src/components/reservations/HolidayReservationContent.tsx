@@ -129,4 +129,54 @@ export const HolidayReservationContent = ({
 
         <PeriodSelector
           selectedPeriod={selectedPeriod}
-          set
+          setSelectedPeriod={setSelectedPeriod}
+          holidayPeriods={holidayPeriods}
+          filterTeenOnly={filterTeenPeriods}
+        />
+
+        {selectedChild && selectedPeriod && (
+          <HolidayDateSelector
+            selectedDates={selectedDates}
+            handleDateToggle={handleDateToggle}
+            handleOptionChange={handleOptionChange}
+            isDateAlreadyReserved={isDateAlreadyReserved}
+            periodId={selectedPeriod}
+            selectedChild={selectedChild}
+            setSelectedDates={setSelectedDates}
+          />
+        )}
+
+        <div className="flex justify-end mt-6">
+          <Button
+            onClick={onSubmitClick}
+            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
+            className="w-full md:w-auto"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Traitement en cours...
+              </>
+            ) : (
+              "Confirmer réservation"
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <SuccessReservationDialog
+        open={showSuccessDialog}
+        onClose={() => setShowSuccessDialog(false)}
+      />
+
+      <NoSpotsDialog
+        open={noSpotsDialog}
+        onClose={() => setNoSpotsDialog(false)}
+      />
+
+      <MinimumDaysDialog
+        open={minimumDaysDialog}
+        onClose={() => setMinimumDaysDialog(false)}
+      />
+    </Card>
+  );
+};
