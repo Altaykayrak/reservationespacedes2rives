@@ -44,15 +44,18 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`[${Date.now()}] Request marked as processed:`, requestId);
 
     // Process based on reservation type
-    if (requestData.reservationType === "holiday" || requestData.reservationType === "wednesday") {
+    // Vérification plus robuste des types de réservation
+    if (requestData.reservationType === "holiday" || 
+        requestData.reservationType === "wednesday" || 
+        requestData.reservationType === "teen-holiday") {
       return await processHolidayReservation(requestData, resend, requestId);
     } 
     else if (requestData.rdvId) {
       return await processRdvReservation(requestData, resend, requestId);
     } 
     else {
-      console.error(`[${Date.now()}] Invalid request data, missing reservationType or rdvId:`, requestData);
-      throw new Error("Invalid request: Either reservationType or rdvId is required");
+      console.error(`[${Date.now()}] Invalid request data, missing or invalid reservationType or rdvId:`, requestData);
+      throw new Error("Invalid request: Either a valid reservationType (holiday, wednesday, teen-holiday) or rdvId is required");
     }
 
   } catch (error: any) {

@@ -30,25 +30,33 @@ export const sendHolidayReservationEmail = async (
                            childSchoolClass === "5ème" || 
                            childSchoolClass === "4ème" || 
                            childSchoolClass === "3ème" ||
-                           childSchoolClass.toUpperCase() === "CAP";
+                           childSchoolClass.toUpperCase() === "CAP" ||
+                           childSchoolClass === "Seconde" ||
+                           childSchoolClass === "Première" ||
+                           childSchoolClass === "Terminale";
   
   const reservationType = isTeenReservation ? 'teen-holiday' : 'holiday';
   console.log(`DEBUG: Reservation type determined as: ${reservationType} for class ${childSchoolClass} (timestamp: ${submissionTimestamp})`);
   
-  // Invoke the Supabase Edge Function to send the email
-  const emailResponse = await supabase.functions.invoke('send-reservation-email', {
-    body: {
-      childName: childFullName,
-      childClass: childSchoolClass,
-      dates: formattedDates,
-      reservationType: reservationType,
-      withoutMeal: selectedDates.map(d => d.withoutMeal),
-      earlyDropoff: selectedDates.map(d => d.earlyDropoff),
-      period: periodName,
-      requestId
-    }
-  });
-  
-  console.log(`DEBUG: Email response: ${JSON.stringify(emailResponse)} (timestamp: ${submissionTimestamp})`);
-  return emailResponse;
+  try {
+    // Invoke the Supabase Edge Function to send the email
+    const emailResponse = await supabase.functions.invoke('send-reservation-email', {
+      body: {
+        childName: childFullName,
+        childClass: childSchoolClass,
+        dates: formattedDates,
+        reservationType: reservationType,
+        withoutMeal: selectedDates.map(d => d.withoutMeal),
+        earlyDropoff: selectedDates.map(d => d.earlyDropoff),
+        period: periodName,
+        requestId
+      }
+    });
+    
+    console.log(`DEBUG: Email response: ${JSON.stringify(emailResponse)} (timestamp: ${submissionTimestamp})`);
+    return emailResponse;
+  } catch (error) {
+    console.error(`DEBUG: Error sending email: ${error} (timestamp: ${submissionTimestamp})`);
+    throw error;
+  }
 };

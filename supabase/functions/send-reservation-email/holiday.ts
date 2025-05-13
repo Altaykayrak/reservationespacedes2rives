@@ -43,10 +43,13 @@ export async function processHolidayReservation(
 
   // Determine the type of reservation
   let reservationTypeDisplay = "vacances";
+  let additionalNote = "";
+  
   if (requestData.reservationType === "wednesday") {
     reservationTypeDisplay = "mercredi";
   } else if (requestData.reservationType === "teen-holiday") {
     reservationTypeDisplay = "vacances Club Ado";
+    additionalNote = `<p><strong>Note:</strong> Pour les réservations Club Ado, les enfants sont accueillis à 11h30 (avec un pique-nique à apporter) ou à 13h30, selon l'option "Sans Repas" sélectionnée. Une "Carte jeune" d'une valeur de 5 euros par enfant est facturée pour l'année civile.</p>`;
   }
   
   const emailHtml = `
@@ -58,8 +61,7 @@ export async function processHolidayReservation(
     <p><strong>Dates réservées:</strong></p>
     ${tableHtml}
     <p><strong>ID de requête:</strong> ${requestId}</p>
-    ${requestData.reservationType === "teen-holiday" ? 
-      `<p><strong>Note:</strong> Pour les réservations Club Ado, les enfants sont accueillis à 11h30 (avec un pique-nique à apporter) ou à 13h30, selon l'option "Sans Repas" sélectionnée. Une "Carte jeune" d'une valeur de 5 euros par enfant est facturée pour l'année civile.</p>` : ''}
+    ${additionalNote}
   `;
   
   const emailSubject = `Nouvelle réservation - ${
