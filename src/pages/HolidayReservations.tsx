@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
 import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const HolidayReservations = () => {
   const { user } = useAuth();
