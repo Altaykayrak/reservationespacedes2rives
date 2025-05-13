@@ -4,7 +4,7 @@ import { HolidayReservationContent } from "@/components/reservations/HolidayRese
 import { HolidayReservationsList } from "@/components/reservations/HolidayReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
 import { useToast } from "@/hooks/use-toast";
@@ -14,53 +14,35 @@ const HolidayReservations = () => {
   const { toast } = useToast();
   const [isWaiting, setIsWaiting] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
-  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
-  const profileCheckRef = useRef(false);
 
   useEffect(() => {
     const checkAccess = async () => {
-      if (!user?.id || profileCheckRef.current) return;
-      
-      profileCheckRef.current = true;
-      
-      try {
-        console.log("[HolidayReservations] Checking profile access for user ID:", user.id);
-        
-        // Récupérer les états directement de la base de données
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_waiting, is_closed')
-          .eq('id', user.id)
-          .single();
+      if (!user?.id) return;
 
-        if (error) {
-          console.error('Error checking access:', error);
-          toast({
-            title: "Erreur",
-            description: "Erreur lors de la vérification de l'accès",
-            variant: "destructive"
-          });
-          return;
-        }
+      // Récupérer les états directement de la base de données
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_waiting, is_closed')
+        .eq('id', user.id)
+        .single();
 
-        console.log('Profile data:', data);
-        setIsWaiting(data?.is_waiting || false);
-        setIsClosed(data?.is_closed || false);
-        setIsProfileLoaded(true);
-      } catch (err) {
-        console.error("Error in profile check:", err);
+      if (error) {
+        console.error('Error checking access:', error);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la vérification de l'accès",
+          variant: "destructive"
+        });
+        return;
       }
+
+      console.log('Profile data:', data);
+      setIsWaiting(data?.is_waiting || false);
+      setIsClosed(data?.is_closed || false);
     };
 
     checkAccess();
   }, [user, toast]);
-
-  console.log("[HolidayReservations] Rendering with:", {
-    isWaiting,
-    isClosed,
-    isProfileLoaded,
-    userId: user?.id
-  });
 
   // Afficher le message d'attente et empêcher la création de nouvelles réservations
   if (isWaiting) {

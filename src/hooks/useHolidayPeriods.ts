@@ -31,8 +31,8 @@ export const useHolidayPeriods = () => {
       console.log("[useHolidayPeriods] Périodes de vacances récupérées:", data?.length);
       return data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    gcTime: 10 * 60 * 1000,   // 10 minutes garbage collection
+    staleTime: 60 * 60 * 1000, // 1 hour cache
+    gcTime: 2 * 60 * 60 * 1000,   // 2 hours garbage collection
   });
 
   return { 
