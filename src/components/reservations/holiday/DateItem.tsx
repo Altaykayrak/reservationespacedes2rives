@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { SpotsBadge } from "./SpotsBadge";
 import { useHolidaySpots } from "@/hooks/useHolidaySpots";
 import { normalizeSchoolClass } from "@/utils/schoolClassUtils";
-import { useEffect, useState } from "react";
 
 interface DateItemProps {
   date: Date;
@@ -35,14 +34,6 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
-  // Local state to track reservation status
-  const [localIsReserved, setLocalIsReserved] = useState(isReserved);
-  
-  // Update local state when prop changes
-  useEffect(() => {
-    setLocalIsReserved(isReserved);
-  }, [isReserved]);
-  
   try {
     // Vérifier si la date est une instance valide de Date
     const isValidDate = date instanceof Date && !isNaN(date.getTime());
@@ -76,15 +67,15 @@ export const DateItem = ({
     console.log(`DateItem - Date: ${formattedDate}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}, isTeenClass: ${effectiveIsTeenClass}`);
     
     // Debug renforcé
-    console.log(`Date ${formattedDate} - DISABLED CHECK: isReserved=${localIsReserved}, spotsLeft=${spotsLeft}, isStrict0=${spotsLeft === 0}`);
+    console.log(`Date ${formattedDate} - DISABLED CHECK: isReserved=${isReserved}, spotsLeft=${spotsLeft}, isStrict0=${spotsLeft === 0}`);
     
     // La date doit être désactivée uniquement si elle est déjà réservée OU si spotsLeft est strictement égal à 0
-    const isDisabled = localIsReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
+    const isDisabled = isReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
 
     return (
       <div 
         className={`relative space-y-1 p-2 rounded-lg transition-colors ${
-          localIsReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
+          isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
         }`}
       >
         <div className="flex items-start gap-2">
@@ -93,7 +84,7 @@ export const DateItem = ({
             checked={isSelected}
             onCheckedChange={onDateToggle}
             disabled={isDisabled}
-            className={`mt-1 ${localIsReserved ? 'border-gray-300' : 'border-blue-200'}`}
+            className={`mt-1 ${isReserved ? 'border-gray-300' : 'border-blue-200'}`}
           />
           <div className="flex-1">
             <div className="flex items-center justify-between gap-2">
@@ -105,7 +96,7 @@ export const DateItem = ({
               >
                 {format(safeDate, "EEEE d MMMM yyyy", { locale: fr })}
               </Label>
-              {localIsReserved && (
+              {isReserved && (
                 <Badge variant="outline" className="text-[10px] md:text-xs">
                   Déjà réservé
                 </Badge>
@@ -120,7 +111,7 @@ export const DateItem = ({
             </div>
           </div>
         </div>
-        {isSelected && !localIsReserved && (
+        {isSelected && !isReserved && (
           <DateOptions
             date={safeDate}
             withoutMeal={withoutMeal}

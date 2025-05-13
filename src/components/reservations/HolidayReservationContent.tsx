@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -11,7 +12,6 @@ import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { eventBus } from "@/lib/utils";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
@@ -74,22 +74,6 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
     }
   };
 
-  // Subscribe to reservation events
-  useEffect(() => {
-    const unsubscribe = eventBus.subscribe('holiday-reservation-created', () => {
-      console.log("HolidayReservationContent: Received holiday-reservation-created event");
-      // Force a re-render
-      setForceUpdate(prev => prev + 1);
-    });
-    
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-  
-  // Add a state to force re-renders
-  const [forceUpdate, setForceUpdate] = useState(0);
-  
   return (
     <Card className="p-6">
       <div className="space-y-6">
@@ -110,7 +94,6 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
 
         {selectedPeriod && !isCM2SummerPeriod && (
           <HolidayDateSelector
-            key={`holiday-selector-${forceUpdate}`}
             selectedDates={selectedDates}
             handleDateToggle={handleDateToggle}
             handleOptionChange={handleOptionChange}

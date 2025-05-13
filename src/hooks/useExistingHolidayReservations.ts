@@ -54,10 +54,9 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       return transformedData;
     },
     enabled: !!selectedChild,
-    // Set to always be fresh to catch new reservations immediately
+    // Using correct React Query v5 options
     staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: true
+    gcTime: 0
   });
 
   const isDateAlreadyReserved = (date: Date): boolean => {

@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -14,7 +15,6 @@ import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 import { useEffect, useState } from "react";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { HolidayPeriodProvider } from "./holiday/HolidayPeriodContext";
-import { eventBus } from "@/lib/utils";
 
 export const TeenHolidayReservationContent = () => {
   const {
@@ -129,22 +129,6 @@ export const TeenHolidayReservationContent = () => {
   // Déterminer si l'enfant est un adolescent
   const isTeenClass = childInfo ? isTeenClassSync(childInfo.school_class, selectedPeriod) : false;
 
-  // Add a state to force re-renders
-  const [forceUpdate, setForceUpdate] = useState(0);
-  
-  // Subscribe to reservation events
-  useEffect(() => {
-    const unsubscribe = eventBus.subscribe('holiday-reservation-created', () => {
-      console.log("TeenHolidayReservationContent: Received holiday-reservation-created event");
-      // Force a re-render
-      setForceUpdate(prev => prev + 1);
-    });
-    
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-  
   return (
     <>
       <Card className="p-6">
@@ -170,7 +154,6 @@ export const TeenHolidayReservationContent = () => {
               isTeenClass={isTeenClass}
             >
               <TeenClassDateSelector
-                key={`teen-selector-${forceUpdate}`}
                 selectedDates={selectedDates}
                 isDateAlreadyReserved={isDateAlreadyReserved}
                 handleOptionChange={handleOptionChange}
