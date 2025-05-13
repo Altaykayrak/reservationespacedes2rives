@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { nanoid } from "nanoid";
 import { addDays, format, parseISO, getDay } from "date-fns";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { useExistingHolidayReservations } from "./useExistingHolidayReservations";
 import { getWeeksFromDates } from "@/utils/dateUtils";
 
