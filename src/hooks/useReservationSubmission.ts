@@ -83,13 +83,23 @@ export const useReservationSubmission = (
 
       const reservedError = validateNotAlreadyReserved(selectedDates, isDateAlreadyReserved);
       if (reservedError) {
-        toast({ title: "Dates déjà réservées", description: reservedError, variant: "destructive" });
+        toast({ title: "Erreur", description: reservedError, variant: "destructive" });
         return;
       }
 
-      const isAdminRoute = window.location.pathname.startsWith('/admin/');
-      if (!validateMinimumDays(selectedDates, isAdminRoute)) {
+      // Détection de la route administrative
+      const isAdminRoute = window.location.pathname.includes('/admin/');
+      console.log("DEBUG: isAdminRoute détecté:", isAdminRoute, "pour pathname:", window.location.pathname);
+      
+      // Vérification explicite des 3 jours minimum par semaine
+      const hasMinimumDays = validateMinimumDays(selectedDates, isAdminRoute);
+      console.log("DEBUG: Résultat de validateMinimumDays:", hasMinimumDays);
+      
+      if (!hasMinimumDays) {
+        console.log("DEBUG: La validation des jours minimum a échoué, affichage du dialogue");
         setMinimumDaysDialog({ isOpen: true });
+        setIsSubmitting(false);
+        setSubmissionInProgress(false);
         return;
       }
       

@@ -30,7 +30,23 @@ export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = fal
     return true;
   }
   
+  // Vérification plus stricte pour s'assurer qu'on a bien des dates
+  if (!dates || dates.length === 0) {
+    return false;
+  }
+  
+  // Regrouper les dates par semaine
   const weeks = getWeeksFromDates(dates);
+  
+  // Vérifier que chaque semaine contient au moins 3 jours
+  // Imprimer les semaines pour le débogage
+  console.log("Weeks validation:", weeks.map(weekDates => {
+    return {
+      count: weekDates.length,
+      dates: weekDates.map(d => d.toISOString().split('T')[0])
+    };
+  }));
+  
   return weeks.every(weekDates => weekDates.length >= 3);
 };
 
