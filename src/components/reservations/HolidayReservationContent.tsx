@@ -11,7 +11,6 @@ import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { eventBus } from "@/lib/utils";
 
 interface HolidayReservationContentProps {
@@ -43,29 +42,9 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
   } = useHolidayReservation();
   
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
 
   // Use the filtered children if provided, otherwise use the children from the hook
   const childrenToDisplay = filteredChildren || children;
-  
-  // Update URL when period changes without reloading page
-  useEffect(() => {
-    if (selectedPeriod) {
-      setSearchParams(prev => {
-        const newParams = new URLSearchParams(prev);
-        newParams.set("periodId", selectedPeriod);
-        return newParams;
-      }, { replace: true });
-    }
-  }, [selectedPeriod, setSearchParams]);
-  
-  // Get periodId from URL on initial load
-  useEffect(() => {
-    const periodId = searchParams.get("periodId");
-    if (periodId && !selectedPeriod) {
-      setSelectedPeriod(periodId);
-    }
-  }, [searchParams, selectedPeriod, setSelectedPeriod]);
   
   // Fonction pour éviter les doubles clics avec prévention de la propagation d'événement
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -120,7 +99,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
 
         {selectedPeriod && !isCM2SummerPeriod && (
           <HolidayDateSelector
-            key={`holiday-selector-${forceUpdate}`}
+            key={`holiday-selector-${forceUpdate}-${selectedChild}-${selectedPeriod}`}
             selectedDates={selectedDates}
             handleDateToggle={handleDateToggle}
             handleOptionChange={handleOptionChange}

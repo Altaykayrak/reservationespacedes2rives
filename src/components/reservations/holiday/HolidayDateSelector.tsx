@@ -36,23 +36,29 @@ export const HolidayDateSelector = ({
 }: HolidayDateSelectorProps) => {
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
   
-  const { data: holidayPeriod } = useQuery({
+  const { data: holidayPeriod, isLoading: isLoadingPeriod } = useQuery({
     queryKey: ["holiday_period", periodId],
     queryFn: async () => {
+      console.log("Fetching holiday period:", periodId);
       const { data, error } = await supabase
         .from("available_holiday_periods")
         .select("*")
         .eq("id", periodId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching holiday period:", error);
+        throw error;
+      }
+      
+      console.log("Holiday period data:", data);
       return data;
     },
     enabled: !!periodId
   });
 
   // Récupérer les informations de l'enfant, y compris la classe
-  const { data: childInfo, isError: isChildInfoError } = useQuery({
+  const { data: childInfo, isLoading: isLoadingChild } = useQuery({
     queryKey: ["child", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return null;
@@ -140,6 +146,15 @@ export const HolidayDateSelector = ({
     }
   }, [selectedChild, isTeenClassValue, holidayPeriod, setSelectedDates, isCM2SummerPeriod]);
 
+  if (isLoadingPeriod || isLoadingChild) {
+    return (
+      <EmptyHolidayState 
+        message="Chargement en cours..."
+        subtitle="Veuillez patienter pendant le chargement des données."
+      />
+    );
+  }
+
   if (!holidayPeriod || !selectedChild) {
     return (
       <EmptyHolidayState 
@@ -149,7 +164,7 @@ export const HolidayDateSelector = ({
     );
   }
 
-  if (!childInfo || isChildInfoError || !childInfo.school_class) {
+  if (!childInfo || !childInfo.school_class) {
     return (
       <EmptyHolidayState 
         message="Information manquante"
