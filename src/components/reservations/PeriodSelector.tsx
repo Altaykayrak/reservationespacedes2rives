@@ -72,10 +72,16 @@ export const PeriodSelector = ({
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
 
+  // Gestionnaire d'événements personnalisé pour la sélection de période
+  const handlePeriodChange = (value: string) => {
+    // Éviter les actions par défaut du navigateur
+    setSelectedPeriod(value);
+  };
+
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Sélectionner une période</label>
-      <Select value={selectedPeriod || ""} onValueChange={setSelectedPeriod}>
+      <Select value={selectedPeriod || ""} onValueChange={handlePeriodChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Choisir une période" />
         </SelectTrigger>

@@ -60,22 +60,20 @@ export const ChildSelector = ({
     onCM2SummerPeriodCheck
   );
 
-  console.log("Children passed to ChildSelector:", children);
-  console.log("Filtered children based on page type:", filteredChildren);
-  console.log("Current path:", location.pathname);
-  console.log("isHolidayReservation:", isHolidayReservation);
-  console.log("Selected period ID:", selectedPeriodId);
-  console.log("Period info:", periodInfo);
-  console.log("Class mappings:", classMappings);
-  console.log("Is summer period:", isSummerPeriod);
+  // Utiliser un gestionnaire d'événements pour éviter les rechargements de page
+  const handleChildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault(); // Éviter le comportement par défaut
+    const childId = e.target.value;
+    setSelectedChild(childId);
+  };
 
   return (
     <div>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
       <select
         id="child-select"
-        value={selectedChild}
-        onChange={(e) => setSelectedChild(e.target.value)}
+        value={selectedChild || ""}
+        onChange={handleChildChange}
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
       >
         <option value="">Choisir un enfant</option>

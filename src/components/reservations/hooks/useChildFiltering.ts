@@ -4,6 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 export const useChildFiltering = (
   children: Tables<"children">[] | null | undefined,
@@ -117,5 +118,3 @@ export const useChildFiltering = (
     isAdminTeenHolidayReservation
   };
 };
-
-import { useState } from "react";

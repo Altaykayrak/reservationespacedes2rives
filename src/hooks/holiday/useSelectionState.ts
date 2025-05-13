@@ -11,7 +11,7 @@ export const useSelectionState = () => {
   const [minimumDaysDialog, setMinimumDaysDialog] = useState({ isOpen: false });
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Initialiser les sélections depuis l'URL au chargement initial
+  // Initialisation depuis l'URL au chargement initial uniquement
   useEffect(() => {
     const periodId = searchParams.get("periodId");
     if (periodId) {
@@ -24,30 +24,53 @@ export const useSelectionState = () => {
     }
   }, []);
   
-  // Mettre à jour l'URL lorsque les sélections changent
-  useEffect(() => {
+  // Fonction personnalisée pour mettre à jour l'enfant sélectionné
+  const updateSelectedChild = (childId: string) => {
+    setSelectedChild(childId);
+    
+    // Mise à jour synchrone des paramètres d'URL sans rechargement
     const newParams = new URLSearchParams(searchParams);
-    
-    if (selectedPeriod) {
-      newParams.set("periodId", selectedPeriod);
-    } else {
-      newParams.delete("periodId");
-    }
-    
-    if (selectedChild) {
-      newParams.set("childId", selectedChild);
+    if (childId) {
+      newParams.set("childId", childId);
     } else {
       newParams.delete("childId");
     }
     
+    // Conserver periodId s'il existe
+    const currentPeriodId = searchParams.get("periodId");
+    if (currentPeriodId) {
+      newParams.set("periodId", currentPeriodId);
+    }
+    
     setSearchParams(newParams, { replace: true });
-  }, [selectedChild, selectedPeriod, setSearchParams]);
+  };
+  
+  // Fonction personnalisée pour mettre à jour la période sélectionnée
+  const updateSelectedPeriod = (periodId: string) => {
+    setSelectedPeriod(periodId);
+    
+    // Mise à jour synchrone des paramètres d'URL sans rechargement
+    const newParams = new URLSearchParams(searchParams);
+    if (periodId) {
+      newParams.set("periodId", periodId);
+    } else {
+      newParams.delete("periodId");
+    }
+    
+    // Conserver childId s'il existe
+    const currentChildId = searchParams.get("childId");
+    if (currentChildId) {
+      newParams.set("childId", currentChildId);
+    }
+    
+    setSearchParams(newParams, { replace: true });
+  };
 
   return {
     selectedChild,
     selectedPeriod,
-    setSelectedChild,
-    setSelectedPeriod,
+    setSelectedChild: updateSelectedChild,
+    setSelectedPeriod: updateSelectedPeriod,
     showSuccessDialog,
     setShowSuccessDialog,
     isSubmitting,
