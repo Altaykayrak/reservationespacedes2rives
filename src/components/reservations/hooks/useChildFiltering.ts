@@ -1,9 +1,10 @@
+
 import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export const useChildFiltering = (
@@ -17,7 +18,6 @@ export const useChildFiltering = (
   
   const { isTeenClassSync } = useSchoolClassUtils();
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
-  const [isGlobalEventHandlerSet, setIsGlobalEventHandlerSet] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   // Assurer que le hook est complètement monté avant de commencer les requêtes
@@ -25,54 +25,6 @@ export const useChildFiltering = (
     setIsMounted(true);
     return () => setIsMounted(false);
   }, []);
-
-  // Liste des chemins où le beforeunload est nécessaire
-  const pathsRequiringWarning = ['/holiday-reservations', '/teenholiday-reservations'];
-  const shouldShowWarning = pathsRequiringWarning.some(path => location.pathname.startsWith(path));
-
-  // Prévenir les rechargements de page accidentels uniquement sur les pages concernées
-  useEffect(() => {
-    if (!shouldShowWarning || isGlobalEventHandlerSet) return;
-
-    const preventFormSubmission = (e: SubmitEvent) => {
-      console.log("[useChildFiltering] Interception d'une soumission de formulaire");
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    };
-    
-    const preventUnload = (e: BeforeUnloadEvent) => {
-      console.log("[useChildFiltering] Tentative de quitter la page, prévention");
-      e.preventDefault();
-      return (e.returnValue = '');
-    };
-    
-    // Prévenir les clics pouvant causer des soumissions
-    const preventClicks = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      
-      // Vérifier si le clic est sur un bouton à l'intérieur d'un formulaire
-      const button = target.closest('button');
-      const form = target.closest('form');
-      
-      if (button && form && button.type !== 'button') {
-        console.log("[useChildFiltering] Interception d'un clic sur bouton dans formulaire");
-        button.setAttribute('type', 'button');
-      }
-    };
-    
-    // Ajouter les écouteurs uniquement sur les pages de réservation
-    document.addEventListener('submit', preventFormSubmission, true);
-    window.addEventListener('beforeunload', preventUnload);
-    document.addEventListener('click', preventClicks, true);
-    setIsGlobalEventHandlerSet(true);
-    
-    return () => {
-      document.removeEventListener('submit', preventFormSubmission, true);
-      window.removeEventListener('beforeunload', preventUnload);
-      document.removeEventListener('click', preventClicks, true);
-    };
-  }, [location.pathname, isGlobalEventHandlerSet, shouldShowWarning]);
 
   // Requête pour obtenir les informations sur la période sélectionnée
   const { data: periodInfo, isLoading: isPeriodLoading } = useQuery({
