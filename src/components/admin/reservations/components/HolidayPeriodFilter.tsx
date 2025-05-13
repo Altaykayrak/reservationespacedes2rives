@@ -20,6 +20,7 @@ export const HolidayPeriodFilter = ({
   availablePeriods,
 }: HolidayPeriodFilterProps) => {
   const eventHandled = useRef(false);
+  const isInitialMount = useRef(true);
   
   // Log pour le débogage
   useEffect(() => {
@@ -27,7 +28,16 @@ export const HolidayPeriodFilter = ({
       selectedPeriod, 
       availablePeriodsCount: availablePeriods?.length 
     });
-  }, [selectedPeriod, availablePeriods]);
+    
+    // Si c'est le montage initial et qu'aucune période n'est sélectionnée
+    // mais que des périodes sont disponibles, sélectionner la première
+    if (isInitialMount.current && !selectedPeriod && availablePeriods && availablePeriods.length > 0) {
+      console.log("[HolidayPeriodFilter] Auto-sélection de la première période disponible:", availablePeriods[0].id);
+      setSelectedPeriod(availablePeriods[0].id);
+    }
+    
+    isInitialMount.current = false;
+  }, [selectedPeriod, availablePeriods, setSelectedPeriod]);
   
   const handlePeriodChange = (newValue: string) => {
     // Éviter les déclenchements multiples du même événement

@@ -71,7 +71,7 @@ const HolidayReservations = () => {
           <EmptyHolidayState 
             message="Erreur de chargement" 
             subtitle="Impossible de récupérer les périodes de vacances. Veuillez réessayer plus tard."
-            icon="error"
+            icon="info"
           />
         </div>
       </div>

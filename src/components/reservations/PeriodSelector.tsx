@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
@@ -31,6 +31,16 @@ export const PeriodSelector = ({
   const isFormSubmitHandled = useRef(false);
   const urlUpdatePending = useRef(false);
   
+  // Log initial props for debugging
+  useEffect(() => {
+    console.log("[PeriodSelector] Initialization with props:", { 
+      selectedPeriod, 
+      holidayPeriodsCount: holidayPeriods?.length,
+      filterTeenOnly,
+      updateUrlWithoutRefresh
+    });
+  }, []);
+
   // Récupérer les mappings de classes pour filtrer les périodes
   const { data: classMappings, isLoading: isMappingsLoading } = useQuery({
     queryKey: ["class_mappings_teen"],
@@ -64,6 +74,12 @@ export const PeriodSelector = ({
 
   // Filtrer les périodes lorsque les mappings sont chargés
   useEffect(() => {
+    console.log("[PeriodSelector] Filtrage des périodes:", { 
+      holidayPeriodsCount: holidayPeriods?.length,
+      classMappingsCount: classMappings?.length,
+      filterTeenOnly
+    });
+    
     if (!holidayPeriods) {
       console.log("[PeriodSelector] Pas de périodes disponibles");
       setFilteredPeriods([]);
@@ -96,6 +112,12 @@ export const PeriodSelector = ({
         
         console.log("[PeriodSelector] Périodes filtrées pour les ados:", uniquePeriods.length);
         setFilteredPeriods(uniquePeriods);
+        
+        // Si aucune période n'est sélectionnée et que nous avons des périodes disponibles, sélectionner la première
+        if (!selectedPeriod && uniquePeriods.length > 0 && isInitialMount.current) {
+          console.log("[PeriodSelector] Auto-sélection de la première période:", uniquePeriods[0].id);
+          setSelectedPeriod(uniquePeriods[0].id);
+        }
       } catch (err) {
         console.error("[PeriodSelector] Erreur lors du filtrage des périodes:", err);
         setFilteredPeriods(holidayPeriods);
@@ -103,8 +125,14 @@ export const PeriodSelector = ({
     } else {
       console.log("[PeriodSelector] Utilisation des périodes non filtrées:", holidayPeriods.length);
       setFilteredPeriods(holidayPeriods);
+      
+      // Si aucune période n'est sélectionnée et que nous avons des périodes disponibles, sélectionner la première
+      if (!selectedPeriod && holidayPeriods.length > 0 && isInitialMount.current) {
+        console.log("[PeriodSelector] Auto-sélection de la première période:", holidayPeriods[0].id);
+        setSelectedPeriod(holidayPeriods[0].id);
+      }
     }
-  }, [holidayPeriods, classMappings, filterTeenOnly]);
+  }, [holidayPeriods, classMappings, filterTeenOnly, selectedPeriod, setSelectedPeriod]);
 
   // Empêcher tout comportement de soumission de formulaire
   useEffect(() => {
@@ -127,7 +155,7 @@ export const PeriodSelector = ({
   }, []);
 
   // Gérer le changement de période avec protection contre les événements multiples
-  const handlePeriodChange = (newPeriodId: string) => {
+  const handlePeriodChange = useCallback((newPeriodId: string) => {
     if (selectEventHandled.current) {
       console.log("[PeriodSelector] Événement déjà traité, ignoré");
       return;
@@ -178,23 +206,26 @@ export const PeriodSelector = ({
       console.error("[PeriodSelector] Erreur lors du changement de période:", error);
       selectEventHandled.current = false;
     }
-  };
+  }, [selectedPeriod, setSelectedPeriod, updateUrlWithoutRefresh, searchParams, setSearchParams]);
 
-  // Initialiser depuis les paramètres d'URL au chargement
+  // Initialiser depuis les paramètres d'URL au chargement - CORRIGÉ
   useEffect(() => {
     if (!isInitialMount.current) {
       return; // Ne s'exécute qu'une fois au montage
     }
     
-    if (updateUrlWithoutRefresh) {
-      const periodIdFromUrl = searchParams.get("periodId");
-      console.log("[PeriodSelector] DEBUG: periodId depuis URL =", periodIdFromUrl, "selectedPeriod =", selectedPeriod);
-      
-      if (periodIdFromUrl && periodIdFromUrl !== selectedPeriod) {
-        console.log("[PeriodSelector] Mise à jour initiale de selectedPeriod depuis URL à", periodIdFromUrl);
-        setSelectedPeriod(periodIdFromUrl);
-      } else if (selectedPeriod) {
-        // Si selectedPeriod a une valeur mais que l'URL n'en a pas, mettre à jour l'URL
+    console.log("[PeriodSelector] Initialisation depuis URL, isInitialMount =", isInitialMount.current);
+    
+    const periodIdFromUrl = searchParams.get("periodId");
+    console.log("[PeriodSelector] periodId depuis URL =", periodIdFromUrl, "selectedPeriod =", selectedPeriod);
+    
+    // Si l'URL contient un periodId valide, l'utiliser
+    if (periodIdFromUrl) {
+      console.log("[PeriodSelector] Mise à jour de selectedPeriod depuis URL à", periodIdFromUrl);
+      setSelectedPeriod(periodIdFromUrl);
+    } else if (selectedPeriod) {
+      // Si selectedPeriod a une valeur mais que l'URL n'en a pas, mettre à jour l'URL
+      if (updateUrlWithoutRefresh) {
         console.log("[PeriodSelector] Mise à jour de l'URL depuis selectedPeriod initial =", selectedPeriod);
         try {
           const newParams = new URLSearchParams(searchParams.toString());
@@ -204,10 +235,27 @@ export const PeriodSelector = ({
           console.error("[PeriodSelector] Erreur lors de la mise à jour initiale de l'URL:", err);
         }
       }
+    } else if (filteredPeriods && filteredPeriods.length > 0) {
+      // Si aucun periodId n'est défini et qu'il y a des périodes disponibles, utiliser la première
+      const firstPeriodId = filteredPeriods[0].id;
+      console.log("[PeriodSelector] Auto-sélection de la première période disponible:", firstPeriodId);
+      setSelectedPeriod(firstPeriodId);
       
-      isInitialMount.current = false;
+      if (updateUrlWithoutRefresh) {
+        try {
+          const newParams = new URLSearchParams(searchParams.toString());
+          newParams.set("periodId", firstPeriodId);
+          setSearchParams(newParams, { replace: true });
+        } catch (err) {
+          console.error("[PeriodSelector] Erreur lors de la mise à jour initiale de l'URL:", err);
+        }
+      }
     }
-  }, [searchParams, setSelectedPeriod, selectedPeriod, updateUrlWithoutRefresh, setSearchParams]);
+    
+    // Toujours marquer l'initialisation comme terminée, que updateUrlWithoutRefresh soit true ou non
+    isInitialMount.current = false;
+    
+  }, [searchParams, setSelectedPeriod, selectedPeriod, updateUrlWithoutRefresh, setSearchParams, filteredPeriods]);
 
   return (
     <div className="space-y-2" onClick={(e) => e.stopPropagation()}>

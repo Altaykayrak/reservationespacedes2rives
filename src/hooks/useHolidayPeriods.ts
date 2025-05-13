@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const useHolidayPeriods = () => {
-  const { data: holidayPeriods, isLoading, error } = useQuery({
+  const { data: holidayPeriods, isLoading, error: queryError } = useQuery({
     queryKey: ["holidayPeriods"],
     queryFn: async () => {
       console.log("[useHolidayPeriods] Récupération des périodes de vacances...");
@@ -17,6 +17,7 @@ export const useHolidayPeriods = () => {
         
         if (error) {
           console.error("[useHolidayPeriods] Erreur lors de la récupération des périodes:", error);
+          toast.error("Impossible de charger les périodes de vacances");
           throw error;
         }
         
@@ -33,6 +34,6 @@ export const useHolidayPeriods = () => {
   return { 
     holidayPeriods,
     isLoading,
-    error
+    error: queryError
   };
 };
