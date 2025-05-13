@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +9,8 @@ import { createHolidayReservations } from "@/utils/reservationCreationUtils";
 import { sendHolidayReservationEmail } from "@/utils/emailUtils";
 import { useHolidayReservations } from "./useHolidayReservations";
 import { validateMinimumDays } from "@/utils/reservationValidationUtils";
+import { eventBus } from "@/lib/utils";
+import { useExistingHolidayReservations } from "./useExistingHolidayReservations";
 
 interface DateOption {
   date: Date;
@@ -27,6 +28,7 @@ export const useHolidayReservation = () => {
   const [minimumDaysDialog, setMinimumDaysDialog] = useState({ isOpen: false });
   const { toast } = useToast();
   const { refetch: refetchReservations } = useHolidayReservations();
+  const { refetchReservations: refetchChildReservations } = useExistingHolidayReservations(selectedChild || "");
   
   const isTeenPage = window.location.pathname === "/teenholiday-reservations" || 
                       window.location.pathname === "/admin/reservations/new-teen-holiday" ||
@@ -164,7 +166,16 @@ export const useHolidayReservation = () => {
           // Don't fail the whole operation if just the email fails
         }
         
+        // Refresh reservations data
         await refetchReservations();
+        await refetchChildReservations();
+        
+        // Notify components that a reservation was made
+        eventBus.publish('holiday-reservation-created', { 
+          child_id: selectedChild,
+          dates: selectedDates.map(d => d.date)
+        });
+        
         setShowSuccessDialog(true);
       } else if (result.noSpots) {
         setNoSpotsDialog({
