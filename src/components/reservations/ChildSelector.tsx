@@ -60,12 +60,12 @@ export const ChildSelector = ({
     onCM2SummerPeriodCheck
   );
 
-  // Utiliser un gestionnaire d'événements pour éviter les rechargements de page
+  // Gestionnaire d'événements pour éviter les rechargements de page
   const handleChildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault(); // Éviter le comportement par défaut
     const childId = e.target.value;
     
-    // Appliquer le changement via le setter qui gère l'URL
+    // Appliquer le changement via le setter sans recharger la page
     if (childId !== selectedChild) {
       setSelectedChild(childId);
     }

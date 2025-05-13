@@ -26,7 +26,7 @@ export const useSelectionState = () => {
     if (childId && childId !== selectedChild) {
       setSelectedChildState(childId);
     }
-  }, [searchParams]);
+  }, []);
   
   // Fonction pour mettre à jour l'enfant sélectionné
   const setSelectedChild = useCallback((childId: string) => {
@@ -35,7 +35,7 @@ export const useSelectionState = () => {
     // Mettre à jour l'état local
     setSelectedChildState(childId);
     
-    // Mettre à jour les paramètres d'URL de façon sécurisée
+    // Mettre à jour les paramètres d'URL de façon sécurisée sans recharger la page
     const newParams = new URLSearchParams(searchParams);
     if (childId) {
       newParams.set("childId", childId);
@@ -49,8 +49,11 @@ export const useSelectionState = () => {
       newParams.set("periodId", currentPeriodId);
     }
     
-    // Utiliser replace: true pour éviter d'ajouter une entrée à l'historique
-    setSearchParams(newParams, { replace: true });
+    // Utiliser replace: true ET l'option state pour éviter de recharger la page
+    setSearchParams(newParams, { 
+      replace: true,
+      state: { preventReload: true }
+    });
   }, [selectedChild, searchParams, setSearchParams]);
   
   // Fonction pour mettre à jour la période sélectionnée
@@ -60,7 +63,7 @@ export const useSelectionState = () => {
     // Mettre à jour l'état local
     setSelectedPeriodState(periodId);
     
-    // Mettre à jour les paramètres d'URL de façon sécurisée
+    // Mettre à jour les paramètres d'URL de façon sécurisée sans recharger la page
     const newParams = new URLSearchParams(searchParams);
     if (periodId) {
       newParams.set("periodId", periodId);
@@ -74,9 +77,27 @@ export const useSelectionState = () => {
       newParams.set("childId", currentChildId);
     }
     
-    // Utiliser replace: true pour éviter d'ajouter une entrée à l'historique
-    setSearchParams(newParams, { replace: true });
+    // Utiliser replace: true ET l'option state pour éviter de recharger la page
+    setSearchParams(newParams, { 
+      replace: true,
+      state: { preventReload: true }
+    });
   }, [selectedPeriod, searchParams, setSearchParams]);
+
+  // Synchroniser les états locaux avec les paramètres d'URL lorsqu'ils changent
+  useEffect(() => {
+    const periodId = searchParams.get("periodId");
+    const childId = searchParams.get("childId");
+    
+    // Synchroniser uniquement si les valeurs diffèrent pour éviter des cycles
+    if (periodId && periodId !== selectedPeriod) {
+      setSelectedPeriodState(periodId);
+    }
+    
+    if (childId && childId !== selectedChild) {
+      setSelectedChildState(childId);
+    }
+  }, [searchParams]);
 
   return {
     selectedChild,

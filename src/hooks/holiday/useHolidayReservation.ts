@@ -6,6 +6,7 @@ import { useSelectionState } from "./useSelectionState";
 import { useReservationValidation } from "./useReservationValidation";
 import { useWeeklyDates } from "./useWeeklyDates";
 import { useSubmitReservation } from "./useSubmitReservation";
+import { useCallback } from "react";
 
 export const useHolidayReservation = () => {
   // Import sub-hooks
@@ -71,6 +72,15 @@ export const useHolidayReservation = () => {
     setIsSubmitting
   );
 
+  // Version optimisée pour éviter les rechargements
+  const safeSetSelectedChild = useCallback((childId: string) => {
+    setSelectedChild(childId);
+  }, [setSelectedChild]);
+
+  const safeSetSelectedPeriod = useCallback((periodId: string) => {
+    setSelectedPeriod(periodId);
+  }, [setSelectedPeriod]);
+
   // Combine all hooks into a single interface
   return {
     // Date selection
@@ -82,8 +92,8 @@ export const useHolidayReservation = () => {
     // Selection state
     selectedChild,
     selectedPeriod,
-    setSelectedChild,
-    setSelectedPeriod,
+    setSelectedChild: safeSetSelectedChild,
+    setSelectedPeriod: safeSetSelectedPeriod,
     showSuccessDialog,
     setShowSuccessDialog,
     isSubmitting,

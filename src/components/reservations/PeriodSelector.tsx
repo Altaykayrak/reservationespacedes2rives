@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -72,13 +72,13 @@ export const PeriodSelector = ({
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
 
-  // Gestionnaire d'événements personnalisé pour la sélection de période
-  const handlePeriodChange = (value: string) => {
+  // Gestionnaire d'événements optimisé pour la sélection de période
+  const handlePeriodChange = useCallback((value: string) => {
     if (value !== selectedPeriod) {
-      // Utiliser le setter qui gère les paramètres URL
+      // Utiliser le setter qui gère les paramètres URL de façon asynchrone
       setSelectedPeriod(value);
     }
-  };
+  }, [selectedPeriod, setSelectedPeriod]);
 
   return (
     <div className="space-y-2">
