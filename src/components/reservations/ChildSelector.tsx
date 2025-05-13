@@ -27,14 +27,33 @@ export const ChildSelector = ({
   const location = useLocation();
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
   const changeEventHandled = useRef(false);
+  const previousSelectedChild = useRef<string | null>(null);
   const previousPeriodId = useRef<string | null>(null);
+
+  // Track if mount has completed to prevent unnecessary renders
+  const initialRenderComplete = useRef(false);
+
+  useEffect(() => {
+    // Only set the initial render flag after component has mounted
+    initialRenderComplete.current = true;
+    
+    // Cleanup function
+    return () => {
+      initialRenderComplete.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedPeriodId && selectedPeriodId !== previousPeriodId.current) {
       console.log("[ChildSelector] selectedPeriodId updated:", selectedPeriodId, "previous:", previousPeriodId.current);
       previousPeriodId.current = selectedPeriodId;
     }
-  }, [selectedPeriodId]);
+    
+    // Track selected child to prevent unnecessary setSelectedChild calls
+    if (selectedChild !== previousSelectedChild.current) {
+      previousSelectedChild.current = selectedChild;
+    }
+  }, [selectedPeriodId, selectedChild]);
 
   // Handle child filtering based on page type and period
   const {
@@ -62,17 +81,19 @@ export const ChildSelector = ({
     onCM2SummerPeriodCheck
   );
 
-  // Log pour le débogage
+  // Log pour le débogage - using initialization check to prevent excessive logging
   useEffect(() => {
-    console.log("[ChildSelector] Rendu avec:", { 
-      selectedChild, 
-      selectedPeriodId,
-      isSummerPeriod,
-      isHolidayReservation,
-      filteredChildrenCount: filteredChildren?.length || 0,
-      periodsInfo: periodInfo ? "loaded" : "undefined",
-      classMappings: classMappings ? "loaded" : "undefined"
-    });
+    if (initialRenderComplete.current) {
+      console.log("[ChildSelector] Rendu avec:", { 
+        selectedChild, 
+        selectedPeriodId,
+        isSummerPeriod,
+        isHolidayReservation,
+        filteredChildrenCount: filteredChildren?.length || 0,
+        periodsInfo: periodInfo ? "loaded" : "undefined",
+        classMappings: classMappings ? "loaded" : "undefined"
+      });
+    }
   }, [selectedChild, selectedPeriodId, isSummerPeriod, isHolidayReservation, filteredChildren, periodInfo, classMappings]);
 
   // Fonction pour mettre à jour l'enfant sélectionné sans soumettre le formulaire
@@ -88,15 +109,20 @@ export const ChildSelector = ({
       changeEventHandled.current = true;
       
       const childId = e.target.value;
+      
+      // Don't update if the value is the same - prevent unnecessary state changes
+      if (childId === selectedChild) {
+        changeEventHandled.current = false;
+        return;
+      }
+      
       console.log("[ChildSelector] Changement d'enfant:", {
         ancien: selectedChild,
         nouveau: childId
       });
       
-      // Utiliser requestAnimationFrame pour éviter les problèmes de synchronisation
-      window.requestAnimationFrame(() => {
-        setSelectedChild(childId);
-      });
+      // Set directly without animation frame to avoid potential loop
+      setSelectedChild(childId);
       
       // Reset le flag après un court délai
       setTimeout(() => {

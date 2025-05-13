@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -54,7 +55,8 @@ export const HolidayReservationContent = ({
   const periodFromUrlApplied = useRef(false);
   const submitAttemptCount = useRef(0);
   const initialRenderComplete = useRef(false);
-
+  const urlUpdatePending = useRef(false);
+  
   // Utiliser les enfants filtrés si fournis, sinon utiliser les enfants du hook
   const childrenToDisplay = filteredChildren || children;
   
@@ -99,54 +101,67 @@ export const HolidayReservationContent = ({
         console.log("[HolidayReservationContent] Utilisation de la première période:", idToUse);
       }
       
-      // Mettre à jour l'état et l'URL
-      setSelectedPeriod(idToUse);
+      // Mettre à jour l'état sans déclencher de cascades de re-renders
+      if (idToUse !== selectedPeriod) {
+        setSelectedPeriod(idToUse);
+      }
       
       // Forcer le renderKey pour refresh du sélecteur
       setRenderKey(prev => prev + 1);
       
-      // Mise à jour de l'URL si nécessaire
-      if (idToUse !== periodIdFromUrl) {
-        const newParams = new URLSearchParams(searchParams);
-        newParams.set("periodId", idToUse);
-        setSearchParams(newParams, { replace: true });
+      // Mise à jour de l'URL si nécessaire, mais avec une protection contre les boucles
+      if (idToUse !== periodIdFromUrl && !urlUpdatePending.current) {
+        urlUpdatePending.current = true;
+        
+        // Utiliser un délai pour éviter les problèmes de timing
+        setTimeout(() => {
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set("periodId", idToUse);
+          setSearchParams(newParams, { replace: true });
+          urlUpdatePending.current = false;
+        }, 50);
       }
       
       initialRenderComplete.current = true;
     }
-  }, [holidayPeriods, initialPeriodId, searchParams, setSearchParams, setSelectedPeriod]);
+  }, [holidayPeriods, initialPeriodId, searchParams, setSearchParams, setSelectedPeriod, selectedPeriod]);
 
-  // Synchroniser l'URL avec l'état de période sélectionnée
+  // Synchroniser l'URL avec l'état de période sélectionnée - version améliorée
   useEffect(() => {
-    // Ne s'exécute que si le rendu initial est terminé
-    if (!initialRenderComplete.current) return;
+    // Ne s'exécute que si le rendu initial est terminé et qu'aucune mise à jour d'URL n'est en cours
+    if (!initialRenderComplete.current || urlUpdatePending.current) return;
     
     const periodIdFromUrl = searchParams.get("periodId");
     
-    console.log("[HolidayReservationContent] Synchronisation URL <-> état");
-    console.log("  - periodIdFromUrl =", periodIdFromUrl);
-    console.log("  - selectedPeriod =", selectedPeriod);
-    
-    // Si le selectedPeriod a changé, mettre à jour l'URL
+    // Si le selectedPeriod a changé et est différent de l'URL, mettre à jour l'URL
     if (selectedPeriod && periodIdFromUrl !== selectedPeriod) {
-      console.log("  - [UPDATE] Mise à jour de l'URL depuis selectedPeriod");
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("periodId", selectedPeriod);
+      console.log("[HolidayReservationContent] Mise à jour de l'URL depuis selectedPeriod:", selectedPeriod);
       
-      // Utiliser requestAnimationFrame pour éviter les problèmes de timing
-      window.requestAnimationFrame(() => {
+      // Activer le verrou pour empêcher les mises à jour en cascade
+      urlUpdatePending.current = true;
+      
+      // Utiliser setTimeout pour éviter les problèmes de timing
+      setTimeout(() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("periodId", selectedPeriod);
         setSearchParams(newParams, { replace: true });
-      });
+        
+        // Désactiver le verrou après la mise à jour
+        urlUpdatePending.current = false;
+      }, 50);
     }
   }, [selectedPeriod, searchParams, setSearchParams]);
   
   // Fonction sécurisée pour mettre à jour selectedPeriod
   const handlePeriodChange = useCallback((periodId: string) => {
+    if (periodId === selectedPeriod) return; // Éviter les mises à jour inutiles
+    
     console.log("[HolidayReservationContent] handlePeriodChange appelé avec:", periodId);
     setSelectedPeriod(periodId);
-    // Forcer un re-rendu du sélecteur de dates
+    
+    // Forcer un re-rendu du sélecteur de dates uniquement si la période change
     setRenderKey(prev => prev + 1);
-  }, [setSelectedPeriod]);
+  }, [setSelectedPeriod, selectedPeriod]);
   
   // Fonction pour éviter les doubles clics avec prévention de la propagation d'événement
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -198,15 +213,20 @@ export const HolidayReservationContent = ({
     };
   }, []);
   
+  // Fonction sécurisée pour mettre à jour l'enfant sélectionné
+  const handleChildChange = useCallback((childId: string) => {
+    if (childId === selectedChild) return; // Éviter les mises à jour inutiles
+    
+    console.log("[HolidayReservationContent] setSelectedChild appelé avec:", childId);
+    setSelectedChild(childId);
+  }, [setSelectedChild, selectedChild]);
+  
   return (
     <Card className="p-6">
       <div className="space-y-6">
         <ChildSelector
           selectedChild={selectedChild}
-          setSelectedChild={(childId) => {
-            console.log("[HolidayReservationContent] setSelectedChild appelé avec:", childId);
-            setSelectedChild(childId);
-          }}
+          setSelectedChild={handleChildChange}
           children={childrenToDisplay}
           setSelectedDates={setSelectedDates}
           onCM2SummerPeriodCheck={setIsCM2SummerPeriod}
