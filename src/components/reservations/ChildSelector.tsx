@@ -29,33 +29,32 @@ export const ChildSelector = ({
   const changeEventHandled = useRef(false);
   const previousSelectedChild = useRef<string | null>(null);
   const previousPeriodId = useRef<string | null>(null);
-
-  // Track if mount has completed to prevent unnecessary renders
   const initialRenderComplete = useRef(false);
+  const selectChangeInProgress = useRef(false);
 
+  // Éviter tout traitement pendant le premier rendu
   useEffect(() => {
-    // Only set the initial render flag after component has mounted
     initialRenderComplete.current = true;
     
-    // Cleanup function
+    // Nettoyer lors du démontage
     return () => {
       initialRenderComplete.current = false;
     };
   }, []);
 
+  // Suivre les changements de période et d'enfant
   useEffect(() => {
     if (selectedPeriodId && selectedPeriodId !== previousPeriodId.current) {
       console.log("[ChildSelector] selectedPeriodId updated:", selectedPeriodId, "previous:", previousPeriodId.current);
       previousPeriodId.current = selectedPeriodId;
     }
     
-    // Track selected child to prevent unnecessary setSelectedChild calls
     if (selectedChild !== previousSelectedChild.current) {
       previousSelectedChild.current = selectedChild;
     }
   }, [selectedPeriodId, selectedChild]);
 
-  // Handle child filtering based on page type and period
+  // Filtrage des enfants basé sur le type de page et la période
   const {
     filteredChildren,
     periodInfo,
@@ -67,7 +66,7 @@ export const ChildSelector = ({
     isLoading
   } = useChildFiltering(children, selectedPeriodId || "");
 
-  // Handle CM2 child check for summer periods
+  // Gestion des enfants CM2 pour les périodes d'été
   const { showCM2Message } = useCM2ChildCheck(
     selectedChild,
     children,
@@ -81,10 +80,10 @@ export const ChildSelector = ({
     onCM2SummerPeriodCheck
   );
 
-  // Log pour le débogage - using initialization check to prevent excessive logging
+  // Réduire les logs - uniquement lors des changements significatifs
   useEffect(() => {
     if (initialRenderComplete.current) {
-      console.log("[ChildSelector] Rendu avec:", { 
+      console.log("[ChildSelector] État actuel:", { 
         selectedChild, 
         selectedPeriodId,
         isSummerPeriod,
@@ -102,17 +101,19 @@ export const ChildSelector = ({
     e.preventDefault();
     e.stopPropagation();
     
-    // Protection contre les déclenchements multiples
-    if (changeEventHandled.current) return;
+    // Protection contre les déclenchements multiples avec 3 mécanismes
+    if (changeEventHandled.current || selectChangeInProgress.current || !initialRenderComplete.current) return;
     
     try {
       changeEventHandled.current = true;
+      selectChangeInProgress.current = true;
       
       const childId = e.target.value;
       
-      // Don't update if the value is the same - prevent unnecessary state changes
+      // Ne pas mettre à jour si la valeur est la même
       if (childId === selectedChild) {
         changeEventHandled.current = false;
+        selectChangeInProgress.current = false;
         return;
       }
       
@@ -121,16 +122,16 @@ export const ChildSelector = ({
         nouveau: childId
       });
       
-      // Set directly without animation frame to avoid potential loop
+      // Définir directement sans animation frame pour éviter une boucle potentielle
       setSelectedChild(childId);
-      
-      // Reset le flag après un court délai
-      setTimeout(() => {
-        changeEventHandled.current = false;
-      }, 100);
     } catch (error) {
       console.error("[ChildSelector] Erreur lors du changement d'enfant:", error);
-      changeEventHandled.current = false;
+    } finally {
+      // Reset des flags après un court délai, quoi qu'il arrive
+      setTimeout(() => {
+        changeEventHandled.current = false;
+        selectChangeInProgress.current = false;
+      }, 100);
     }
   };
 

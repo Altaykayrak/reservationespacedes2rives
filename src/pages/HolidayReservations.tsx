@@ -17,22 +17,30 @@ const HolidayReservations = () => {
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const { holidayPeriods, isLoading: periodsLoading, error: periodsError } = useHolidayPeriods();
   const profileCheckCompleted = useRef(false);
+  const profileCheckInProgress = useRef(false);
 
-  console.log("[HolidayReservations] Rendering with:", {
-    isWaiting,
-    isClosed,
-    isProfileLoaded,
-    periodsLoading,
-    periodsError: !!periodsError,
-    holidayPeriodsCount: holidayPeriods?.length || 0
-  });
+  // Réduire les logs pour éviter de surcharger la console
+  useEffect(() => {
+    // N'afficher le log que lors du premier rendu et lorsqu'il y a des changements significatifs
+    console.log("[HolidayReservations] Rendering with:", {
+      isWaiting,
+      isClosed,
+      isProfileLoaded,
+      periodsLoading,
+      periodsError: !!periodsError,
+      holidayPeriodsCount: holidayPeriods?.length || 0
+    });
+  }, [isWaiting, isClosed, isProfileLoaded, periodsLoading, periodsError, holidayPeriods?.length]);
 
   useEffect(() => {
-    // Skip profile checks if already completed to prevent repeated fetches
-    if (!user?.id || profileCheckCompleted.current) return;
+    // Éviter les vérifications multiples en établissant deux conditions de garde
+    if (!user?.id || profileCheckCompleted.current || profileCheckInProgress.current) return;
 
     const checkAccess = async () => {
       try {
+        // Éviter les appels multiples en plaçant un verrou
+        profileCheckInProgress.current = true;
+        
         // Récupérer les états directement de la base de données
         const { data, error } = await supabase
           .from('profiles')
@@ -50,13 +58,16 @@ const HolidayReservations = () => {
         setIsWaiting(data?.is_waiting || false);
         setIsClosed(data?.is_closed || false);
         setIsProfileLoaded(true);
-        // Mark profile check as completed to prevent repeated fetches
+        
+        // Marquer la vérification comme terminée
         profileCheckCompleted.current = true;
       } catch (err) {
         console.error('[HolidayReservations] Exception:', err);
-        setIsProfileLoaded(true); // Still mark as loaded so UI can proceed
-        // Mark profile check as completed to prevent repeated fetches
+        setIsProfileLoaded(true); // Marquer comme chargé pour que l'UI puisse procéder
         profileCheckCompleted.current = true;
+      } finally {
+        // Relâcher le verrou dans tous les cas
+        profileCheckInProgress.current = false;
       }
     };
 
@@ -156,7 +167,10 @@ const HolidayReservations = () => {
             />
           </div>
         ) : (
-          <HolidayReservationContent initialPeriodId={holidayPeriods?.[0]?.id} />
+          <HolidayReservationContent 
+            initialPeriodId={holidayPeriods?.[0]?.id} 
+            key={`holiday-content-${profileCheckCompleted.current ? 'loaded' : 'loading'}`}
+          />
         )}
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">

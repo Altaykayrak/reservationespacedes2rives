@@ -2,14 +2,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { customToast } from "./use-toast";
+import { useRef } from "react";
 
 export const useHolidayPeriods = () => {
-  console.log("[useHolidayPeriods] Hook initialized");
+  const isInitialFetch = useRef(true);
   
+  // Utilisez un queryKey stable pour éviter des déclenchements multiples
   const { data: holidayPeriods, isLoading, error: queryError } = useQuery({
     queryKey: ["holidayPeriods"],
     queryFn: async () => {
-      console.log("[useHolidayPeriods] Récupération des périodes de vacances...");
+      if (isInitialFetch.current) {
+        console.log("[useHolidayPeriods] Récupération des périodes de vacances...");
+        isInitialFetch.current = false;
+      }
+      
       try {
         const { data, error } = await supabase
           .from("available_holiday_periods")
@@ -31,8 +37,13 @@ export const useHolidayPeriods = () => {
         return [];
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2
+    // Augmenter le staleTime pour éviter des refetch trop fréquents
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    // Désactiver les requêtes automatiques en arrière-plan qui peuvent causer des boucles
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 1 // Réduire le nombre de tentatives
   });
 
   return { 
