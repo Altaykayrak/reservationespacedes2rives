@@ -1,5 +1,4 @@
 
-import { useToast as useToastHook, toast as toastFunction } from "@/components/ui/use-toast";
-
-export const useToast = useToastHook;
-export const toast = toastFunction;
+// Re-export from the UI component to maintain API compatibility
+// This avoids circular dependencies
+export { useToast, toast } from "@/components/ui/use-toast";
