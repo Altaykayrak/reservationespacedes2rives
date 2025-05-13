@@ -32,42 +32,25 @@ export const HolidayDateSelector = ({
   selectedChild,
   setSelectedDates
 }: HolidayDateSelectorProps) => {
-  // Récupérer les informations de la période sélectionnée
-  const { data: holidayPeriod, isLoading: isLoadingPeriod } = useQuery({
+  const { data: holidayPeriod } = useQuery({
     queryKey: ["holiday_period", periodId],
     queryFn: async () => {
-      console.log("Récupération de la période:", periodId);
-      
-      if (!periodId) {
-        console.log("Aucun ID de période fourni");
-        return null;
-      }
-      
       const { data, error } = await supabase
         .from("available_holiday_periods")
         .select("*")
         .eq("id", periodId)
         .single();
       
-      if (error) {
-        console.error("Erreur lors de la récupération de la période:", error);
-        throw error;
-      }
-      
-      console.log("Période récupérée:", data);
+      if (error) throw error;
       return data;
     },
-    enabled: Boolean(periodId)
+    enabled: !!periodId
   });
 
   const { childInfo, isTeenClass } = useHolidayClassification(selectedChild);
 
   // Effet pour réinitialiser les dates lors du changement d'enfant
   useEffect(() => {
-    console.log("Enfant sélectionné:", selectedChild);
-    console.log("Classe ado:", isTeenClass);
-    console.log("Période:", holidayPeriod);
-    
     if (!selectedChild) return;
 
     if (isTeenClass && holidayPeriod) {
@@ -87,26 +70,10 @@ export const HolidayDateSelector = ({
 
   // Effet pour réinitialiser les dates lors du changement de période
   useEffect(() => {
-    console.log("Changement de période, réinitialisation des dates");
     setSelectedDates([]);
   }, [periodId, setSelectedDates]);
 
-  if (isLoadingPeriod) {
-    console.log("Chargement de la période en cours...");
-    return <div className="p-4 text-center">Chargement de la période...</div>;
-  }
-
-  if (!holidayPeriod || !selectedChild) {
-    console.log("Période ou enfant manquant:", { period: !!holidayPeriod, child: !!selectedChild });
-    return <div className="p-4 text-center">Veuillez sélectionner une période et un enfant.</div>;
-  }
-
-  if (!childInfo) {
-    console.log("Informations de l'enfant manquantes");
-    return <div className="p-4 text-center">Chargement des informations de l'enfant...</div>;
-  }
-
-  console.log("HolidayDateSelector rendu avec période et enfant valides");
+  if (!holidayPeriod || !selectedChild) return null;
 
   return (
     <HolidayPeriodProvider 

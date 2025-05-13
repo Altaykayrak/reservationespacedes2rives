@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -158,7 +157,7 @@ export const TeenHolidayReservationContent = () => {
           />
 
           <PeriodSelector
-            selectedPeriod={selectedPeriod || ""}
+            selectedPeriod={selectedPeriod}
             setSelectedPeriod={setSelectedPeriod}
             holidayPeriods={holidayPeriods}
             filterTeenOnly={true}
@@ -171,7 +170,7 @@ export const TeenHolidayReservationContent = () => {
               isTeenClass={isTeenClass}
             >
               <TeenClassDateSelector
-                key={`teen-selector-${forceUpdate}-${selectedChild}-${selectedPeriod}`}
+                key={`teen-selector-${forceUpdate}`}
                 selectedDates={selectedDates}
                 isDateAlreadyReserved={isDateAlreadyReserved}
                 handleOptionChange={handleOptionChange}

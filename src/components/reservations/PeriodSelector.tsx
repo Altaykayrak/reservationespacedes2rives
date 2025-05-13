@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
-import { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,14 +14,13 @@ interface PeriodSelectorProps {
   filterTeenOnly?: boolean;
 }
 
-// Utiliser memo pour éviter les rendus inutiles
-export const PeriodSelector = memo(({
+export const PeriodSelector = ({
   selectedPeriod,
   setSelectedPeriod,
   holidayPeriods,
   filterTeenOnly = false
 }: PeriodSelectorProps) => {
-  const [filteredPeriods, setFilteredPeriods] = useState<Tables<"available_holiday_periods">[] | null | undefined>([]);
+  const [filteredPeriods, setFilteredPeriods] = useState<Tables<"available_holiday_periods">[] | null | undefined>(holidayPeriods);
 
   // Récupérer les mappings de classes pour filtrer les périodes
   const { data: classMappings } = useQuery({
@@ -46,12 +45,7 @@ export const PeriodSelector = memo(({
 
   // Filtrer les périodes lorsque les mappings sont chargés
   useEffect(() => {
-    if (!holidayPeriods) {
-      setFilteredPeriods([]);
-      return;
-    }
-    
-    if (filterTeenOnly && classMappings) {
+    if (filterTeenOnly && classMappings && holidayPeriods) {
       // Extraire les IDs de période qui ont des classes mappées comme adolescents
       const teenPeriodIds = classMappings.map(mapping => mapping.holiday_period_id);
       
@@ -74,51 +68,26 @@ export const PeriodSelector = memo(({
       
       setFilteredPeriods(uniquePeriods);
     } else {
-      setFilteredPeriods(holidayPeriods || []);
+      setFilteredPeriods(holidayPeriods);
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
 
-  // Gestionnaire d'événements optimisé pour la sélection de période
-  const handlePeriodChange = useCallback((value: string) => {
-    // Prévenir les événements par défaut qui pourraient causer un rechargement
-    console.log("Sélection de période:", value);
-    
-    if (value !== selectedPeriod) {
-      setSelectedPeriod(value);
-    }
-  }, [selectedPeriod, setSelectedPeriod]);
-
-  // Prévenir les clics qui pourraient se propager à un formulaire parent
-  const preventPropagation = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
   return (
-    <div className="space-y-2" onClick={preventPropagation}>
+    <div className="space-y-2">
       <label className="text-sm font-medium">Sélectionner une période</label>
-      <Select 
-        value={selectedPeriod} 
-        onValueChange={handlePeriodChange}
-      >
-        <SelectTrigger className="w-full" onClick={preventPropagation}>
+      <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Choisir une période" />
         </SelectTrigger>
-        <SelectContent className="bg-white z-[100]">
-          {Array.isArray(filteredPeriods) && filteredPeriods.length > 0 ? (
-            filteredPeriods.map((period) => (
-              <SelectItem key={period.id} value={period.id}>
-                {format(new Date(period.start_date), "d MMMM yyyy", { locale: fr })} au{" "}
-                {format(new Date(period.end_date), "d MMMM yyyy", { locale: fr })}
-              </SelectItem>
-            ))
-          ) : (
-            <SelectItem value="loading" disabled>Chargement des périodes...</SelectItem>
-          )}
+        <SelectContent>
+          {filteredPeriods?.map((period) => (
+            <SelectItem key={period.id} value={period.id}>
+              {format(new Date(period.start_date), "d MMMM yyyy", { locale: fr })} au{" "}
+              {format(new Date(period.end_date), "d MMMM yyyy", { locale: fr })}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
   );
-});
-
-PeriodSelector.displayName = "PeriodSelector";
+};

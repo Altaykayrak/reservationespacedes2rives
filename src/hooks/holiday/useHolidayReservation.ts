@@ -6,7 +6,6 @@ import { useSelectionState } from "./useSelectionState";
 import { useReservationValidation } from "./useReservationValidation";
 import { useWeeklyDates } from "./useWeeklyDates";
 import { useSubmitReservation } from "./useSubmitReservation";
-import { useCallback, useMemo } from "react";
 
 export const useHolidayReservation = () => {
   // Import sub-hooks
@@ -32,12 +31,10 @@ export const useHolidayReservation = () => {
     setMinimumDaysDialog
   } = useSelectionState();
 
-  // Use validation hook with stable selectedChild reference
   const { isDateAlreadyReserved } = useReservationValidation(selectedChild);
-  
   const { getDatesPerWeek } = useWeeklyDates();
 
-  // Fetch children data - use memoization to avoid unnecessary re-renders
+  // Fetch children data
   const { data: children } = useQuery({
     queryKey: ["children"],
     queryFn: async () => {
@@ -49,7 +46,7 @@ export const useHolidayReservation = () => {
     },
   });
 
-  // Fetch holiday periods data - use memoization to avoid unnecessary re-renders
+  // Fetch holiday periods data
   const { data: holidayPeriods } = useQuery({
     queryKey: ["available_holiday_periods"],
     queryFn: async () => {
@@ -74,16 +71,7 @@ export const useHolidayReservation = () => {
     setIsSubmitting
   );
 
-  // Version optimisée pour éviter les rechargements
-  const safeSetSelectedChild = useCallback((childId: string) => {
-    setSelectedChild(childId);
-  }, [setSelectedChild]);
-
-  const safeSetSelectedPeriod = useCallback((periodId: string) => {
-    setSelectedPeriod(periodId);
-  }, [setSelectedPeriod]);
-
-  // Combine all hooks into a single interface with memoized values
+  // Combine all hooks into a single interface
   return {
     // Date selection
     selectedDates,
@@ -94,8 +82,8 @@ export const useHolidayReservation = () => {
     // Selection state
     selectedChild,
     selectedPeriod,
-    setSelectedChild: safeSetSelectedChild,
-    setSelectedPeriod: safeSetSelectedPeriod,
+    setSelectedChild,
+    setSelectedPeriod,
     showSuccessDialog,
     setShowSuccessDialog,
     isSubmitting,

@@ -2,7 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
 import { useLocation } from "react-router-dom";
-import { useState, useEffect, memo, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { CM2SummerAlert } from "./CM2SummerAlert";
 import { useChildFiltering } from "./hooks/useChildFiltering";
 import { useCM2ChildCheck } from "./hooks/useCM2ChildCheck";
@@ -15,7 +15,7 @@ interface ChildSelectorProps {
   onCM2SummerPeriodCheck?: (isInSummerPeriod: boolean) => void;
 }
 
-export const ChildSelector = memo(({
+export const ChildSelector = ({
   selectedChild,
   setSelectedChild,
   children,
@@ -28,14 +28,10 @@ export const ChildSelector = memo(({
 
   // Listen for period selection from URL search parameters
   useEffect(() => {
-    try {
-      const searchParams = new URLSearchParams(location.search);
-      const periodId = searchParams.get("periodId");
-      if (periodId) {
-        setSelectedPeriodId(periodId);
-      }
-    } catch (error) {
-      console.error("Erreur lors de la récupération des paramètres d'URL:", error);
+    const searchParams = new URLSearchParams(location.search);
+    const periodId = searchParams.get("periodId");
+    if (periodId) {
+      setSelectedPeriodId(periodId);
     }
   }, [location.search]);
 
@@ -64,37 +60,23 @@ export const ChildSelector = memo(({
     onCM2SummerPeriodCheck
   );
 
-  // Gestionnaire d'événements optimisé pour éviter les rechargements de page
-  const handleChildChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const form = e.target.closest('form');
-    if (form) {
-      // Empêcher tout formulaire parent de se soumettre
-      form.addEventListener('submit', (formEvent) => {
-        formEvent.preventDefault();
-        formEvent.stopPropagation();
-      }, { once: true });
-    }
-    
-    const childId = e.target.value;
-    console.log("Sélection d'enfant:", childId);
-    
-    if (childId !== selectedChild) {
-      setSelectedChild(childId);
-    }
-  }, [selectedChild, setSelectedChild]);
+  console.log("Children passed to ChildSelector:", children);
+  console.log("Filtered children based on page type:", filteredChildren);
+  console.log("Current path:", location.pathname);
+  console.log("isHolidayReservation:", isHolidayReservation);
+  console.log("Selected period ID:", selectedPeriodId);
+  console.log("Period info:", periodInfo);
+  console.log("Class mappings:", classMappings);
+  console.log("Is summer period:", isSummerPeriod);
 
   return (
-    <div onClick={(e) => e.stopPropagation()}>
+    <div>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
       <select
         id="child-select"
-        value={selectedChild || ""}
-        onChange={handleChildChange}
+        value={selectedChild}
+        onChange={(e) => setSelectedChild(e.target.value)}
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
-        onClick={(e) => e.stopPropagation()}
       >
         <option value="">Choisir un enfant</option>
         {filteredChildren?.length ? (
@@ -114,6 +96,4 @@ export const ChildSelector = memo(({
       <CM2SummerAlert show={showCM2Message} />
     </div>
   );
-});
-
-ChildSelector.displayName = "ChildSelector";
+};

@@ -12,12 +12,14 @@ export const useHolidayReservations = () => {
   const { data: reservations, isError, error, refetch } = useQuery({
     queryKey: ["holiday_reservations"],
     queryFn: async () => {
-      console.log("Début de la récupération des réservations de vacances");
+      console.log("A. Début de la récupération des réservations de vacances");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log("Aucun utilisateur connecté");
+        console.log("B. Aucun utilisateur connecté");
         throw new Error("Not authenticated");
       }
+
+      console.log("C. Utilisateur connecté:", user.id);
 
       const { data: userChildren, error: childrenError } = await supabase
         .from("children")
@@ -25,18 +27,20 @@ export const useHolidayReservations = () => {
         .eq('profile_id', user.id);
 
       if (childrenError) {
-        console.error("Erreur lors de la récupération des enfants:", childrenError);
+        console.error("D. Erreur lors de la récupération des enfants:", childrenError);
         throw childrenError;
       }
 
       if (!userChildren || userChildren.length === 0) {
-        console.log("Aucun enfant trouvé pour l'utilisateur");
+        console.log("E. Aucun enfant trouvé pour l'utilisateur");
         return [];
       }
 
+      console.log("F. Enfants trouvés:", userChildren);
+
       const childrenIds = userChildren.map(child => child.id);
 
-      // Récupération simplifiée des réservations
+      // Modify the query to avoid using nested join on profiles.school_city
       const { data: reservationsData, error: reservationsError } = await supabase
         .from("holiday_reservations")
         .select(`
@@ -63,55 +67,64 @@ export const useHolidayReservations = () => {
         .order('reservation_date', { ascending: true });
 
       if (reservationsError) {
-        console.error("Erreur lors de la récupération des réservations:", reservationsError);
+        console.error("G. Erreur lors de la récupération des réservations:", reservationsError);
         throw reservationsError;
       }
 
       if (!reservationsData) {
-        console.log("Aucune réservation trouvée");
+        console.log("H. Aucune réservation trouvée");
         return [];
       }
 
-      console.log("Réservations brutes reçues:", reservationsData.length);
+      console.log("I. Réservations brutes reçues:", JSON.stringify(reservationsData, null, 2));
 
-      // Transformer les données pour correspondre à notre structure attendue
-      const transformedReservations = reservationsData
-        .filter(reservation => reservation.children) // Vérifier que les données enfant existent
-        .map(reservation => {
-          const childData = reservation.children;
+      // Transform the data to match our expected structure
+      const transformedReservations = reservationsData.map(reservation => {
+        console.log("Traitement de la réservation:", reservation.id);
+        
+        if (!reservation.children) {
+          console.error("Données enfant manquantes pour la réservation:", reservation.id);
+          return null;
+        }
 
-          return {
-            id: reservation.id,
-            child_id: reservation.child_id,
-            period_id: reservation.period_id,
-            reservation_date: reservation.reservation_date,
-            reservation_number: reservation.reservation_number,
-            without_meal: reservation.without_meal || false,
-            early_dropoff: reservation.early_dropoff || false,
-            status: reservation.status,
-            created_at: reservation.created_at,
-            updated_at: reservation.updated_at,
-            children: {
-              id: childData.id,
-              first_name: childData.first_name,
-              last_name: childData.last_name,
-              school_class: childData.school_class,
-              profile: {
-                school_city: '' // Champ requis par le type
-              }
+        // Ensure we're handling the children data correctly
+        const childData = reservation.children;
+
+        const transformedReservation: HolidayReservationWithChild = {
+          id: reservation.id,
+          child_id: reservation.child_id,
+          period_id: reservation.period_id,
+          reservation_date: reservation.reservation_date,
+          reservation_number: reservation.reservation_number,
+          without_meal: reservation.without_meal || false,
+          early_dropoff: reservation.early_dropoff || false,
+          status: reservation.status,
+          created_at: reservation.created_at,
+          updated_at: reservation.updated_at,
+          children: {
+            id: childData.id,
+            first_name: childData.first_name,
+            last_name: childData.last_name,
+            school_class: childData.school_class,
+            profile: {
+              school_city: '' // We don't have school_city but the type requires it
             }
-          } as HolidayReservationWithChild;
-        });
+          }
+        };
+        
+        console.log("Réservation transformée:", JSON.stringify(transformedReservation, null, 2));
+        return transformedReservation;
+      }).filter((r): r is HolidayReservationWithChild => r !== null);
 
-      console.log("Nombre de réservations transformées:", transformedReservations.length);
+      console.log("J. Nombre de réservations transformées:", transformedReservations.length);
       return transformedReservations;
     },
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Configuration de la souscription en temps réel
   useEffect(() => {
+    console.log("K. Configuration de la souscription en temps réel");
     const channel = supabase
       .channel('holiday-reservations-changes')
       .on(
@@ -122,13 +135,14 @@ export const useHolidayReservations = () => {
           table: 'holiday_reservations'
         },
         (payload) => {
-          console.log('Changement détecté dans les réservations:', payload);
+          console.log('L. Changement détecté:', payload);
           queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
         }
       )
       .subscribe();
 
     return () => {
+      console.log("M. Nettoyage de la souscription");
       supabase.removeChannel(channel);
     };
   }, [queryClient]);

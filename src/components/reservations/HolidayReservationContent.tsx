@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -11,6 +10,7 @@ import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { eventBus } from "@/lib/utils";
 
 interface HolidayReservationContentProps {
@@ -42,9 +42,20 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
   } = useHolidayReservation();
   
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Use the filtered children if provided, otherwise use the children from the hook
   const childrenToDisplay = filteredChildren || children;
+  
+  // Update URL when period changes
+  useEffect(() => {
+    if (selectedPeriod) {
+      const searchParams = new URLSearchParams(location.search);
+      searchParams.set("periodId", selectedPeriod);
+      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+    }
+  }, [selectedPeriod, navigate, location.pathname, location.search]);
   
   // Fonction pour éviter les doubles clics avec prévention de la propagation d'événement
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -83,7 +94,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
     <Card className="p-6">
       <div className="space-y-6">
         <ChildSelector
-          selectedChild={selectedChild || ""}
+          selectedChild={selectedChild}
           setSelectedChild={setSelectedChild}
           children={childrenToDisplay}
           setSelectedDates={setSelectedDates}
@@ -91,7 +102,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
         />
 
         <PeriodSelector
-          selectedPeriod={selectedPeriod || ""}
+          selectedPeriod={selectedPeriod}
           setSelectedPeriod={setSelectedPeriod}
           holidayPeriods={holidayPeriods}
           filterTeenOnly={filterTeenPeriods}
@@ -99,13 +110,13 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
 
         {selectedPeriod && !isCM2SummerPeriod && (
           <HolidayDateSelector
-            key={`holiday-selector-${forceUpdate}-${selectedChild}-${selectedPeriod}`}
+            key={`holiday-selector-${forceUpdate}`}
             selectedDates={selectedDates}
             handleDateToggle={handleDateToggle}
             handleOptionChange={handleOptionChange}
             isDateAlreadyReserved={isDateAlreadyReserved}
             periodId={selectedPeriod}
-            selectedChild={selectedChild || ""}
+            selectedChild={selectedChild}
             setSelectedDates={setSelectedDates}
           />
         )}
