@@ -60,7 +60,7 @@ export const useHolidayReservations = () => {
             last_name,
             school_class,
             profile_id,
-            profile (
+            profile:profiles (
               school_city
             )
           )
@@ -92,6 +92,8 @@ export const useHolidayReservations = () => {
 
         // Ensure we're handling the children data correctly
         const childData = reservation.children;
+        // Extract profile data safely
+        const profileData = (childData.profile as any) || {};
 
         const transformedReservation: HolidayReservationWithChild = {
           id: reservation.id,
@@ -110,7 +112,7 @@ export const useHolidayReservations = () => {
             last_name: childData.last_name,
             school_class: childData.school_class,
             profile: {
-              school_city: childData.profile?.school_city || ''
+              school_city: profileData.school_city || ''
             }
           }
         };

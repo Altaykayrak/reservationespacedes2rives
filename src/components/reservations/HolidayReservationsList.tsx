@@ -4,7 +4,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
 import { HolidayChildReservationCard } from "./holiday/HolidayChildReservationCard";
 import { useHolidayReservations } from "@/hooks/useHolidayReservations";
-import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { useToast } from "@/hooks/use-toast";
 import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";

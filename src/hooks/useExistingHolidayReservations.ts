@@ -2,10 +2,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HolidayReservationWithChild } from "@/types/reservations";
-import { RefetchOptions } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 
 export const useExistingHolidayReservations = (selectedChild: string) => {
-  const { data: existingReservations, refetch: refetchReservations } = useQuery<HolidayReservationWithChild[]>({
+  // Using the correct query structure for React Query v5
+  const { data: existingReservations, refetch: refetchReservations } = useQuery({
     queryKey: ["existing_holiday_reservations", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return [];
@@ -22,10 +23,10 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       }
       console.log("Raw existing reservations:", data);
       
-      // Transform the data to match our HolidayReservationWithChild type
+      // Transform the data safely to match our HolidayReservationWithChild type
       const transformedData = data?.map(reservation => {
-        // Safety check for children object
-        const childrenData = reservation.children as Record<string, any> | null;
+        // We need to safely cast the children object
+        const childrenData = reservation.children as Record<string, any> || {};
         
         return {
           id: reservation.id || '',
@@ -39,12 +40,12 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
           created_at: reservation.created_at || '',
           updated_at: reservation.updated_at || '',
           children: {
-            id: childrenData?.id || '',
-            first_name: childrenData?.first_name || '',
-            last_name: childrenData?.last_name || '',
-            school_class: childrenData?.school_class || '',
+            id: childrenData.id || '',
+            first_name: childrenData.first_name || '',
+            last_name: childrenData.last_name || '',
+            school_class: childrenData.school_class || '',
             profile: {
-              school_city: childrenData?.profile?.school_city || ''
+              school_city: childrenData.profile?.school_city || ''
             }
           }
         } as HolidayReservationWithChild;
@@ -53,10 +54,9 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       return transformedData;
     },
     enabled: !!selectedChild,
-    gcTime: 0,      // Désactive le garbage collection
-    staleTime: 0,   // Désactive le cache pour toujours avoir les données fraîches
-    refetchOnMount: true, // Force le rechargement à chaque montage
-    refetchOnWindowFocus: true // Recharge quand la fenêtre reprend le focus
+    // Using correct React Query v5 options
+    staleTime: 0,
+    gcTime: 0
   });
 
   const isDateAlreadyReserved = (date: Date): boolean => {
