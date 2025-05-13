@@ -7,6 +7,7 @@ import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
+import { toast } from "@/hooks/use-toast";
 
 const TeenHolidayReservations = () => {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ const TeenHolidayReservations = () => {
 
       if (error) {
         console.error('Error checking access:', error);
+        toast.error('Erreur lors de la vérification de l\'accès');
         return;
       }
 

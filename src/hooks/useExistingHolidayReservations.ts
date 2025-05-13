@@ -21,7 +21,41 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
         throw error;
       }
       console.log("Raw existing reservations:", data);
-      return data || [];
+      
+      // Transform the data to match our HolidayReservationWithChild type
+      const transformedData = data?.map(reservation => {
+        return {
+          id: reservation.id || '',
+          child_id: reservation.child_id || '',
+          period_id: reservation.period_id || '',
+          reservation_date: reservation.reservation_date || '',
+          reservation_number: reservation.reservation_number || '',
+          without_meal: reservation.without_meal || false,
+          early_dropoff: reservation.early_dropoff || false,
+          status: reservation.status || '',
+          created_at: reservation.created_at || '',
+          updated_at: reservation.updated_at || '',
+          children: typeof reservation.children === 'object' ? {
+            id: reservation.children?.id || '',
+            first_name: reservation.children?.first_name || '',
+            last_name: reservation.children?.last_name || '',
+            school_class: reservation.children?.school_class || '',
+            profile: {
+              school_city: reservation.children?.profile?.school_city || ''
+            }
+          } : {
+            id: '',
+            first_name: '',
+            last_name: '',
+            school_class: '',
+            profile: {
+              school_city: ''
+            }
+          }
+        } as HolidayReservationWithChild;
+      }) || [];
+      
+      return transformedData;
     },
     enabled: !!selectedChild,
     gcTime: 0,      // Désactive le garbage collection
