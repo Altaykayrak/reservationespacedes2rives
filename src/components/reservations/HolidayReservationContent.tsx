@@ -116,7 +116,6 @@ export const HolidayReservationContent = ({
   };
 
   return (
-    return (
   <Card className="p-6">
     {/* ... */}
   </Card>
