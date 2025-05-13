@@ -45,7 +45,8 @@ export const ChildSelector = ({
     isSummerPeriod,
     isHolidayReservation,
     isTeenHolidayReservation,
-    isAdminTeenHolidayReservation
+    isAdminTeenHolidayReservation,
+    isLoading
   } = useChildFiltering(children, selectedPeriodId);
 
   // Handle CM2 child check for summer periods
@@ -69,7 +70,7 @@ export const ChildSelector = ({
       selectedPeriodId,
       isSummerPeriod,
       isHolidayReservation,
-      filteredChildrenCount: filteredChildren?.length
+      filteredChildrenCount: filteredChildren?.length || 0
     });
   }, [selectedChild, selectedPeriodId, isSummerPeriod, isHolidayReservation, filteredChildren]);
 
@@ -105,6 +106,18 @@ export const ChildSelector = ({
       changeEventHandled.current = false;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="relative">
+        <Label htmlFor="child-select">Sélectionner un enfant</Label>
+        <div className="w-full mt-2 p-2 border border-gray-300 rounded-md bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
+          <span className="text-sm text-gray-500">Chargement...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div onClick={(e) => e.stopPropagation()} className="relative">

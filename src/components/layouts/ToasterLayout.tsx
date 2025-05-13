@@ -9,7 +9,7 @@ export const ToasterLayout = ({ children }: ToasterLayoutProps) => {
   return (
     <>
       {children}
-      <Toaster position="top-center" richColors />
+      <Toaster position="top-center" richColors closeButton />
     </>
   );
 };

@@ -4,7 +4,8 @@ import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react"; // Ajout de useState
+import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 export const useChildFiltering = (
   children: Tables<"children">[] | null | undefined,
@@ -18,6 +19,13 @@ export const useChildFiltering = (
   const { isTeenClassSync } = useSchoolClassUtils();
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
   const [isGlobalEventHandlerSet, setIsGlobalEventHandlerSet] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Assurer que le hook est complètement monté avant de commencer les requêtes
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
   // Prévenir les rechargements de page accidentels
   useEffect(() => {
@@ -25,10 +33,8 @@ export const useChildFiltering = (
 
     const preventFormSubmission = (e: SubmitEvent) => {
       console.log("[useChildFiltering] Interception d'une soumission de formulaire");
-      if (!e.defaultPrevented) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      e.preventDefault();
+      e.stopPropagation();
       return false;
     };
     
@@ -41,64 +47,92 @@ export const useChildFiltering = (
       }
     };
     
+    // Prévenir les clics pouvant causer des soumissions
+    const preventClicks = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Vérifier si le clic est sur un bouton à l'intérieur d'un formulaire
+      const button = target.closest('button');
+      const form = target.closest('form');
+      
+      if (button && form && button.type !== 'button') {
+        console.log("[useChildFiltering] Interception d'un clic sur bouton dans formulaire");
+        button.setAttribute('type', 'button');
+      }
+    };
+    
     // Ajouter les écouteurs
     document.addEventListener('submit', preventFormSubmission, true);
     window.addEventListener('beforeunload', preventUnload);
+    document.addEventListener('click', preventClicks, true);
     setIsGlobalEventHandlerSet(true);
     
     return () => {
       document.removeEventListener('submit', preventFormSubmission, true);
       window.removeEventListener('beforeunload', preventUnload);
+      document.removeEventListener('click', preventClicks, true);
     };
   }, [location.pathname, isGlobalEventHandlerSet]);
 
   // Requête pour obtenir les informations sur la période sélectionnée
-  const { data: periodInfo } = useQuery({
+  const { data: periodInfo, isLoading: isPeriodLoading } = useQuery({
     queryKey: ["holiday_period_info", selectedPeriodId],
     queryFn: async () => {
-      if (!selectedPeriodId) return null;
+      if (!selectedPeriodId || !isMounted) return null;
       
       console.log("[useChildFiltering] Récupération des infos pour la période:", selectedPeriodId);
       
-      const { data, error } = await supabase
-        .from("available_holiday_periods")
-        .select("name")
-        .eq("id", selectedPeriodId)
-        .single();
-      
-      if (error) {
-        console.error("[useChildFiltering] Erreur lors de la récupération des informations de période:", error);
+      try {
+        const { data, error } = await supabase
+          .from("available_holiday_periods")
+          .select("name")
+          .eq("id", selectedPeriodId)
+          .single();
+        
+        if (error) {
+          console.error("[useChildFiltering] Erreur lors de la récupération des informations de période:", error);
+          return null;
+        }
+        
+        console.log("[useChildFiltering] Informations de période récupérées:", data);
+        return data;
+      } catch (err) {
+        console.error("[useChildFiltering] Exception:", err);
+        toast.error("Impossible de charger les informations de période");
         return null;
       }
-      
-      console.log("[useChildFiltering] Informations de période récupérées:", data);
-      return data;
     },
-    enabled: !!selectedPeriodId
+    enabled: !!selectedPeriodId && isMounted
   });
 
   // Récupérer les mappings de classe pour la période sélectionnée
-  const { data: classMappings } = useQuery({
+  const { data: classMappings, isLoading: isMappingsLoading } = useQuery({
     queryKey: ["holiday_class_mappings", selectedPeriodId],
     queryFn: async () => {
-      if (!selectedPeriodId) return [];
+      if (!selectedPeriodId || !isMounted) return [];
       
       console.log("[useChildFiltering] Récupération des mappings pour la période:", selectedPeriodId);
       
-      const { data, error } = await supabase
-        .from("holiday_period_class_mappings")
-        .select("school_class, category")
-        .eq("holiday_period_id", selectedPeriodId);
-      
-      if (error) {
-        console.error("[useChildFiltering] Erreur lors de la récupération des mappings de classe:", error);
+      try {
+        const { data, error } = await supabase
+          .from("holiday_period_class_mappings")
+          .select("school_class, category")
+          .eq("holiday_period_id", selectedPeriodId);
+        
+        if (error) {
+          console.error("[useChildFiltering] Erreur lors de la récupération des mappings de classe:", error);
+          return [];
+        }
+        
+        console.log("[useChildFiltering] Mappings de classe récupérés:", data?.length);
+        return data || [];
+      } catch (err) {
+        console.error("[useChildFiltering] Exception:", err);
+        toast.error("Impossible de charger les mappings de classes");
         return [];
       }
-      
-      console.log("[useChildFiltering] Mappings de classe récupérés:", data?.length);
-      return data;
     },
-    enabled: !!selectedPeriodId
+    enabled: !!selectedPeriodId && isMounted
   });
 
   // Filtrage des enfants basé sur la page et les mappings
@@ -110,6 +144,11 @@ export const useChildFiltering = (
     console.log("[useChildFiltering] Class mappings:", classMappings);
     console.log("[useChildFiltering] Is summer period:", periodInfo?.name && summerPeriods.includes(periodInfo.name));
     
+    if (!children || children.length === 0) {
+      console.log("[useChildFiltering] Pas d'enfants disponibles");
+      return [];
+    }
+    
     // Pour la page des mercredis, utiliser les enfants tels quels
     // car ils sont déjà filtrés dans useChildrenData
     let filteredChildren = children;
@@ -117,7 +156,9 @@ export const useChildFiltering = (
     // Filtrage spécifique pour /holiday-reservations basé sur les mappings de classe
     if (isHolidayReservation && classMappings && classMappings.length > 0 && selectedPeriodId) {
       // Filtrer les enfants par catégorie primaire et maternelle selon les mappings
-      filteredChildren = children?.filter(child => {
+      filteredChildren = children.filter(child => {
+        if (!child || !child.school_class) return false;
+        
         // Chercher le mapping pour cette classe
         const mapping = classMappings.find(
           m => m.school_class.toLowerCase() === child.school_class.toLowerCase()
@@ -133,12 +174,15 @@ export const useChildFiltering = (
       });
     } else if (isHolidayReservation) {
       // Fallback à la logique standard si pas de mappings
-      filteredChildren = children?.filter(child => {
+      filteredChildren = children.filter(child => {
+        if (!child || !child.school_class) return false;
         return !isTeenClassSync(child.school_class);
       });
     } else if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
       // Pour les réservations de vacances ados, afficher les adolescents et les CM2 pendant les périodes d'été
-      filteredChildren = children?.filter(child => {
+      filteredChildren = children.filter(child => {
+        if (!child || !child.school_class) return false;
+        
         const isChildTeen = isTeenClassSync(child.school_class);
         const isCM2 = child.school_class === "CM2";
         
@@ -154,6 +198,7 @@ export const useChildFiltering = (
   };
 
   const isSummerPeriod = periodInfo?.name && summerPeriods.includes(periodInfo.name);
+  const isLoading = isPeriodLoading || isMappingsLoading;
 
   return {
     filteredChildren: getFilteredChildren(),
@@ -162,6 +207,7 @@ export const useChildFiltering = (
     isSummerPeriod,
     isHolidayReservation,
     isTeenHolidayReservation,
-    isAdminTeenHolidayReservation
+    isAdminTeenHolidayReservation,
+    isLoading
   };
 };
