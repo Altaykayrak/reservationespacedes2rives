@@ -1,5 +1,4 @@
 
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
@@ -10,7 +9,12 @@ import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
+import { useEffect, useState } from "react";
+import { useChildrenData } from "@/hooks/useChildrenData";
+import { HolidayPeriodProvider } from "./holiday/HolidayPeriodContext";
 import { useLocation } from "react-router-dom";
 
 interface HolidayReservationContentProps {
@@ -28,7 +32,6 @@ export const HolidayReservationContent = ({
     selectedPeriod,
     setSelectedChild,
     setSelectedPeriod,
-    children,
     holidayPeriods,
     handleDateToggle,
     handleOptionChange,
@@ -44,18 +47,85 @@ export const HolidayReservationContent = ({
     setMinimumDaysDialog
   } = useHolidayReservation();
 
-  const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
+  const { children: allChildren } = useChildrenData();
+  const [filteredChildrenState, setFilteredChildrenState] = useState<any[]>([]);
+  const { isTeenClassSync } = useSchoolClassUtils();
   const location = useLocation();
-  const initialRender = useRef(true);
-  const previousPeriod = useRef(selectedPeriod);
-  const urlUpdating = useRef(false);
-  const childrenToDisplay = filteredChildren || children;
-  const updateBlocked = useRef(false);
+  
+  // Récupération des informations de l'enfant sélectionné
+  const { data: childInfo } = useQuery({
+    queryKey: ["child", selectedChild],
+    queryFn: async () => {
+      if (!selectedChild) return null;
+      
+      const { data, error } = await supabase
+        .from("children")
+        .select("school_class")
+        .eq("id", selectedChild)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedChild
+  });
+
+  // Récupération des informations de la période sélectionnée
+  const { data: holidayPeriod } = useQuery({
+    queryKey: ["holiday_period", selectedPeriod],
+    queryFn: async () => {
+      if (!selectedPeriod) return null;
+      
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("*")
+        .eq("id", selectedPeriod)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedPeriod
+  });
+
+  // Récupérer les catégories des classes scolaires pour filtrer les enfants non-ados
+  const { data: schoolClassCategories } = useQuery({
+    queryKey: ["schoolClassCategoriesNonTeen"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_class_categories")
+        .select("*")
+        .neq("category", "adolescent");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Filtrer les enfants en fonction de leur classe (exclure les adolescents)
+  useEffect(() => {
+    if (!allChildren) return;
+    
+    console.log("Children passed to ChildSelector:", allChildren);
+    
+    const filtered = allChildren.filter(child => {
+      // Vérifier si c'est un enfant non-adolescent selon les catégories
+      const isNonTeenByCategory = schoolClassCategories?.some(category => 
+        category.name.toUpperCase() === child.school_class.toUpperCase()
+      );
+      
+      // Alternative: utiliser la fonction isTeenClassSync pour exclure les adolescents
+      const isNotTeen = !isTeenClassSync(child.school_class);
+      
+      return isNonTeenByCategory || isNotTeen;
+    });
+    
+    console.log("Filtered children for regular holiday reservations:", filtered);
+    setFilteredChildrenState(filtered);
+  }, [allChildren, schoolClassCategories, isTeenClassSync]);
 
   // Lire l'ID de période depuis l'URL lors du montage (une seule fois)
   useEffect(() => {
-    if (!initialRender.current) return;
-    
     try {
       const searchParams = new URLSearchParams(location.search);
       const periodId = searchParams.get("periodId");
@@ -63,81 +133,49 @@ export const HolidayReservationContent = ({
       if (periodId && periodId !== selectedPeriod) {
         console.log("[HolidayReservationContent] Setting period from URL:", periodId);
         setSelectedPeriod(periodId);
-        previousPeriod.current = periodId;
       }
     } catch (error) {
       console.error("[HolidayReservationContent] Error reading URL:", error);
-    } finally {
-      initialRender.current = false;
     }
   }, [location.search, selectedPeriod, setSelectedPeriod]);
 
-  // Mise à jour synchronisée de l'URL (sans rechargement) uniquement quand nécessaire
-  useEffect(() => {
-    // Éviter les exécutions inutiles et les boucles
-    if (initialRender.current || !selectedPeriod || updateBlocked.current || 
-        urlUpdating.current || selectedPeriod === previousPeriod.current) {
-      return;
-    }
-    
-    // Appliquer les verrous pour éviter les mises à jour en cascade
-    urlUpdating.current = true;
-    updateBlocked.current = true;
-    console.log("[HolidayReservationContent] Period changed in state to:", selectedPeriod);
-    
-    try {
-      // Mise à jour de l'URL sans rechargement de la page
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set("periodId", selectedPeriod);
-      window.history.replaceState({ path: newUrl.toString() }, "", newUrl.toString());
-      console.log("[HolidayReservationContent] URL updated without reload");
-    } catch (error) {
-      console.error("[HolidayReservationContent] Error updating URL:", error);
-    } finally {
-      previousPeriod.current = selectedPeriod;
-      
-      // Débloquer après un délai pour éviter les effets de rebond
-      setTimeout(() => {
-        urlUpdating.current = false;
-        updateBlocked.current = false;
-      }, 200);
-    }
-  }, [selectedPeriod]);
-
+  // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-
-    console.log("DEBUG: Bouton Confirmer réservation cliqué - timestamp:", Date.now());
-    console.log(`DEBUG: Nombre de dates sélectionnées: ${selectedDates.length}`);
-
+    
+    console.log(`DEBUG: Bouton cliqué - Nombre de dates sélectionnées: ${selectedDates.length}`);
+    
     if (!isSubmitting) {
-      console.log("DEBUG: Soumission démarrée - isSubmitting:", isSubmitting);
       handleSubmit();
-    } else {
-      console.log("DEBUG: Soumission déjà en cours (isSubmitting = true), clic ignoré");
     }
   };
 
+  // Déterminer si l'enfant est un adolescent (pour le vérifier si besoin)
+  const isTeenClass = childInfo ? isTeenClassSync(childInfo.school_class, selectedPeriod) : false;
+
   return (
-    <Card className="p-6">
-      <div className="space-y-6">
-        <ChildSelector
-          selectedChild={selectedChild}
-          setSelectedChild={setSelectedChild}
-          children={childrenToDisplay}
-          setSelectedDates={setSelectedDates}
-          onCM2SummerPeriodCheck={setIsCM2SummerPeriod}
-        />
+    <div className="space-y-6">
+      <ChildSelector
+        selectedChild={selectedChild}
+        setSelectedChild={setSelectedChild}
+        children={filteredChildren || filteredChildrenState}
+        setSelectedDates={setSelectedDates}
+      />
 
-        <PeriodSelector
-          selectedPeriod={selectedPeriod}
-          setSelectedPeriod={setSelectedPeriod}
-          holidayPeriods={holidayPeriods}
-          filterTeenOnly={filterTeenPeriods}
-        />
+      <PeriodSelector
+        selectedPeriod={selectedPeriod}
+        setSelectedPeriod={setSelectedPeriod}
+        holidayPeriods={holidayPeriods}
+        filterTeenOnly={false}
+      />
 
-        {selectedChild && selectedPeriod && (
+      {selectedPeriod && selectedChild && childInfo && holidayPeriod && (
+        <HolidayPeriodProvider 
+          holidayPeriod={holidayPeriod} 
+          childInfo={childInfo} 
+          isTeenClass={isTeenClass}
+        >
           <HolidayDateSelector
             selectedDates={selectedDates}
             handleDateToggle={handleDateToggle}
@@ -147,27 +185,29 @@ export const HolidayReservationContent = ({
             selectedChild={selectedChild}
             setSelectedDates={setSelectedDates}
           />
-        )}
+        </HolidayPeriodProvider>
+      )}
 
-        <div className="flex justify-end mt-6">
-          <Button
-            onClick={onSubmitClick}
-            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
-            className="w-full md:w-auto"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Traitement en cours...
-              </>
-            ) : (
-              "Confirmer réservation"
-            )}
-          </Button>
-        </div>
+      <div className="flex justify-end mt-6">
+        <Button
+          onClick={onSubmitClick}
+          className="w-full md:w-auto"
+          disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
+          type="button"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Réservation en cours...
+            </>
+          ) : (
+            "Confirmer réservation"
+          )}
+        </Button>
       </div>
 
-      <SuccessReservationDialog
-        open={showSuccessDialog}
+      <SuccessReservationDialog 
+        open={showSuccessDialog} 
         onOpenChange={setShowSuccessDialog}
       />
 
@@ -177,11 +217,11 @@ export const HolidayReservationContent = ({
         schoolClass={noSpotsDialog.schoolClass}
         date={noSpotsDialog.date}
       />
-
+      
       <MinimumDaysDialog
         open={minimumDaysDialog.isOpen}
         onOpenChange={(open) => setMinimumDaysDialog({ isOpen: open })}
       />
-    </Card>
+    </div>
   );
 };

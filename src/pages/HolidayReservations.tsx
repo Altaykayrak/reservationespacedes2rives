@@ -99,7 +99,9 @@ const HolidayReservations = () => {
             />
           </div>
         ) : (
-          <HolidayReservationContent />
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+            <HolidayReservationContent />
+          </div>
         )}
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
