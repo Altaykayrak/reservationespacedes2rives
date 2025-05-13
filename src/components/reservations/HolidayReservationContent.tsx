@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -165,17 +164,19 @@ export const HolidayReservationContent = ({
 
       <SuccessReservationDialog
         open={showSuccessDialog}
-        onClose={() => setShowSuccessDialog(false)}
+        onOpenChange={setShowSuccessDialog}
       />
 
       <NoSpotsDialog
-        open={noSpotsDialog}
-        onClose={() => setNoSpotsDialog(false)}
+        open={noSpotsDialog.isOpen}
+        onOpenChange={(open) => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })}
+        schoolClass={noSpotsDialog.schoolClass}
+        date={noSpotsDialog.date}
       />
 
       <MinimumDaysDialog
-        open={minimumDaysDialog}
-        onClose={() => setMinimumDaysDialog(false)}
+        open={minimumDaysDialog.isOpen}
+        onOpenChange={(open) => setMinimumDaysDialog({ isOpen: open })}
       />
     </Card>
   );
