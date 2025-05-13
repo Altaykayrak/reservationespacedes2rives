@@ -1,11 +1,11 @@
 
-import { Calendar, Info, AlertCircle } from "lucide-react";
+import { Calendar, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EmptyHolidayStateProps {
   message: string;
   subtitle: string;
-  icon?: "calendar" | "info" | "error";
+  icon?: "calendar" | "info";
   className?: string;
 }
 
@@ -21,10 +21,8 @@ export const EmptyHolidayState = ({
         <div className="p-3 bg-blue-100 rounded-full">
           {icon === "calendar" ? (
             <Calendar className="h-8 w-8 text-blue-600" />
-          ) : icon === "info" ? (
-            <Info className="h-8 w-8 text-blue-600" />
           ) : (
-            <AlertCircle className="h-8 w-8 text-red-600" />
+            <Info className="h-8 w-8 text-blue-600" />
           )}
         </div>
         <h2 className="text-xl font-semibold text-gray-800">
