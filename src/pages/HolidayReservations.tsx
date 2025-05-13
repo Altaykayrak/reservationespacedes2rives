@@ -8,13 +8,23 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
 import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
-import { toast } from "sonner";
+import { toast, customToast } from "@/hooks/use-toast";
 
 const HolidayReservations = () => {
   const { user } = useAuth();
   const [isWaiting, setIsWaiting] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
+  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const { holidayPeriods, isLoading: periodsLoading, error: periodsError } = useHolidayPeriods();
+
+  console.log("[HolidayReservations] Rendering with:", {
+    isWaiting,
+    isClosed,
+    isProfileLoaded,
+    periodsLoading,
+    periodsError: !!periodsError,
+    holidayPeriodsCount: holidayPeriods?.length || 0
+  });
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -30,26 +40,46 @@ const HolidayReservations = () => {
 
         if (error) {
           console.error('[HolidayReservations] Erreur lors de la vérification de l\'accès:', error);
-          toast.error("Erreur lors de la vérification de l'accès");
+          customToast.error("Erreur lors de la vérification de l'accès");
           return;
         }
 
         console.log('[HolidayReservations] Données du profil:', data);
         setIsWaiting(data?.is_waiting || false);
         setIsClosed(data?.is_closed || false);
+        setIsProfileLoaded(true);
       } catch (err) {
         console.error('[HolidayReservations] Exception:', err);
+        setIsProfileLoaded(true); // Still mark as loaded so UI can proceed
       }
     };
 
     checkAccess();
   }, [user]);
 
+  // Empêcher tout rechargement de page accidentel
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   // Vérifier si des périodes sont disponibles
   const hasAvailablePeriods = holidayPeriods && holidayPeriods.length > 0;
 
-  // Afficher le chargement pendant la vérification des périodes
-  if (periodsLoading) {
+  // Bloquer le rendu tant que les données essentielles ne sont pas chargées
+  const isLoadingEssentialData = !isProfileLoaded || periodsLoading;
+  
+  // Afficher le chargement pendant la vérification
+  if (isLoadingEssentialData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <Navbar />
@@ -135,7 +165,7 @@ const HolidayReservations = () => {
             />
           </div>
         ) : (
-          <HolidayReservationContent />
+          <HolidayReservationContent initialPeriodId={holidayPeriods?.[0]?.id} />
         )}
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">

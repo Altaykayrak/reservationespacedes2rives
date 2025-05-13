@@ -13,6 +13,7 @@ interface ChildSelectorProps {
   children?: Tables<"children">[] | null;
   setSelectedDates?: (dates: any[]) => void;
   onCM2SummerPeriodCheck?: (isInSummerPeriod: boolean) => void;
+  selectedPeriodId?: string;
 }
 
 export const ChildSelector = ({
@@ -20,22 +21,20 @@ export const ChildSelector = ({
   setSelectedChild,
   children,
   setSelectedDates,
-  onCM2SummerPeriodCheck
+  onCM2SummerPeriodCheck,
+  selectedPeriodId = ""
 }: ChildSelectorProps) => {
   const location = useLocation();
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
   const changeEventHandled = useRef(false);
+  const previousPeriodId = useRef<string | null>(null);
 
-  // Listen for period selection from URL search parameters
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const periodId = searchParams.get("periodId");
-    if (periodId) {
-      console.log("[ChildSelector] selectedPeriodId mis à jour depuis URL à", periodId);
-      setSelectedPeriodId(periodId);
+    if (selectedPeriodId && selectedPeriodId !== previousPeriodId.current) {
+      console.log("[ChildSelector] selectedPeriodId updated:", selectedPeriodId, "previous:", previousPeriodId.current);
+      previousPeriodId.current = selectedPeriodId;
     }
-  }, [location.search]);
+  }, [selectedPeriodId]);
 
   // Handle child filtering based on page type and period
   const {
@@ -47,13 +46,13 @@ export const ChildSelector = ({
     isTeenHolidayReservation,
     isAdminTeenHolidayReservation,
     isLoading
-  } = useChildFiltering(children, selectedPeriodId);
+  } = useChildFiltering(children, selectedPeriodId || "");
 
   // Handle CM2 child check for summer periods
   const { showCM2Message } = useCM2ChildCheck(
     selectedChild,
     children,
-    selectedPeriodId,
+    selectedPeriodId || "",
     periodInfo,
     summerPeriods,
     isHolidayReservation,
@@ -70,9 +69,11 @@ export const ChildSelector = ({
       selectedPeriodId,
       isSummerPeriod,
       isHolidayReservation,
-      filteredChildrenCount: filteredChildren?.length || 0
+      filteredChildrenCount: filteredChildren?.length || 0,
+      periodsInfo: periodInfo ? "loaded" : "undefined",
+      classMappings: classMappings ? "loaded" : "undefined"
     });
-  }, [selectedChild, selectedPeriodId, isSummerPeriod, isHolidayReservation, filteredChildren]);
+  }, [selectedChild, selectedPeriodId, isSummerPeriod, isHolidayReservation, filteredChildren, periodInfo, classMappings]);
 
   // Fonction pour mettre à jour l'enfant sélectionné sans soumettre le formulaire
   const handleChildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

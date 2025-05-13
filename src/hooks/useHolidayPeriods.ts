@@ -1,9 +1,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { customToast } from "./use-toast";
 
 export const useHolidayPeriods = () => {
+  console.log("[useHolidayPeriods] Hook initialized");
+  
   const { data: holidayPeriods, isLoading, error: queryError } = useQuery({
     queryKey: ["holidayPeriods"],
     queryFn: async () => {
@@ -17,7 +19,7 @@ export const useHolidayPeriods = () => {
         
         if (error) {
           console.error("[useHolidayPeriods] Erreur lors de la récupération des périodes:", error);
-          toast.error("Impossible de charger les périodes de vacances");
+          customToast.error("Impossible de charger les périodes de vacances");
           throw error;
         }
         
@@ -25,10 +27,12 @@ export const useHolidayPeriods = () => {
         return data;
       } catch (err) {
         console.error("[useHolidayPeriods] Exception:", err);
-        toast.error("Impossible de charger les périodes de vacances");
+        customToast.error("Impossible de charger les périodes de vacances");
         return [];
       }
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2
   });
 
   return { 

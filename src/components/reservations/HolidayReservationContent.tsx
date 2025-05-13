@@ -13,14 +13,19 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { eventBus } from "@/lib/utils";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
   filterTeenPeriods?: boolean;
+  initialPeriodId?: string;
 }
 
-export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods = false }: HolidayReservationContentProps) => {
+export const HolidayReservationContent = ({ 
+  filteredChildren, 
+  filterTeenPeriods = false,
+  initialPeriodId 
+}: HolidayReservationContentProps) => {
   const {
     selectedDates,
     selectedChild,
@@ -49,6 +54,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
   const isInitialMount = useRef(true);
   const periodFromUrlApplied = useRef(false);
   const submitAttemptCount = useRef(0);
+  const initialRenderComplete = useRef(false);
 
   // Utiliser les enfants filtrés si fournis, sinon utiliser les enfants du hook
   const childrenToDisplay = filteredChildren || children;
@@ -59,31 +65,71 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
       selectedPeriod,
       selectedChild,
       selectedDatesCount: selectedDates?.length || 0,
-      periodFromURL: searchParams.get("periodId")
+      periodFromURL: searchParams.get("periodId"),
+      initialPeriodId,
+      holidayPeriodsLength: holidayPeriods?.length || 0
     });
-  }, [selectedPeriod, selectedChild, selectedDates, searchParams]);
+  }, [selectedPeriod, selectedChild, selectedDates, searchParams, initialPeriodId, holidayPeriods]);
 
-  // Synchroniser l'URL avec l'état de période sélectionnée sans recharger la page
+  // Initialisation forcée du selectedPeriod si nécessaire
   useEffect(() => {
+    if (!initialRenderComplete.current && holidayPeriods && holidayPeriods.length > 0) {
+      const periodIdFromUrl = searchParams.get("periodId");
+      const validInitialId = initialPeriodId && holidayPeriods.some(p => p.id === initialPeriodId);
+      const validUrlId = periodIdFromUrl && holidayPeriods.some(p => p.id === periodIdFromUrl);
+      
+      console.log("[HolidayReservationContent] Initialisation forcée:", {
+        initialRenderComplete: initialRenderComplete.current,
+        periodIdFromUrl,
+        initialPeriodId,
+        validInitialId,
+        validUrlId
+      });
+
+      // Priorité URL > initialPeriodId > première période
+      let idToUse: string;
+      
+      if (validUrlId) {
+        idToUse = periodIdFromUrl as string;
+        console.log("[HolidayReservationContent] Utilisation de l'ID depuis l'URL:", idToUse);
+      } else if (validInitialId) {
+        idToUse = initialPeriodId as string;
+        console.log("[HolidayReservationContent] Utilisation de l'initialPeriodId:", idToUse);
+      } else {
+        idToUse = holidayPeriods[0].id;
+        console.log("[HolidayReservationContent] Utilisation de la première période:", idToUse);
+      }
+      
+      // Mettre à jour l'état et l'URL
+      setSelectedPeriod(idToUse);
+      
+      // Forcer le renderKey pour refresh du sélecteur
+      setRenderKey(prev => prev + 1);
+      
+      // Mise à jour de l'URL si nécessaire
+      if (idToUse !== periodIdFromUrl) {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("periodId", idToUse);
+        setSearchParams(newParams, { replace: true });
+      }
+      
+      initialRenderComplete.current = true;
+    }
+  }, [holidayPeriods, initialPeriodId, searchParams, setSearchParams, setSelectedPeriod]);
+
+  // Synchroniser l'URL avec l'état de période sélectionnée
+  useEffect(() => {
+    // Ne s'exécute que si le rendu initial est terminé
+    if (!initialRenderComplete.current) return;
+    
     const periodIdFromUrl = searchParams.get("periodId");
     
     console.log("[HolidayReservationContent] Synchronisation URL <-> état");
     console.log("  - periodIdFromUrl =", periodIdFromUrl);
     console.log("  - selectedPeriod =", selectedPeriod);
-    console.log("  - isInitialMount =", isInitialMount.current);
-    console.log("  - periodFromUrlApplied =", periodFromUrlApplied.current);
     
-    // Au montage initial, si l'URL contient un periodId, l'utiliser
-    if (isInitialMount.current && periodIdFromUrl && !periodFromUrlApplied.current) {
-      console.log("  - [INIT] Mise à jour de selectedPeriod depuis URL");
-      setSelectedPeriod(periodIdFromUrl);
-      periodFromUrlApplied.current = true;
-      isInitialMount.current = false;
-      return;
-    }
-    
-    // Si le selectedPeriod a changé et que ce n'est pas le montage initial, mettre à jour l'URL
-    if (!isInitialMount.current && selectedPeriod && periodIdFromUrl !== selectedPeriod) {
+    // Si le selectedPeriod a changé, mettre à jour l'URL
+    if (selectedPeriod && periodIdFromUrl !== selectedPeriod) {
       console.log("  - [UPDATE] Mise à jour de l'URL depuis selectedPeriod");
       const newParams = new URLSearchParams(searchParams);
       newParams.set("periodId", selectedPeriod);
@@ -93,9 +139,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
         setSearchParams(newParams, { replace: true });
       });
     }
-    
-    isInitialMount.current = false;
-  }, [selectedPeriod, searchParams, setSearchParams, setSelectedPeriod]);
+  }, [selectedPeriod, searchParams, setSearchParams]);
   
   // Fonction sécurisée pour mettre à jour selectedPeriod
   const handlePeriodChange = useCallback((periodId: string) => {
@@ -167,6 +211,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
           children={childrenToDisplay}
           setSelectedDates={setSelectedDates}
           onCM2SummerPeriodCheck={setIsCM2SummerPeriod}
+          selectedPeriodId={selectedPeriod}
         />
 
         <PeriodSelector
@@ -175,6 +220,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
           holidayPeriods={holidayPeriods}
           filterTeenOnly={filterTeenPeriods}
           updateUrlWithoutRefresh={true}
+          initialPeriodId={initialPeriodId}
         />
 
         {selectedPeriod && selectedChild && !isCM2SummerPeriod && (
