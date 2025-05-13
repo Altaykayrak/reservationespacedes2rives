@@ -4,6 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react"; // Ajout de useState
 
 export const useChildFiltering = (
   children: Tables<"children">[] | null | undefined,
@@ -16,12 +17,48 @@ export const useChildFiltering = (
   
   const { isTeenClassSync } = useSchoolClassUtils();
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
+  const [isGlobalEventHandlerSet, setIsGlobalEventHandlerSet] = useState(false);
+
+  // Prévenir les rechargements de page accidentels
+  useEffect(() => {
+    if (isGlobalEventHandlerSet) return;
+
+    const preventFormSubmission = (e: SubmitEvent) => {
+      console.log("[useChildFiltering] Interception d'une soumission de formulaire");
+      if (!e.defaultPrevented) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      return false;
+    };
+    
+    const preventUnload = (e: BeforeUnloadEvent) => {
+      if (location.pathname.includes('holiday-reservations') || 
+          location.pathname.includes('teenholiday-reservations')) {
+        console.log("[useChildFiltering] Tentative de quitter la page, prévention");
+        e.preventDefault();
+        return (e.returnValue = '');
+      }
+    };
+    
+    // Ajouter les écouteurs
+    document.addEventListener('submit', preventFormSubmission, true);
+    window.addEventListener('beforeunload', preventUnload);
+    setIsGlobalEventHandlerSet(true);
+    
+    return () => {
+      document.removeEventListener('submit', preventFormSubmission, true);
+      window.removeEventListener('beforeunload', preventUnload);
+    };
+  }, [location.pathname, isGlobalEventHandlerSet]);
 
   // Requête pour obtenir les informations sur la période sélectionnée
   const { data: periodInfo } = useQuery({
     queryKey: ["holiday_period_info", selectedPeriodId],
     queryFn: async () => {
       if (!selectedPeriodId) return null;
+      
+      console.log("[useChildFiltering] Récupération des infos pour la période:", selectedPeriodId);
       
       const { data, error } = await supabase
         .from("available_holiday_periods")
@@ -30,10 +67,11 @@ export const useChildFiltering = (
         .single();
       
       if (error) {
-        console.error("Erreur lors de la récupération des informations de période:", error);
+        console.error("[useChildFiltering] Erreur lors de la récupération des informations de période:", error);
         return null;
       }
       
+      console.log("[useChildFiltering] Informations de période récupérées:", data);
       return data;
     },
     enabled: !!selectedPeriodId
@@ -45,16 +83,19 @@ export const useChildFiltering = (
     queryFn: async () => {
       if (!selectedPeriodId) return [];
       
+      console.log("[useChildFiltering] Récupération des mappings pour la période:", selectedPeriodId);
+      
       const { data, error } = await supabase
         .from("holiday_period_class_mappings")
         .select("school_class, category")
         .eq("holiday_period_id", selectedPeriodId);
       
       if (error) {
-        console.error("Erreur lors de la récupération des mappings de classe:", error);
+        console.error("[useChildFiltering] Erreur lors de la récupération des mappings de classe:", error);
         return [];
       }
       
+      console.log("[useChildFiltering] Mappings de classe récupérés:", data?.length);
       return data;
     },
     enabled: !!selectedPeriodId
@@ -62,6 +103,13 @@ export const useChildFiltering = (
 
   // Filtrage des enfants basé sur la page et les mappings
   const getFilteredChildren = () => {
+    console.log("[useChildFiltering] Current path:", location.pathname);
+    console.log("[useChildFiltering] isHolidayReservation:", isHolidayReservation);
+    console.log("[useChildFiltering] Selected period ID:", selectedPeriodId);
+    console.log("[useChildFiltering] Period info:", periodInfo);
+    console.log("[useChildFiltering] Class mappings:", classMappings);
+    console.log("[useChildFiltering] Is summer period:", periodInfo?.name && summerPeriods.includes(periodInfo.name));
+    
     // Pour la page des mercredis, utiliser les enfants tels quels
     // car ils sont déjà filtrés dans useChildrenData
     let filteredChildren = children;
@@ -117,5 +165,3 @@ export const useChildFiltering = (
     isAdminTeenHolidayReservation
   };
 };
-
-import { useState } from "react";

@@ -7,35 +7,76 @@ import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
+import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
+import { toast } from "@/hooks/use-toast";
 
 const HolidayReservations = () => {
   const { user } = useAuth();
   const [isWaiting, setIsWaiting] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
+  const { holidayPeriods, isLoading: periodsLoading, error: periodsError } = useHolidayPeriods();
 
   useEffect(() => {
     const checkAccess = async () => {
       if (!user?.id) return;
 
-      // Récupérer les états directement de la base de données
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_waiting, is_closed')
-        .eq('id', user.id)
-        .single();
+      try {
+        // Récupérer les états directement de la base de données
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_waiting, is_closed')
+          .eq('id', user.id)
+          .single();
 
-      if (error) {
-        console.error('Error checking access:', error);
-        return;
+        if (error) {
+          console.error('[HolidayReservations] Erreur lors de la vérification de l\'accès:', error);
+          toast.error("Erreur lors de la vérification de l'accès");
+          return;
+        }
+
+        console.log('[HolidayReservations] Données du profil:', data);
+        setIsWaiting(data?.is_waiting || false);
+        setIsClosed(data?.is_closed || false);
+      } catch (err) {
+        console.error('[HolidayReservations] Exception:', err);
       }
-
-      console.log('Profile data:', data);
-      setIsWaiting(data?.is_waiting || false);
-      setIsClosed(data?.is_closed || false);
     };
 
     checkAccess();
   }, [user]);
+
+  // Vérifier si des périodes sont disponibles
+  const hasAvailablePeriods = holidayPeriods && holidayPeriods.length > 0;
+
+  // Afficher le chargement pendant la vérification des périodes
+  if (periodsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Afficher une erreur si la récupération des périodes a échoué
+  if (periodsError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6">
+          <EmptyHolidayState 
+            message="Erreur de chargement" 
+            subtitle="Impossible de récupérer les périodes de vacances. Veuillez réessayer plus tard."
+            icon="error"
+          />
+        </div>
+      </div>
+    );
+  }
 
   // Afficher le message d'attente et empêcher la création de nouvelles réservations
   if (isWaiting) {
@@ -47,6 +88,22 @@ const HolidayReservations = () => {
             message="Réservations bientôt disponibles !" 
             subtitle="Les inscriptions ne sont pas encore ouvertes. Vous serez informé(e) par e-mail dès leur lancement. Restez à l'affût ! ✉️📅"
             icon="info"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Afficher le message lorsqu'il n'y a plus de périodes disponibles
+  if (!hasAvailablePeriods && !periodsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6">
+          <EmptyHolidayState 
+            message="Aucune période de vacances disponible" 
+            subtitle="Il n'y a actuellement aucune période de vacances disponible pour les réservations."
+            icon="calendar"
           />
         </div>
       </div>

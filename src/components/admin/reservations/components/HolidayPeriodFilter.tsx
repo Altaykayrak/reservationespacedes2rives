@@ -25,7 +25,7 @@ export const HolidayPeriodFilter = ({
   useEffect(() => {
     console.log("[HolidayPeriodFilter] Rendu avec:", { 
       selectedPeriod, 
-      availablePeriods: availablePeriods?.length 
+      availablePeriodsCount: availablePeriods?.length 
     });
   }, [selectedPeriod, availablePeriods]);
   
@@ -58,7 +58,7 @@ export const HolidayPeriodFilter = ({
   };
 
   return (
-    <div className="mb-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+    <div className="mb-4 flex items-center gap-2">
       <Calendar className="h-5 w-5 text-gray-500" />
       <Select 
         value={selectedPeriod} 
@@ -67,14 +67,14 @@ export const HolidayPeriodFilter = ({
         <SelectTrigger 
           className="w-[280px]" 
           onClick={(e) => {
-            // Empêcher toute propagation qui pourrait déclencher des soumissions de formulaire
+            // Empêcher toute propagation
             e.preventDefault();
             e.stopPropagation();
           }}
         >
           <SelectValue placeholder="Filtrer par période" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent onClick={(e) => e.stopPropagation()}>
           <SelectItem value="all">Toutes les périodes</SelectItem>
           {availablePeriods.map((period) => (
             <SelectItem key={period.id} value={period.id}>

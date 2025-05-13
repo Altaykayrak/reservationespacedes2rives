@@ -27,6 +27,7 @@ export const PeriodSelector = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const isInitialMount = useRef(true);
   const selectEventHandled = useRef(false);
+  const isFormSubmitHandled = useRef(false);
   
   // Récupérer les mappings de classes pour filtrer les périodes
   const { data: classMappings } = useQuery({
@@ -85,6 +86,26 @@ export const PeriodSelector = ({
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
 
+  // Empêcher tout comportement de soumission de formulaire
+  useEffect(() => {
+    if (isFormSubmitHandled.current) return;
+    
+    const handleFormSubmit = (e: SubmitEvent) => {
+      console.log("[PeriodSelector] Interception d'une soumission de formulaire");
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+    
+    // Capture all form submissions
+    document.addEventListener('submit', handleFormSubmit, true);
+    isFormSubmitHandled.current = true;
+    
+    return () => {
+      document.removeEventListener('submit', handleFormSubmit, true);
+    };
+  }, []);
+
   // Gérer le changement de période avec protection contre les événements multiples
   const handlePeriodChange = (newPeriodId: string) => {
     if (selectEventHandled.current) {
@@ -139,7 +160,7 @@ export const PeriodSelector = ({
     
     if (updateUrlWithoutRefresh) {
       const periodIdFromUrl = searchParams.get("periodId");
-      console.log("[PeriodSelector] Initialisation: periodId depuis URL =", periodIdFromUrl, "selectedPeriod =", selectedPeriod);
+      console.log("[PeriodSelector] DEBUG: periodId depuis URL =", periodIdFromUrl, "selectedPeriod =", selectedPeriod);
       
       if (periodIdFromUrl && periodIdFromUrl !== selectedPeriod) {
         console.log("[PeriodSelector] Mise à jour initiale de selectedPeriod depuis URL à", periodIdFromUrl);
@@ -165,6 +186,7 @@ export const PeriodSelector = ({
       >
         <SelectTrigger 
           className="w-full" 
+          type="button"
           onClick={(e) => {
             // Bloquer tout événement qui pourrait causer une soumission de formulaire
             e.preventDefault();

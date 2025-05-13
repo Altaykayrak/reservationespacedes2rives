@@ -1,26 +1,38 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 export const useHolidayPeriods = () => {
-  const { data: holidayPeriods } = useQuery({
+  const { data: holidayPeriods, isLoading, error } = useQuery({
     queryKey: ["holidayPeriods"],
     queryFn: async () => {
-      console.log("Fetching holiday periods...");
-      const { data, error } = await supabase
-        .from("available_holiday_periods")
-        .select("*")
-        .gte("end_date", new Date().toISOString().split("T")[0])
-        .order("start_date");
-      
-      if (error) {
-        console.error("Error fetching holiday periods:", error);
-        throw error;
+      console.log("[useHolidayPeriods] Récupération des périodes de vacances...");
+      try {
+        const { data, error } = await supabase
+          .from("available_holiday_periods")
+          .select("*")
+          .gte("end_date", new Date().toISOString().split("T")[0])
+          .order("start_date");
+        
+        if (error) {
+          console.error("[useHolidayPeriods] Erreur lors de la récupération des périodes:", error);
+          throw error;
+        }
+        
+        console.log("[useHolidayPeriods] Périodes de vacances récupérées:", data?.length);
+        return data;
+      } catch (err) {
+        console.error("[useHolidayPeriods] Exception:", err);
+        toast.error("Impossible de charger les périodes de vacances");
+        return [];
       }
-      console.log("Retrieved holiday periods:", data);
-      return data;
     },
   });
 
-  return { holidayPeriods };
+  return { 
+    holidayPeriods,
+    isLoading,
+    error
+  };
 };
