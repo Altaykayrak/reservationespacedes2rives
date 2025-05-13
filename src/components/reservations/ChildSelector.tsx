@@ -2,7 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
 import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CM2SummerAlert } from "./CM2SummerAlert";
 import { useChildFiltering } from "./hooks/useChildFiltering";
 import { useCM2ChildCheck } from "./hooks/useCM2ChildCheck";
@@ -25,13 +25,18 @@ export const ChildSelector = ({
   const location = useLocation();
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
+  const isInitialMount = useRef(true);
+  const previousPeriodId = useRef(selectedPeriodId);
 
   // Listen for period selection from URL search parameters
   useEffect(() => {
+    // Only update if URL params actually changed to prevent loops
     const searchParams = new URLSearchParams(location.search);
     const periodId = searchParams.get("periodId");
-    if (periodId) {
+    
+    if (periodId && periodId !== selectedPeriodId) {
       setSelectedPeriodId(periodId);
+      previousPeriodId.current = periodId;
     }
   }, [location.search]);
 
@@ -69,13 +74,21 @@ export const ChildSelector = ({
   console.log("Class mappings:", classMappings);
   console.log("Is summer period:", isSummerPeriod);
 
+  // Handle child selection with anti-bounce protection
+  const handleChildSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const childId = e.target.value;
+    if (childId !== selectedChild) {
+      setSelectedChild(childId);
+    }
+  };
+
   return (
     <div>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
       <select
         id="child-select"
         value={selectedChild}
-        onChange={(e) => setSelectedChild(e.target.value)}
+        onChange={handleChildSelect}
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
       >
         <option value="">Choisir un enfant</option>

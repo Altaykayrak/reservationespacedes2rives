@@ -4,6 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect, useMemo } from "react";
 
 export const useChildFiltering = (
   children: Tables<"children">[] | null | undefined,
@@ -36,7 +37,8 @@ export const useChildFiltering = (
       
       return data;
     },
-    enabled: !!selectedPeriodId
+    enabled: !!selectedPeriodId,
+    staleTime: 60000, // Cache for 1 minute
   });
 
   // Récupérer les mappings de classe pour la période sélectionnée
@@ -57,58 +59,56 @@ export const useChildFiltering = (
       
       return data;
     },
-    enabled: !!selectedPeriodId
+    enabled: !!selectedPeriodId,
+    staleTime: 60000, // Cache for 1 minute
   });
 
-  // Filtrage des enfants basé sur la page et les mappings
-  const getFilteredChildren = () => {
-    // Pour la page des mercredis, utiliser les enfants tels quels
-    // car ils sont déjà filtrés dans useChildrenData
-    let filteredChildren = children;
-
-    // Filtrage spécifique pour /holiday-reservations basé sur les mappings de classe
+  // Memoize filtered children to prevent unnecessary recalculations
+  const filteredChildren = useMemo(() => {
+    // For non-existent children array, return early
+    if (!children) return null;
+    
+    // For holiday reservations with class mappings
     if (isHolidayReservation && classMappings && classMappings.length > 0 && selectedPeriodId) {
-      // Filtrer les enfants par catégorie primaire et maternelle selon les mappings
-      filteredChildren = children?.filter(child => {
-        // Chercher le mapping pour cette classe
+      return children.filter(child => {
         const mapping = classMappings.find(
           m => m.school_class.toLowerCase() === child.school_class.toLowerCase()
         );
         
-        // Si un mapping existe, vérifier si la catégorie est maternelle ou primaire
         if (mapping) {
           return mapping.category === 'maternelle' || mapping.category === 'primaire';
         }
         
-        // Si pas de mapping trouvé, utiliser la logique standard (exclure les adolescents)
         return !isTeenClassSync(child.school_class);
       });
-    } else if (isHolidayReservation) {
-      // Fallback à la logique standard si pas de mappings
-      filteredChildren = children?.filter(child => {
-        return !isTeenClassSync(child.school_class);
-      });
-    } else if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
-      // Pour les réservations de vacances ados, afficher les adolescents et les CM2 pendant les périodes d'été
-      filteredChildren = children?.filter(child => {
+    } 
+    // For holiday reservations without mappings
+    else if (isHolidayReservation) {
+      return children.filter(child => !isTeenClassSync(child.school_class));
+    } 
+    // For teen holiday reservations
+    else if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
+      return children.filter(child => {
         const isChildTeen = isTeenClassSync(child.school_class);
         const isCM2 = child.school_class === "CM2";
         
-        // Si c'est une période d'été spécifique, inclure également les CM2
         if (periodInfo?.name && summerPeriods.includes(periodInfo.name)) {
           return isChildTeen || isCM2;
         }
         return isChildTeen;
       });
     }
+    
+    // Default: return all children
+    return children;
+  }, [children, classMappings, selectedPeriodId, periodInfo, isHolidayReservation, isTeenHolidayReservation, isAdminTeenHolidayReservation, isTeenClassSync, summerPeriods]);
 
-    return filteredChildren;
-  };
-
-  const isSummerPeriod = periodInfo?.name && summerPeriods.includes(periodInfo.name);
+  const isSummerPeriod = useMemo(() => {
+    return periodInfo?.name && summerPeriods.includes(periodInfo.name);
+  }, [periodInfo, summerPeriods]);
 
   return {
-    filteredChildren: getFilteredChildren(),
+    filteredChildren,
     periodInfo,
     classMappings,
     isSummerPeriod,
@@ -117,5 +117,3 @@ export const useChildFiltering = (
     isAdminTeenHolidayReservation
   };
 };
-
-import { useState } from "react";
