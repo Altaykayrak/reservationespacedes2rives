@@ -40,7 +40,7 @@ export const useHolidayReservations = () => {
 
       const childrenIds = userChildren.map(child => child.id);
 
-      // Ensure we're only getting confirmed reservations
+      // Modify the query to avoid using nested join on profiles.school_city
       const { data: reservationsData, error: reservationsError } = await supabase
         .from("holiday_reservations")
         .select(`
@@ -59,10 +59,7 @@ export const useHolidayReservations = () => {
             first_name,
             last_name,
             school_class,
-            profile_id,
-            profile:profiles (
-              school_city
-            )
+            profile_id
           )
         `)
         .eq('status', 'confirmed')
@@ -92,8 +89,6 @@ export const useHolidayReservations = () => {
 
         // Ensure we're handling the children data correctly
         const childData = reservation.children;
-        // Extract profile data safely
-        const profileData = (childData.profile as any) || {};
 
         const transformedReservation: HolidayReservationWithChild = {
           id: reservation.id,
@@ -112,7 +107,7 @@ export const useHolidayReservations = () => {
             last_name: childData.last_name,
             school_class: childData.school_class,
             profile: {
-              school_city: profileData.school_city || ''
+              school_city: '' // We don't have school_city but the type requires it
             }
           }
         };

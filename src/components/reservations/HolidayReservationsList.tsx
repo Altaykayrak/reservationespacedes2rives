@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { HolidayChildReservationCard } from "./holiday/HolidayChildReservationCard";
 import { useHolidayReservations } from "@/hooks/useHolidayReservations";
 import { HolidayReservationWithChild } from "@/types/reservations";
-import { useToast } from "@/hooks/use-toast";
 import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 
 type GroupedReservations = Record<string, {
@@ -16,7 +15,6 @@ type GroupedReservations = Record<string, {
 
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const isTeenPage = window.location.pathname === "/teenholiday-reservations";
   const { reservations, isError, error, refetch } = useHolidayReservations();
   const { isTeenClassSync } = useSchoolClassUtils();
