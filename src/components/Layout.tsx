@@ -10,6 +10,17 @@ export const Layout = () => {
   useEffect(() => {
     console.log("[Layout] Navigation vers", location.pathname, "avec URL params:", location.search);
     
+    // Liste des chemins où le beforeunload est nécessaire (pages de réservation uniquement)
+    const pathsRequiringWarning = [
+      '/holiday-reservations',
+      '/teenholiday-reservations'
+    ];
+    
+    // Vérifier si le chemin actuel nécessite une confirmation avant de quitter
+    const shouldShowWarning = pathsRequiringWarning.some(path => 
+      location.pathname.startsWith(path)
+    );
+    
     // Fonction pour intercepter et prévenir les soumissions de formulaire
     const preventFormSubmission = (e: SubmitEvent) => {
       console.log("[Layout] Interception d'une soumission de formulaire");
@@ -18,10 +29,9 @@ export const Layout = () => {
       return false;
     };
     
-    // Fonction pour empêcher les rechargements de page
+    // Fonction pour empêcher les rechargements de page uniquement sur les pages spécifiques
     const preventUnload = (e: BeforeUnloadEvent) => {
-      if (location.pathname.includes('holiday-reservations') || 
-          location.pathname.includes('teenholiday-reservations')) {
+      if (shouldShowWarning) {
         console.log("[Layout] Tentative de quitter la page, prévention");
         e.preventDefault();
         return (e.returnValue = '');
@@ -47,25 +57,29 @@ export const Layout = () => {
       }
     };
     
-    // Ajouter les écouteurs
-    document.addEventListener('submit', preventFormSubmission, true);
-    window.addEventListener('beforeunload', preventUnload);
-    document.addEventListener('click', preventDefaultClicks, true);
-    
-    // Vérifier tous les formulaires existants
-    const forms = document.querySelectorAll('form');
-    if (forms.length > 0) {
-      console.log(`[Layout] ${forms.length} formulaires trouvés, ajout de préventifs`);
-      forms.forEach((form, index) => {
-        form.setAttribute('data-controlled', 'true');
-        form.addEventListener('submit', preventFormSubmission);
-      });
+    // N'ajouter les écouteurs que si nous sommes sur une page qui les nécessite
+    if (shouldShowWarning) {
+      document.addEventListener('submit', preventFormSubmission, true);
+      window.addEventListener('beforeunload', preventUnload);
+      document.addEventListener('click', preventDefaultClicks, true);
+      
+      // Vérifier tous les formulaires existants
+      const forms = document.querySelectorAll('form');
+      if (forms.length > 0) {
+        console.log(`[Layout] ${forms.length} formulaires trouvés, ajout de préventifs`);
+        forms.forEach((form) => {
+          form.setAttribute('data-controlled', 'true');
+          form.addEventListener('submit', preventFormSubmission);
+        });
+      }
     }
     
     return () => {
-      document.removeEventListener('submit', preventFormSubmission, true);
-      window.addEventListener('beforeunload', preventUnload);
-      document.removeEventListener('click', preventDefaultClicks, true);
+      if (shouldShowWarning) {
+        document.removeEventListener('submit', preventFormSubmission, true);
+        window.removeEventListener('beforeunload', preventUnload);
+        document.removeEventListener('click', preventDefaultClicks, true);
+      }
     };
   }, [location]);
 

@@ -1,4 +1,3 @@
-
 import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
@@ -27,9 +26,13 @@ export const useChildFiltering = (
     return () => setIsMounted(false);
   }, []);
 
-  // Prévenir les rechargements de page accidentels
+  // Liste des chemins où le beforeunload est nécessaire
+  const pathsRequiringWarning = ['/holiday-reservations', '/teenholiday-reservations'];
+  const shouldShowWarning = pathsRequiringWarning.some(path => location.pathname.startsWith(path));
+
+  // Prévenir les rechargements de page accidentels uniquement sur les pages concernées
   useEffect(() => {
-    if (isGlobalEventHandlerSet) return;
+    if (!shouldShowWarning || isGlobalEventHandlerSet) return;
 
     const preventFormSubmission = (e: SubmitEvent) => {
       console.log("[useChildFiltering] Interception d'une soumission de formulaire");
@@ -39,12 +42,9 @@ export const useChildFiltering = (
     };
     
     const preventUnload = (e: BeforeUnloadEvent) => {
-      if (location.pathname.includes('holiday-reservations') || 
-          location.pathname.includes('teenholiday-reservations')) {
-        console.log("[useChildFiltering] Tentative de quitter la page, prévention");
-        e.preventDefault();
-        return (e.returnValue = '');
-      }
+      console.log("[useChildFiltering] Tentative de quitter la page, prévention");
+      e.preventDefault();
+      return (e.returnValue = '');
     };
     
     // Prévenir les clics pouvant causer des soumissions
@@ -61,7 +61,7 @@ export const useChildFiltering = (
       }
     };
     
-    // Ajouter les écouteurs
+    // Ajouter les écouteurs uniquement sur les pages de réservation
     document.addEventListener('submit', preventFormSubmission, true);
     window.addEventListener('beforeunload', preventUnload);
     document.addEventListener('click', preventClicks, true);
@@ -72,7 +72,7 @@ export const useChildFiltering = (
       window.removeEventListener('beforeunload', preventUnload);
       document.removeEventListener('click', preventClicks, true);
     };
-  }, [location.pathname, isGlobalEventHandlerSet]);
+  }, [location.pathname, isGlobalEventHandlerSet, shouldShowWarning]);
 
   // Requête pour obtenir les informations sur la période sélectionnée
   const { data: periodInfo, isLoading: isPeriodLoading } = useQuery({
