@@ -7,35 +7,66 @@ import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
+import { toast } from "@/hooks/use-toast";
 
 const HolidayReservations = () => {
   const { user } = useAuth();
   const [isWaiting, setIsWaiting] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAccess = async () => {
       if (!user?.id) return;
+      
+      try {
+        setIsLoading(true);
+        // Récupérer les états directement de la base de données
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_waiting, is_closed')
+          .eq('id', user.id)
+          .single();
 
-      // Récupérer les états directement de la base de données
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_waiting, is_closed')
-        .eq('id', user.id)
-        .single();
+        if (error) {
+          console.error('Error checking access:', error);
+          toast({ 
+            title: "Erreur",
+            description: "Impossible de vérifier votre accès. Veuillez réessayer plus tard.",
+            variant: "destructive"
+          });
+          return;
+        }
 
-      if (error) {
-        console.error('Error checking access:', error);
-        return;
+        console.log('Profile data:', data);
+        setIsWaiting(data?.is_waiting || false);
+        setIsClosed(data?.is_closed || false);
+      } catch (error) {
+        console.error('Error in checkAccess:', error);
+      } finally {
+        setIsLoading(false);
       }
-
-      console.log('Profile data:', data);
-      setIsWaiting(data?.is_waiting || false);
-      setIsClosed(data?.is_closed || false);
     };
 
     checkAccess();
   }, [user]);
+
+  // Afficher un indicateur de chargement
+  if (isLoading && user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-gray-600">Chargement des réservations...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Afficher le message d'attente et empêcher la création de nouvelles réservations
   if (isWaiting) {

@@ -5,7 +5,7 @@ import { useMemo } from "react";
 
 export const useReservationValidation = (childId: string | null) => {
   // Récupération des réservations existantes
-  const { data: existingReservations } = useQuery({
+  const { data: existingReservations, isLoading } = useQuery({
     queryKey: ["existing_holiday_reservations", childId],
     queryFn: async () => {
       if (!childId) return [];
@@ -23,18 +23,21 @@ export const useReservationValidation = (childId: string | null) => {
         throw error;
       }
       
+      console.log("Current existingReservations:", data);
       return data || [];
     },
     enabled: Boolean(childId),
     staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10 // 10 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    retry: false
   });
 
   // Utiliser useMemo pour mémoriser la fonction isDateAlreadyReserved
   const isDateAlreadyReserved = useMemo(() => {
     return (date: Date) => {
       // Vérifier si existingReservations est défini
-      if (!existingReservations || existingReservations.length === 0) return false;
+      const reservations = existingReservations || [];
+      if (reservations.length === 0) return false;
       
       try {
         // Normaliser la date à minuit UTC
@@ -42,7 +45,7 @@ export const useReservationValidation = (childId: string | null) => {
         normalizedDate.setHours(0, 0, 0, 0);
         
         // Vérifier si la date existe déjà dans les réservations
-        return existingReservations.some(reservation => {
+        return reservations.some(reservation => {
           if (!reservation.reservation_date) return false;
           
           const reservationDate = new Date(reservation.reservation_date);
@@ -60,5 +63,6 @@ export const useReservationValidation = (childId: string | null) => {
   return {
     existingReservations: existingReservations || [],
     isDateAlreadyReserved,
+    isLoading
   };
 };

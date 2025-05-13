@@ -46,7 +46,12 @@ export const PeriodSelector = memo(({
 
   // Filtrer les périodes lorsque les mappings sont chargés
   useEffect(() => {
-    if (filterTeenOnly && classMappings && holidayPeriods) {
+    if (!holidayPeriods) {
+      setFilteredPeriods([]);
+      return;
+    }
+    
+    if (filterTeenOnly && classMappings) {
       // Extraire les IDs de période qui ont des classes mappées comme adolescents
       const teenPeriodIds = classMappings.map(mapping => mapping.holiday_period_id);
       
@@ -75,7 +80,7 @@ export const PeriodSelector = memo(({
 
   // Gestionnaire d'événements optimisé pour la sélection de période
   const handlePeriodChange = useCallback((value: string) => {
-    // Arrêter tout événement de propagation potentiel
+    // Prévenir les événements par défaut qui pourraient causer un rechargement
     console.log("Sélection de période:", value);
     
     if (value !== selectedPeriod) {
@@ -83,15 +88,24 @@ export const PeriodSelector = memo(({
     }
   }, [selectedPeriod, setSelectedPeriod]);
 
+  // Prévenir les clics qui pourraient se propager à un formulaire parent
+  const preventPropagation = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
-    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+    <div className="space-y-2" onClick={preventPropagation}>
       <label className="text-sm font-medium">Sélectionner une période</label>
-      <Select value={selectedPeriod || ""} onValueChange={handlePeriodChange}>
-        <SelectTrigger className="w-full">
+      <Select 
+        value={selectedPeriod} 
+        onValueChange={handlePeriodChange}
+      >
+        <SelectTrigger className="w-full" onClick={preventPropagation}>
           <SelectValue placeholder="Choisir une période" />
         </SelectTrigger>
         <SelectContent className="bg-white z-[100]">
-          {filteredPeriods && filteredPeriods.length > 0 ? (
+          {Array.isArray(filteredPeriods) && filteredPeriods.length > 0 ? (
             filteredPeriods.map((period) => (
               <SelectItem key={period.id} value={period.id}>
                 {format(new Date(period.start_date), "d MMMM yyyy", { locale: fr })} au{" "}

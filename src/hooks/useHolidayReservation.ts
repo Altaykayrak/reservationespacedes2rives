@@ -41,10 +41,16 @@ export const useHolidayReservation = () => {
   const { data: children } = useQuery({
     queryKey: ["children"],
     queryFn: async () => {
+      console.log("Fetching children data");
       const { data, error } = await supabase
         .from("children")
         .select("*");
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Error fetching children:", error);
+        throw error;
+      }
+      
       return data;
     },
   });
@@ -53,15 +59,21 @@ export const useHolidayReservation = () => {
   const { data: holidayPeriods } = useQuery({
     queryKey: ["available_holiday_periods"],
     queryFn: async () => {
+      console.log("Fetching holiday periods");
       const { data, error } = await supabase
         .from("available_holiday_periods")
         .select("*");
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Error fetching holiday periods:", error);
+        throw error;
+      }
+      
       return data;
     },
   });
 
-  // Use the submit hook
+  // Use the submit hook with proper dependencies
   const { handleSubmit } = useSubmitReservation(
     selectedChild,
     selectedDates,
@@ -74,7 +86,7 @@ export const useHolidayReservation = () => {
     setIsSubmitting
   );
 
-  // Version optimisée pour éviter les rechargements
+  // Optimized setters to avoid unnecessary re-renders
   const safeSetSelectedChild = useCallback((childId: string) => {
     setSelectedChild(childId);
   }, [setSelectedChild]);

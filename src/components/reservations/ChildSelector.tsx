@@ -28,10 +28,14 @@ export const ChildSelector = memo(({
 
   // Listen for period selection from URL search parameters
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const periodId = searchParams.get("periodId");
-    if (periodId) {
-      setSelectedPeriodId(periodId);
+    try {
+      const searchParams = new URLSearchParams(location.search);
+      const periodId = searchParams.get("periodId");
+      if (periodId) {
+        setSelectedPeriodId(periodId);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des paramètres d'URL:", error);
     }
   }, [location.search]);
 
@@ -62,27 +66,35 @@ export const ChildSelector = memo(({
 
   // Gestionnaire d'événements optimisé pour éviter les rechargements de page
   const handleChildChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    e.preventDefault(); // Éviter le comportement par défaut
-    e.stopPropagation(); // Arrêter la propagation
-    const childId = e.target.value;
+    e.preventDefault();
+    e.stopPropagation();
     
+    const form = e.target.closest('form');
+    if (form) {
+      // Empêcher tout formulaire parent de se soumettre
+      form.addEventListener('submit', (formEvent) => {
+        formEvent.preventDefault();
+        formEvent.stopPropagation();
+      }, { once: true });
+    }
+    
+    const childId = e.target.value;
     console.log("Sélection d'enfant:", childId);
     
-    // Appliquer le changement via le setter sans recharger la page
     if (childId !== selectedChild) {
       setSelectedChild(childId);
     }
   }, [selectedChild, setSelectedChild]);
 
   return (
-    <div>
+    <div onClick={(e) => e.stopPropagation()}>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
       <select
         id="child-select"
         value={selectedChild || ""}
         onChange={handleChildChange}
         className="w-full mt-2 rounded-md border border-gray-300 p-2"
-        onClick={(e) => e.stopPropagation()} // Empêcher la propagation
+        onClick={(e) => e.stopPropagation()}
       >
         <option value="">Choisir un enfant</option>
         {filteredChildren?.length ? (
