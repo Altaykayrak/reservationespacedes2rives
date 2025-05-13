@@ -1,9 +1,9 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
 export const useSelectionState = () => {
-  // États locaux
+  // États locaux avec références pour éviter les références circulaires
   const [selectedChild, setSelectedChildState] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriodState] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -11,29 +11,44 @@ export const useSelectionState = () => {
   const [noSpotsDialog, setNoSpotsDialog] = useState({ isOpen: false, schoolClass: '', date: new Date() });
   const [minimumDaysDialog, setMinimumDaysDialog] = useState({ isOpen: false });
   
-  // Utilisation des paramètres d'URL
+  // Utilisation des paramètres d'URL avec une référence pour éviter les mises à jour en boucle
   const [searchParams, setSearchParams] = useSearchParams();
+  const isUpdatingParams = useRef(false);
 
   // Initialisation depuis l'URL au chargement initial
   useEffect(() => {
+    if (isUpdatingParams.current) return;
+
     const periodId = searchParams.get("periodId");
     const childId = searchParams.get("childId");
     
+    // Utiliser batch updates pour minimiser les rendus
+    const updates = {};
+    
     if (periodId && periodId !== selectedPeriod) {
-      setSelectedPeriodState(periodId);
+      updates["selectedPeriod"] = periodId;
     }
     
     if (childId && childId !== selectedChild) {
-      setSelectedChildState(childId);
+      updates["selectedChild"] = childId;
     }
-  }, []);
+    
+    // N'appliquer les mises à jour que s'il y a des changements
+    if (Object.keys(updates).length > 0) {
+      if (updates["selectedPeriod"]) setSelectedPeriodState(updates["selectedPeriod"]);
+      if (updates["selectedChild"]) setSelectedChildState(updates["selectedChild"]);
+    }
+  }, [searchParams]);
   
-  // Fonction pour mettre à jour l'enfant sélectionné
+  // Fonction pour mettre à jour l'enfant sélectionné de manière sécurisée
   const setSelectedChild = useCallback((childId: string) => {
     if (childId === selectedChild) return; // Éviter les mises à jour inutiles
     
     // Mettre à jour l'état local
     setSelectedChildState(childId);
+    
+    // Éviter les boucles de mise à jour
+    isUpdatingParams.current = true;
     
     // Mettre à jour les paramètres d'URL de façon sécurisée sans recharger la page
     const newParams = new URLSearchParams(searchParams);
@@ -54,14 +69,22 @@ export const useSelectionState = () => {
       replace: true,
       state: { preventReload: true }
     });
+    
+    // Réinitialiser le drapeau après un court délai
+    setTimeout(() => {
+      isUpdatingParams.current = false;
+    }, 0);
   }, [selectedChild, searchParams, setSearchParams]);
   
-  // Fonction pour mettre à jour la période sélectionnée
+  // Fonction pour mettre à jour la période sélectionnée de manière sécurisée
   const setSelectedPeriod = useCallback((periodId: string) => {
     if (periodId === selectedPeriod) return; // Éviter les mises à jour inutiles
     
     // Mettre à jour l'état local
     setSelectedPeriodState(periodId);
+    
+    // Éviter les boucles de mise à jour
+    isUpdatingParams.current = true;
     
     // Mettre à jour les paramètres d'URL de façon sécurisée sans recharger la page
     const newParams = new URLSearchParams(searchParams);
@@ -80,24 +103,14 @@ export const useSelectionState = () => {
     // Utiliser replace: true ET l'option state pour éviter de recharger la page
     setSearchParams(newParams, { 
       replace: true,
-      state: { preventReload: true }
+      state: { preventReload: true, updateSource: 'internal' }
     });
+    
+    // Réinitialiser le drapeau après un court délai
+    setTimeout(() => {
+      isUpdatingParams.current = false;
+    }, 0);
   }, [selectedPeriod, searchParams, setSearchParams]);
-
-  // Synchroniser les états locaux avec les paramètres d'URL lorsqu'ils changent
-  useEffect(() => {
-    const periodId = searchParams.get("periodId");
-    const childId = searchParams.get("childId");
-    
-    // Synchroniser uniquement si les valeurs diffèrent pour éviter des cycles
-    if (periodId && periodId !== selectedPeriod) {
-      setSelectedPeriodState(periodId);
-    }
-    
-    if (childId && childId !== selectedChild) {
-      setSelectedChildState(childId);
-    }
-  }, [searchParams]);
 
   return {
     selectedChild,

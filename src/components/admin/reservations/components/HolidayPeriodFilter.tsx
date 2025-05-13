@@ -1,7 +1,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, memo } from "react";
 
 interface HolidayPeriod {
   id: string;
@@ -14,7 +14,7 @@ interface HolidayPeriodFilterProps {
   availablePeriods: HolidayPeriod[];
 }
 
-export const HolidayPeriodFilter = ({
+export const HolidayPeriodFilter = memo(({
   selectedPeriod,
   setSelectedPeriod,
   availablePeriods,
@@ -22,6 +22,7 @@ export const HolidayPeriodFilter = ({
   // Optimiser le gestionnaire pour éviter les rechargements
   const handlePeriodChange = useCallback((value: string) => {
     if (value !== selectedPeriod) {
+      console.log("Changing period filter to:", value);
       setSelectedPeriod(value);
     }
   }, [selectedPeriod, setSelectedPeriod]);
@@ -33,7 +34,7 @@ export const HolidayPeriodFilter = ({
         <SelectTrigger className="w-[280px]">
           <SelectValue placeholder="Filtrer par période" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white z-[100]">
           <SelectItem value="all">Toutes les périodes</SelectItem>
           {availablePeriods.map((period) => (
             <SelectItem key={period.id} value={period.id}>
@@ -44,4 +45,6 @@ export const HolidayPeriodFilter = ({
       </Select>
     </div>
   );
-};
+});
+
+HolidayPeriodFilter.displayName = "HolidayPeriodFilter";

@@ -2,7 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
 import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import { CM2SummerAlert } from "./CM2SummerAlert";
 import { useChildFiltering } from "./hooks/useChildFiltering";
 import { useCM2ChildCheck } from "./hooks/useCM2ChildCheck";
@@ -15,7 +15,7 @@ interface ChildSelectorProps {
   onCM2SummerPeriodCheck?: (isInSummerPeriod: boolean) => void;
 }
 
-export const ChildSelector = ({
+export const ChildSelector = memo(({
   selectedChild,
   setSelectedChild,
   children,
@@ -60,16 +60,18 @@ export const ChildSelector = ({
     onCM2SummerPeriodCheck
   );
 
-  // Gestionnaire d'événements pour éviter les rechargements de page
-  const handleChildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  // Gestionnaire d'événements optimisé pour éviter les rechargements de page
+  const handleChildChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault(); // Éviter le comportement par défaut
     const childId = e.target.value;
+    
+    console.log("Sélection d'enfant:", childId);
     
     // Appliquer le changement via le setter sans recharger la page
     if (childId !== selectedChild) {
       setSelectedChild(childId);
     }
-  };
+  }, [selectedChild, setSelectedChild]);
 
   return (
     <div>
@@ -98,4 +100,6 @@ export const ChildSelector = ({
       <CM2SummerAlert show={showCM2Message} />
     </div>
   );
-};
+});
+
+ChildSelector.displayName = "ChildSelector";

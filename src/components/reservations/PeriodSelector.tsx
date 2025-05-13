@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,7 +14,8 @@ interface PeriodSelectorProps {
   filterTeenOnly?: boolean;
 }
 
-export const PeriodSelector = ({
+// Utiliser memo pour éviter les rendus inutiles
+export const PeriodSelector = memo(({
   selectedPeriod,
   setSelectedPeriod,
   holidayPeriods,
@@ -75,7 +76,9 @@ export const PeriodSelector = ({
   // Gestionnaire d'événements optimisé pour la sélection de période
   const handlePeriodChange = useCallback((value: string) => {
     if (value !== selectedPeriod) {
+      // Empêcher le comportement de formulaire par défaut
       // Utiliser le setter qui gère les paramètres URL de façon asynchrone
+      console.log("Sélection de période:", value);
       setSelectedPeriod(value);
     }
   }, [selectedPeriod, setSelectedPeriod]);
@@ -87,7 +90,7 @@ export const PeriodSelector = ({
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Choisir une période" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white z-[100]">
           {filteredPeriods?.length ? (
             filteredPeriods.map((period) => (
               <SelectItem key={period.id} value={period.id}>
@@ -102,4 +105,7 @@ export const PeriodSelector = ({
       </Select>
     </div>
   );
-};
+});
+
+PeriodSelector.displayName = "PeriodSelector";
+
