@@ -1,14 +1,13 @@
-
 import { useState } from "react";
-import { useChildrenData } from "@/hooks/useChildrenData";
-import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { nanoid } from "nanoid";
-import { format } from "date-fns";
-import { toast } from "sonner";
-import { useExistingHolidayReservations } from "./useExistingHolidayReservations";
-import { getWeeksFromDates } from "@/utils/dateUtils";
+import { Tables } from "@/integrations/supabase/types";
+import { format, startOfWeek } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
+import { createHolidayReservations } from "@/utils/reservationCreationUtils";
+import { sendHolidayReservationEmail } from "@/utils/emailUtils";
+import { useHolidayReservations } from "./useHolidayReservations";
 
 interface DateOption {
   date: Date;
@@ -18,188 +17,190 @@ interface DateOption {
 
 export const useHolidayReservation = () => {
   const [selectedDates, setSelectedDates] = useState<DateOption[]>([]);
-  const [selectedChild, setSelectedChild] = useState("");
-  const [selectedPeriod, setSelectedPeriod] = useState("");
+  const [selectedChild, setSelectedChild] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [noSpotsDialog, setNoSpotsDialog] = useState({
-    isOpen: false,
-    schoolClass: "",
-    date: null as Date | null
-  });
-  const [minimumDaysDialog, setMinimumDaysDialog] = useState({
-    isOpen: false
-  });
-  
-  const queryClient = useQueryClient();
-  
-  // Récupérer les données des enfants et des périodes
-  const { children } = useChildrenData();
-  const { holidayPeriods } = useHolidayPeriods();
-  const { existingReservations, refetchReservations, isDateAlreadyReserved } = useExistingHolidayReservations(selectedChild);
-  
-  // État pour suivre si le formulaire est en cours d'envoi
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [noSpotsDialog, setNoSpotsDialog] = useState({ isOpen: false, schoolClass: '', date: new Date() });
+  const [minimumDaysDialog, setMinimumDaysDialog] = useState({ isOpen: false });
+  const { toast } = useToast();
+  const { refetch: refetchReservations } = useHolidayReservations();
   
-  // Toggle date selection
-  const handleDateToggle = (date: Date) => {
-    console.log(`Toggle date: ${format(date, "yyyy-MM-dd")}`);
-    
-    const isTeenHolidayReservation = window.location.pathname === "/teenholiday-reservations" || 
-                                    window.location.pathname === "/admin/reservations/new-teen-holiday";
-    
-    const existingDateIndex = selectedDates.findIndex(
-      d => format(d.date, "yyyy-MM-dd") === format(date, "yyyy-MM-dd")
-    );
-    
-    if (existingDateIndex >= 0) {
-      // Si la date existe déjà, la supprimer
-      setSelectedDates(selectedDates.filter((_, i) => i !== existingDateIndex));
-    } else {
-      // Sinon, l'ajouter avec les options par défaut
-      // Pour le "Club Ado", l'option "Sans repas" est activée par défaut
-      setSelectedDates([
-        ...selectedDates,
-        {
-          date,
-          withoutMeal: isTeenHolidayReservation,
-          earlyDropoff: false // "Accueil avant 8h30" désactivé par défaut
-        }
-      ]);
-    }
-  };
-  
-  // Handle option changes
-  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
-    setSelectedDates(selectedDates.map(d => 
-      format(d.date, "yyyy-MM-dd") === format(date, "yyyy-MM-dd") 
-        ? { ...d, [option]: value } 
-        : d
-    ));
-  };
-  
-  // Create reservations mutation
-  const createReservations = useMutation({
-    mutationFn: async () => {
-      if (!selectedChild || !selectedPeriod || selectedDates.length === 0) return;
-      
-      // Générer un numéro de réservation unique
-      const reservationNumber = nanoid(8).toUpperCase();
-      
-      // Préparer les réservations
-      const reservations = selectedDates.map(d => ({
-        child_id: selectedChild,
-        period_id: selectedPeriod,
-        reservation_date: format(d.date, "yyyy-MM-dd"),
-        without_meal: d.withoutMeal,
-        early_dropoff: d.earlyDropoff,
-        reservation_number: reservationNumber,
-        status: "confirmed"
-      }));
-      
-      // Insérer les réservations dans la base de données
-      const { error } = await supabase.from("holiday_reservations").insert(reservations);
+  const isTeenPage = window.location.pathname === "/teenholiday-reservations" || 
+                      window.location.pathname === "/admin/reservations/new-teen-holiday" ||
+                      window.location.pathname === "/admin/new-teenholiday-reservation";
+
+  const { data: children } = useQuery({
+    queryKey: ["children"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("*");
       if (error) throw error;
-      
-      return { reservationNumber };
+      return data;
     },
-    onSuccess: () => {
-      // Rafraîchir les données des réservations
-      queryClient.invalidateQueries({ queryKey: ["holiday_reservations"] });
-      queryClient.invalidateQueries({ queryKey: ["existing_holiday_reservations"] });
-      
-      // Réinitialiser le formulaire
-      setSelectedDates([]);
-      setShowSuccessDialog(true);
-      refetchReservations();
-    }
   });
-  
-  // Vérifier que le minimum de 3 jours par semaine est respecté
-  const checkMinimumDays = () => {
-    // Obtenir la liste des dates sélectionnées
-    const dates = selectedDates.map(d => d.date);
-    
-    // Vérifier s'il y a au moins une date sélectionnée
-    if (dates.length === 0) {
-      return false;
+
+  const { data: holidayPeriods } = useQuery({
+    queryKey: ["available_holiday_periods"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("available_holiday_periods")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: existingReservations } = useQuery({
+    queryKey: ["existing_holiday_reservations", selectedChild],
+    queryFn: async () => {
+      if (!selectedChild) return [];
+      const { data, error } = await supabase
+        .from("holiday_reservations")
+        .select("*")
+        .eq("child_id", selectedChild);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedChild,
+  });
+
+  const isDateAlreadyReserved = (date: Date): boolean => {
+    if (!existingReservations) return false;
+    return existingReservations.some(reservation => {
+      const reservationDate = new Date(reservation.reservation_date);
+      return (
+        reservationDate.getFullYear() === date.getFullYear() &&
+        reservationDate.getMonth() === date.getMonth() &&
+        reservationDate.getDate() === date.getDate()
+      );
+    });
+  };
+
+  const handleDateToggle = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const isSelected = selectedDates.some(d => d.date.toISOString().split('T')[0] === dateStr);
+
+    if (isSelected) {
+      setSelectedDates(prev => prev.filter(d => d.date.toISOString().split('T')[0] !== dateStr));
+    } else {
+      setSelectedDates(prev => [...prev, { date: new Date(date), withoutMeal: isTeenPage, earlyDropoff: false }]);
     }
-    
-    // Obtenir les semaines avec leurs jours
-    const weeks = getWeeksFromDates(dates);
-    
-    // Vérifier chaque semaine pour le minimum de 3 jours
-    const isTeenReservation = window.location.pathname === "/teenholiday-reservations" || 
-                             window.location.pathname === "/admin/reservations/new-teen-holiday" || 
-                             window.location.pathname === "/admin/new-teenholiday-reservation";
-    
-    // Si c'est une réservation ado, on vérifie toutes les semaines
-    if (isTeenReservation) {
-      for (const weekDates of weeks) {
-        if (weekDates.length < 3) {
-          setMinimumDaysDialog({ isOpen: true });
-          return false;
+  };
+
+  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
+    setSelectedDates(prev => {
+      return prev.map(d => {
+        if (d.date.toISOString().split('T')[0] === date.toISOString().split('T')[0]) {
+          return { ...d, [option]: value };
         }
-      }
-    }
-    
-    // Si on arrive ici, toutes les vérifications sont passées
-    return true;
+        return d;
+      });
+    });
   };
-  
-  // Vérifier les spots disponibles avant soumission
-  const checkAvailableSpots = async () => {
-    // Vérification des places disponibles
-    // Cette fonction est simplifiée pour cet exemple
-    // Dans une implémentation complète, elle vérifierait les places disponibles pour chaque date
-    return true;
-  };
-  
+
   const handleSubmit = async () => {
-    console.log("Début de la soumission");
+    if (!selectedChild || !selectedPeriod || selectedDates.length === 0) return;
     
-    // Éviter les soumissions multiples
-    if (isSubmitting) {
-      console.log("Déjà en cours de soumission, ignoré");
-      return;
-    }
+    // Generate a timestamp to trace this specific submission
+    const submissionTimestamp = Date.now();
+    console.log(`DEBUG: handleSubmit called - timestamp: ${submissionTimestamp}`);
     
     setIsSubmitting(true);
     
     try {
-      // Vérifications préalables
-      console.log("Vérification des jours minimums");
-      const minDaysOk = checkMinimumDays();
-      if (!minDaysOk) {
-        console.log("Validation échouée: minimum de jours non respecté");
+      // Check if all selected dates are in the same week
+      const datesPerWeek = getDatesPerWeek(selectedDates.map(d => d.date));
+      const hasMinimumDaysPerWeek = Object.values(datesPerWeek).every(dates => dates.length >= 3);
+      
+      // If it's a teen reservation and we don't have minimum 3 days per week, show dialog
+      if (isTeenPage && !hasMinimumDaysPerWeek) {
+        setMinimumDaysDialog({ isOpen: true });
         setIsSubmitting(false);
         return;
       }
       
-      console.log("Vérification des places disponibles");
-      const spotsOk = await checkAvailableSpots();
-      if (!spotsOk) {
-        console.log("Validation échouée: places non disponibles");
-        setIsSubmitting(false);
-        return;
+      // Create the reservations
+      const result = await createHolidayReservations(
+        selectedChild, 
+        selectedDates, 
+        holidayPeriods,
+        submissionTimestamp
+      );
+      
+      if (result.success) {
+        setSelectedDates([]);
+        
+        // Send the confirmation email
+        try {
+          console.log(`DEBUG: Sending confirmation email - timestamp: ${submissionTimestamp}`);
+          const childFullName = `${result.childData?.first_name} ${result.childData?.last_name}`;
+          const childSchoolClass = result.childData?.school_class || "";
+          
+          const emailResult = await sendHolidayReservationEmail(
+            childFullName,
+            selectedDates,
+            result.periodName || "",
+            result.reservationNumber || "",
+            result.periodId || "",
+            submissionTimestamp,
+            childSchoolClass
+          );
+          
+          console.log(`DEBUG: Email result:`, emailResult, `- timestamp: ${submissionTimestamp}`);
+        } catch (emailError) {
+          console.error(`DEBUG: Error sending email: ${emailError} - timestamp: ${submissionTimestamp}`);
+          // Don't fail the whole operation if just the email fails
+        }
+        
+        await refetchReservations();
+        setShowSuccessDialog(true);
+      } else if (result.noSpots) {
+        setNoSpotsDialog({
+          isOpen: true,
+          schoolClass: result.noSpots.schoolClass,
+          date: result.noSpots.date,
+        });
+      } else {
+        console.error(`DEBUG: Error creating reservations: ${result.error} - timestamp: ${submissionTimestamp}`);
+        toast({
+          title: "Erreur",
+          description: result.error || "Une erreur est survenue lors de la création des réservations.",
+          variant: "destructive",
+        });
       }
-      
-      console.log("Toutes les vérifications OK, envoi de la réservation");
-      await createReservations.mutateAsync();
-      console.log("Réservation créée avec succès");
-      
-      // Réinitialiser le formulaire
-      setSelectedDates([]);
-      console.log("Formulaire réinitialisé");
-      
-    } catch (error) {
-      console.error("Erreur lors de la soumission:", error);
-      toast.error("Une erreur est survenue lors de la réservation. Veuillez réessayer.");
+    } catch (error: any) {
+      console.error(`DEBUG: Unexpected error in handleSubmit: ${error.message} - timestamp: ${submissionTimestamp}`);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création des réservations.",
+        variant: "destructive",
+      });
     } finally {
-      console.log("Fin de la soumission");
       setIsSubmitting(false);
     }
   };
-  
+
+  // Helper function to group dates by week
+  const getDatesPerWeek = (dates: Date[]) => {
+    const weeks: Record<string, Date[]> = {};
+    
+    dates.forEach(date => {
+      // Get the week number (ISO week, starting on Monday)
+      const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+      const weekKey = format(weekStart, 'yyyy-MM-dd');
+      
+      if (!weeks[weekKey]) {
+        weeks[weekKey] = [];
+      }
+      
+      weeks[weekKey].push(date);
+    });
+    
+    return weeks;
+  };
+
   return {
     selectedDates,
     selectedChild,

@@ -1,33 +1,13 @@
 
 export interface ReservationEmailRequest {
-  rdvId?: string;
-  motifs?: string[];
-  userId?: string;
-  reservationType?: string;
   childName?: string;
-  childClass?: string;
+  childClass?: string; // School class of the child
   dates?: string[];
   period?: string;
   withoutMeal?: boolean[];
   earlyDropoff?: boolean[];
+  reservationType?: 'holiday' | 'wednesday' | 'teen-holiday'; // Added 'teen-holiday'
+  rdvId?: string;
   requestId?: string;
-  userEmail?: string;
-  userName?: string;
-}
-
-export interface EventDetails {
-  summary: string;
-  description: string;
-  location: string;
-  start: Date;
-  end: Date;
-  uid: string;
-  organizer?: {
-    email: string;
-    name: string;
-  };
-  attendee?: {
-    email: string;
-    name: string;
-  };
+  userId?: string;
 }

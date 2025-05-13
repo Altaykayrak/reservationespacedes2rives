@@ -16,20 +16,32 @@ export const sendHolidayReservationEmail = async (
   reservationNumber: string,
   periodId: string,
   submissionTimestamp: number,
-  childSchoolClass: string // Ajout de la classe scolaire
+  childSchoolClass: string // Class field
 ) => {
-  // Créer un requestId unique qui inclut toutes les informations pertinentes
+  // Create a unique requestId that includes all relevant information
   const requestId = `holiday-${childFullName}-${reservationNumber}-${periodId}-${submissionTimestamp}`;
-  console.log(`DEBUG: Envoi d'email avec requestId: ${requestId} (timestamp: ${submissionTimestamp})`);
+  console.log(`DEBUG: Sending email with requestId: ${requestId} (timestamp: ${submissionTimestamp})`);
   
+  // Format the dates for better readability in the email
   const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
   
+  // Determine reservation type (standard or teen)
+  const isTeenReservation = childSchoolClass === "6ème" || 
+                           childSchoolClass === "5ème" || 
+                           childSchoolClass === "4ème" || 
+                           childSchoolClass === "3ème" ||
+                           childSchoolClass.toUpperCase() === "CAP";
+  
+  const reservationType = isTeenReservation ? 'teen-holiday' : 'holiday';
+  console.log(`DEBUG: Reservation type determined as: ${reservationType} for class ${childSchoolClass} (timestamp: ${submissionTimestamp})`);
+  
+  // Invoke the Supabase Edge Function to send the email
   const emailResponse = await supabase.functions.invoke('send-reservation-email', {
     body: {
       childName: childFullName,
-      childClass: childSchoolClass, // Ajout de la classe de l'enfant
+      childClass: childSchoolClass,
       dates: formattedDates,
-      reservationType: 'holiday',
+      reservationType: reservationType,
       withoutMeal: selectedDates.map(d => d.withoutMeal),
       earlyDropoff: selectedDates.map(d => d.earlyDropoff),
       period: periodName,
@@ -37,6 +49,6 @@ export const sendHolidayReservationEmail = async (
     }
   });
   
-  console.log(`DEBUG: Réponse de l'email: ${JSON.stringify(emailResponse)} (timestamp: ${submissionTimestamp})`);
+  console.log(`DEBUG: Email response: ${JSON.stringify(emailResponse)} (timestamp: ${submissionTimestamp})`);
   return emailResponse;
 };
