@@ -10,9 +10,10 @@ import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { eventBus } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
@@ -45,37 +46,64 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [renderKey, setRenderKey] = useState(0);
+  const isInitialMount = useRef(true);
+  const periodFromUrlApplied = useRef(false);
+  const submitAttemptCount = useRef(0);
 
   // Utiliser les enfants filtrés si fournis, sinon utiliser les enfants du hook
   const childrenToDisplay = filteredChildren || children;
   
-  // Log pour déboguer
+  // Log pour déboguer l'état
   useEffect(() => {
-    console.log("DEBUG HolidayReservationContent: selectedPeriod =", selectedPeriod);
-    console.log("DEBUG HolidayReservationContent: selectedChild =", selectedChild);
-    console.log("DEBUG HolidayReservationContent: selectedDates =", selectedDates);
-  }, [selectedPeriod, selectedChild, selectedDates]);
+    console.log("[HolidayReservationContent] État actuel:", { 
+      selectedPeriod,
+      selectedChild,
+      selectedDatesCount: selectedDates?.length || 0,
+      periodFromURL: searchParams.get("periodId")
+    });
+  }, [selectedPeriod, selectedChild, selectedDates, searchParams]);
 
   // Synchroniser l'URL avec l'état de période sélectionnée sans recharger la page
   useEffect(() => {
     const periodIdFromUrl = searchParams.get("periodId");
     
-    console.log("DEBUG HolidayReservationContent: synchronisation URL <-> état");
+    console.log("[HolidayReservationContent] Synchronisation URL <-> état");
     console.log("  - periodIdFromUrl =", periodIdFromUrl);
     console.log("  - selectedPeriod =", selectedPeriod);
+    console.log("  - isInitialMount =", isInitialMount.current);
+    console.log("  - periodFromUrlApplied =", periodFromUrlApplied.current);
     
-    // Si l'URL a un periodId et qu'il est différent de l'état actuel, mettre à jour l'état
-    if (periodIdFromUrl && periodIdFromUrl !== selectedPeriod) {
-      console.log("  - Mise à jour de selectedPeriod depuis URL");
+    // Au montage initial, si l'URL contient un periodId, l'utiliser
+    if (isInitialMount.current && periodIdFromUrl && !periodFromUrlApplied.current) {
+      console.log("  - [INIT] Mise à jour de selectedPeriod depuis URL");
       setSelectedPeriod(periodIdFromUrl);
-    } 
-    // Si l'état a un periodId et qu'il est différent de l'URL, mettre à jour l'URL
-    else if (selectedPeriod && periodIdFromUrl !== selectedPeriod) {
-      console.log("  - Mise à jour de l'URL depuis selectedPeriod");
-      searchParams.set("periodId", selectedPeriod);
-      setSearchParams(searchParams, { replace: true });
+      periodFromUrlApplied.current = true;
+      isInitialMount.current = false;
+      return;
     }
+    
+    // Si le selectedPeriod a changé et que ce n'est pas le montage initial, mettre à jour l'URL
+    if (!isInitialMount.current && selectedPeriod && periodIdFromUrl !== selectedPeriod) {
+      console.log("  - [UPDATE] Mise à jour de l'URL depuis selectedPeriod");
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("periodId", selectedPeriod);
+      
+      // Utiliser requestAnimationFrame pour éviter les problèmes de timing
+      window.requestAnimationFrame(() => {
+        setSearchParams(newParams, { replace: true });
+      });
+    }
+    
+    isInitialMount.current = false;
   }, [selectedPeriod, searchParams, setSearchParams, setSelectedPeriod]);
+  
+  // Fonction sécurisée pour mettre à jour selectedPeriod
+  const handlePeriodChange = useCallback((periodId: string) => {
+    console.log("[HolidayReservationContent] handlePeriodChange appelé avec:", periodId);
+    setSelectedPeriod(periodId);
+    // Forcer un re-rendu du sélecteur de dates
+    setRenderKey(prev => prev + 1);
+  }, [setSelectedPeriod]);
   
   // Fonction pour éviter les doubles clics avec prévention de la propagation d'événement
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -83,21 +111,41 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
     e.preventDefault();
     e.stopPropagation();
     
-    console.log("DEBUG: Bouton Confirmer réservation cliqué - timestamp:", Date.now());
-    console.log(`DEBUG: Nombre de dates sélectionnées: ${selectedDates.length}`);
+    // Éviter les soumissions multiples rapprochées
+    const now = Date.now();
+    submitAttemptCount.current += 1;
+    
+    console.log(`[HolidayReservationContent] Bouton Confirmer réservation cliqué:`, {
+      timestamp: now,
+      selectedDates: selectedDates.length,
+      attemptCount: submitAttemptCount.current
+    });
+    
+    if (submitAttemptCount.current > 3) {
+      toast.warning("Veuillez patienter entre les soumissions");
+      setTimeout(() => {
+        submitAttemptCount.current = 0;
+      }, 2000);
+      return;
+    }
     
     if (!isSubmitting) {
-      console.log("DEBUG: Soumission démarrée - isSubmitting:", isSubmitting);
+      console.log("[HolidayReservationContent] Soumission démarrée");
       handleSubmit();
+      
+      // Reset le compteur après un délai
+      setTimeout(() => {
+        submitAttemptCount.current = 0;
+      }, 2000);
     } else {
-      console.log("DEBUG: Soumission déjà en cours (isSubmitting = true), clic ignoré");
+      console.log("[HolidayReservationContent] Soumission déjà en cours, clic ignoré");
     }
   };
 
   // Subscribe to reservation events
   useEffect(() => {
     const unsubscribe = eventBus.subscribe('holiday-reservation-created', () => {
-      console.log("HolidayReservationContent: Received holiday-reservation-created event");
+      console.log("[HolidayReservationContent] Received holiday-reservation-created event");
       // Force a re-render
       setRenderKey(prev => prev + 1);
     });
@@ -107,27 +155,13 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
     };
   }, []);
   
-  // Forcer le rafraîchissement du sélecteur de dates quand une période est sélectionnée
-  useEffect(() => {
-    if (selectedPeriod) {
-      setRenderKey(prev => prev + 1);
-    }
-  }, [selectedPeriod]);
-  
-  // Forcer le rafraîchissement du sélecteur de dates quand un enfant est sélectionné
-  useEffect(() => {
-    if (selectedChild) {
-      setRenderKey(prev => prev + 1);
-    }
-  }, [selectedChild]);
-  
   return (
     <Card className="p-6">
       <div className="space-y-6">
         <ChildSelector
           selectedChild={selectedChild}
           setSelectedChild={(childId) => {
-            console.log("DEBUG ChildSelector: sélection d'enfant changée à", childId);
+            console.log("[HolidayReservationContent] setSelectedChild appelé avec:", childId);
             setSelectedChild(childId);
           }}
           children={childrenToDisplay}
@@ -137,10 +171,7 @@ export const HolidayReservationContent = ({ filteredChildren, filterTeenPeriods 
 
         <PeriodSelector
           selectedPeriod={selectedPeriod}
-          setSelectedPeriod={(periodId) => {
-            console.log("DEBUG HolidayReservationContent: setPeriod appelé avec", periodId);
-            setSelectedPeriod(periodId);
-          }}
+          setSelectedPeriod={handlePeriodChange}
           holidayPeriods={holidayPeriods}
           filterTeenOnly={filterTeenPeriods}
           updateUrlWithoutRefresh={true}

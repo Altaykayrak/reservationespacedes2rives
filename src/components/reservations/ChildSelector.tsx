@@ -2,7 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { Tables } from "@/integrations/supabase/types";
 import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CM2SummerAlert } from "./CM2SummerAlert";
 import { useChildFiltering } from "./hooks/useChildFiltering";
 import { useCM2ChildCheck } from "./hooks/useCM2ChildCheck";
@@ -25,13 +25,14 @@ export const ChildSelector = ({
   const location = useLocation();
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
+  const changeEventHandled = useRef(false);
 
   // Listen for period selection from URL search parameters
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const periodId = searchParams.get("periodId");
     if (periodId) {
-      console.log("DEBUG ChildSelector: selectedPeriodId mis à jour depuis URL à", periodId);
+      console.log("[ChildSelector] selectedPeriodId mis à jour depuis URL à", periodId);
       setSelectedPeriodId(periodId);
     }
   }, [location.search]);
@@ -61,29 +62,52 @@ export const ChildSelector = ({
     onCM2SummerPeriodCheck
   );
 
-  console.log("Children passed to ChildSelector:", children);
-  console.log("Filtered children based on page type:", filteredChildren);
-  console.log("Current path:", location.pathname);
-  console.log("isHolidayReservation:", isHolidayReservation);
-  console.log("Selected period ID:", selectedPeriodId);
-  console.log("Period info:", periodInfo);
-  console.log("Class mappings:", classMappings);
-  console.log("Is summer period:", isSummerPeriod);
+  // Log pour le débogage
+  useEffect(() => {
+    console.log("[ChildSelector] Rendu avec:", { 
+      selectedChild, 
+      selectedPeriodId,
+      isSummerPeriod,
+      isHolidayReservation,
+      filteredChildrenCount: filteredChildren?.length
+    });
+  }, [selectedChild, selectedPeriodId, isSummerPeriod, isHolidayReservation, filteredChildren]);
 
   // Fonction pour mettre à jour l'enfant sélectionné sans soumettre le formulaire
   const handleChildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     // Empêcher tout comportement de soumission
     e.preventDefault();
+    e.stopPropagation();
     
-    // Utiliser requestAnimationFrame pour éviter les problèmes de synchronisation
-    window.requestAnimationFrame(() => {
-      console.log("DEBUG ChildSelector: sélection d'enfant changée à", e.target.value);
-      setSelectedChild(e.target.value);
-    });
+    // Protection contre les déclenchements multiples
+    if (changeEventHandled.current) return;
+    
+    try {
+      changeEventHandled.current = true;
+      
+      const childId = e.target.value;
+      console.log("[ChildSelector] Changement d'enfant:", {
+        ancien: selectedChild,
+        nouveau: childId
+      });
+      
+      // Utiliser requestAnimationFrame pour éviter les problèmes de synchronisation
+      window.requestAnimationFrame(() => {
+        setSelectedChild(childId);
+      });
+      
+      // Reset le flag après un court délai
+      setTimeout(() => {
+        changeEventHandled.current = false;
+      }, 100);
+    } catch (error) {
+      console.error("[ChildSelector] Erreur lors du changement d'enfant:", error);
+      changeEventHandled.current = false;
+    }
   };
 
   return (
-    <div onClick={(e) => e.stopPropagation()}>
+    <div onClick={(e) => e.stopPropagation()} className="relative">
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
       <select
         id="child-select"
