@@ -38,8 +38,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         }
 
         console.log("Spots available response:", data);
-        // Ensure we're returning a number or null
-        return typeof data === 'number' ? data : null;
+        return data;
       } catch (error) {
         console.error("Exception in holidaySpots query:", error);
         return null;
@@ -49,8 +48,8 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
     enabled: !!periodId && !!date && !!schoolClass && !isNaN(date.getTime()),
   });
 
-  // Ensure availableSpots is a number or null for type safety
-  const availableSpots = typeof data === 'number' ? data : null;
+  // Ensure availableSpots is a number (can be 0) or null for type safety
+  const availableSpots = data === null ? null : Number(data);
   const isFull = availableSpots !== null && availableSpots <= 0;
 
   return { 

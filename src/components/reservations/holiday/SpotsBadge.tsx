@@ -26,14 +26,17 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", isLoa
     return "Chargement des places...";
   }
   
+  // Si la valeur est explicitement null ou undefined (pas d'informations)
   if (spots === null || spots === undefined) {
     return "Places non disponibles";
   }
   
+  // Si spots est 0, le groupe est complet
   if (spots === 0) {
     return `Groupe complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
   }
   
+  // Sinon, afficher le nombre de places restantes (qui est > 0)
   return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
 };
 
