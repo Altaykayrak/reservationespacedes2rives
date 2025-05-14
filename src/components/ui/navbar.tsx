@@ -1,73 +1,99 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
+import { Link, useNavigate } from "react-router-dom";
+import { useAdminAuth } from "../admin/reservations/hooks/useAdminAuth";
+import { NavbarLink } from "./navbar-link";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./sheet";
+import { Menu } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Logo } from "./nav/Logo";
-import { DesktopNav } from "./nav/DesktopNav";
-import { MobileNav } from "./nav/MobileNav";
-import { NavItem } from "./nav/types";
-
-export function Navbar() {
+export const Navbar = () => {
+  const { isLoggedIn, logout, user } = useAuth();
+  const { data: isAdmin } = useAdminAuth();
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
-  };
-
-  const authenticatedMenuItems: NavItem[] = [
-    { label: "Accueil", href: "/" },
-    { label: "Mon profil", href: "/profile" },
-    { label: "Mes enfants", href: "/children" },
-    // Removed "Prise de rendez-vous" item
-    { label: "Réservations vacances", href: "/holiday-reservations" },
-    { label: "Réservations Club Ado", href: "/teenholiday-reservations" },
-    { label: "Programme vacances", href: "/holiday-program" },
-    { label: "Règlement de fonctionnement", href: "/terms-of-operation" },
-    { label: "CGU", href: "/terms-of-service" },
-    { label: "Simulateur de tarifs", href: "/prices" },
-  ];
-
-  const publicMenuItems: NavItem[] = [
-    { label: "Accueil", href: "/" },
-    { label: "Programme vacances", href: "/holiday-program" },
-    { label: "Règlement de fonctionnement", href: "/terms-of-operation" },
-    { label: "CGU", href: "/terms-of-service" },
-    { label: "Simulateur de tarifs", href: "/prices" },
-  ];
-
-  const menuItems = isAuthenticated ? authenticatedMenuItems : publicMenuItems;
 
   return (
-    <nav className="border-b">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
-          <Logo />
-          <DesktopNav 
-            menuItems={menuItems}
-            isAuthenticated={isAuthenticated}
-            onLogout={handleLogout}
-          />
-          <MobileNav 
-            menuItems={menuItems}
-            isAuthenticated={isAuthenticated}
-            onLogout={handleLogout}
-          />
+    <div className="border-b bg-white/70 backdrop-blur-md sticky top-0 z-30">
+      <div className="container flex h-16 items-center">
+        <Link to="/" className="flex items-center gap-2">
+          <span className="font-bold">Les Petits Artistes</span>
+        </Link>
+        <div className="ml-auto flex items-center gap-2">
+          {isLoggedIn ? (
+            <>
+              <div className="hidden md:flex items-center gap-4">
+                <NavbarLink to="/reservations">Mercredis</NavbarLink>
+                <NavbarLink to="/teenholiday-reservations">Ados</NavbarLink>
+                <NavbarLink to="/account">Mon compte</NavbarLink>
+                <NavbarLink to="/contact">Contact</NavbarLink>
+                {isAdmin && (
+                  <NavbarLink to="/admin/reservations">Admin</NavbarLink>
+                )}
+              </div>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" className="md:hidden">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="sm:w-64">
+                  <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                    <SheetDescription>
+                      Explorez les différentes sections de notre site.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="divide-y divide-border">
+                    <div className="grid gap-4 py-4">
+                      <NavbarLink to="/reservations">Mercredis</NavbarLink>
+                      <NavbarLink to="/teenholiday-reservations">Ados</NavbarLink>
+                      <NavbarLink to="/account">Mon compte</NavbarLink>
+                      <NavbarLink to="/contact">Contact</NavbarLink>
+                      {isAdmin && (
+                        <NavbarLink to="/admin/reservations">Admin</NavbarLink>
+                      )}
+                    </div>
+                    <div className="grid gap-4 py-4">
+                      <Button variant="outline" onClick={logout} className="w-full">
+                        Se déconnecter
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user?.user_metadata?.avatar_url as string} />
+                      <AvatarFallback>
+                        {user?.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuItem onClick={() => navigate("/account")}>
+                    Mon profil
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout}>
+                    Se déconnecter
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <div className="hidden md:flex items-center gap-4">
+              <NavbarLink to="/login">Se connecter</NavbarLink>
+              <Button variant="outline" onClick={() => navigate("/signup")}>
+                S'inscrire
+              </Button>
+            </div>
+          )}
         </div>
       </div>
-    </nav>
+    </div>
   );
-}
+};
