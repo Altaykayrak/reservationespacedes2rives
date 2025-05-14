@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -53,7 +54,19 @@ export const useReservationSubmission = (
   const handleSubmit = async () => {
     const submissionTimestamp = Date.now();
     console.log(`DEBUG: Début de handleSubmit (timestamp: ${submissionTimestamp}) dans useReservationSubmission`);
-    console.log("DEBUG: Dates sélectionnées:", selectedDates);
+    
+    // Log explicite des dates sélectionnées
+    const validDates = selectedDates.filter(d => 
+      d.date instanceof Date && !isNaN(d.date.getTime())
+    );
+    console.log(`DEBUG: Nombre de dates valides avant validation : ${validDates.length}`);
+    console.log("DEBUG: Dates sélectionnées:", selectedDates.map(d => {
+      try {
+        return d.date instanceof Date ? d.date.toISOString() : "Date invalide";
+      } catch (e) {
+        return "Erreur lors de la conversion de date";
+      }
+    }));
     
     // Vérifier si une soumission est déjà en cours
     if (submissionInProgress || isSubmitting) {
@@ -92,7 +105,7 @@ export const useReservationSubmission = (
         d.date instanceof Date && !isNaN(d.date.getTime())
       );
       
-      console.log(`DEBUG: Nombre de dates valides: ${validDates.length}`);
+      console.log(`DEBUG: Nombre de dates valides après filtrage: ${validDates.length}`);
       
       // Vérifier la contrainte de 3 jours minimum avec les dates valides
       if (validDates.length < 3) {

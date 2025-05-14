@@ -184,9 +184,10 @@ export const HolidayReservationContent = ({
   }, [location.search, selectedPeriod, setSelectedPeriod]);
 
   // Calculer le nombre exact de jours sélectionnés valides
-  const validDatesCount = selectedDates.filter(d => 
+  const validDates = selectedDates.filter(d => 
     d.date instanceof Date && !isNaN(d.date.getTime())
-  ).length;
+  );
+  const validDatesCount = validDates.length;
 
   // Vérifier si le nombre de jours sélectionnés est suffisant
   const hasMinimumDays = validDatesCount >= 3;

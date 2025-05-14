@@ -91,7 +91,15 @@ export const useHolidayReservation = () => {
     }
     
     // Log pour débogage
-    console.log(`Date ${dateStr} ${isSelected ? 'désélectionnée' : 'sélectionnée'}, nombre actuel: ${isSelected ? selectedDates.length - 1 : selectedDates.length + 1}`);
+    console.log(`Date ${dateStr} ${isSelected ? 'désélectionnée' : 'sélectionnée'}`);
+    
+    // Calcul immédiat des dates valides pour le logging
+    setTimeout(() => {
+      const validDates = selectedDates.filter(d => 
+        d.date instanceof Date && !isNaN(d.date.getTime())
+      );
+      console.log(`Après toggle: Nombre de dates valides: ${validDates.length}`);
+    }, 100);
   };
 
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
