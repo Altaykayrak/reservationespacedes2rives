@@ -41,7 +41,7 @@ function App() {
         <Route path="/admin-login" element={<AdminLoginPage />} />
         
         {/* Routes protégées par authentification */}
-        <Route element={<ProtectedRoute children={undefined} />}>
+        <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/children" element={<Children />} />
           <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
@@ -50,7 +50,7 @@ function App() {
           <Route path="/rdv" element={<RdvPage />} />
         </Route>
         
-        {/* Routes admin - toutes accessibles sans authentification */}
+        {/* Routes admin - accessibles sans authentification */}
         <Route path="/admin" element={<AdminPage />}>
           <Route index element={<AdminDashboard />} />
           <Route path="profiles" element={<AdminProfiles />} />

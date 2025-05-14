@@ -12,12 +12,22 @@ export function useAuth() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Vérifier si l'utilisateur est sur une route admin
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   useEffect(() => {
     // Configurer le client Supabase explicitement
     const supabaseClient = supabase;
 
     // Récupérer la session initiale
     const initializeAuth = async () => {
+      // Pour les routes admin, ne pas vérifier l'authentification
+      if (isAdminRoute) {
+        console.log("Route admin détectée dans useAuth, authentification ignorée");
+        setLoading(false);
+        return;
+      }
+
       try {
         const { data: { session }, error } = await supabaseClient.auth.getSession();
         
@@ -48,13 +58,17 @@ export function useAuth() {
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
       console.log("Changement d'état d'authentification:", event, session?.user);
       
+      // Pour les routes admin, ignorer les événements d'authentification
+      if (isAdminRoute) {
+        return;
+      }
+      
       if (event === 'SIGNED_OUT') {
         setUser(null);
         
         // Ne pas rediriger automatiquement lors de la déconnexion
         // sauf si l'utilisateur est sur une page protégée qui n'est pas une page admin
-        if (!location.pathname.startsWith('/admin') && 
-            !isPublicPage(location.pathname)) {
+        if (!isAdminRoute && !isPublicPage(location.pathname)) {
           navigate('/login');
         }
       } else if (session?.user) {
@@ -72,7 +86,7 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast, location.pathname]);
+  }, [navigate, toast, location.pathname, isAdminRoute]);
 
   const signOut = async () => {
     try {
@@ -109,7 +123,8 @@ export function useAuth() {
       '/holiday-program',
       '/register',
       '/forgot-password',
-      '/reset-password'
+      '/reset-password',
+      '/admin-login'
     ];
     return publicPages.some(page => path === page) || path.startsWith('/admin');
   };

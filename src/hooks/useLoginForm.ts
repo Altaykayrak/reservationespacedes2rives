@@ -36,20 +36,23 @@ export const useLoginForm = () => {
         } else {
           setError("Une erreur est survenue lors de la connexion. Veuillez réessayer.");
         }
+        setIsLoading(false);
         return;
       }
 
       if (data.session) {
         console.log("Connexion réussie, session établie:", data.session);
         toast.success("Connexion réussie");
-        navigate("/profile");
+        
+        // Force l'actualisation de la page après connexion réussie
+        window.location.href = '/profile';
       } else {
         setError("Session non établie. Veuillez réessayer.");
+        setIsLoading(false);
       }
     } catch (err) {
       console.error("Erreur complète:", err);
       setError("Une erreur est survenue. Veuillez réessayer plus tard.");
-    } finally {
       setIsLoading(false);
     }
   };

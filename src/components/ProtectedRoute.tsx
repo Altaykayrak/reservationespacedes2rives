@@ -17,18 +17,21 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Vérifier si c'est une route admin
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
   useEffect(() => {
+    // Si c'est une route admin, ne pas vérifier l'authentification
+    if (isAdminRoute) {
+      console.log("Route admin détectée, accès autorisé sans vérification");
+      setIsAuthenticated(true);
+      setLoading(false);
+      return;
+    }
+
+    // Pour les routes non-admin, vérifier l'authentification
     const checkAuth = async () => {
       try {
-        // Pour les routes admin, toujours autoriser l'accès sans vérification
-        if (location.pathname.startsWith('/admin')) {
-          console.log("Route admin détectée, accès autorisé sans vérification");
-          setIsAuthenticated(true);
-          setLoading(false);
-          return;
-        }
-
-        // Pour les autres routes, vérifier l'authentification
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -51,12 +54,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
     };
 
-    // Listen for auth state changes
+    // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("ProtectedRoute - Auth state changed:", event, session ? "Session présente" : "Session absente");
       
-      // Les routes admin sont toujours accessibles sans authentification
-      if (location.pathname.startsWith('/admin')) {
+      // Les routes admin sont toujours accessibles
+      if (isAdminRoute) {
         setIsAuthenticated(true);
         setLoading(false);
         return;
@@ -65,20 +68,23 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         queryClient.clear();
-      } else if (event === 'SIGNED_IN' && session) {
+      } else if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
         setIsAuthenticated(true);
         queryClient.resetQueries();
       }
     });
 
-    checkAuth();
+    // Ne pas appeler checkAuth pour les routes admin
+    if (!isAdminRoute) {
+      checkAuth();
+    }
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [location.pathname, toast, queryClient]);
+  }, [location.pathname, toast, queryClient, isAdminRoute]);
 
-  if (loading) {
+  if (loading && !isAdminRoute) {
     return <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -87,7 +93,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     </div>;
   }
 
-  if (connectionError) {
+  if (connectionError && !isAdminRoute) {
     return <div className="flex items-center justify-center min-h-screen">
       <div className="text-center p-4">
         <p className="text-red-600 mb-2">Erreur de connexion au serveur</p>
@@ -97,7 +103,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   // Routes administratives sont toujours accessibles sans authentification
-  if (location.pathname.startsWith('/admin')) {
+  if (isAdminRoute) {
     console.log("Accès admin autorisé sans authentification");
     return children ? <>{children}</> : <Outlet />;
   }
