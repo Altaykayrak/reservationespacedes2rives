@@ -22,7 +22,7 @@ export const useHolidayPeriods = () => {
         .from("available_holiday_periods")
         .select("*")
         .gte("end_date", new Date().toISOString().split("T")[0])
-        .order("start_date");
+        .order("start_date", { ascending: true });
       
       if (error) {
         console.error("Error fetching holiday periods:", error);
