@@ -3,9 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
+  // Use React Query for data fetching
   const { data, isLoading, error } = useQuery({
     queryKey: ["holidaySpots", periodId, date.toISOString(), schoolClass],
     queryFn: async () => {
+      // Skip API call if any required parameter is missing or invalid
+      if (!periodId || !date || !schoolClass || isNaN(date.getTime())) {
+        console.log("Skipping API call due to invalid parameters:", { periodId, date, schoolClass });
+        return null;
+      }
+
       const { data, error } = await supabase.rpc("check_holiday_spots_available", {
         period_id: periodId,
         reservation_date: date.toISOString().split('T')[0],
@@ -19,7 +26,8 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
 
       return data || 0;
     },
-    enabled: !!periodId && !!date && !!schoolClass,
+    // Enable the query only when we have valid parameters
+    enabled: !!periodId && !!date && !!schoolClass && !isNaN(date.getTime()),
   });
 
   // Ensure data is a number for type safety

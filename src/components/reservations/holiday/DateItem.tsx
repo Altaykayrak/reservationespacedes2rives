@@ -35,7 +35,7 @@ export const DateItem = ({
 }: DateItemProps) => {
   const [localDate, setLocalDate] = useState<Date | null>(null);
   
-  // Vérification et correction des dates invalides
+  // Ensure valid date first
   useEffect(() => {
     try {
       // Tester si la date est valide
@@ -59,14 +59,18 @@ export const DateItem = ({
     }
   }, [date]);
 
-  // Si la date est invalide et impossible à corriger
+  // Always call hook - even if localDate is null, to maintain hook order
+  const { availableSpots, isFull, isLoading } = useHolidaySpots(
+    periodId, 
+    localDate || new Date(), // Provide fallback value to avoid errors
+    childSchoolClass
+  );
+
+  // If the date is invalid and impossible to correct, don't render
   if (!localDate) {
     console.error("❌ DateItem - Date invalide, composant non rendu");
     return null;
   }
-
-  // Spots disponibles
-  const { availableSpots, isFull, isLoading } = useHolidaySpots(periodId, localDate, childSchoolClass);
 
   const dayLabel = format(localDate, "EEEE d MMMM", { locale: fr });
 
