@@ -1,3 +1,4 @@
+
 import { DateCheckbox } from "@/components/ui/date-checkbox";
 import { DateOptions } from "./DateOptions";
 import { format } from "date-fns";
@@ -76,10 +77,10 @@ export const DateItem = ({
       </div>
       {isSelected && (
         <DateOptions
+          date={date}
           withoutMeal={withoutMeal}
           earlyDropoff={earlyDropoff}
-          onWithoutMealChange={(value) => onOptionChange('withoutMeal', value)}
-          onEarlyDropoffChange={(value) => onOptionChange('earlyDropoff', value)}
+          onOptionChange={onOptionChange}
           isTeenClass={isTeenClass}
         />
       )}
