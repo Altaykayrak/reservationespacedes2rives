@@ -24,6 +24,10 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
+      // Réinitialiser le localStorage pour éviter les conflits de session
+      localStorage.removeItem("supabase.auth.token");
+      
+      // Connexion avec Supabase
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
@@ -43,7 +47,7 @@ export const useLoginForm = () => {
       if (data.session) {
         console.log("Connexion réussie, session établie:", data.session);
         
-        // Stocker explicitement la session dans le localStorage pour s'assurer qu'elle est disponible
+        // Stocker explicitement la session dans le localStorage
         localStorage.setItem("supabase.auth.token", JSON.stringify({
           currentSession: data.session,
           expiresAt: data.session.expires_at
@@ -51,11 +55,12 @@ export const useLoginForm = () => {
         
         toast.success("Connexion réussie");
         
-        // Attendre un court instant pour s'assurer que la session est bien enregistrée
+        // Attendre un moment pour assurer que la session est bien enregistrée
         setTimeout(() => {
-          // Rediriger vers la page d'accueil ou le profil
+          // Forcer un rafraîchissement complet de la page pour s'assurer que 
+          // tous les composants reconnaissent la nouvelle session
           window.location.href = '/profile';
-        }, 500);
+        }, 1000);
       } else {
         setError("Session non établie. Veuillez réessayer.");
         setIsLoading(false);

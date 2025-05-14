@@ -37,7 +37,7 @@ export function useAuth() {
         }
 
         if (session?.user) {
-          console.log("useAuth: Session trouvée:", session.user);
+          console.log("useAuth: Session trouvée:", session.user.email);
           setUser(session.user);
         } else {
           console.log("useAuth: Aucune session active");
@@ -55,7 +55,7 @@ export function useAuth() {
 
     // S'abonner aux changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("useAuth: Changement d'état d'authentification:", event, session?.user);
+      console.log(`useAuth: Changement d'état d'authentification: ${event}`, session?.user?.email);
       
       // Pour les routes admin, ignorer les événements d'authentification
       if (isAdminRoute) {
@@ -97,10 +97,13 @@ export function useAuth() {
 
   const signOut = async () => {
     try {
+      console.log("Tentative de déconnexion...");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      console.log("Déconnexion réussie, nettoyage du localStorage");
       setUser(null);
+      
       // Vider le localStorage pour s'assurer qu'il n'y a pas de données résiduelles
       localStorage.removeItem("supabase.auth.token");
       
