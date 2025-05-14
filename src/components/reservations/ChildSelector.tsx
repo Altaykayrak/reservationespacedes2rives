@@ -126,7 +126,7 @@ export const ChildSelector = ({
       </div>
 
       {showCM2Message && (
-        <Alert variant="warning" className="bg-amber-50 text-amber-800 border-amber-300">
+        <Alert className="bg-amber-50 text-amber-800 border-amber-300">
           <AlertDescription className="text-sm">
             <p><strong>Information importante :</strong></p>
             <p>Durant l'été, les élèves de CM2 doivent s'inscrire aux activités Club Ado.</p>

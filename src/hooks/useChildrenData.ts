@@ -34,7 +34,7 @@ export const useChildrenData = () => {
   });
 
   const { isTeenClassSync } = useSchoolClassUtils();
-  const { schoolClassCategories } = useSchoolClassCategories();
+  const { getClassCategorySync } = useSchoolClassCategories();
 
   // Filtre pour les adolescents
   const teenChildren = children?.filter(child => isTeenClassSync(child.school_class)) || [];
@@ -49,11 +49,7 @@ export const useChildrenData = () => {
     const isPS = child.school_class.toUpperCase() === "PS";
     
     // Vérifier si c'est un adolescent en utilisant les catégories
-    const isTeen = schoolClassCategories?.some(
-      category => 
-        category.category === "adolescent" && 
-        child.school_class.toUpperCase() === category.name.toUpperCase()
-    );
+    const isTeen = getClassCategorySync(child.school_class) === "adolescent";
     
     console.log(`Enfant ${child.first_name} ${child.last_name}, classe: ${child.school_class}, est PS: ${isPS}, est adolescent: ${isTeen}`);
     
