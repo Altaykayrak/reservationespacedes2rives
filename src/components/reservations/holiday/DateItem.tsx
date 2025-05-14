@@ -50,6 +50,8 @@ export const DateItem = ({
       childSchoolClass, 
       periodId, 
       date: date.toISOString(), 
+      isSelected,
+      isReserved,
       isTeenClass 
     });
     
@@ -71,18 +73,31 @@ export const DateItem = ({
     
     // La date doit être désactivée uniquement si elle est déjà réservée OU si spotsLeft est strictement égal à 0
     const isDisabled = isReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
+    
+    // Log pour vérifier ce qui bloque éventuellement le clic
+    console.log(`Date ${formattedDate} - Final isDisabled=${isDisabled}, isReserved=${isReserved}`);
 
     return (
       <div 
         className={`relative space-y-1 p-2 rounded-lg transition-colors ${
           isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
         }`}
+        onClick={(e) => {
+          // S'assurer que le clic sur le div déclenche aussi la case à cocher
+          if (!isDisabled && e.target === e.currentTarget) {
+            console.log("Div clicked, triggering onDateToggle");
+            onDateToggle();
+          }
+        }}
       >
         <div className="flex items-start gap-2">
           <Checkbox
             id={safeDate.toISOString()}
             checked={isSelected}
-            onCheckedChange={onDateToggle}
+            onCheckedChange={() => {
+              console.log("Checkbox clicked, calling onDateToggle");
+              onDateToggle();
+            }}
             disabled={isDisabled}
             className={`mt-1 ${isReserved ? 'border-gray-300' : 'border-blue-200'}`}
           />
@@ -93,6 +108,14 @@ export const DateItem = ({
                 className={`cursor-pointer font-medium ${
                   isDisabled ? 'text-gray-500' : 'text-blue-900'
                 }`}
+                onClick={(e) => {
+                  // Empêcher la propagation pour éviter les doubles clics
+                  e.stopPropagation();
+                  if (!isDisabled) {
+                    console.log("Label clicked, triggering onDateToggle");
+                    onDateToggle();
+                  }
+                }}
               >
                 {format(safeDate, "EEEE d MMMM yyyy", { locale: fr })}
               </Label>

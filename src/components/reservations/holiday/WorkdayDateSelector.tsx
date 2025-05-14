@@ -119,6 +119,8 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
             );
             
             const isReserved = isDateAlreadyReserved(date);
+            
+            console.log(`Date ${date.toISOString()} - isReserved: ${isReserved}, selectedOption:`, selectedDateOption);
 
             return (
               <DateItem

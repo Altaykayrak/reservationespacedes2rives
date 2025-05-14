@@ -30,17 +30,35 @@ export const useReservations = () => {
   } = useExistingReservations(selectedChild);
 
   const handleDateToggle = (date: Date) => {
+    console.log("handleDateToggle called with date:", date);
     setSelectedDates(prev => {
-      const existing = prev.find(d => d.date.getTime() === date.getTime());
-      if (existing) {
-        return prev.filter(d => d.date.getTime() !== date.getTime());
+      // Vérifier si la date est déjà sélectionnée
+      const existingIndex = prev.findIndex(d => {
+        if (!(d.date instanceof Date)) return false;
+        return d.date.getTime() === date.getTime();
+      });
+      
+      console.log("existingIndex:", existingIndex);
+      
+      // Si la date est déjà sélectionnée, la supprimer
+      if (existingIndex !== -1) {
+        const newDates = [...prev];
+        newDates.splice(existingIndex, 1);
+        console.log("Date removed, new dates:", newDates);
+        return newDates;
       }
-      return [...prev, { date, withoutMeal: false, earlyDropoff: false }];
+      
+      // Sinon l'ajouter
+      const newDates = [...prev, { date, withoutMeal: false, earlyDropoff: false }];
+      console.log("Date added, new dates:", newDates);
+      return newDates;
     });
   };
 
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
+    console.log("handleOptionChange called with:", { date, option, value });
     setSelectedDates(prev => prev.map(d => {
+      if (!(d.date instanceof Date)) return d;
       if (d.date.getTime() === date.getTime()) {
         return { ...d, [option]: value };
       }
@@ -118,7 +136,7 @@ export const useReservations = () => {
 
   return {
     selectedDates,
-    setSelectedDates, // Make sure this is exposed from the hook
+    setSelectedDates, 
     selectedChild,
     setSelectedChild,
     children,
