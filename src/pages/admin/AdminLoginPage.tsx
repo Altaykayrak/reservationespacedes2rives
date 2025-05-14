@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LoginForm } from "@/components/forms/LoginForm";
 import { AuthLayout } from "@/components/layouts/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -13,32 +14,41 @@ const AdminLoginPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const checkAdminAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (session?.user) {
-          // Vérifier si l'utilisateur est admin
-          const { data: isAdmin, error: adminError } = await supabase
-            .rpc('is_admin', { user_id: session.user.id });
-
-          if (adminError) {
-            console.error("Error checking admin status:", adminError);
-            setIsLoading(false);
-            return;
-          }
-
-          // Ne rediriger que si l'utilisateur est admin
-          if (isAdmin) {
-            console.log("Admin user authenticated, redirecting to admin panel");
-            navigate("/admin");
-            return;
-          } else {
-            console.log("User authenticated but not admin, staying on login page");
-          }
+        if (!session?.user) {
+          console.log("No active session, staying on admin login page");
+          setIsLoading(false);
+          return;
         }
+        
+        console.log("Checking admin status for existing session");
+        // Vérifier si l'utilisateur est admin
+        const { data: isAdmin, error: adminError } = await supabase
+          .rpc('is_admin', { user_id: session.user.id });
+
+        if (adminError) {
+          console.error("Error checking admin status:", adminError);
+          setIsLoading(false);
+          return;
+        }
+
+        // Ne rediriger que si l'utilisateur est admin
+        if (isAdmin) {
+          console.log("Admin user authenticated, redirecting to admin panel");
+          queryClient.setQueryData(['admin-status'], true);
+          navigate("/admin");
+          return;
+        } else {
+          console.log("User authenticated but not admin, staying on login page");
+          setError("Vous n'avez pas les droits d'accès administrateur");
+        }
+        
         setIsLoading(false);
       } catch (error) {
         console.error("Error checking authentication:", error);
@@ -47,7 +57,7 @@ const AdminLoginPage = () => {
     };
 
     checkAdminAuth();
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +106,9 @@ const AdminLoginPage = () => {
         setIsLoading(false);
         return;
       }
+
+      // Mettre à jour le cache de react-query avec le statut admin
+      queryClient.setQueryData(['admin-status'], true);
 
       toast({
         title: "Succès",

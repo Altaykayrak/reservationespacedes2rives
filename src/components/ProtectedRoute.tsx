@@ -20,6 +20,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("ProtectedRoute: Checking auth for path", location.pathname);
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -29,22 +30,15 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         // Pour les routes admin
         if (location.pathname.startsWith('/admin')) {
           if (!session?.user) {
+            console.log("No active session found in ProtectedRoute for admin route");
             setIsAuthenticated(false);
             setLoading(false);
             return;
           }
 
-          // Vérifier le statut d'admin en utilisant la fonction RPC
-          const { data: isAdmin, error: adminError } = await supabase
-            .rpc('is_admin', { user_id: session.user.id });
-
-          if (adminError) {
-            console.error("Error checking admin role:", adminError);
-            setIsAuthenticated(false);
-          } else {
-            console.log("Admin check result in ProtectedRoute:", isAdmin);
-            setIsAuthenticated(!!isAdmin);
-          }
+          // Si c'est une route admin, on laisse AdminPage faire la vérification d'admin
+          // Cela évite la double vérification et les potentielles boucles
+          setIsAuthenticated(true);
           
           setLoading(false);
           return;
@@ -77,15 +71,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         setIsAuthenticated(false);
         queryClient.clear();
       } else if (event === 'SIGNED_IN' && session) {
-        // Pour les routes admin, vérifiez spécifiquement le statut d'admin
-        if (location.pathname.startsWith('/admin')) {
-          const { data: isAdmin } = await supabase
-            .rpc('is_admin', { user_id: session.user.id });
-
-          setIsAuthenticated(!!isAdmin);
-        } else {
-          setIsAuthenticated(true);
-        }
+        setIsAuthenticated(true);
         queryClient.resetQueries();
       }
     });

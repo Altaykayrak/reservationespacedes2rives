@@ -20,6 +20,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Routes publiques */}
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/prices" element={<Prices />} />
@@ -27,6 +28,7 @@ function App() {
         <Route path="/holiday-program" element={<HolidayProgram />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         
+        {/* Routes protégées utilisateur */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/children" element={<Children />} />
@@ -36,9 +38,10 @@ function App() {
           <Route path="/rdv" element={<RdvPage />} />
         </Route>
         
-        <Route path="/admin" element={<AdminPage />}>
+        {/* Routes admin avec vérification des droits admin */}
+        <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>}>
           <Route index element={<AdminDashboard />} />
-          {/* Les sous-routes admin existantes seront automatiquement ajoutées ici */}
+          {/* Les sous-routes admin seront implicitement protégées */}
         </Route>
       </Routes>
     </Router>

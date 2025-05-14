@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useAdminAuth = () => {
   return useQuery({
-    queryKey: ["isAdmin"],
+    queryKey: ["admin-status"],
     queryFn: async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -13,6 +13,7 @@ export const useAdminAuth = () => {
           return false;
         }
         
+        console.log("Checking admin status for user:", session.user.id);
         const { data: isAdmin, error: adminError } = await supabase
           .rpc('is_admin', { user_id: session.user.id });
 
@@ -28,9 +29,9 @@ export const useAdminAuth = () => {
         return false;
       }
     },
-    retry: 1,
+    retry: false,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // Consider admin status valid for 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes (formerly cacheTime)
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 };

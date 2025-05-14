@@ -4,7 +4,9 @@ import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 
 export function AdminPage() {
-  const { data: isAdmin, isLoading } = useAdminAuth();
+  const { data: isAdmin, isLoading, error } = useAdminAuth();
+
+  console.log("AdminPage render - isAdmin:", isAdmin, "isLoading:", isLoading, "error:", !!error);
 
   if (isLoading) {
     return (
@@ -17,7 +19,9 @@ export function AdminPage() {
     );
   }
 
+  // Si l'utilisateur n'est pas admin, rediriger vers la page de connexion admin
   if (isAdmin === false) {
+    console.log("User is not admin, redirecting to admin-login");
     return <Navigate to="/admin-login" replace />;
   }
 
