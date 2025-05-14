@@ -6,7 +6,7 @@ import { fr } from "date-fns/locale";
 import { DateOptions } from "./DateOptions";
 import { useHolidaySpots } from "@/hooks/useHolidaySpots";
 import { SpotsBadge } from "./SpotsBadge";
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect } from "react";
 
 interface DateItemProps {
   date: Date;
@@ -21,8 +21,7 @@ interface DateItemProps {
   childSchoolClass: string;
 }
 
-// Utiliser memo pour éviter les re-rendus inutiles
-export const DateItem = memo(({
+export const DateItem = ({
   date,
   isSelected,
   isReserved,
@@ -34,27 +33,65 @@ export const DateItem = memo(({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
-  // Vérifier si la date est valide une seule fois
-  const isValidDate = date instanceof Date && !isNaN(date.getTime());
+  const [localDate, setLocalDate] = useState<Date | null>(null);
   
-  // N'utiliser useHolidaySpots que si la date est valide
-  const { availableSpots, isFull, isLoading } = isValidDate && periodId && childSchoolClass 
-    ? useHolidaySpots(periodId, date, childSchoolClass)
-    : { availableSpots: null, isFull: false, isLoading: false };
-  
-  // Utiliser useCallback pour la stabilité de la fonction
-  const handleToggle = useCallback(() => {
-    if (!isReserved && !isFull) {
-      onDateToggle();
+  // Ensure valid date first
+  useEffect(() => {
+    try {
+      // Tester si la date est valide
+      if (!(date instanceof Date) || isNaN(date.getTime())) {
+        console.error("🛑 DateItem - Date invalide reçue:", date);
+        // Tentative de correction
+        const correctedDate = date instanceof Date ? date : new Date(date);
+        if (correctedDate instanceof Date && !isNaN(correctedDate.getTime())) {
+          console.log("✅ DateItem - Date corrigée:", correctedDate);
+          setLocalDate(correctedDate);
+        } else {
+          console.error("❌ DateItem - Impossible de corriger la date");
+          setLocalDate(null);
+        }
+      } else {
+        setLocalDate(date);
+      }
+    } catch (error) {
+      console.error("❌ DateItem - Erreur lors du traitement de la date:", error);
+      setLocalDate(null);
     }
-  }, [isReserved, isFull, onDateToggle]);
+  }, [date]);
 
-  // Si la date est invalide, ne pas rendre le composant
-  if (!isValidDate) {
+  // Hook pour vérifier les places disponibles - s'assurer qu'il est appelé même si la date est invalide
+  const { availableSpots, isFull, isLoading } = useHolidaySpots(
+    periodId, 
+    localDate || new Date(), // Fournir une valeur par défaut pour éviter les erreurs
+    childSchoolClass
+  );
+
+  // Log détaillé pour déboguer les places disponibles
+  useEffect(() => {
+    console.log(`DateItem - Places disponibles pour ${localDate?.toISOString()}:`, {
+      periodId,
+      schoolClass: childSchoolClass,
+      availableSpots,
+      isFull,
+      isLoading
+    });
+  }, [localDate, periodId, childSchoolClass, availableSpots, isFull, isLoading]);
+
+  // If the date is invalid and impossible to correct, don't render
+  if (!localDate) {
+    console.error("❌ DateItem - Date invalide, composant non rendu");
     return null;
   }
 
-  const dayLabel = format(date, "EEEE d MMMM", { locale: fr });
+  const dayLabel = format(localDate, "EEEE d MMMM", { locale: fr });
+
+  // Gestion des clics
+  const handleToggle = () => {
+    console.log(`🖱️ DateItem - Toggle pour ${localDate.toISOString()}, état actuel: ${isSelected}`);
+    if (!isReserved && !isFull) {
+      onDateToggle();
+    }
+  };
 
   return (
     <Card
@@ -62,7 +99,7 @@ export const DateItem = memo(({
         isSelected ? "border-2 border-primary" : "border"
       } ${isReserved ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
       onClick={handleToggle}
-      data-date={date.toISOString()}
+      data-date={localDate.toISOString()}
     >
       <div className="flex items-center justify-between">
         <Label className="font-semibold">{dayLabel}</Label>
@@ -82,12 +119,9 @@ export const DateItem = memo(({
           withoutMeal={withoutMeal}
           earlyDropoff={earlyDropoff}
           onOptionChange={onOptionChange}
-          date={date}
+          date={localDate}
         />
       )}
     </Card>
   );
-});
-
-// Ajouter un displayName pour les devtools React
-DateItem.displayName = "DateItem";
+};

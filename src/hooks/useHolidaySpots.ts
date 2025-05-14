@@ -1,39 +1,43 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
-  // Générer une clé stable pour la date, même si Date est un objet
-  const dateString = date instanceof Date && !isNaN(date.getTime()) 
-    ? date.toISOString().split('T')[0]
-    : null;
-
-  // Use React Query for data fetching with proper caching
+  // Use React Query for data fetching
   const { data, isLoading, error } = useQuery({
-    // Utiliser un tableau stable pour la queryKey
-    queryKey: ["holidaySpots", periodId, dateString, schoolClass],
+    queryKey: ["holidaySpots", periodId, date.toISOString(), schoolClass],
     queryFn: async () => {
       // Skip API call if any required parameter is missing or invalid
-      if (!periodId || !dateString || !schoolClass) {
+      if (!periodId || !date || !schoolClass || isNaN(date.getTime())) {
+        console.log("Skipping API call due to invalid parameters:", { periodId, date, schoolClass });
         return null;
       }
 
       try {
+        console.log("Calling check_holiday_spots_available with:", {
+          period_id: periodId,
+          reservation_date: date.toISOString().split('T')[0],
+          child_school_class: schoolClass
+        });
+        
         const { data, error } = await supabase.rpc("check_holiday_spots_available", {
           period_id: periodId,
-          reservation_date: dateString,
+          reservation_date: date.toISOString().split('T')[0],
           child_school_class: schoolClass,
         });
 
         if (error) {
           console.error("Error fetching holiday spots:", error);
-          toast("Impossible de vérifier les places disponibles", {
-            description: "Une erreur est survenue"
+          toast({
+            title: "Erreur",
+            description: "Impossible de vérifier les places disponibles",
+            variant: "destructive"
           });
           throw error;
         }
 
+        console.log("Spots available response:", data);
         return data;
       } catch (error) {
         console.error("Exception in holidaySpots query:", error);
@@ -41,13 +45,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       }
     },
     // Enable the query only when we have valid parameters
-    enabled: !!periodId && !!dateString && !!schoolClass,
-    // Ajouter un temps de cache de 5 minutes pour éviter les requêtes inutiles
-    staleTime: 5 * 60 * 1000,
-    // Ne pas refetch automatiquement, seulement quand les paramètres changent
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    enabled: !!periodId && !!date && !!schoolClass && !isNaN(date.getTime()),
   });
 
   // Ensure availableSpots is a number (can be 0) or null for type safety
