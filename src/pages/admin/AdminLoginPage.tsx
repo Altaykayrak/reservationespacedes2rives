@@ -27,7 +27,6 @@ const AdminLoginPage = () => {
           return;
         }
         
-        console.log("Checking admin status for existing session");
         // Vérifier si l'utilisateur est admin
         const { data: isAdmin, error: adminError } = await supabase
           .rpc('is_admin', { user_id: session.user.id });
@@ -41,8 +40,9 @@ const AdminLoginPage = () => {
         // Ne rediriger que si l'utilisateur est admin
         if (isAdmin) {
           console.log("Admin user authenticated, redirecting to admin panel");
+          // Mettre à jour le cache React Query avec le statut admin
           queryClient.setQueryData(['admin-status'], true);
-          navigate("/admin");
+          navigate("/admin", { replace: true });
           return;
         } else {
           console.log("User authenticated but not admin, staying on login page");
@@ -115,7 +115,7 @@ const AdminLoginPage = () => {
         description: "Connexion administrateur réussie"
       });
       
-      navigate("/admin");
+      navigate("/admin", { replace: true });
 
     } catch (err) {
       console.error("Connection error:", err);

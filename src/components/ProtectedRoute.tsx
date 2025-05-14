@@ -6,12 +6,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ProtectedRouteProps {
-  children?: React.ReactNode; // Make children optional
+  children?: React.ReactNode;
+  requireAdmin?: boolean;
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   const location = useLocation();
   const { toast } = useToast();
@@ -20,33 +23,44 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log("ProtectedRoute: Checking auth for path", location.pathname);
+        console.log(`ProtectedRoute: Checking auth for path ${location.pathname}, requireAdmin=${requireAdmin}`);
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           throw sessionError;
         }
 
-        // Pour les routes admin
-        if (location.pathname.startsWith('/admin')) {
-          if (!session?.user) {
-            console.log("No active session found in ProtectedRoute for admin route");
-            setIsAuthenticated(false);
-            setLoading(false);
-            return;
-          }
-
-          // Si c'est une route admin, on laisse AdminPage faire la vérification d'admin
-          // Cela évite la double vérification et les potentielles boucles
-          setIsAuthenticated(true);
-          
+        // Vérifier si l'utilisateur est authentifié
+        if (!session?.user) {
+          console.log("No active session found in ProtectedRoute");
+          setIsAuthenticated(false);
           setLoading(false);
           return;
-        } 
+        }
 
-        // Pour les routes utilisateur normales
-        setIsAuthenticated(!!session);
+        console.log("Session active trouvée dans ProtectedRoute:", session.user.id);
+        setIsAuthenticated(true);
         
+        // Si nous avons besoin de vérifier le rôle admin
+        if (requireAdmin) {
+          console.log("Vérification du rôle admin pour l'utilisateur:", session.user.id);
+          const { data: adminResult, error: adminError } = await supabase
+            .rpc('is_admin', { user_id: session.user.id });
+
+          if (adminError) {
+            console.error("Erreur lors de la vérification du rôle admin:", adminError);
+            setIsAdmin(false);
+          } else {
+            console.log("Résultat de la vérification admin:", adminResult);
+            setIsAdmin(!!adminResult);
+            
+            // Mettre à jour le cache de react-query avec le statut admin
+            queryClient.setQueryData(['admin-status'], !!adminResult);
+          }
+          setAdminCheckComplete(true);
+        }
+        
+        setLoading(false);
       } catch (error) {
         console.error("Auth check error:", error);
         setConnectionError(true);
@@ -65,10 +79,11 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
     // S'abonner aux changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session);
+      console.log("Auth state changed in ProtectedRoute:", event, session?.user?.id);
       
       if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
+        setIsAdmin(false);
         queryClient.clear();
       } else if (event === 'SIGNED_IN' && session) {
         setIsAuthenticated(true);
@@ -79,7 +94,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [location.pathname, toast, queryClient]);
+  }, [location.pathname, toast, queryClient, requireAdmin]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">
@@ -103,6 +118,25 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return location.pathname.startsWith('/admin') ? 
       <Navigate to="/admin-login" replace /> :
       <Navigate to="/login" replace />;
+  }
+
+  // Vérifier les permissions admin si nécessaire
+  if (requireAdmin) {
+    // Attendre que la vérification admin soit terminée
+    if (!adminCheckComplete) {
+      return <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Vérification des droits d'accès...</p>
+        </div>
+      </div>;
+    }
+
+    // Si l'utilisateur n'est pas admin, rediriger
+    if (!isAdmin) {
+      console.log("L'utilisateur n'est pas admin, redirection vers admin-login");
+      return <Navigate to="/admin-login" replace />;
+    }
   }
 
   // Return either the children prop if it's provided or render the Outlet for route nesting

@@ -15,6 +15,8 @@ import RdvPage from "./pages/Rdv";
 import { AdminPage } from "./pages/admin/AdminPage";
 import AdminLogin from "./pages/admin/AdminLoginPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminReservations from "./pages/admin/AdminReservations";
+import AdminWednesdays from "./pages/admin/AdminWednesdays";
 
 function App() {
   return (
@@ -39,9 +41,13 @@ function App() {
         </Route>
         
         {/* Routes admin avec vérification des droits admin */}
-        <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>}>
+        <Route path="/admin" element={<ProtectedRoute requireAdmin={true}>
+          <AdminPage />
+        </ProtectedRoute>}>
           <Route index element={<AdminDashboard />} />
-          {/* Les sous-routes admin seront implicitement protégées */}
+          <Route path="reservations" element={<AdminReservations />} />
+          <Route path="wednesdays" element={<AdminWednesdays />} />
+          {/* Les autres sous-routes admin seront implicitement protégées */}
         </Route>
       </Routes>
     </Router>
