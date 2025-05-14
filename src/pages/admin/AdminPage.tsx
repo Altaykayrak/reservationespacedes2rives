@@ -1,11 +1,10 @@
 
-import { useNavigate, Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 
 export function AdminPage() {
   const { data: isAdmin, isLoading } = useAdminAuth();
-  const navigate = useNavigate();
 
   if (isLoading) {
     return (

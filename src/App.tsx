@@ -27,7 +27,7 @@ function App() {
         <Route path="/holiday-program" element={<HolidayProgram />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         
-        <Route element={<ProtectedRoute children={undefined} />}>
+        <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/children" element={<Children />} />
           <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
