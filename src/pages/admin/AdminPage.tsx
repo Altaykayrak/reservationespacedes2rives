@@ -12,11 +12,13 @@ export function AdminPage() {
   const [adminChecked, setAdminChecked] = useState(false);
 
   useEffect(() => {
-    if (isLoading) return;
+    // Ne faire la vérification qu'une seule fois
+    if (isLoading || adminChecked) return;
 
-    if (adminChecked) return;
+    console.log("AdminPage: Vérifiant le statut administrateur, isAdmin =", isAdmin);
 
     if (isError) {
+      console.error("AdminPage: Erreur lors de la vérification du statut administrateur");
       toast({
         title: "Erreur",
         description: "Impossible de vérifier vos droits administrateur.",
@@ -27,13 +29,15 @@ export function AdminPage() {
     }
 
     if (isAdmin === false) {
-      console.log("AdminPage: User is not admin, redirecting to admin login");
+      console.log("AdminPage: Utilisateur non-admin, redirection vers admin-login");
       navigate("/admin-login", { replace: true });
       return;
     }
 
+    // Marquer la vérification comme effectuée pour éviter de nouvelles redirections
     setAdminChecked(true);
-  }, [isAdmin, isLoading, isError, adminChecked, navigate, toast]);
+    console.log("AdminPage: Vérification admin terminée, utilisateur autorisé");
+  }, [isAdmin, isLoading, isError, navigate, toast, adminChecked]);
 
   if (isLoading) {
     return (
@@ -46,18 +50,7 @@ export function AdminPage() {
     );
   }
 
-  if (!adminChecked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Vérification des droits d'accès...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si nous arrivons ici, l'utilisateur est admin
+  // Une fois que nous avons vérifié que l'utilisateur est admin, afficher la page
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNavbar />

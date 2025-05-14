@@ -40,12 +40,11 @@ function App() {
           <Route path="/rdv" element={<RdvPage />} />
         </Route>
         
-        {/* Routes admin avec vérification des droits admin */}
-        <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>}>
+        {/* Routes admin avec vérification des droits admin intégrée dans AdminPage */}
+        <Route path="/admin" element={<AdminPage />}>
           <Route index element={<AdminDashboard />} />
           <Route path="reservations" element={<AdminReservations />} />
           <Route path="wednesdays" element={<AdminWednesdays />} />
-          {/* Les autres sous-routes admin seront implicitement protégées */}
         </Route>
       </Routes>
     </Router>
