@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
@@ -54,6 +55,7 @@ export const HolidayReservationContent = ({
   
   // Fonction callback pour recevoir l'information de CM2 en période d'été
   const handleCM2SummerPeriodCheck = (isInSummerPeriod: boolean) => {
+    console.log("CM2 en période d'été détecté:", isInSummerPeriod);
     setIsCM2SummerPeriod(isInSummerPeriod);
   };
   

@@ -11,6 +11,8 @@ interface CM2SummerAlertProps {
 export const CM2SummerAlert = ({ show }: CM2SummerAlertProps) => {
   if (!show) return null;
   
+  console.log("Affichage de l'alerte CM2 été");
+  
   return (
     <Alert className="mt-3 bg-blue-50 border-blue-200">
       <Info className="h-4 w-4 text-blue-500" />
