@@ -114,17 +114,18 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
       <ScrollArea className="h-[300px] pr-3">
         <div className="space-y-1">
           {dates.map((date) => {
+            // Normaliser la date pour la comparaison
+            const dateOnly = new Date(date);
+            dateOnly.setHours(0, 0, 0, 0);
+            
             const selectedDateOption = selectedDates.find(
               (d) => {
                 if (!(d.date instanceof Date)) return false;
                 
-                const dateOnly1 = new Date(d.date);
-                dateOnly1.setHours(0, 0, 0, 0);
+                const dDateOnly = new Date(d.date);
+                dDateOnly.setHours(0, 0, 0, 0);
                 
-                const dateOnly2 = new Date(date);
-                dateOnly2.setHours(0, 0, 0, 0);
-                
-                return dateOnly1.getTime() === dateOnly2.getTime();
+                return dDateOnly.getTime() === dateOnly.getTime();
               }
             );
             
@@ -141,10 +142,13 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
                 withoutMeal={selectedDateOption?.withoutMeal || false}
                 earlyDropoff={selectedDateOption?.earlyDropoff || false}
                 onDateToggle={() => {
-                  console.log(`WorkdayDateSelector - Toggle date: ${date.toISOString()}`);
+                  console.log(`WorkdayDateSelector - Toggle date appelé pour: ${date.toISOString()}`);
                   handleDateToggle(date);
                 }}
-                onOptionChange={(option, value) => handleOptionChange(date, option, value)}
+                onOptionChange={(option, value) => {
+                  console.log(`WorkdayDateSelector - Option change pour: ${date.toISOString()}`, option, value);
+                  handleOptionChange(date, option, value);
+                }}
                 isTeenClass={false}
                 periodId={periodId}
                 childSchoolClass={schoolClass}

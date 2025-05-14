@@ -82,7 +82,14 @@ export const DateItem = ({
       e.stopPropagation();
       
       if (!isDisabled) {
-        console.log("DateItem - Click handler triggered");
+        console.log("DateItem - Click handler triggered for date:", formattedDate);
+        onDateToggle();
+      }
+    };
+    
+    const handleCheckboxChange = () => {
+      if (!isDisabled) {
+        console.log("Clicked checkbox for date:", formattedDate);
         onDateToggle();
       }
     };
@@ -93,17 +100,13 @@ export const DateItem = ({
           isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
         }`}
         onClick={handleClick}
+        style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
       >
         <div className="flex items-start gap-2">
           <Checkbox
             id={safeDate.toISOString()}
             checked={isSelected}
-            onCheckedChange={() => {
-              console.log("Checkbox clicked, calling onDateToggle");
-              if (!isDisabled) {
-                onDateToggle();
-              }
-            }}
+            onCheckedChange={handleCheckboxChange}
             disabled={isDisabled}
             className={`mt-1 ${isReserved ? 'border-gray-300' : 'border-blue-200'}`}
           />
@@ -119,7 +122,7 @@ export const DateItem = ({
                   e.stopPropagation();
                   
                   if (!isDisabled) {
-                    console.log("Label clicked, triggering onDateToggle");
+                    console.log("Label clicked for date:", formattedDate);
                     onDateToggle();
                   }
                 }}

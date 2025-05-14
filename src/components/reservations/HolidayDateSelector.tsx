@@ -32,6 +32,13 @@ export const HolidayDateSelector = ({
   selectedChild,
   setSelectedDates
 }: HolidayDateSelectorProps) => {
+  console.log("HolidayDateSelector RENDER - Props:", {
+    periodId, 
+    selectedChild, 
+    selectedDatesCount: selectedDates?.length || 0,
+    handleDateToggleDefined: !!handleDateToggle
+  });
+
   const { data: holidayPeriod } = useQuery({
     queryKey: ["holiday_period", periodId],
     queryFn: async () => {
@@ -70,8 +77,15 @@ export const HolidayDateSelector = ({
 
   // Effet pour réinitialiser les dates lors du changement de période
   useEffect(() => {
+    console.log("HolidayDateSelector - Reset dates due to period change:", periodId);
     setSelectedDates([]);
   }, [periodId, setSelectedDates]);
+
+  // Fonction wrapper pour gérer explicitement les clics de date
+  const enhancedHandleDateToggle = (date: Date) => {
+    console.log("HolidayDateSelector - enhancedHandleDateToggle appelé pour date:", date);
+    handleDateToggle(date);
+  };
 
   if (!holidayPeriod || !selectedChild) return null;
 
@@ -88,13 +102,13 @@ export const HolidayDateSelector = ({
           selectedDates={selectedDates}
           isDateAlreadyReserved={isDateAlreadyReserved}
           handleOptionChange={handleOptionChange}
-          handleDateToggle={handleDateToggle}
+          handleDateToggle={enhancedHandleDateToggle}
           periodId={periodId}
         />
       ) : (
         <WorkdayDateSelector
           selectedDates={selectedDates}
-          handleDateToggle={handleDateToggle}
+          handleDateToggle={enhancedHandleDateToggle}
           handleOptionChange={handleOptionChange}
           isDateAlreadyReserved={isDateAlreadyReserved}
           periodId={periodId}
