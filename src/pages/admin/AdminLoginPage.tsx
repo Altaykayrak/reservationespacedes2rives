@@ -2,35 +2,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogFooter,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
 import { LoginForm } from "@/components/forms/LoginForm";
 import { AuthLayout } from "@/components/layouts/AuthLayout";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [showErrorDialog, setShowErrorDialog] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -52,16 +32,14 @@ const AdminLoginPage = () => {
 
           // Ne rediriger que si l'utilisateur est admin
           if (isAdmin) {
+            console.log("Admin user authenticated, redirecting to admin panel");
             navigate("/admin");
             return;
+          } else {
+            console.log("User authenticated but not admin, staying on login page");
           }
-          
-          // Si l'utilisateur est connecté mais n'est pas admin, on le laisse sur la page
-          setIsLoading(false);
-        } else {
-          // Pas de session, on laisse l'utilisateur sur la page de login
-          setIsLoading(false);
         }
+        setIsLoading(false);
       } catch (error) {
         console.error("Error checking authentication:", error);
         setIsLoading(false);
@@ -77,7 +55,6 @@ const AdminLoginPage = () => {
 
     if (!email.trim() || !password.trim()) {
       setError("Veuillez remplir tous les champs");
-      setShowErrorDialog(true);
       return;
     }
 
@@ -91,14 +68,12 @@ const AdminLoginPage = () => {
       if (authError) {
         console.error("Authentication error:", authError);
         setError("Email ou mot de passe incorrect");
-        setShowErrorDialog(true);
         setIsLoading(false);
         return;
       }
 
       if (!authData.user) {
         setError("Utilisateur non trouvé");
-        setShowErrorDialog(true);
         setIsLoading(false);
         return;
       }
@@ -110,7 +85,6 @@ const AdminLoginPage = () => {
       if (adminError) {
         console.error("Error checking admin role:", adminError);
         setError("Une erreur est survenue lors de la vérification des droits d'accès");
-        setShowErrorDialog(true);
         await supabase.auth.signOut();
         setIsLoading(false);
         return;
@@ -118,7 +92,6 @@ const AdminLoginPage = () => {
 
       if (!isAdmin) {
         setError("Vous n'avez pas les droits d'accès administrateur");
-        setShowErrorDialog(true);
         await supabase.auth.signOut();
         setIsLoading(false);
         return;
@@ -134,7 +107,6 @@ const AdminLoginPage = () => {
     } catch (err) {
       console.error("Connection error:", err);
       setError("Une erreur est survenue lors de la connexion");
-      setShowErrorDialog(true);
       setIsLoading(false);
     }
   };
@@ -159,20 +131,6 @@ const AdminLoginPage = () => {
           onSubmit={handleSubmit}
         />
       )}
-
-      <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Erreur de connexion</AlertDialogTitle>
-            <AlertDialogDescription>{error}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowErrorDialog(false)}>
-              OK
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </AuthLayout>
   );
 };
