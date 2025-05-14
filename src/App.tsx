@@ -15,6 +15,19 @@ import RdvPage from "./pages/Rdv";
 import { AdminPage } from "./pages/admin/AdminPage";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 
+// Import des pages admin
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProfiles from "./pages/admin/AdminProfiles";
+import AdminChildren from "./pages/admin/AdminChildren";
+import AdminReservations from "./pages/admin/AdminReservations";
+import AdminWednesdays from "./pages/admin/AdminWednesdays";
+import AdminHolidays from "./pages/admin/AdminHolidays";
+import AdminRdv from "./pages/admin/AdminRdv";
+import AdminAuthorizedEmails from "./pages/admin/AdminAuthorizedEmails";
+import AdminNewReservation from "./pages/admin/AdminNewReservation";
+import AdminNewHolidayReservation from "./pages/admin/AdminNewHolidayReservation";
+import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
+
 function App() {
   return (
     <Router>
@@ -38,7 +51,19 @@ function App() {
         </Route>
         
         {/* Routes admin - toutes accessibles sans authentification */}
-        <Route path="/admin/*" element={<AdminPage />} />
+        <Route path="/admin" element={<AdminPage />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="profiles" element={<AdminProfiles />} />
+          <Route path="children" element={<AdminChildren />} />
+          <Route path="reservations" element={<AdminReservations />} />
+          <Route path="reservations/new" element={<AdminNewReservation />} />
+          <Route path="reservations/new-holiday" element={<AdminNewHolidayReservation />} />
+          <Route path="reservations/new-teen-holiday" element={<AdminNewTeenHolidayReservation />} />
+          <Route path="wednesdays" element={<AdminWednesdays />} />
+          <Route path="holidays" element={<AdminHolidays />} />
+          <Route path="rdv" element={<AdminRdv />} />
+          <Route path="authorized-emails" element={<AdminAuthorizedEmails />} />
+        </Route>
       </Routes>
     </Router>
   );

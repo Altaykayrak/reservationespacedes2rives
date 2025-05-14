@@ -13,14 +13,16 @@ export function useAuth() {
   const location = useLocation();
 
   useEffect(() => {
+    // Configurer le client Supabase explicitement
+    const supabaseClient = supabase;
+
     // Récupérer la session initiale
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
         
         if (error) {
           console.error("Erreur lors de la récupération de la session:", error);
-          await supabase.auth.signOut();
           setUser(null);
           return;
         }
@@ -34,7 +36,6 @@ export function useAuth() {
         }
       } catch (error) {
         console.error("Erreur d'initialisation de l'auth:", error);
-        await supabase.auth.signOut();
         setUser(null);
       } finally {
         setLoading(false);
@@ -44,22 +45,16 @@ export function useAuth() {
     initializeAuth();
 
     // S'abonner aux changements d'état d'authentification
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
       console.log("Changement d'état d'authentification:", event, session?.user);
       
       if (event === 'SIGNED_OUT') {
         setUser(null);
         
         // Ne pas rediriger automatiquement lors de la déconnexion
-        // Sauf si l'utilisateur est sur une page protégée
+        // sauf si l'utilisateur est sur une page protégée qui n'est pas une page admin
         if (!location.pathname.startsWith('/admin') && 
-            location.pathname !== '/login' &&
-            location.pathname !== '/' &&
-            location.pathname !== '/prices' &&
-            location.pathname !== '/terms-of-operation' &&
-            location.pathname !== '/holiday-program') {
+            !isPublicPage(location.pathname)) {
           navigate('/login');
         }
       } else if (session?.user) {
@@ -88,7 +83,7 @@ export function useAuth() {
       // Vider le localStorage pour s'assurer qu'il n'y a pas de données résiduelles
       localStorage.clear();
       
-      // Ne pas rediriger automatiquement, laisser l'utilisateur sur la page actuelle
+      navigate('/login');
       
       toast({
         title: "Déconnexion réussie",
@@ -102,6 +97,21 @@ export function useAuth() {
         variant: "destructive",
       });
     }
+  };
+
+  // Fonction utilitaire pour vérifier si la page est publique
+  const isPublicPage = (path: string) => {
+    const publicPages = [
+      '/login', 
+      '/', 
+      '/prices', 
+      '/terms-of-operation', 
+      '/holiday-program',
+      '/register',
+      '/forgot-password',
+      '/reset-password'
+    ];
+    return publicPages.some(page => path === page) || path.startsWith('/admin');
   };
 
   return {

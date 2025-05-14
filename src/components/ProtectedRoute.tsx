@@ -20,20 +20,22 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Pour les routes admin, toujours autoriser l'accès sans vérification
+        if (location.pathname.startsWith('/admin')) {
+          console.log("Route admin détectée, accès autorisé sans vérification");
+          setIsAuthenticated(true);
+          setLoading(false);
+          return;
+        }
+
+        // Pour les autres routes, vérifier l'authentification
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           throw sessionError;
         }
 
-        // Pour les routes admin, toujours autoriser l'accès
-        if (location.pathname.startsWith('/admin')) {
-          setIsAuthenticated(true);
-          setLoading(false);
-          return;
-        } 
-
-        // Pour les routes utilisateur
+        console.log("État de la session:", session ? "Authentifié" : "Non authentifié");
         setIsAuthenticated(!!session);
         
       } catch (error) {
@@ -51,16 +53,20 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session);
+      console.log("ProtectedRoute - Auth state changed:", event, session ? "Session présente" : "Session absente");
+      
+      // Les routes admin sont toujours accessibles sans authentification
+      if (location.pathname.startsWith('/admin')) {
+        setIsAuthenticated(true);
+        setLoading(false);
+        return;
+      }
+      
       if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         queryClient.clear();
       } else if (event === 'SIGNED_IN' && session) {
-        if (location.pathname.startsWith('/admin')) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(true);
-        }
+        setIsAuthenticated(true);
         queryClient.resetQueries();
       }
     });
@@ -90,16 +96,19 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     </div>;
   }
 
-  // Routes administratives sont toujours accessibles
+  // Routes administratives sont toujours accessibles sans authentification
   if (location.pathname.startsWith('/admin')) {
+    console.log("Accès admin autorisé sans authentification");
     return children ? <>{children}</> : <Outlet />;
   }
 
   // Pour les routes utilisateur, vérifier l'authentification
   if (!isAuthenticated) {
+    console.log("Utilisateur non authentifié, redirection vers /login");
     return <Navigate to="/login" replace />;
   }
 
+  console.log("Accès autorisé à la route protégée:", location.pathname);
   // Return either the children prop if it's provided or render the Outlet for route nesting
   return children ? <>{children}</> : <Outlet />;
 };
