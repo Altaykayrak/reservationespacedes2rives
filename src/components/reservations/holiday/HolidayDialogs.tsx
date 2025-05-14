@@ -2,6 +2,7 @@
 import { SuccessReservationDialog } from "../SuccessReservationDialog";
 import { NoSpotsDialog } from "../NoSpotsDialog";
 import { MinimumDaysDialog } from "../dialogs/MinimumDaysDialog";
+import { Dispatch, SetStateAction } from "react";
 
 interface HolidayDialogsProps {
   showSuccessDialog: boolean;
@@ -11,11 +12,11 @@ interface HolidayDialogsProps {
     schoolClass?: string;
     date?: Date;
   };
-  setNoSpotsDialog: (dialog: {
+  setNoSpotsDialog: Dispatch<SetStateAction<{
     isOpen: boolean;
-    schoolClass?: string;
-    date?: Date;
-  }) => void;
+    schoolClass: string;
+    date: Date | null;
+  }>>;
   minimumDaysDialog: {
     isOpen: boolean;
   };
@@ -39,7 +40,7 @@ export const HolidayDialogs = ({
 
       <NoSpotsDialog
         open={noSpotsDialog.isOpen}
-        onOpenChange={(open) => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })}
+        onOpenChange={(open) => setNoSpotsDialog(prev => ({ ...prev, isOpen: open }))}
         schoolClass={noSpotsDialog.schoolClass}
         date={noSpotsDialog.date}
       />

@@ -203,7 +203,7 @@ export const HolidayReservationContent = ({
     }
     
     if (!isSubmitting) {
-      // Vérifier que toutes les dates sont des instances valides
+      // Vérifier que toutes les dates sont des instances valides de Date
       const validDates = selectedDates.filter(
         d => d.date instanceof Date && !isNaN(d.date.getTime())
       );

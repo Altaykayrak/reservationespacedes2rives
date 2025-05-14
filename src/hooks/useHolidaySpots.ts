@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
   // Générer une clé stable pour la date, même si Date est un objet
@@ -28,8 +28,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
 
         if (error) {
           console.error("Error fetching holiday spots:", error);
-          toast({
-            description: "Impossible de vérifier les places disponibles",
+          toast("Impossible de vérifier les places disponibles", {
             variant: "destructive"
           });
           throw error;
