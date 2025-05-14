@@ -8,7 +8,7 @@ interface HolidaySelectorsProps {
   setSelectedPeriod: (periodId: string) => void;
   selectedChild: string;
   setSelectedChild: (childId: string) => void;
-  holidayPeriods: Array<{ id: string; name: string }>;
+  holidayPeriods: Array<any>; // Updated to accept any type of period
   filteredChildren: Tables<"children">[] | null;
   setSelectedDates: (dates: any[]) => void;
   filterTeenPeriods: boolean;
