@@ -20,6 +20,16 @@ export const validateSelectedDates = (selectedDates: DateOption[]): string | nul
   if (selectedDates.length === 0) {
     return "Veuillez sélectionner au moins une date.";
   }
+  
+  // Vérifier qu'il y a au moins 3 dates valides
+  const validDates = selectedDates.filter(d => 
+    d.date instanceof Date && !isNaN(d.date.getTime())
+  );
+  
+  if (validDates.length < 3) {
+    return "Veuillez sélectionner au moins 3 jours pour valider votre réservation.";
+  }
+  
   return null;
 };
 
@@ -56,7 +66,7 @@ export const validateMinimumDays = (
     return false;
   }
   
-  // Exigence explicitie de 3 jours minimum, SANS EXCEPTION
+  // Exigence explicite de 3 jours minimum, SANS EXCEPTION
   if (selectedDates.length < 3) {
     console.log("validateMinimumDays - moins de 3 dates au total");
     return false;

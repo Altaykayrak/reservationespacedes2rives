@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -212,6 +213,12 @@ export const HolidayReservationContent = ({
           selectedDates.filter(d => !(d.date instanceof Date) || isNaN(d.date.getTime())));
       }
       
+      // Vérification supplémentaire du minimum de 3 jours
+      if (validDates.length < 3) {
+        setMinimumDaysDialog({ isOpen: true });
+        return;
+      }
+      
       console.log("DEBUG: Dates valides avant soumission:", validDates);
       handleSubmit();
     }
@@ -239,14 +246,6 @@ export const HolidayReservationContent = ({
       onCM2SummerPeriodCheck={handleCM2SummerPeriodCheck}
     />
   );
-
-  // Calculer le nombre exact de jours sélectionnés valides
-  const validDatesCount_ = selectedDates.filter(d => 
-    d.date instanceof Date && !isNaN(d.date.getTime())
-  ).length;
-
-  // Vérifier si le nombre de jours sélectionnés est suffisant
-  const hasMinimumDays_ = validDatesCount_ >= 3;
 
   return (
     <div className="space-y-6">

@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -133,6 +134,12 @@ export const TeenHolidayReservationContent = () => {
     console.log(`DEBUG: Validation minimale: ${hasMinimumDays} (${validDatesCount} >= 3)`);
     
     if (!isSubmitting) {
+      // Vérification supplémentaire du minimum de 3 jours
+      if (validDates.length < 3) {
+        setMinimumDaysDialog({ isOpen: true });
+        return;
+      }
+      
       handleSubmit();
     }
   };
