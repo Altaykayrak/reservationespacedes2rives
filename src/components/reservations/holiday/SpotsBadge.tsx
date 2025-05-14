@@ -33,6 +33,7 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string = "") => {
 };
 
 export const SpotsBadge = ({ availableSpots, isFull, schoolClass = "", isLoading = false }: SpotsBadgeProps) => {
+  // Ne rien afficher si on est en chargement ou qu'on n'a pas de classe scolaire et pas de spots disponibles
   if (isLoading || (!schoolClass && availableSpots === null)) return null;
 
   return (

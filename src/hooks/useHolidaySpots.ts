@@ -24,13 +24,14 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         throw error;
       }
 
-      return data || 0;
+      // Ensure we're returning a number or null
+      return typeof data === 'number' ? data : null;
     },
     // Enable the query only when we have valid parameters
     enabled: !!periodId && !!date && !!schoolClass && !isNaN(date.getTime()),
   });
 
-  // Ensure data is a number for type safety
+  // Ensure availableSpots is a number or null for type safety
   const availableSpots = typeof data === 'number' ? data : null;
   const isFull = availableSpots !== null && availableSpots <= 0;
 
