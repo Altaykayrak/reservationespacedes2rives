@@ -32,8 +32,7 @@ export function Navbar() {
     { label: "Accueil", href: "/" },
     { label: "Mon profil", href: "/profile" },
     { label: "Mes enfants", href: "/children" },
-    // Removed "Prise de rendez-vous" item
-    { label: "Réservations vacances", href: "/holiday-reservations" },
+    // Removed the "Réservations vacances" link
     { label: "Réservations Club Ado", href: "/teenholiday-reservations" },
     { label: "Programme vacances", href: "/holiday-program" },
     { label: "Règlement de fonctionnement", href: "/terms-of-operation" },

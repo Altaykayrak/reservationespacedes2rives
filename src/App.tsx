@@ -21,7 +21,6 @@ import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Children from "./pages/Children";
 import WednesdayReservations from "./pages/WednesdayReservations";
-import HolidayReservations from "./pages/HolidayReservations";
 import TeenHolidayReservations from "./pages/TeenHolidayReservations";
 import RdvPage from "./pages/Rdv";
 import HolidayProgram from "./pages/HolidayProgram";
@@ -76,7 +75,6 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/children" element={<Children />} />
               <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
-              <Route path="/holiday-reservations" element={<HolidayReservations />} />
               <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
               <Route path="/rdv" element={<RdvPage />} />
             </Route>
