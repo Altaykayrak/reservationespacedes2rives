@@ -18,6 +18,11 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Si le chemin commence par /admin, nous permettons l'accès sans vérification
+  if (location.pathname.startsWith('/admin')) {
+    return children ? <>{children}</> : <Outlet />;
+  }
+
   useEffect(() => {
     // Une seule vérification par rendu
     if (authChecked) return;

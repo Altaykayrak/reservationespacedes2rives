@@ -12,11 +12,15 @@ import HolidayProgram from "./pages/HolidayProgram";
 import Prices from "./pages/Prices";
 import TermsOfOperation from "./pages/TermsOfOperation";
 import RdvPage from "./pages/Rdv";
-import { AdminPage } from "./pages/admin/AdminPage";
-import AdminLogin from "./pages/admin/AdminLoginPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminLogin from "./pages/admin/AdminLoginPage";
 import AdminReservations from "./pages/admin/AdminReservations";
 import AdminWednesdays from "./pages/admin/AdminWednesdays";
+import AdminRdv from "./pages/admin/AdminRdv";
+import AdminProfiles from "./pages/admin/AdminProfiles";
+import AdminNewReservation from "./pages/admin/AdminNewReservation";
+import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
+import { AdminNavbar } from "@/components/admin/AdminNavbar";
 
 function App() {
   return (
@@ -40,12 +44,63 @@ function App() {
           <Route path="/rdv" element={<RdvPage />} />
         </Route>
         
-        {/* Routes admin avec vérification des droits admin intégrée dans AdminPage */}
-        <Route path="/admin" element={<AdminPage />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="reservations" element={<AdminReservations />} />
-          <Route path="wednesdays" element={<AdminWednesdays />} />
-        </Route>
+        {/* Routes admin - maintenant sans vérification des droits admin */}
+        <Route path="/admin" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminDashboard />
+            </main>
+          </div>
+        } />
+        <Route path="/admin/reservations" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminReservations />
+            </main>
+          </div>
+        } />
+        <Route path="/admin/wednesdays" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminWednesdays />
+            </main>
+          </div>
+        } />
+        <Route path="/admin/rdv" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminRdv />
+            </main>
+          </div>
+        } />
+        <Route path="/admin/profiles" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminProfiles />
+            </main>
+          </div>
+        } />
+        <Route path="/admin/new-reservation" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminNewReservation />
+            </main>
+          </div>
+        } />
+        <Route path="/admin/new-teen-holiday-reservation" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminNewTeenHolidayReservation />
+            </main>
+          </div>
+        } />
       </Routes>
     </Router>
   );
