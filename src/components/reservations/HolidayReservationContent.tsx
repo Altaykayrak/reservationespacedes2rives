@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -281,7 +280,7 @@ export const HolidayReservationContent = ({
               Réservation en cours...
             </>
           ) : (
-            `Confirmer réservation (${validDatesCount} jour${validDatesCount > 1 ? 's' : ''})`
+            "Confirmer réservation"
           )}
         </Button>
       </div>
@@ -305,4 +304,3 @@ export const HolidayReservationContent = ({
     </div>
   );
 };
-
