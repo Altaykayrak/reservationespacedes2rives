@@ -33,61 +33,39 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
-  const [localDate, setLocalDate] = useState<Date | null>(null);
+  // Vérifier si la date est valide
+  const isValidDate = date instanceof Date && !isNaN(date.getTime());
   
-  // Ensure valid date first
+  // N'utiliser useHolidaySpots que si la date est valide
+  const { availableSpots, isFull, isLoading } = isValidDate 
+    ? useHolidaySpots(periodId, date, childSchoolClass)
+    : { availableSpots: null, isFull: false, isLoading: false };
+  
+  // Log pour déboguer
   useEffect(() => {
-    try {
-      // Tester si la date est valide
-      if (!(date instanceof Date) || isNaN(date.getTime())) {
-        console.error("🛑 DateItem - Date invalide reçue:", date);
-        // Tentative de correction
-        const correctedDate = date instanceof Date ? date : new Date(date);
-        if (correctedDate instanceof Date && !isNaN(correctedDate.getTime())) {
-          console.log("✅ DateItem - Date corrigée:", correctedDate);
-          setLocalDate(correctedDate);
-        } else {
-          console.error("❌ DateItem - Impossible de corriger la date");
-          setLocalDate(null);
-        }
-      } else {
-        setLocalDate(date);
-      }
-    } catch (error) {
-      console.error("❌ DateItem - Erreur lors du traitement de la date:", error);
-      setLocalDate(null);
+    if (isValidDate) {
+      console.log(`DateItem - Places disponibles pour ${date.toISOString()}:`, {
+        periodId,
+        schoolClass: childSchoolClass,
+        availableSpots,
+        isFull,
+        isLoading
+      });
+    } else {
+      console.error("DateItem - Date invalide reçue:", date);
     }
-  }, [date]);
+  }, [date, periodId, childSchoolClass, availableSpots, isFull, isLoading, isValidDate]);
 
-  // Hook pour vérifier les places disponibles - s'assurer qu'il est appelé même si la date est invalide
-  const { availableSpots, isFull, isLoading } = useHolidaySpots(
-    periodId, 
-    localDate || new Date(), // Fournir une valeur par défaut pour éviter les erreurs
-    childSchoolClass
-  );
-
-  // Log détaillé pour déboguer les places disponibles
-  useEffect(() => {
-    console.log(`DateItem - Places disponibles pour ${localDate?.toISOString()}:`, {
-      periodId,
-      schoolClass: childSchoolClass,
-      availableSpots,
-      isFull,
-      isLoading
-    });
-  }, [localDate, periodId, childSchoolClass, availableSpots, isFull, isLoading]);
-
-  // If the date is invalid and impossible to correct, don't render
-  if (!localDate) {
-    console.error("❌ DateItem - Date invalide, composant non rendu");
+  // Si la date est invalide, ne pas rendre le composant
+  if (!isValidDate) {
     return null;
   }
 
-  const dayLabel = format(localDate, "EEEE d MMMM", { locale: fr });
+  const dayLabel = format(date, "EEEE d MMMM", { locale: fr });
 
   // Gestion des clics
   const handleToggle = () => {
-    console.log(`🖱️ DateItem - Toggle pour ${localDate.toISOString()}, état actuel: ${isSelected}`);
+    console.log(`🖱️ DateItem - Toggle pour ${date.toISOString()}, état actuel: ${isSelected}`);
     if (!isReserved && !isFull) {
       onDateToggle();
     }
@@ -99,7 +77,7 @@ export const DateItem = ({
         isSelected ? "border-2 border-primary" : "border"
       } ${isReserved ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
       onClick={handleToggle}
-      data-date={localDate.toISOString()}
+      data-date={date.toISOString()}
     >
       <div className="flex items-center justify-between">
         <Label className="font-semibold">{dayLabel}</Label>
@@ -119,7 +97,7 @@ export const DateItem = ({
           withoutMeal={withoutMeal}
           earlyDropoff={earlyDropoff}
           onOptionChange={onOptionChange}
-          date={localDate}
+          date={date}
         />
       )}
     </Card>

@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast";
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
   // Use React Query for data fetching
   const { data, isLoading, error } = useQuery({
-    queryKey: ["holidaySpots", periodId, date.toISOString(), schoolClass],
+    queryKey: ["holidaySpots", periodId, date?.toISOString(), schoolClass],
     queryFn: async () => {
       // Skip API call if any required parameter is missing or invalid
       if (!periodId || !date || !schoolClass || isNaN(date.getTime())) {

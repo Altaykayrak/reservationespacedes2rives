@@ -23,20 +23,17 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", isLoa
   const groupName = schoolClass ? getGroupName(schoolClass) : "";
   
   if (isLoading) {
-    return "Chargement des places...";
+    return "Vérification des places...";
   }
   
-  // Si la valeur est explicitement null ou undefined (pas d'informations)
   if (spots === null || spots === undefined) {
-    return "Places non disponibles";
+    return "Vérifiez dans un instant";
   }
   
-  // Si spots est 0, le groupe est complet
   if (spots === 0) {
-    return `Groupe complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
+    return `Groupe ${groupName} complet`;
   }
   
-  // Sinon, afficher le nombre de places restantes (qui est > 0)
   return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
 };
 
@@ -50,7 +47,6 @@ export const SpotsBadge = ({ availableSpots, isFull, schoolClass = "", isLoading
     setBadgeColor(getSpotsBadgeColor(availableSpots));
   }, [availableSpots, isFull, schoolClass, isLoading]);
 
-  // Toujours afficher le badge, même pendant le chargement ou si pas de classe
   return (
     <Badge 
       variant="secondary" 
