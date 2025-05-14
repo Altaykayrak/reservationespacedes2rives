@@ -30,7 +30,12 @@ const AdminLoginPage = () => {
       
       // D'abord, déconnexion pour éviter les problèmes d'état
       await supabase.auth.signOut();
-      queryClient.invalidateQueries({ queryKey: ['admin-status'] });
+      
+      // Supprimer les clés de cache pertinentes
+      queryClient.removeQueries({ queryKey: ['admin-status'] });
+      
+      // Attendre un court instant pour s'assurer que la déconnexion est terminée
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Ensuite, connexion avec les nouvelles informations
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -70,13 +75,11 @@ const AdminLoginPage = () => {
         return;
       }
 
-      // Invalider et forcer un préchargement des données admin
-      queryClient.invalidateQueries({ queryKey: ['admin-status'] });
-      await queryClient.prefetchQuery({
-        queryKey: ['admin-status'],
-        queryFn: async () => {
-          return { isAdmin: true, isLoading: false };
-        }
+      // Définir explicitement les données admin dans le cache
+      await queryClient.setQueryData(['admin-status', authData.user.id], { 
+        isAdmin: true, 
+        isLoading: false,
+        isError: false 
       });
 
       toast({
@@ -84,12 +87,11 @@ const AdminLoginPage = () => {
         description: "Connexion administrateur réussie"
       });
       
-      // Attendre un moment avant la redirection pour laisser le temps à la session de s'établir
+      // Utiliser un délai plus long et s'assurer que la redirection se fait avec remplace
       setTimeout(() => {
         setIsLoading(false);
-        // Redirection avec remplacement pour éviter de revenir en arrière
         navigate("/admin", { replace: true });
-      }, 500);
+      }, 1000);
 
     } catch (err) {
       console.error("Connection error:", err);

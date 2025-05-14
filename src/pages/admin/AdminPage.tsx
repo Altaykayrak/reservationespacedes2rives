@@ -1,7 +1,7 @@
 
 import { Outlet, useNavigate } from "react-router-dom";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,46 +13,82 @@ export function AdminPage() {
   const { toast } = useToast();
   const [initialSessionCheck, setInitialSessionCheck] = useState(false);
   const [hasSession, setHasSession] = useState(false);
+  const [sessionStable, setSessionStable] = useState(false);
+
+  // Déterminer si nous avons essayé une redirection
   const [redirectAttempted, setRedirectAttempted] = useState(false);
   
-  // Étape 1: Vérification initiale de la session pour éviter les redirections prématurées
+  // Étape 1: Vérification initiale et stabilisation de la session
   useEffect(() => {
+    let isMounted = true;
+    let stabilityTimer: number;
+
     const checkSession = async () => {
       try {
+        // Assurer que la session a eu le temps de s'établir complètement
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         const { data } = await supabase.auth.getSession();
         const sessionExists = !!data.session;
-        setHasSession(sessionExists);
         
-        console.log("AdminPage: Vérification initiale de session:", sessionExists ? "Session trouvée" : "Aucune session");
-        
-        // Si aucune session, rediriger immédiatement
-        if (!sessionExists) {
-          console.log("AdminPage: Aucune session trouvée, redirection vers login");
-          navigate("/admin-login", { replace: true });
+        if (isMounted) {
+          setHasSession(sessionExists);
+          console.log("AdminPage: Vérification initiale de session:", sessionExists ? "Session trouvée" : "Aucune session");
+          
+          // Si aucune session, rediriger immédiatement sans attendre
+          if (!sessionExists) {
+            console.log("AdminPage: Aucune session trouvée, redirection vers login");
+            setRedirectAttempted(true);
+            navigate("/admin-login", { replace: true });
+          } else {
+            // Donner du temps à la session pour "stabiliser"
+            stabilityTimer = window.setTimeout(() => {
+              if (isMounted) {
+                setSessionStable(true);
+              }
+            }, 800);
+          }
+          setInitialSessionCheck(true);
         }
-        
       } catch (error) {
         console.error("Erreur lors de la vérification de session:", error);
-      } finally {
-        setInitialSessionCheck(true);
+        if (isMounted) {
+          setInitialSessionCheck(true);
+          setRedirectAttempted(true);
+          navigate("/admin-login", { replace: true });
+        }
       }
     };
 
     checkSession();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(stabilityTimer);
+    };
   }, [navigate]);
   
-  // Étape 2: Vérification du statut admin seulement après confirmation de session
-  useEffect(() => {
-    // Ne vérifier le statut admin que si:
-    // 1. La vérification initiale de session est terminée
-    // 2. Une session existe
-    // 3. La requête admin n'est plus en chargement
-    // 4. Aucune redirection n'a déjà été tentée
-    if (initialSessionCheck && hasSession && !adminLoading && !queryLoading && !redirectAttempted) {
-      console.log("AdminPage: Vérification admin complète, isAdmin =", isAdmin, "isError =", isError);
-      
-      // Marquer que nous avons tenté une redirection pour éviter les boucles
+  // Fonction sécurisée pour rediriger vers admin-login
+  const safeRedirect = useCallback(() => {
+    if (!redirectAttempted) {
       setRedirectAttempted(true);
+      console.log("AdminPage: Redirection vers login (non-admin)");
+      navigate("/admin-login", { replace: true });
+    }
+  }, [navigate, redirectAttempted]);
+
+  // Étape 2: Vérification du statut admin seulement si la session est stable
+  useEffect(() => {
+    // Ne vérifier que si toutes les conditions sont remplies
+    if (
+      initialSessionCheck && 
+      hasSession && 
+      sessionStable && 
+      !adminLoading && 
+      !queryLoading && 
+      !redirectAttempted
+    ) {
+      console.log("AdminPage: Vérification admin complète, isAdmin =", isAdmin, "isError =", isError);
       
       if (isError) {
         toast({
@@ -60,7 +96,7 @@ export function AdminPage() {
           description: "Impossible de vérifier vos droits administrateur.",
           variant: "destructive",
         });
-        navigate("/admin-login", { replace: true });
+        safeRedirect();
         return;
       }
       
@@ -71,16 +107,27 @@ export function AdminPage() {
           description: "Vous n'avez pas les droits administrateur.",
           variant: "destructive",
         });
-        navigate("/admin-login", { replace: true });
+        safeRedirect();
         return;
       }
 
       console.log("AdminPage: Accès admin confirmé");
     }
-  }, [isAdmin, isError, queryLoading, adminLoading, initialSessionCheck, hasSession, navigate, toast, redirectAttempted]);
+  }, [
+    isAdmin, 
+    isError, 
+    queryLoading, 
+    adminLoading, 
+    initialSessionCheck, 
+    hasSession, 
+    sessionStable,
+    redirectAttempted, 
+    safeRedirect, 
+    toast
+  ]);
 
   // Affichage pendant les différentes phases de chargement
-  if (!initialSessionCheck || !hasSession || queryLoading || adminLoading) {
+  if (!initialSessionCheck || !hasSession || !sessionStable || queryLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -89,11 +136,22 @@ export function AdminPage() {
           <p className="text-sm text-gray-400 mt-2">
             {!initialSessionCheck ? "Vérification de la session..." : 
              !hasSession ? "Récupération des informations de session..." :
+             !sessionStable ? "Stabilisation de la session..." :
              "Vérification des droits administrateur..."}
           </p>
         </div>
       </div>
     );
+  }
+
+  if (!isAdmin && !queryLoading) {
+    console.log("Redirection déclenchée depuis le rendu (non admin)");
+    // Ne pas créer une boucle infinie, utiliser un effet pour rediriger
+    if (!redirectAttempted) {
+      setRedirectAttempted(true);
+      safeRedirect();
+    }
+    return null;
   }
 
   // Une fois que nous avons vérifié que l'utilisateur est admin, afficher la page
