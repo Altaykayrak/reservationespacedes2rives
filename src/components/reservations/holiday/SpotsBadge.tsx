@@ -1,6 +1,5 @@
 
 import { Badge } from "@/components/ui/badge";
-import { getGroupName } from "@/utils/schoolClassUtils";
 import { useEffect, useState } from "react";
 
 interface SpotsBadgeProps {
@@ -18,10 +17,6 @@ const getSpotsBadgeColor = (spots: number | null) => {
 };
 
 const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", isLoading: boolean = false) => {
-  // La fonction getGroupName est utilisée uniquement pour obtenir le nom du groupe
-  // et non pour déterminer la disponibilité, qui est faite par useHolidaySpots
-  const groupName = schoolClass ? getGroupName(schoolClass) : "";
-  
   if (isLoading) {
     return "Chargement des places...";
   }
