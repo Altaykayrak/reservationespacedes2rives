@@ -6,10 +6,10 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
   const { data, isLoading, error } = useQuery({
     queryKey: ["holidaySpots", periodId, date.toISOString(), schoolClass],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_holiday_spots", {
+      const { data, error } = await supabase.rpc("check_holiday_spots_available", {
         period_id: periodId,
         reservation_date: date.toISOString().split('T')[0],
-        school_class: schoolClass,
+        child_school_class: schoolClass,
       });
 
       if (error) {
@@ -22,8 +22,8 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
     enabled: !!periodId && !!date && !!schoolClass,
   });
 
-  // Calculate isFull based on available spots
-  const availableSpots = data !== undefined ? data : null;
+  // Ensure data is a number for type safety
+  const availableSpots = typeof data === 'number' ? data : null;
   const isFull = availableSpots !== null && availableSpots <= 0;
 
   return { 

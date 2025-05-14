@@ -92,7 +92,7 @@ export const DateItem = ({
           <span className="text-red-500 font-semibold">Réservé</span>
         ) : (
           <SpotsBadge 
-            availableSpots={availableSpots} 
+            availableSpots={availableSpots as number} 
             isFull={isFull} 
             schoolClass={childSchoolClass}
             isLoading={isLoading}
