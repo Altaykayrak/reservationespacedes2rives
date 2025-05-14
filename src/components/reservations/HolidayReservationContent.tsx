@@ -57,10 +57,6 @@ export const HolidayReservationContent = ({
   const location = useLocation();
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
   
-  // États pour les options globales
-  const [withoutMeal, setWithoutMeal] = useState(false);
-  const [earlyDropoff, setEarlyDropoff] = useState(false);
-  
   // Fonction callback pour recevoir l'information de CM2 en période d'été
   const handleCM2SummerPeriodCheck = (isInSummerPeriod: boolean) => {
     console.log("CM2 en période d'été détecté:", isInSummerPeriod);
@@ -124,23 +120,6 @@ export const HolidayReservationContent = ({
     enabled: !!selectedPeriod,
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
-
-  // Appliquer les options globales à toutes les dates sélectionnées
-  const applyOptionsToAllDates = (option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
-    if (option === 'withoutMeal') {
-      setWithoutMeal(value);
-    } else {
-      setEarlyDropoff(value);
-    }
-    
-    // Appliquer l'option à toutes les dates sélectionnées
-    setSelectedDates(prev => 
-      prev.map(dateOption => ({
-        ...dateOption,
-        [option]: value
-      }))
-    );
-  };
 
   // Filtrer les enfants en fonction de leur classe et de la période sélectionnée
   useEffect(() => {
@@ -279,40 +258,6 @@ export const HolidayReservationContent = ({
             selectedChild={selectedChild}
             setSelectedDates={setSelectedDates}
           />
-          
-          {/* Options globales pour toutes les dates */}
-          {selectedDates.length > 1 && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <div className="text-sm font-medium mb-2 text-blue-800">Options pour toutes les dates ({selectedDates.length} sélectionnées)</div>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="global-without-meal"
-                    checked={withoutMeal}
-                    onCheckedChange={(checked) => {
-                      if (typeof checked === 'boolean') {
-                        applyOptionsToAllDates('withoutMeal', checked);
-                      }
-                    }}
-                  />
-                  <Label htmlFor="global-without-meal">Sans repas (toutes les dates)</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="global-early-dropoff"
-                    checked={earlyDropoff}
-                    onCheckedChange={(checked) => {
-                      if (typeof checked === 'boolean') {
-                        applyOptionsToAllDates('earlyDropoff', checked);
-                      }
-                    }}
-                  />
-                  <Label htmlFor="global-early-dropoff">Accueil avant 8h30 (toutes les dates)</Label>
-                </div>
-              </div>
-            </div>
-          )}
         </HolidayPeriodProvider>
       )}
 
