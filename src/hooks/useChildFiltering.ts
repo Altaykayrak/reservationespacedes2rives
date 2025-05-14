@@ -20,8 +20,8 @@ export const useChildFiltering = (
   const { isTeenClassSync } = useSchoolClassUtils();
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
 
-  // Requête pour obtenir les informations sur la période sélectionnée avec cache amélioré
-  const { data: periodInfo } = useQuery({
+  // Requête pour obtenir les informations sur la période sélectionnée
+  const { data: periodInfo, isError: periodError } = useQuery({
     queryKey: ["holiday_period_info", selectedPeriodId],
     queryFn: async () => {
       if (!selectedPeriodId || processingRef.current) return null;
@@ -33,7 +33,7 @@ export const useChildFiltering = (
           .from("available_holiday_periods")
           .select("name")
           .eq("id", selectedPeriodId)
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error("[useChildFiltering] Error fetching period info:", error);
@@ -55,10 +55,11 @@ export const useChildFiltering = (
     enabled: !!selectedPeriodId && !processingRef.current,
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
     gcTime: 30 * 60 * 1000,    // Garbage collection after 30 minutes
+    retry: 3,                  // Retry 3 times on error
   });
 
   // Récupérer les mappings de classe pour la période sélectionnée
-  const { data: classMappings } = useQuery({
+  const { data: classMappings, isError: mappingsError } = useQuery({
     queryKey: ["holiday_class_mappings", selectedPeriodId],
     queryFn: async () => {
       if (!selectedPeriodId || processingRef.current) return [];
@@ -75,11 +76,12 @@ export const useChildFiltering = (
       }
       
       console.log("[useChildFiltering] Class mappings fetched:", data?.length || 0);
-      return data;
+      return data || [];
     },
     enabled: !!selectedPeriodId && !processingRef.current,
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
-    gcTime: 30 * 60 * 1000,    // Garbage collection after 30 minutes 
+    gcTime: 30 * 60 * 1000,    // Garbage collection after 30 minutes
+    retry: 3,                  // Retry 3 times on error
   });
 
   // Utiliser une référence pour stocker le dernier résultat calculé
@@ -108,10 +110,15 @@ export const useChildFiltering = (
     
     console.log("[useChildFiltering] Filtering children. Count:", children.length);
     
+    // Effectuer une copie défensive des enfants pour éviter les mutations accidentelles
+    const childrenCopy = [...children];
+    
     // Pour les réservations de vacances avec mappages de classes
     let result;
     if (isHolidayReservation && classMappings && classMappings.length > 0 && selectedPeriodId) {
-      result = children.filter(child => {
+      result = childrenCopy.filter(child => {
+        if (!child || !child.school_class) return false;
+        
         const mapping = classMappings.find(
           m => m.school_class.toLowerCase() === child.school_class.toLowerCase()
         );
@@ -125,11 +132,16 @@ export const useChildFiltering = (
     } 
     // Pour les réservations de vacances sans mappages
     else if (isHolidayReservation) {
-      result = children.filter(child => !isTeenClassSync(child.school_class));
+      result = childrenCopy.filter(child => {
+        if (!child || !child.school_class) return false;
+        return !isTeenClassSync(child.school_class);
+      });
     } 
     // Pour les réservations de vacances pour adolescents
     else if (isTeenHolidayReservation || isAdminTeenHolidayReservation) {
-      result = children.filter(child => {
+      result = childrenCopy.filter(child => {
+        if (!child || !child.school_class) return false;
+        
         const isChildTeen = isTeenClassSync(child.school_class);
         const isCM2 = child.school_class === "CM2";
         
@@ -140,7 +152,7 @@ export const useChildFiltering = (
       });
     } else {
       // Par défaut : retourner tous les enfants
-      result = children;
+      result = childrenCopy;
     }
     
     // Mettre à jour la référence pour les comparaisons futures
@@ -165,6 +177,7 @@ export const useChildFiltering = (
     isSummerPeriod,
     isHolidayReservation,
     isTeenHolidayReservation,
-    isAdminTeenHolidayReservation
+    isAdminTeenHolidayReservation,
+    hasErrors: periodError || mappingsError
   };
 };

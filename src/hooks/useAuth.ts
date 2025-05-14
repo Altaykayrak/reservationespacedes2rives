@@ -1,147 +1,114 @@
 
-import { useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Session, User } from "@supabase/supabase-js";
 
-export function useAuth() {
+export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [initialized, setInitialized] = useState(false);
+  const authSubscription = useRef<{ data: { subscription: any } } | null>(null);
 
-  // Vérifier si l'utilisateur est sur une route admin
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  // Fonction pour gérer le changement d'état d'authentification
+  const handleAuthStateChange = useCallback((event: string, session: Session | null) => {
+    console.log("useAuth: Changement d'état d'authentification:", event, session?.user?.email || "pas de session");
+    
+    if (event === "INITIAL_SESSION") {
+      console.log("useAuth: Session initiale détectée");
+    }
+    
+    if (event === "SIGNED_IN") {
+      console.log("useAuth: Event d'authentification positif détecté avec session");
+    }
+    
+    if (event === "SIGNED_OUT") {
+      console.log("useAuth: Event de déconnexion détecté");
+      setUser(null);
+      // Supprimer les données de session du localStorage
+      localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
+    }
+    
+    // Ne pas modifier l'état user lors d'un SIGNED_OUT car nous voulons gérer cela séparément
+    if (event !== "SIGNED_OUT") {
+      setUser(session?.user || null);
+    }
+    
+    setLoading(false);
+  }, []);
 
+  // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
-    // Récupérer la session initiale
-    const initializeAuth = async () => {
-      // Pour les routes admin, ne pas vérifier l'authentification
-      if (isAdminRoute) {
-        console.log("Route admin détectée dans useAuth, authentification ignorée");
-        setLoading(false);
-        return;
+    console.log("useAuth: Vérification de la session existante...");
+    
+    // Connexion à l'event listener pour les changements d'états d'authentification
+    const setupAuthSubscription = async () => {
+      if (authSubscription.current) {
+        return; // Éviter les abonnements multiples
       }
-
+      
+      // Configuration de l'écouteur d'événements d'authentification
+      authSubscription.current = supabase.auth.onAuthStateChange(handleAuthStateChange);
+      
+      // Récupération de la session actuelle
       try {
-        console.log("useAuth: Vérification de la session existante...");
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error("Erreur lors de la récupération de la session:", error);
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-
-        if (session?.user) {
+        if (session) {
           console.log("useAuth: Session trouvée:", session.user.email);
           setUser(session.user);
         } else {
           console.log("useAuth: Aucune session active");
           setUser(null);
+          // Nettoyage explicite du localStorage pour éviter les sessions partielles
+          localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
         }
       } catch (error) {
-        console.error("Erreur d'initialisation de l'auth:", error);
+        console.error("useAuth: Erreur lors de la récupération de la session:", error);
         setUser(null);
       } finally {
         setLoading(false);
+        setInitialized(true);
       }
     };
-
-    initializeAuth();
-
-    // S'abonner aux changements d'état d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log(`useAuth: Changement d'état d'authentification: ${event}`, session?.user?.email);
-      
-      // Pour les routes admin, ignorer les événements d'authentification
-      if (isAdminRoute) {
-        console.log("useAuth: Route admin détectée, ignorer l'événement d'authentification");
-        return;
-      }
-      
-      if (event === 'SIGNED_OUT') {
-        console.log("useAuth: SIGNED_OUT détecté");
-        setUser(null);
-        
-        // Ne pas rediriger automatiquement lors de la déconnexion
-        // sauf si l'utilisateur est sur une page protégée qui n'est pas une page admin
-        if (!isAdminRoute && !isPublicPage(location.pathname)) {
-          console.log("useAuth: Redirection après déconnexion");
-          navigate('/login', { replace: true });
-        }
-      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session?.user) {
-        console.log("useAuth: Event d'authentification positif détecté avec session");
-        setUser(session.user);
-        
-        // Ne rediriger que si l'utilisateur est sur la page de login
-        if (location.pathname === '/login') {
-          console.log("useAuth: Sur page login avec session, redirection vers profile");
-          navigate('/profile', { replace: true });
-        }
-      } else if (!session) {
-        console.log("useAuth: Pas de session détectée dans l'événement");
-        setUser(null);
-      }
-
-      setLoading(false);
-    });
-
+    
+    setupAuthSubscription();
+    
+    // Nettoyage de la souscription
     return () => {
-      subscription.unsubscribe();
+      if (authSubscription.current) {
+        const { data: { subscription } } = authSubscription.current;
+        if (subscription && typeof subscription.unsubscribe === 'function') {
+          subscription.unsubscribe();
+        }
+        authSubscription.current = null;
+      }
     };
-  }, [navigate, toast, location.pathname, isAdminRoute]);
+  }, [handleAuthStateChange]);
 
+  // Fonction pour se déconnecter
   const signOut = async () => {
+    console.log("useAuth: Déconnexion en cours...");
+    setLoading(true);
     try {
-      console.log("Tentative de déconnexion...");
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error("useAuth: Erreur lors de la déconnexion:", error);
+        throw error;
+      }
       
-      console.log("Déconnexion réussie, nettoyage du localStorage");
+      // Nettoyage explicite après déconnexion
       setUser(null);
+      localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
+      console.log("useAuth: Déconnexion réussie, token supprimé du localStorage");
       
-      // Vider le localStorage pour s'assurer qu'il n'y a pas de données résiduelles
-      localStorage.removeItem("supabase.auth.token");
-      
-      navigate('/login', { replace: true });
-      
-      toast({
-        title: "Déconnexion réussie",
-        description: "Vous avez été déconnecté avec succès.",
-      });
+      // Forcer le rafraîchissement de la page pour réinitialiser complètement l'état
+      window.location.href = "/login";
     } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-      toast({
-        title: "Erreur de déconnexion",
-        description: "Une erreur est survenue lors de la déconnexion.",
-        variant: "destructive",
-      });
+      console.error("useAuth: Erreur inattendue lors de la déconnexion:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fonction utilitaire pour vérifier si la page est publique
-  const isPublicPage = (path: string) => {
-    const publicPages = [
-      '/login', 
-      '/', 
-      '/prices', 
-      '/terms-of-operation', 
-      '/holiday-program',
-      '/register',
-      '/forgot-password',
-      '/reset-password',
-      '/admin-login'
-    ];
-    return publicPages.some(page => path === page) || path.startsWith('/admin');
-  };
-
-  return {
-    user,
-    loading,
-    signOut,
-  };
-}
+  return { user, loading, signOut, initialized };
+};

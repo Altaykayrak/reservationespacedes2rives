@@ -12,43 +12,60 @@ import { injectAnimationStyles } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const HolidayReservations = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   const [isWaiting, setIsWaiting] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     // Injecter les styles d'animation pour améliorer l'interaction
     injectAnimationStyles();
     
     const checkAccess = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        console.log("Aucun utilisateur trouvé, attente de l'authentification...");
+        setIsLoading(false);
+        return;
+      }
+      
       setIsLoading(true);
 
       try {
-        // Récupérer les états directement de la base de données
+        console.log("Tentative de récupération du profil pour l'utilisateur:", user.id);
+        
+        // Récupérer les états directement de la base de données avec gestion d'erreurs améliorée
         const { data, error } = await supabase
           .from('profiles')
           .select('is_waiting, is_closed')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
-          console.error('Error checking access:', error);
+          console.error('Erreur lors de la récupération du profil:', error);
+          setProfileError(`Erreur d'accès au profil: ${error.message}`);
           toast({
             title: "Erreur",
-            description: "Erreur lors de la vérification de l'accès",
+            description: "Erreur lors de la vérification du profil utilisateur",
             variant: "destructive"
           });
           return;
         }
 
-        console.log('Profile data:', data);
-        setIsWaiting(data?.is_waiting || false);
-        setIsClosed(data?.is_closed || false);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des données:", error);
+        if (!data) {
+          console.warn('Profil non trouvé pour cet utilisateur');
+          setProfileError("Profil utilisateur non trouvé");
+          return;
+        }
+
+        console.log('Données du profil récupérées:', data);
+        setIsWaiting(data.is_waiting || false);
+        setIsClosed(data.is_closed || false);
+        setProfileError(null);
+      } catch (error: any) {
+        console.error("Erreur inattendue lors de la récupération des données:", error);
+        setProfileError(`Erreur inattendue: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
@@ -57,8 +74,8 @@ const HolidayReservations = () => {
     checkAccess();
   }, [user, toast]);
 
-  // Affiche un squelette de chargement
-  if (isLoading) {
+  // Affiche un squelette de chargement pendant l'initialisation de l'auth ou le chargement du profil
+  if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <Navbar />
@@ -72,6 +89,22 @@ const HolidayReservations = () => {
           </div>
           <Skeleton className="h-[400px] w-full rounded-xl" />
           <Skeleton className="h-[300px] w-full rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
+  // Afficher une erreur si le profil n'a pas pu être récupéré
+  if (profileError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6">
+          <EmptyHolidayState 
+            message="Erreur lors du chargement du profil" 
+            subtitle={profileError}
+            icon="error"
+          />
         </div>
       </div>
     );
