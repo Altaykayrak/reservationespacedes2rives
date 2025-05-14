@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -9,9 +10,11 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Menu } from "lucide-react";
 
 export const Navbar = () => {
-  const { isLoggedIn, logout, user } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const { data: isAdmin } = useAdminAuth();
   const navigate = useNavigate();
+  
+  const isLoggedIn = !!user;
 
   return (
     <div className="border-b bg-white/70 backdrop-blur-md sticky top-0 z-30">
@@ -23,12 +26,10 @@ export const Navbar = () => {
           {isLoggedIn ? (
             <>
               <div className="hidden md:flex items-center gap-4">
-                <NavbarLink to="/reservations">Mercredis</NavbarLink>
                 <NavbarLink to="/teenholiday-reservations">Ados</NavbarLink>
-                <NavbarLink to="/account">Mon compte</NavbarLink>
-                <NavbarLink to="/contact">Contact</NavbarLink>
+                <NavbarLink to="/profile">Mon compte</NavbarLink>
                 {isAdmin && (
-                  <NavbarLink to="/admin/reservations">Admin</NavbarLink>
+                  <NavbarLink to="/admin">Admin</NavbarLink>
                 )}
               </div>
               <Sheet>
@@ -46,16 +47,14 @@ export const Navbar = () => {
                   </SheetHeader>
                   <div className="divide-y divide-border">
                     <div className="grid gap-4 py-4">
-                      <NavbarLink to="/reservations">Mercredis</NavbarLink>
                       <NavbarLink to="/teenholiday-reservations">Ados</NavbarLink>
-                      <NavbarLink to="/account">Mon compte</NavbarLink>
-                      <NavbarLink to="/contact">Contact</NavbarLink>
+                      <NavbarLink to="/profile">Mon compte</NavbarLink>
                       {isAdmin && (
-                        <NavbarLink to="/admin/reservations">Admin</NavbarLink>
+                        <NavbarLink to="/admin">Admin</NavbarLink>
                       )}
                     </div>
                     <div className="grid gap-4 py-4">
-                      <Button variant="outline" onClick={logout} className="w-full">
+                      <Button variant="outline" onClick={signOut} className="w-full">
                         Se déconnecter
                       </Button>
                     </div>
@@ -74,11 +73,11 @@ export const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuItem onClick={() => navigate("/account")}>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
                     Mon profil
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>
+                  <DropdownMenuItem onClick={signOut}>
                     Se déconnecter
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -87,7 +86,7 @@ export const Navbar = () => {
           ) : (
             <div className="hidden md:flex items-center gap-4">
               <NavbarLink to="/login">Se connecter</NavbarLink>
-              <Button variant="outline" onClick={() => navigate("/signup")}>
+              <Button variant="outline" onClick={() => navigate("/register")}>
                 S'inscrire
               </Button>
             </div>
