@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -188,17 +187,6 @@ export const HolidayReservationContent = ({
     }
   }, [location.search, selectedPeriod, setSelectedPeriod]);
 
-  // Appliquer les options globales à toutes les dates sélectionnées
-  useEffect(() => {
-    if (selectedDates.length === 0) return;
-    
-    setSelectedDates(selectedDates.map(date => ({
-      ...date,
-      withoutMeal,
-      earlyDropoff
-    })));
-  }, [withoutMeal, earlyDropoff]);
-
   // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -246,31 +234,6 @@ export const HolidayReservationContent = ({
           {childSelectorElement}
           {periodSelectorElement}
         </>
-      )}
-
-      {/* Options globales - uniquement pour la page de réservations standard (non-ado) */}
-      {!filterTeenPeriods && location.pathname.includes('holiday-reservations') && (
-        <div className="space-y-4">
-          <h3 className="font-semibold text-lg">Options pour toutes les réservations</h3>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="without-meal" 
-                checked={withoutMeal} 
-                onCheckedChange={(checked) => setWithoutMeal(checked === true)}
-              />
-              <Label htmlFor="without-meal">Sans repas</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="early-dropoff" 
-                checked={earlyDropoff} 
-                onCheckedChange={(checked) => setEarlyDropoff(checked === true)}
-              />
-              <Label htmlFor="early-dropoff">Accueil avant 8h30</Label>
-            </div>
-          </div>
-        </div>
       )}
 
       {selectedPeriod && selectedChild && childInfo && holidayPeriod && !isCM2SummerPeriod && (
