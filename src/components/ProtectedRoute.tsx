@@ -26,7 +26,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           throw sessionError;
         }
 
-        // For admin routes
+        // Pour les routes admin
         if (location.pathname.startsWith('/admin')) {
           if (!session?.user) {
             setIsAuthenticated(false);
@@ -34,7 +34,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
             return;
           }
 
-          // Check admin status using RPC function
+          // Vérifier le statut d'admin en utilisant la fonction RPC
           const { data: isAdmin, error: adminError } = await supabase
             .rpc('is_admin', { user_id: session.user.id });
 
@@ -50,7 +50,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           return;
         } 
 
-        // For user routes
+        // Pour les routes utilisateur normales
         setIsAuthenticated(!!session);
         
       } catch (error) {
@@ -66,26 +66,29 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
     };
 
-    // Listen for auth state changes
+    // Effectuer la vérification initiale d'authentification
+    checkAuth();
+
+    // S'abonner aux changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
+      
       if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         queryClient.clear();
       } else if (event === 'SIGNED_IN' && session) {
+        // Pour les routes admin, vérifiez spécifiquement le statut d'admin
         if (location.pathname.startsWith('/admin')) {
           const { data: isAdmin } = await supabase
             .rpc('is_admin', { user_id: session.user.id });
 
-          setIsAuthenticated(isAdmin);
+          setIsAuthenticated(!!isAdmin);
         } else {
           setIsAuthenticated(true);
         }
         queryClient.resetQueries();
       }
     });
-
-    checkAuth();
 
     return () => {
       subscription.unsubscribe();

@@ -1,6 +1,7 @@
 
 import { useNavigate, Navigate, Outlet } from "react-router-dom";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
+import { AdminNavbar } from "@/components/admin/AdminNavbar";
 
 export function AdminPage() {
   const { data: isAdmin, isLoading } = useAdminAuth();
@@ -17,12 +18,13 @@ export function AdminPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (isAdmin === false) {
     return <Navigate to="/admin-login" replace />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AdminNavbar />
       <main className="container mx-auto p-8">
         <Outlet />
       </main>
