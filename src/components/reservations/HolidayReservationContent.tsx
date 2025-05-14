@@ -188,7 +188,9 @@ export const HolidayReservationContent = ({
     e.preventDefault();
     e.stopPropagation();
     
-    console.log(`DEBUG: Bouton cliqué - Nombre de dates sélectionnées: ${selectedDates.length}`);
+    // Vérifier le nombre exact de dates sélectionnées
+    const validDatesCount = selectedDates.length;
+    console.log(`DEBUG: Bouton cliqué - Nombre de dates sélectionnées: ${validDatesCount}`);
     
     if (!isSubmitting) {
       // Vérifier que toutes les dates sont des instances valides
@@ -229,6 +231,11 @@ export const HolidayReservationContent = ({
     />
   );
 
+  // Calculer le nombre exact de jours sélectionnés valides
+  const validDatesCount = selectedDates.filter(d => 
+    d.date instanceof Date && !isNaN(d.date.getTime())
+  ).length;
+
   return (
     <div className="space-y-6">
       {invertSelectors ? (
@@ -265,7 +272,7 @@ export const HolidayReservationContent = ({
         <Button
           onClick={onSubmitClick}
           className="w-full md:w-auto"
-          disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting || isCM2SummerPeriod}
+          disabled={!selectedChild || !selectedPeriod || validDatesCount === 0 || isSubmitting || isCM2SummerPeriod}
           type="button"
         >
           {isSubmitting ? (
@@ -274,7 +281,7 @@ export const HolidayReservationContent = ({
               Réservation en cours...
             </>
           ) : (
-            `Confirmer réservation (${selectedDates.length} jour${selectedDates.length > 1 ? 's' : ''})`
+            `Confirmer réservation (${validDatesCount} jour${validDatesCount > 1 ? 's' : ''})`
           )}
         </Button>
       </div>
@@ -298,3 +305,4 @@ export const HolidayReservationContent = ({
     </div>
   );
 };
+
