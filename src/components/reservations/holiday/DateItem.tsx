@@ -6,7 +6,7 @@ import { fr } from "date-fns/locale";
 import { DateOptions } from "./DateOptions";
 import { useHolidaySpots } from "@/hooks/useHolidaySpots";
 import { SpotsBadge } from "./SpotsBadge";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 
 interface DateItemProps {
   date: Date;
@@ -21,7 +21,8 @@ interface DateItemProps {
   childSchoolClass: string;
 }
 
-export const DateItem = ({
+// Utiliser memo pour éviter les re-rendus inutiles
+export const DateItem = memo(({
   date,
   isSelected,
   isReserved,
@@ -33,28 +34,20 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
-  // Vérifier si la date est valide
+  // Vérifier si la date est valide une seule fois
   const isValidDate = date instanceof Date && !isNaN(date.getTime());
   
   // N'utiliser useHolidaySpots que si la date est valide
-  const { availableSpots, isFull, isLoading } = isValidDate 
+  const { availableSpots, isFull, isLoading } = isValidDate && periodId && childSchoolClass 
     ? useHolidaySpots(periodId, date, childSchoolClass)
     : { availableSpots: null, isFull: false, isLoading: false };
   
-  // Log pour déboguer
-  useEffect(() => {
-    if (isValidDate) {
-      console.log(`DateItem - Places disponibles pour ${date.toISOString()}:`, {
-        periodId,
-        schoolClass: childSchoolClass,
-        availableSpots,
-        isFull,
-        isLoading
-      });
-    } else {
-      console.error("DateItem - Date invalide reçue:", date);
+  // Utiliser useCallback pour la stabilité de la fonction
+  const handleToggle = useCallback(() => {
+    if (!isReserved && !isFull) {
+      onDateToggle();
     }
-  }, [date, periodId, childSchoolClass, availableSpots, isFull, isLoading, isValidDate]);
+  }, [isReserved, isFull, onDateToggle]);
 
   // Si la date est invalide, ne pas rendre le composant
   if (!isValidDate) {
@@ -62,14 +55,6 @@ export const DateItem = ({
   }
 
   const dayLabel = format(date, "EEEE d MMMM", { locale: fr });
-
-  // Gestion des clics
-  const handleToggle = () => {
-    console.log(`🖱️ DateItem - Toggle pour ${date.toISOString()}, état actuel: ${isSelected}`);
-    if (!isReserved && !isFull) {
-      onDateToggle();
-    }
-  };
 
   return (
     <Card
@@ -102,4 +87,7 @@ export const DateItem = ({
       )}
     </Card>
   );
-};
+});
+
+// Ajouter un displayName pour les devtools React
+DateItem.displayName = "DateItem";
