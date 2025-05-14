@@ -2,8 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { ChildrenList } from "@/components/profile/ChildrenList";
 import { ProfileSection } from "@/components/profile/ProfileSection";
-import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileData, Child } from "@/types/profile";
@@ -11,18 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Navbar } from "@/components/ui/navbar";
 
 const Profile = () => {
-  const navigate = useNavigate();
-
-  // Check authentication status
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-      }
-    };
-    checkAuth();
-  }, [navigate]);
+  // Suppression de la vérification d'authentification et de la redirection
 
   const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ["profile"],
@@ -77,12 +66,14 @@ const Profile = () => {
       <div className="container mx-auto p-4">
         <Alert variant="destructive">
           <AlertDescription>
-            Une erreur est survenue lors du chargement des données. Veuillez réessayer ou vous reconnecter.
+            Une erreur est survenue lors du chargement des données. Veuillez réessayer.
           </AlertDescription>
         </Alert>
         <div className="mt-4 flex justify-center">
-          <Button onClick={() => navigate("/login")}>
-            Se reconnecter
+          <Button asChild>
+            <Link to="/login">
+              Se connecter
+            </Link>
           </Button>
         </div>
       </div>
@@ -102,12 +93,14 @@ const Profile = () => {
       <div className="container mx-auto p-4">
         <Alert>
           <AlertDescription>
-            Profil non trouvé. Veuillez vous reconnecter.
+            Profil non trouvé. Veuillez vous connecter.
           </AlertDescription>
         </Alert>
         <div className="mt-4 flex justify-center">
-          <Button onClick={() => navigate("/login")}>
-            Se connecter
+          <Button asChild>
+            <Link to="/login">
+              Se connecter
+            </Link>
           </Button>
         </div>
       </div>

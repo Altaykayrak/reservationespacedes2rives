@@ -1,22 +1,25 @@
 
-import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { toast } from "sonner";
 
 export const AdminPage = () => {
-  const navigate = useNavigate();
   const { data: isAdmin, isLoading, isError, isChecking } = useAdminAuth();
+  const [showAdmin, setShowAdmin] = useState(false);
 
   useEffect(() => {
-    // Si la vérification est terminée et que l'utilisateur n'est pas admin, rediriger
-    if (!isChecking && !isLoading && !isAdmin) {
-      console.log("[AdminPage] L'utilisateur n'est pas administrateur, redirection...");
-      toast.error("Accès non autorisé. Vous devez être administrateur pour accéder à cette page.");
-      navigate("/admin-login");
+    // Mettre à jour l'état sans redirection
+    if (!isChecking && !isLoading) {
+      if (!isAdmin) {
+        console.log("[AdminPage] L'utilisateur n'est pas administrateur");
+        toast.error("Accès non autorisé. Vous devez être administrateur pour accéder à cette page.");
+      } else {
+        setShowAdmin(true);
+      }
     }
-  }, [isAdmin, isLoading, isChecking, navigate]);
+  }, [isAdmin, isLoading, isChecking]);
 
   // Afficher un indicateur de chargement pendant la vérification
   if (isChecking || isLoading) {
@@ -36,22 +39,27 @@ export const AdminPage = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p className="text-red-600 mb-4">Une erreur est survenue lors de la vérification des droits d'accès.</p>
-          <button 
-            onClick={() => navigate("/admin-login")} 
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
-          >
-            Retourner à la page de connexion
-          </button>
         </div>
       </div>
     );
   }
 
   // Si l'utilisateur est admin, afficher la page d'administration
+  if (showAdmin) {
+    return (
+      <>
+        <AdminNavbar />
+        <Outlet />
+      </>
+    );
+  }
+
+  // Sinon, afficher un message d'accès refusé
   return (
-    <>
-      <AdminNavbar />
-      <Outlet />
-    </>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <p className="text-red-600 mb-4">Accès non autorisé. Vous devez être administrateur pour accéder à cette page.</p>
+      </div>
+    </div>
   );
 };
