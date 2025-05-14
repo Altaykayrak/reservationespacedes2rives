@@ -16,9 +16,6 @@ export function useAuth() {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
-    // Configurer le client Supabase explicitement
-    const supabaseClient = supabase;
-
     // Récupérer la session initiale
     const initializeAuth = async () => {
       // Pour les routes admin, ne pas vérifier l'authentification
@@ -29,19 +26,21 @@ export function useAuth() {
       }
 
       try {
-        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        console.log("useAuth: Vérification de la session existante...");
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Erreur lors de la récupération de la session:", error);
           setUser(null);
+          setLoading(false);
           return;
         }
 
         if (session?.user) {
-          console.log("Session trouvée:", session.user);
+          console.log("useAuth: Session trouvée:", session.user);
           setUser(session.user);
         } else {
-          console.log("Aucune session active");
+          console.log("useAuth: Aucune session active");
           setUser(null);
         }
       } catch (error) {
@@ -55,29 +54,37 @@ export function useAuth() {
     initializeAuth();
 
     // S'abonner aux changements d'état d'authentification
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      console.log("Changement d'état d'authentification:", event, session?.user);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("useAuth: Changement d'état d'authentification:", event, session?.user);
       
       // Pour les routes admin, ignorer les événements d'authentification
       if (isAdminRoute) {
+        console.log("useAuth: Route admin détectée, ignorer l'événement d'authentification");
         return;
       }
       
       if (event === 'SIGNED_OUT') {
+        console.log("useAuth: SIGNED_OUT détecté");
         setUser(null);
         
         // Ne pas rediriger automatiquement lors de la déconnexion
         // sauf si l'utilisateur est sur une page protégée qui n'est pas une page admin
         if (!isAdminRoute && !isPublicPage(location.pathname)) {
-          navigate('/login');
+          console.log("useAuth: Redirection après déconnexion");
+          navigate('/login', { replace: true });
         }
-      } else if (session?.user) {
+      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session?.user) {
+        console.log("useAuth: Event d'authentification positif détecté avec session");
         setUser(session.user);
         
         // Ne rediriger que si l'utilisateur est sur la page de login
         if (location.pathname === '/login') {
-          navigate('/profile');
+          console.log("useAuth: Sur page login avec session, redirection vers profile");
+          navigate('/profile', { replace: true });
         }
+      } else if (!session) {
+        console.log("useAuth: Pas de session détectée dans l'événement");
+        setUser(null);
       }
 
       setLoading(false);
@@ -95,9 +102,9 @@ export function useAuth() {
       
       setUser(null);
       // Vider le localStorage pour s'assurer qu'il n'y a pas de données résiduelles
-      localStorage.clear();
+      localStorage.removeItem("supabase.auth.token");
       
-      navigate('/login');
+      navigate('/login', { replace: true });
       
       toast({
         title: "Déconnexion réussie",

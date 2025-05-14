@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ProtectedRouteProps {
-  children?: React.ReactNode; // Make children optional
+  children?: React.ReactNode;
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
@@ -32,6 +32,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     // Pour les routes non-admin, vérifier l'authentification
     const checkAuth = async () => {
       try {
+        console.log("Vérification de la session...");
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -39,7 +40,14 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         }
 
         console.log("État de la session:", session ? "Authentifié" : "Non authentifié");
-        setIsAuthenticated(!!session);
+        
+        if (session) {
+          console.log("Session active trouvée, utilisateur authentifié");
+          setIsAuthenticated(true);
+        } else {
+          console.log("Aucune session active trouvée");
+          setIsAuthenticated(false);
+        }
         
       } catch (error) {
         console.error("Auth check error:", error);
@@ -54,6 +62,16 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
     };
 
+    // Configuration explicite des options du client Supabase
+    const setupSupabaseAuth = async () => {
+      console.log("Configuration de Supabase Auth...");
+      // Ici, nous nous assurons que les options de persistance sont correctement configurées
+      // Cette étape est implicitement gérée par le client Supabase, mais nous la mentionnons pour clarté
+    };
+
+    setupSupabaseAuth();
+    checkAuth();
+
     // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("ProtectedRoute - Auth state changed:", event, session ? "Session présente" : "Session absente");
@@ -66,18 +84,15 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
       
       if (event === 'SIGNED_OUT') {
+        console.log("SIGNED_OUT event détecté");
         setIsAuthenticated(false);
         queryClient.clear();
-      } else if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session) {
+        console.log("Event d'authentification positif détecté avec session");
         setIsAuthenticated(true);
         queryClient.resetQueries();
       }
     });
-
-    // Ne pas appeler checkAuth pour les routes admin
-    if (!isAdminRoute) {
-      checkAuth();
-    }
 
     return () => {
       subscription.unsubscribe();
@@ -111,7 +126,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Pour les routes utilisateur, vérifier l'authentification
   if (!isAuthenticated) {
     console.log("Utilisateur non authentifié, redirection vers /login");
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   console.log("Accès autorisé à la route protégée:", location.pathname);

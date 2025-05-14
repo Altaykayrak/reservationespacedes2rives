@@ -42,10 +42,20 @@ export const useLoginForm = () => {
 
       if (data.session) {
         console.log("Connexion réussie, session établie:", data.session);
+        
+        // Stocker explicitement la session dans le localStorage pour s'assurer qu'elle est disponible
+        localStorage.setItem("supabase.auth.token", JSON.stringify({
+          currentSession: data.session,
+          expiresAt: data.session.expires_at
+        }));
+        
         toast.success("Connexion réussie");
         
-        // Force l'actualisation de la page après connexion réussie
-        window.location.href = '/profile';
+        // Attendre un court instant pour s'assurer que la session est bien enregistrée
+        setTimeout(() => {
+          // Rediriger vers la page d'accueil ou le profil
+          window.location.href = '/profile';
+        }, 500);
       } else {
         setError("Session non établie. Veuillez réessayer.");
         setIsLoading(false);
