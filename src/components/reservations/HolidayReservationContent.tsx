@@ -1,21 +1,15 @@
-import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
-import { ChildSelector } from "./ChildSelector";
-import { PeriodSelector } from "./PeriodSelector";
-import { HolidayDateSelector } from "./holiday/HolidayDateSelector";
-import { SuccessReservationDialog } from "./SuccessReservationDialog";
-import { NoSpotsDialog } from "./NoSpotsDialog";
-import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Tables } from "@/integrations/supabase/types";
-import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 import { useEffect, useState } from "react";
 import { useChildrenData } from "@/hooks/useChildrenData";
-import { HolidayPeriodProvider } from "./holiday/HolidayPeriodContext";
 import { useLocation } from "react-router-dom";
-import { Label } from "../ui/label";
+import { HolidaySelectors } from "./holiday/HolidaySelectors";
+import { DateSelectorWrapper } from "./holiday/DateSelectorWrapper";
+import { HolidayDialogs } from "./holiday/HolidayDialogs";
+import { ReservationButton } from "./holiday/ReservationButton";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
@@ -190,12 +184,6 @@ export const HolidayReservationContent = ({
   // Vérifier si le nombre de jours sélectionnés est suffisant
   const hasMinimumDays = validDatesCount >= 3;
   
-  // Ajoutez des logs détaillés pour déboguer le problème
-  console.log(`🔍 HolidayReservationContent - Dates sélectionnées total: ${selectedDates.length}`);
-  console.log(`🔍 HolidayReservationContent - Dates valides count: ${validDatesCount}`);
-  console.log(`🔍 HolidayReservationContent - hasMinimumDays: ${hasMinimumDays}`);
-  console.log(`🔍 HolidayReservationContent - Button disabled: ${!selectedChild || !selectedPeriod || validDatesCount === 0 || !hasMinimumDays || isSubmitting || isCM2SummerPeriod}`);
-
   // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -235,90 +223,50 @@ export const HolidayReservationContent = ({
     }
   };
 
-  const periodSelectorElement = (
-    <PeriodSelector
-      selectedPeriod={selectedPeriod}
-      setSelectedPeriod={setSelectedPeriod}
-      holidayPeriods={holidayPeriods}
-      filterTeenOnly={filterTeenPeriods}
-    />
-  );
-
-  const childSelectorElement = (
-    <ChildSelector
-      selectedChild={selectedChild}
-      setSelectedChild={setSelectedChild}
-      children={filteredChildren || filteredChildrenState}
-      setSelectedDates={setSelectedDates}
-      onCM2SummerPeriodCheck={handleCM2SummerPeriodCheck}
-    />
-  );
+  const isButtonDisabled = !selectedChild || !selectedPeriod || validDatesCount < 3 || isSubmitting || isCM2SummerPeriod;
 
   return (
     <div className="space-y-6">
-      {invertSelectors ? (
-        <>
-          {periodSelectorElement}
-          {childSelectorElement}
-        </>
-      ) : (
-        <>
-          {childSelectorElement}
-          {periodSelectorElement}
-        </>
-      )}
-
-      {selectedPeriod && selectedChild && childInfo && holidayPeriod && !isCM2SummerPeriod && (
-        <HolidayPeriodProvider 
-          holidayPeriod={holidayPeriod} 
-          childInfo={childInfo} 
-          isTeenClass={isTeenClassSync(childInfo.school_class)}
-        >
-          <HolidayDateSelector
-            selectedDates={selectedDates}
-            handleDateToggle={handleDateToggle}
-            handleOptionChange={handleOptionChange}
-            isDateAlreadyReserved={isDateAlreadyReserved}
-            periodId={selectedPeriod}
-            selectedChild={selectedChild}
-            setSelectedDates={setSelectedDates}
-          />
-        </HolidayPeriodProvider>
-      )}
-
-      <div className="flex justify-end mt-6">
-        <Button
-          onClick={onSubmitClick}
-          className="w-full md:w-auto"
-          disabled={!selectedChild || !selectedPeriod || validDatesCount < 3 || isSubmitting || isCM2SummerPeriod}
-          type="button"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Réservation en cours...
-            </>
-          ) : (
-            "Confirmer réservation"
-          )}
-        </Button>
-      </div>
-
-      <SuccessReservationDialog 
-        open={showSuccessDialog} 
-        onOpenChange={setShowSuccessDialog}
+      <HolidaySelectors 
+        selectedPeriod={selectedPeriod}
+        setSelectedPeriod={setSelectedPeriod}
+        selectedChild={selectedChild}
+        setSelectedChild={setSelectedChild}
+        holidayPeriods={holidayPeriods}
+        filteredChildren={filteredChildren || filteredChildrenState}
+        setSelectedDates={setSelectedDates}
+        filterTeenPeriods={filterTeenPeriods}
+        invertSelectors={invertSelectors}
+        onCM2SummerPeriodCheck={handleCM2SummerPeriodCheck}
       />
 
-      <NoSpotsDialog
-        open={noSpotsDialog.isOpen}
-        onOpenChange={(open) => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })}
-        schoolClass={noSpotsDialog.schoolClass}
-        date={noSpotsDialog.date}
+      <DateSelectorWrapper
+        selectedPeriod={selectedPeriod}
+        selectedChild={selectedChild}
+        childInfo={childInfo}
+        holidayPeriod={holidayPeriod}
+        selectedDates={selectedDates}
+        handleDateToggle={handleDateToggle}
+        handleOptionChange={handleOptionChange}
+        isDateAlreadyReserved={isDateAlreadyReserved}
+        setSelectedDates={setSelectedDates}
+        isCM2SummerPeriod={isCM2SummerPeriod}
+        isTeenClassSync={isTeenClassSync}
       />
-      
-      <MinimumDaysDialog
-        open={minimumDaysDialog.isOpen}
-        onOpenChange={(open) => setMinimumDaysDialog({ isOpen: open })}
+
+      <ReservationButton
+        onSubmitClick={onSubmitClick}
+        isDisabled={isButtonDisabled}
+        isSubmitting={isSubmitting}
+      />
+
+      <HolidayDialogs
+        showSuccessDialog={showSuccessDialog}
+        setShowSuccessDialog={setShowSuccessDialog}
+        noSpotsDialog={noSpotsDialog}
+        setNoSpotsDialog={setNoSpotsDialog}
+        minimumDaysDialog={minimumDaysDialog}
+        setMinimumDaysDialog={setMinimumDaysDialog}
       />
     </div>
   );
