@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -9,39 +9,63 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading, initialized, session } = useAuth();
+  const { user, loading, initialized, session, isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
-  // Log des changements d'état d'authentification pour le débogage
+  // Référence pour éviter les redirections multiples
+  const redirectAttemptedRef = useRef(false);
+  
+  // Liste des routes publiques qui ne nécessitent pas d'authentification
+  const publicRoutes = ['/login', '/register', '/admin-login', '/forgot-password'];
+  const isPublicRoute = publicRoutes.some(route => location.pathname.startsWith(route));
+  
   useEffect(() => {
     console.log("[ProtectedRoute] État d'authentification:", 
-      loading ? "CHARGEMENT" : (user ? "AUTHENTIFIÉ" : "NON AUTHENTIFIÉ"), 
+      loading ? "CHARGEMENT" : (isAuthenticated ? "AUTHENTIFIÉ" : "NON AUTHENTIFIÉ"), 
       session ? "Session présente" : "Session absente",
       "Initialisé:", initialized);
     
     console.log("[ProtectedRoute] Route actuelle:", location.pathname);
+    console.log("[ProtectedRoute] Est route publique:", isPublicRoute);
     
     if (session) {
-      console.log("[ProtectedRoute] Session valide jusqu'à:", new Date(session.expires_at * 1000).toLocaleString());
+      console.log("[ProtectedRoute] Session valide jusqu'à:", 
+        new Date(session.expires_at * 1000).toLocaleString());
     }
 
-    // Ne rediriger que si l'initialisation est vraiment terminée et que l'utilisateur n'est pas connecté
-    // et seulement si nous ne sommes pas déjà sur une page publique
-    if (initialized && !loading && !user && 
-        !location.pathname.startsWith("/login") && 
-        !location.pathname.startsWith("/admin") && 
-        !location.pathname.startsWith("/register") && 
-        !location.pathname.startsWith("/forgot-password")) {
-      console.log("[ProtectedRoute] Redirection vers la page de connexion depuis", location.pathname);
-      toast.error("Veuillez vous connecter pour accéder à cette page");
-      navigate("/login", { replace: true, state: { from: location } });
+    // Éviter de rediriger pendant le chargement ou si on est déjà en train de rediriger
+    if (loading || !initialized || isRedirecting) {
+      return;
     }
-  }, [user, session, loading, location, initialized, navigate]);
+
+    // Si on est sur une route publique, ne pas rediriger
+    if (isPublicRoute) {
+      console.log("[ProtectedRoute] Route publique, pas de redirection nécessaire");
+      return;
+    }
+
+    // Si l'utilisateur n'est pas authentifié et n'est pas sur une route publique, rediriger
+    if (!isAuthenticated && !redirectAttemptedRef.current) {
+      console.log("[ProtectedRoute] Redirection vers la page de connexion depuis", location.pathname);
+      redirectAttemptedRef.current = true;
+      setIsRedirecting(true);
+      
+      // Utiliser un délai pour éviter les redirections en cascade
+      setTimeout(() => {
+        toast.error("Veuillez vous connecter pour accéder à cette page");
+        navigate("/login", { state: { from: location } });
+        setIsRedirecting(false);
+      }, 300);
+    } else if (isAuthenticated) {
+      // Réinitialiser le drapeau si l'utilisateur est authentifié
+      redirectAttemptedRef.current = false;
+    }
+  }, [user, session, loading, location, initialized, navigate, isAuthenticated, isPublicRoute, isRedirecting]);
   
-  // Pendant le chargement initial, afficher un indicateur
-  if (loading || !initialized) {
-    console.log("[ProtectedRoute] Chargement en cours ou initialisation en attente...");
+  // Pendant le chargement initial ou la redirection, afficher un indicateur
+  if (loading || !initialized || isRedirecting) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -52,22 +76,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
   
-  // Si l'utilisateur est connecté, afficher le contenu protégé
-  if (user) {
-    console.log("[ProtectedRoute] Accès autorisé à", location.pathname);
+  // Si l'utilisateur est authentifié ou sur une route publique, afficher le contenu
+  if (isAuthenticated || isPublicRoute) {
     return <>{children}</>;
   }
   
-  // Si nous sommes sur une route publique, laisser la page gérer l'authentification
-  if (location.pathname.startsWith("/admin") || 
-      location.pathname.startsWith("/login") || 
-      location.pathname.startsWith("/register") || 
-      location.pathname.startsWith("/forgot-password")) {
-    console.log("[ProtectedRoute] Route spéciale détectée, laissant la page gérer l'authentification");
-    return <>{children}</>;
-  }
-  
-  // Cette partie ne devrait pas être atteinte grâce à la redirection dans useEffect
-  console.log("[ProtectedRoute] Aucune condition satisfaite, retour null");
+  // Fallback silencieux - ne devrait pas être atteint grâce au spinner de chargement
   return null;
 }

@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, checkSession } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 
 export const useAdminAuth = () => {
-  const { user, initialized, loading: authLoading } = useAuth();
+  const { user, initialized, loading: authLoading, isAuthenticated } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   
   const {
@@ -15,11 +15,18 @@ export const useAdminAuth = () => {
     refetch
   } = useQuery({
     queryKey: ["isAdmin", user?.id],
-    enabled: !!user?.id && initialized,
+    enabled: !!user?.id && initialized && isAuthenticated,
     queryFn: async () => {
       console.log("[useAdminAuth] Vérification du statut admin pour l'utilisateur:", user?.id);
       
       try {
+        // Vérifier d'abord que la session est toujours valide
+        const session = await checkSession();
+        if (!session) {
+          console.error("[useAdminAuth] Session invalide lors de la vérification du statut admin");
+          return false;
+        }
+        
         const { data, error } = await supabase.rpc("is_admin", { user_id: user?.id });
         
         if (error) {
@@ -34,13 +41,13 @@ export const useAdminAuth = () => {
         throw error;
       }
     },
-    retry: 1,
+    retry: 2,
     gcTime: 1000 * 60 * 5, // 5 minutes
   });
 
   useEffect(() => {
     if (!authLoading && initialized) {
-      if (!user) {
+      if (!user || !isAuthenticated) {
         console.log("[useAdminAuth] Utilisateur non authentifié");
         setIsChecking(false);
       } else if (!isLoading) {
@@ -48,7 +55,7 @@ export const useAdminAuth = () => {
         setIsChecking(false);
       }
     }
-  }, [user, initialized, authLoading, isLoading]);
+  }, [user, initialized, authLoading, isLoading, isAuthenticated]);
 
   return {
     data: isAdmin,

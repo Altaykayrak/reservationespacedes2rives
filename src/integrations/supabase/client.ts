@@ -6,6 +6,9 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://dddtybmradplydzymrly.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZHR5Ym1yYWRwbHlkenltcmx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MTMyOTYsImV4cCI6MjA1MTA4OTI5Nn0.WMyVzGwkQlg3YZOu-N_rxI1hDuf5lFO_kntzhD3GKLI";
 
+// Clé de stockage du token d'authentification Supabase
+const STORAGE_KEY = 'sb-dddtybmradplydzymrly-auth-token';
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -15,7 +18,22 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     storage: localStorage,
     detectSessionInUrl: true,
-    storageKey: 'sb-dddtybmradplydzymrly-auth-token',
+    storageKey: STORAGE_KEY,
     flowType: 'implicit'
   }
 });
+
+// Fonction utilitaire pour vérifier l'état de la session
+export const checkSession = async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error("[supabase] Erreur lors de la vérification de la session:", error);
+      return null;
+    }
+    return data.session;
+  } catch (err) {
+    console.error("[supabase] Exception lors de la vérification de la session:", err);
+    return null;
+  }
+};

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -10,6 +10,10 @@ export const useLoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Récupérer la page d'origine si elle existe (pour la redirection post-connexion)
+  const from = location.state?.from?.pathname || "/profile";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,20 +47,34 @@ export const useLoginForm = () => {
 
       if (data.session) {
         console.log("[useLoginForm] Connexion réussie, session établie:", data.session);
-        
         toast.success("Connexion réussie");
         
-        // Utiliser setTimeout pour permettre à la session d'être pleinement établie avant redirection
-        setTimeout(() => {
-          navigate("/profile", { replace: true });
-        }, 300);
+        // Utiliser un délai plus long pour permettre à la session d'être pleinement établie
+        setTimeout(async () => {
+          // Vérifier que la session est toujours valide après le délai
+          const { data: sessionCheck } = await supabase.auth.getSession();
+          if (sessionCheck.session) {
+            console.log("[useLoginForm] Session confirmée, redirection vers:", from);
+            navigate(from, { replace: true });
+          } else {
+            console.error("[useLoginForm] Session perdue après délai, nouvel essai...");
+            // Tenter de récupérer la session une dernière fois
+            const { data: lastAttempt } = await supabase.auth.getSession();
+            if (lastAttempt.session) {
+              navigate(from, { replace: true });
+            } else {
+              setError("Problème de persistance de session. Veuillez réessayer.");
+              setIsLoading(false);
+            }
+          }
+        }, 1000); // Augmenter le délai à 1 seconde pour plus de fiabilité
       } else {
         setError("Session non établie. Veuillez réessayer.");
+        setIsLoading(false);
       }
     } catch (err) {
       console.error("[useLoginForm] Erreur complète:", err);
       setError("Une erreur est survenue. Veuillez réessayer plus tard.");
-    } finally {
       setIsLoading(false);
     }
   };

@@ -1,4 +1,11 @@
 
 project_id = "dddtybmradplydzymrly"
+
+[auth]
+# Configuration explicite de l'authentification
+site_url = "https://e2r-reservation.netlify.app"
+additional_redirect_urls = ["https://e2r-reservation.netlify.app/*", "http://localhost:5173/*"]
+logout_redirect_path = "/login"
+
 [functions.send-reservation-email]
 verify_jwt = false
