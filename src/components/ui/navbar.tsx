@@ -1,17 +1,23 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../admin/reservations/hooks/useAdminAuth";
-import { NavbarLink } from "./navbar-link";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./sheet";
 import { Menu } from "lucide-react";
 
 export const Navbar = () => {
-  const { isLoggedIn, logout, user } = useAuth();
+  const { user, signOut } = useAuth();
+  const isLoggedIn = !!user;
   const { data: isAdmin } = useAdminAuth();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <div className="border-b bg-white/70 backdrop-blur-md sticky top-0 z-30">
@@ -23,12 +29,12 @@ export const Navbar = () => {
           {isLoggedIn ? (
             <>
               <div className="hidden md:flex items-center gap-4">
-                <NavbarLink to="/reservations">Mercredis</NavbarLink>
-                <NavbarLink to="/teenholiday-reservations">Ados</NavbarLink>
-                <NavbarLink to="/account">Mon compte</NavbarLink>
-                <NavbarLink to="/contact">Contact</NavbarLink>
+                <Link to="/reservations" className="text-sm font-medium hover:text-primary">Mercredis</Link>
+                <Link to="/teenholiday-reservations" className="text-sm font-medium hover:text-primary">Ados</Link>
+                <Link to="/account" className="text-sm font-medium hover:text-primary">Mon compte</Link>
+                <Link to="/contact" className="text-sm font-medium hover:text-primary">Contact</Link>
                 {isAdmin && (
-                  <NavbarLink to="/admin/reservations">Admin</NavbarLink>
+                  <Link to="/admin/reservations" className="text-sm font-medium hover:text-primary">Admin</Link>
                 )}
               </div>
               <Sheet>
@@ -46,16 +52,16 @@ export const Navbar = () => {
                   </SheetHeader>
                   <div className="divide-y divide-border">
                     <div className="grid gap-4 py-4">
-                      <NavbarLink to="/reservations">Mercredis</NavbarLink>
-                      <NavbarLink to="/teenholiday-reservations">Ados</NavbarLink>
-                      <NavbarLink to="/account">Mon compte</NavbarLink>
-                      <NavbarLink to="/contact">Contact</NavbarLink>
+                      <Link to="/reservations" className="text-sm font-medium hover:text-primary">Mercredis</Link>
+                      <Link to="/teenholiday-reservations" className="text-sm font-medium hover:text-primary">Ados</Link>
+                      <Link to="/account" className="text-sm font-medium hover:text-primary">Mon compte</Link>
+                      <Link to="/contact" className="text-sm font-medium hover:text-primary">Contact</Link>
                       {isAdmin && (
-                        <NavbarLink to="/admin/reservations">Admin</NavbarLink>
+                        <Link to="/admin/reservations" className="text-sm font-medium hover:text-primary">Admin</Link>
                       )}
                     </div>
                     <div className="grid gap-4 py-4">
-                      <Button variant="outline" onClick={logout} className="w-full">
+                      <Button variant="outline" onClick={handleLogout} className="w-full">
                         Se déconnecter
                       </Button>
                     </div>
@@ -78,7 +84,7 @@ export const Navbar = () => {
                     Mon profil
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>
+                  <DropdownMenuItem onClick={handleLogout}>
                     Se déconnecter
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -86,7 +92,7 @@ export const Navbar = () => {
             </>
           ) : (
             <div className="hidden md:flex items-center gap-4">
-              <NavbarLink to="/login">Se connecter</NavbarLink>
+              <Link to="/login" className="text-sm font-medium hover:text-primary">Se connecter</Link>
               <Button variant="outline" onClick={() => navigate("/signup")}>
                 S'inscrire
               </Button>

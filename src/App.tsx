@@ -1,20 +1,21 @@
-import { Home } from "@/pages/Home";
-import { Login } from "@/pages/Login";
-import { Signup } from "@/pages/Signup";
-import { ForgotPassword } from "@/pages/ForgotPassword";
-import { ResetPassword } from "@/pages/ResetPassword";
-import { Profile } from "@/pages/Profile";
-import { Reservations } from "@/pages/Reservations";
-import { TeenHolidayReservations } from "@/pages/TeenHolidayReservations";
-import { Account } from "@/pages/Account";
-import { Contact } from "@/pages/Contact";
-import { Admin } from "@/pages/Admin";
-import { AdminUsers } from "@/pages/AdminUsers";
-import AdminReservations from "@/pages/AdminReservations";
-import AdminNewReservation from "@/pages/AdminNewReservation";
-import AdminNewHolidayReservation from "@/pages/AdminNewHolidayReservation";
-import AdminNewTeenHolidayReservation from "@/pages/AdminNewTeenHolidayReservation";
-import { NotFound } from "@/pages/NotFound";
+
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Signup from "@/pages/Signup";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
+import Profile from "@/pages/Profile";
+import Reservations from "@/pages/WednesdayReservations";
+import TeenHolidayReservations from "@/pages/TeenHolidayReservations";
+import Account from "@/pages/Account";
+import Contact from "@/pages/Contact";
+import Admin from "@/pages/admin/AdminPage";
+import { AdminUsers } from "@/pages/admin/AdminUsers";
+import AdminReservations from "@/pages/admin/AdminReservations";
+import AdminNewReservation from "@/pages/admin/AdminNewReservation";
+import AdminNewHolidayReservation from "@/pages/admin/AdminNewHolidayReservation";
+import AdminNewTeenHolidayReservation from "@/pages/admin/AdminNewTeenHolidayReservation";
+import NotFound from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/toaster";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -23,7 +24,7 @@ function App() {
     <BrowserRouter>
       <Toaster />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

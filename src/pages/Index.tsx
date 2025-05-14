@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
 import { Calendar, Users, Image } from "lucide-react";
+
 const Index = () => {
   return <div className="min-h-screen bg-white">
       <Navbar />
