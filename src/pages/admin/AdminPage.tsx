@@ -4,21 +4,53 @@ import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AdminPage() {
   const navigate = useNavigate();
-  const { data: isAdmin, isLoading, isError } = useAdminAuth();
+  const { data, isLoading: queryLoading, isError } = useAdminAuth();
+  const { isAdmin, isLoading: adminLoading } = data || { isAdmin: false, isLoading: true };
   const { toast } = useToast();
-  const [adminChecked, setAdminChecked] = useState(false);
-
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  
+  // Vérification initiale de la session pour éviter les redirections prématurées
   useEffect(() => {
-    // Ne faire la vérification qu'une seule fois
-    if (isLoading || adminChecked) return;
+    const checkSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const hasSession = !!data.session;
+        setSessionChecked(true);
+        
+        // Si on n'a pas de session du tout, on redirige immédiatement
+        if (!hasSession) {
+          console.log("AdminPage: Aucune session trouvée, redirection vers login");
+          navigate("/admin-login", { replace: true });
+          return;
+        }
+        
+        // On a une session, on attend la vérification admin
+        console.log("AdminPage: Session trouvée, attente de la vérification admin");
+        setInitialLoading(false);
+      } catch (error) {
+        console.error("Erreur lors de la vérification de session:", error);
+        setSessionChecked(true);
+        setInitialLoading(false);
+      }
+    };
 
-    console.log("AdminPage: Vérifiant le statut administrateur, isAdmin =", isAdmin);
-
+    checkSession();
+  }, [navigate]);
+  
+  // Vérification du statut admin après confirmation de session
+  useEffect(() => {
+    // N'exécuter la logique que si la session a été vérifiée et qu'on n'est plus dans le chargement initial
+    if (!sessionChecked || initialLoading || queryLoading || adminLoading) return;
+    
+    console.log("AdminPage: Vérification admin complète, isAdmin =", isAdmin, "isError =", isError);
+    
+    // Ne rediriger que si on est sûr qu'il n'est pas admin
     if (isError) {
-      console.error("AdminPage: Erreur lors de la vérification du statut administrateur");
       toast({
         title: "Erreur",
         description: "Impossible de vérifier vos droits administrateur.",
@@ -27,19 +59,23 @@ export function AdminPage() {
       navigate("/admin-login", { replace: true });
       return;
     }
-
+    
     if (isAdmin === false) {
       console.log("AdminPage: Utilisateur non-admin, redirection vers admin-login");
+      toast({
+        title: "Accès refusé",
+        description: "Vous n'avez pas les droits administrateur.",
+        variant: "destructive",
+      });
       navigate("/admin-login", { replace: true });
       return;
     }
 
-    // Marquer la vérification comme effectuée pour éviter de nouvelles redirections
-    setAdminChecked(true);
-    console.log("AdminPage: Vérification admin terminée, utilisateur autorisé");
-  }, [isAdmin, isLoading, isError, navigate, toast, adminChecked]);
+    console.log("AdminPage: Accès admin confirmé");
+  }, [isAdmin, isError, queryLoading, adminLoading, sessionChecked, initialLoading, navigate, toast]);
 
-  if (isLoading) {
+  // Affichage pendant le chargement initial ou la vérification
+  if (initialLoading || queryLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

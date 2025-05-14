@@ -10,7 +10,7 @@ export const useAdminAuth = () => {
       
       if (!session?.user) {
         console.log("useAdminAuth: Aucune session active");
-        return false;
+        return { isAdmin: false, isLoading: false };
       }
       
       console.log("useAdminAuth: Vérification du statut admin pour l'utilisateur:", session.user.id);
@@ -19,11 +19,11 @@ export const useAdminAuth = () => {
       
       if (error) {
         console.error("Erreur lors de la vérification du statut admin:", error);
-        throw error;
+        return { isAdmin: false, isError: true };
       }
       
       console.log("useAdminAuth: Résultat de la vérification admin:", isAdmin);
-      return !!isAdmin;
+      return { isAdmin: !!isAdmin, isLoading: false };
     },
     retry: 1, // Un seul essai en cas d'échec
     refetchOnWindowFocus: false,
