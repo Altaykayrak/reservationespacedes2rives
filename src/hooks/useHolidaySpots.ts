@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
   // Use React Query for data fetching
@@ -29,10 +29,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
 
         if (error) {
           console.error("Error fetching holiday spots:", error);
-          toast({
-            description: "Impossible de vérifier les places disponibles",
-            variant: "destructive"
-          });
+          toast.error("Impossible de vérifier les places disponibles");
           throw error;
         }
 
