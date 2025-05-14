@@ -113,20 +113,24 @@ export const TeenHolidayReservationContent = () => {
     setFilteredChildren(filtered);
   }, [allChildren, schoolClassCategories]);
 
-  // Calculer le nombre exact de jours sélectionnés valides
-  const validDatesCount = selectedDates.filter(d => 
+  // Calculer le nombre exact de jours sélectionnés valides - calcul explicite
+  const validDates = selectedDates.filter(d => 
     d.date instanceof Date && !isNaN(d.date.getTime())
-  ).length;
+  );
+  const validDatesCount = validDates.length;
 
-  // Vérifier si le nombre de jours sélectionnés est suffisant
+  // Vérifier si le nombre de jours sélectionnés est suffisant - log pour débogage
   const hasMinimumDays = validDatesCount >= 3;
+  console.log(`[TeenHolidayReservationContent] Jours sélectionnés: ${validDatesCount}, minimum requis atteint: ${hasMinimumDays}`);
+  console.log("[TeenHolidayReservationContent] Dates valides:", validDates.map(d => d.date.toISOString()));
 
   // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
-    console.log(`DEBUG: Bouton cliqué - Nombre de dates sélectionnées: ${selectedDates.length}`);
+    console.log(`DEBUG: Bouton cliqué - Nombre de dates sélectionnées: ${validDatesCount}`);
+    console.log(`DEBUG: Validation minimale: ${hasMinimumDays} (${validDatesCount} >= 3)`);
     
     if (!isSubmitting) {
       handleSubmit();
@@ -173,7 +177,7 @@ export const TeenHolidayReservationContent = () => {
           <Button
             onClick={onSubmitClick}
             className="w-full"
-            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || !hasMinimumDays || isSubmitting}
+            disabled={!selectedChild || !selectedPeriod || validDatesCount === 0 || !hasMinimumDays || isSubmitting}
             type="button"
           >
             {isSubmitting ? (

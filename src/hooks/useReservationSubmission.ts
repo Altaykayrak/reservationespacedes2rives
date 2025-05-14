@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -88,8 +87,16 @@ export const useReservationSubmission = (
         return;
       }
 
-      // Vérifier la contrainte de 3 jours minimum
-      if (selectedDates.length < 3) {
+      // Filtrer pour ne conserver que les dates valides
+      const validDates = selectedDates.filter(d => 
+        d.date instanceof Date && !isNaN(d.date.getTime())
+      );
+      
+      console.log(`DEBUG: Nombre de dates valides: ${validDates.length}`);
+      
+      // Vérifier la contrainte de 3 jours minimum avec les dates valides
+      if (validDates.length < 3) {
+        console.log("DEBUG: Moins de 3 dates valides, affichage du dialogue");
         setMinimumDaysDialog({ isOpen: true });
         setSubmissionInProgress(false);
         setIsSubmitting(false);
@@ -101,7 +108,7 @@ export const useReservationSubmission = (
       console.log("DEBUG: isAdminRoute détecté:", isAdminRoute, "pour pathname:", window.location.pathname);
       
       // Vérification explicite des 3 jours minimum par semaine - POINT CRITIQUE
-      const hasMinimumDays = validateMinimumDays(selectedDates, isAdminRoute);
+      const hasMinimumDays = validateMinimumDays(validDates, isAdminRoute);
       console.log("DEBUG: Résultat de validateMinimumDays:", hasMinimumDays);
       
       if (!hasMinimumDays && !isAdminRoute) {

@@ -106,12 +106,24 @@ export const useHolidayReservation = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedChild || !selectedPeriod || selectedDates.length === 0) return;
+    if (!selectedChild || !selectedPeriod) return;
+    
+    // Vérifier qu'il y a au moins 3 jours sélectionnés (dates valides uniquement)
+    const validDates = selectedDates.filter(d => 
+      d.date instanceof Date && !isNaN(d.date.getTime())
+    );
+    
+    console.log(`DEBUG: handleSubmit - validDates.length = ${validDates.length}`);
+    
+    if (validDates.length < 3) {
+      console.log("DEBUG: Pas assez de jours sélectionnés, ouverture du dialogue");
+      setMinimumDaysDialog({ isOpen: true });
+      return;
+    }
     
     // Generate a timestamp to trace this specific submission
     const submissionTimestamp = Date.now();
     console.log(`DEBUG: handleSubmit called - timestamp: ${submissionTimestamp}`);
-    console.log(`DEBUG: selectedDates.length = ${selectedDates.length}`);
     
     setIsSubmitting(true);
     
@@ -121,7 +133,7 @@ export const useHolidayReservation = () => {
       console.log("DEBUG: isAdminRoute détecté:", isAdminRoute, "pour pathname:", window.location.pathname);
       
       // Vérifier ici si les dates sélectionnées respectent la règle des 3 jours minimum
-      const hasMinimumDays = validateMinimumDays(selectedDates, isAdminRoute);
+      const hasMinimumDays = validateMinimumDays(validDates, isAdminRoute);
       console.log(`DEBUG: Résultat validation minimum jours: ${hasMinimumDays}`);
       
       if (!hasMinimumDays) {

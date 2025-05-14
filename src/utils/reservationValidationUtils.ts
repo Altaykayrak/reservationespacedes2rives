@@ -56,7 +56,7 @@ export const validateMinimumDays = (
     return false;
   }
   
-  // Si moins de 3 dates sont sélectionnées au total, on sait déjà que c'est insuffisant
+  // Exigence explicitie de 3 jours minimum, SANS EXCEPTION
   if (selectedDates.length < 3) {
     console.log("validateMinimumDays - moins de 3 dates au total");
     return false;
@@ -70,13 +70,19 @@ export const validateMinimumDays = (
   console.log("validateMinimumDays - validDates:", validDates.map(d => d.toISOString()));
   console.log("validateMinimumDays - validDates count:", validDates.length);
   
-  // Si pas assez de dates valides, la validation échoue
+  // Si pas assez de dates valides (au moins 3), la validation échoue
   if (validDates.length < 3) {
     console.log("validateMinimumDays - moins de 3 dates valides");
     return false;
   }
   
-  // Utiliser la fonction existante avec les dates validées
+  // Pour les administrateurs, on autorise moins de 3 jours par semaine
+  if (isAdminRoute) {
+    console.log("validateMinimumDays - route admin, validation OK");
+    return true;
+  }
+  
+  // Pour les utilisateurs normaux, on utilise la fonction existante avec les dates validées
   const result = validateMinimumDaysPerWeek(validDates, isAdminRoute);
   console.log("validateMinimumDays - résultat final:", result);
   return result;

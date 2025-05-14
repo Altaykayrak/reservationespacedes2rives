@@ -182,14 +182,24 @@ export const HolidayReservationContent = ({
     }
   }, [location.search, selectedPeriod, setSelectedPeriod]);
 
+  // Calculer le nombre exact de jours sélectionnés valides
+  const validDatesCount = selectedDates.filter(d => 
+    d.date instanceof Date && !isNaN(d.date.getTime())
+  ).length;
+
+  // Vérifier si le nombre de jours sélectionnés est suffisant
+  const hasMinimumDays = validDatesCount >= 3;
+  
+  console.log(`Nombre de jours sélectionnés: ${validDatesCount}, Minimum atteint: ${hasMinimumDays}`);
+
   // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
     // Vérifier le nombre exact de dates sélectionnées
-    const validDatesCount = selectedDates.length;
     console.log(`DEBUG: Bouton cliqué - Nombre de dates sélectionnées: ${validDatesCount}`);
+    console.log(`DEBUG: Validation minimale: ${hasMinimumDays} (${validDatesCount} >= 3)`);
     
     if (!isSubmitting) {
       // Vérifier que toutes les dates sont des instances valides
@@ -231,12 +241,12 @@ export const HolidayReservationContent = ({
   );
 
   // Calculer le nombre exact de jours sélectionnés valides
-  const validDatesCount = selectedDates.filter(d => 
+  const validDatesCount_ = selectedDates.filter(d => 
     d.date instanceof Date && !isNaN(d.date.getTime())
   ).length;
 
   // Vérifier si le nombre de jours sélectionnés est suffisant
-  const hasMinimumDays = validDatesCount >= 3;
+  const hasMinimumDays_ = validDatesCount_ >= 3;
 
   return (
     <div className="space-y-6">
