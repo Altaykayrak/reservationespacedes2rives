@@ -1,5 +1,7 @@
 
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
@@ -16,15 +18,18 @@ import { useEffect, useState } from "react";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { HolidayPeriodProvider } from "./holiday/HolidayPeriodContext";
 import { useLocation } from "react-router-dom";
+import { Label } from "../ui/label";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
   filterTeenPeriods?: boolean;
+  invertSelectors?: boolean;
 }
 
 export const HolidayReservationContent = ({
   filteredChildren,
-  filterTeenPeriods = false
+  filterTeenPeriods = false,
+  invertSelectors = false
 }: HolidayReservationContentProps) => {
   const {
     selectedDates,
@@ -52,6 +57,10 @@ export const HolidayReservationContent = ({
   const { isTeenClassSync } = useSchoolClassUtils();
   const location = useLocation();
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
+  
+  // États pour les options globales
+  const [withoutMeal, setWithoutMeal] = useState(false);
+  const [earlyDropoff, setEarlyDropoff] = useState(false);
   
   // Fonction callback pour recevoir l'information de CM2 en période d'été
   const handleCM2SummerPeriodCheck = (isInSummerPeriod: boolean) => {
@@ -95,41 +104,74 @@ export const HolidayReservationContent = ({
     enabled: !!selectedPeriod
   });
 
-  // Récupérer les catégories des classes scolaires pour filtrer les enfants non-ados
-  const { data: schoolClassCategories } = useQuery({
-    queryKey: ["schoolClassCategoriesNonTeen"],
+  // Récupérer les mappages de classe pour la période sélectionnée
+  const { data: classMappings } = useQuery({
+    queryKey: ["holiday_class_mappings", selectedPeriod],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("school_class_categories")
-        .select("*")
-        .neq("category", "adolescent");
+      if (!selectedPeriod) return [];
       
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from("holiday_period_class_mappings")
+        .select("school_class, category")
+        .eq("holiday_period_id", selectedPeriod);
+      
+      if (error) {
+        console.error("Erreur lors de la récupération des mappings de classe:", error);
+        return [];
+      }
+      
       return data;
     },
+    enabled: !!selectedPeriod,
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
-  // Filtrer les enfants en fonction de leur classe (exclure les adolescents)
+  // Filtrer les enfants en fonction de leur classe et de la période sélectionnée
   useEffect(() => {
-    if (!allChildren) return;
+    if (!allChildren || !selectedPeriod) return;
     
     console.log("Children passed to ChildSelector:", allChildren);
     
-    const filtered = allChildren.filter(child => {
-      // Vérifier si c'est un enfant non-adolescent selon les catégories
-      const isNonTeenByCategory = schoolClassCategories?.some(category => 
-        category.name.toUpperCase() === child.school_class.toUpperCase()
-      );
-      
-      // Alternative: utiliser la fonction isTeenClassSync pour exclure les adolescents
-      const isNotTeen = !isTeenClassSync(child.school_class);
-      
-      return isNonTeenByCategory || isNotTeen;
-    });
-    
-    console.log("Filtered children for regular holiday reservations:", filtered);
-    setFilteredChildrenState(filtered);
-  }, [allChildren, schoolClassCategories, isTeenClassSync]);
+    // Récupérer les mappages de classe pour cette période
+    const fetchMappings = async () => {
+      if (!selectedPeriod) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("holiday_period_class_mappings")
+          .select("school_class, category")
+          .eq("holiday_period_id", selectedPeriod);
+
+        if (error) {
+          console.error("Erreur lors de la récupération des mappings:", error);
+          return;
+        }
+
+        // Filtrer les enfants selon les mappages de classe
+        // Pour la page holiday-reservations, on ne veut que les enfants de maternelle et primaire
+        const filtered = allChildren.filter(child => {
+          // Vérifier si nous avons un mapping spécifique pour cette classe
+          const mapping = data.find(m => 
+            m.school_class.toLowerCase() === child.school_class.toLowerCase()
+          );
+
+          if (mapping) {
+            return mapping.category === 'maternelle' || mapping.category === 'primaire';
+          }
+          
+          // Si pas de mapping, utiliser la logique par défaut
+          return !isTeenClassSync(child.school_class);
+        });
+        
+        console.log("Filtered children for regular holiday reservations:", filtered);
+        setFilteredChildrenState(filtered);
+      } catch (error) {
+        console.error("Erreur:", error);
+      }
+    };
+
+    fetchMappings();
+  }, [allChildren, selectedPeriod, isTeenClassSync]);
 
   // Lire l'ID de période depuis l'URL lors du montage (une seule fois)
   useEffect(() => {
@@ -146,6 +188,17 @@ export const HolidayReservationContent = ({
     }
   }, [location.search, selectedPeriod, setSelectedPeriod]);
 
+  // Appliquer les options globales à toutes les dates sélectionnées
+  useEffect(() => {
+    if (selectedDates.length === 0) return;
+    
+    setSelectedDates(selectedDates.map(date => ({
+      ...date,
+      withoutMeal,
+      earlyDropoff
+    })));
+  }, [withoutMeal, earlyDropoff]);
+
   // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -161,22 +214,64 @@ export const HolidayReservationContent = ({
   // Déterminer si l'enfant est un adolescent (pour le vérifier si besoin)
   const isTeenClass = childInfo ? isTeenClassSync(childInfo.school_class, selectedPeriod) : false;
 
+  // Préparation des éléments de l'interface
+  const periodSelectorElement = (
+    <PeriodSelector
+      selectedPeriod={selectedPeriod}
+      setSelectedPeriod={setSelectedPeriod}
+      holidayPeriods={holidayPeriods}
+      filterTeenOnly={filterTeenPeriods}
+    />
+  );
+
+  const childSelectorElement = (
+    <ChildSelector
+      selectedChild={selectedChild}
+      setSelectedChild={setSelectedChild}
+      children={filteredChildren || filteredChildrenState}
+      setSelectedDates={setSelectedDates}
+      onCM2SummerPeriodCheck={handleCM2SummerPeriodCheck}
+    />
+  );
+
   return (
     <div className="space-y-6">
-      <ChildSelector
-        selectedChild={selectedChild}
-        setSelectedChild={setSelectedChild}
-        children={filteredChildren || filteredChildrenState}
-        setSelectedDates={setSelectedDates}
-        onCM2SummerPeriodCheck={handleCM2SummerPeriodCheck}
-      />
+      {invertSelectors ? (
+        <>
+          {periodSelectorElement}
+          {childSelectorElement}
+        </>
+      ) : (
+        <>
+          {childSelectorElement}
+          {periodSelectorElement}
+        </>
+      )}
 
-      <PeriodSelector
-        selectedPeriod={selectedPeriod}
-        setSelectedPeriod={setSelectedPeriod}
-        holidayPeriods={holidayPeriods}
-        filterTeenOnly={false}
-      />
+      {/* Options globales - uniquement pour la page de réservations standard (non-ado) */}
+      {!filterTeenPeriods && location.pathname.includes('holiday-reservations') && (
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg">Options pour toutes les réservations</h3>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="without-meal" 
+                checked={withoutMeal} 
+                onCheckedChange={(checked) => setWithoutMeal(checked === true)}
+              />
+              <Label htmlFor="without-meal">Sans repas</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="early-dropoff" 
+                checked={earlyDropoff} 
+                onCheckedChange={(checked) => setEarlyDropoff(checked === true)}
+              />
+              <Label htmlFor="early-dropoff">Accueil avant 8h30</Label>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedPeriod && selectedChild && childInfo && holidayPeriod && !isCM2SummerPeriod && (
         <HolidayPeriodProvider 
