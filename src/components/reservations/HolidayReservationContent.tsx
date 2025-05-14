@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
@@ -51,6 +50,12 @@ export const HolidayReservationContent = ({
   const [filteredChildrenState, setFilteredChildrenState] = useState<any[]>([]);
   const { isTeenClassSync } = useSchoolClassUtils();
   const location = useLocation();
+  const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
+  
+  // Fonction callback pour recevoir l'information de CM2 en période d'été
+  const handleCM2SummerPeriodCheck = (isInSummerPeriod: boolean) => {
+    setIsCM2SummerPeriod(isInSummerPeriod);
+  };
   
   // Récupération des informations de l'enfant sélectionné
   const { data: childInfo } = useQuery({
@@ -161,6 +166,7 @@ export const HolidayReservationContent = ({
         setSelectedChild={setSelectedChild}
         children={filteredChildren || filteredChildrenState}
         setSelectedDates={setSelectedDates}
+        onCM2SummerPeriodCheck={handleCM2SummerPeriodCheck}
       />
 
       <PeriodSelector
@@ -170,7 +176,7 @@ export const HolidayReservationContent = ({
         filterTeenOnly={false}
       />
 
-      {selectedPeriod && selectedChild && childInfo && holidayPeriod && (
+      {selectedPeriod && selectedChild && childInfo && holidayPeriod && !isCM2SummerPeriod && (
         <HolidayPeriodProvider 
           holidayPeriod={holidayPeriod} 
           childInfo={childInfo} 
@@ -192,7 +198,7 @@ export const HolidayReservationContent = ({
         <Button
           onClick={onSubmitClick}
           className="w-full md:w-auto"
-          disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
+          disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting || isCM2SummerPeriod}
           type="button"
         >
           {isSubmitting ? (

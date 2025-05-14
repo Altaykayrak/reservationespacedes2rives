@@ -4,7 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export const useChildFiltering = (
   children: Tables<"children">[] | null | undefined,
@@ -14,7 +14,6 @@ export const useChildFiltering = (
   const isHolidayReservation = location.pathname === "/holiday-reservations";
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
   const isAdminTeenHolidayReservation = location.pathname === "/admin/reservations/new-teen-holiday";
-  const pathRef = useRef(location.pathname);
   
   const { isTeenClassSync } = useSchoolClassUtils();
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
@@ -69,12 +68,6 @@ export const useChildFiltering = (
     // Pour un tableau d'enfants inexistant, retourner rapidement
     if (!children) return null;
     
-    // Enregistrer le chemin pour le débogage
-    if (pathRef.current !== location.pathname) {
-      console.log("[useChildFiltering] Path changed from", pathRef.current, "to", location.pathname);
-      pathRef.current = location.pathname;
-    }
-    
     // Pour les réservations de vacances avec mappages de classes
     if (isHolidayReservation && classMappings && classMappings.length > 0 && selectedPeriodId) {
       return children.filter(child => {
@@ -108,21 +101,11 @@ export const useChildFiltering = (
     
     // Par défaut : retourner tous les enfants
     return children;
-  }, [children, classMappings, selectedPeriodId, periodInfo, isHolidayReservation, isTeenHolidayReservation, isAdminTeenHolidayReservation, isTeenClassSync, summerPeriods, location.pathname]);
+  }, [children, classMappings, selectedPeriodId, periodInfo, isHolidayReservation, isTeenHolidayReservation, isAdminTeenHolidayReservation, isTeenClassSync, summerPeriods]);
 
   const isSummerPeriod = useMemo(() => {
     return periodInfo?.name && summerPeriods.includes(periodInfo.name);
   }, [periodInfo, summerPeriods]);
-
-  // Logging pour débogage
-  useEffect(() => {
-    console.log("Current path:", location.pathname);
-    console.log("isHolidayReservation:", isHolidayReservation);
-    console.log("Selected period ID:", selectedPeriodId);
-    console.log("Period info:", periodInfo);
-    console.log("Class mappings:", classMappings);
-    console.log("Is summer period:", isSummerPeriod);
-  }, [location.pathname, isHolidayReservation, selectedPeriodId, periodInfo, classMappings, isSummerPeriod]);
 
   return {
     filteredChildren,

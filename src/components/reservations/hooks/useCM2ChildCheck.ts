@@ -49,27 +49,12 @@ export const useCM2ChildCheck = (
             }
             return;
           }
-          
-          // Si ce n'est pas une période spécifique, utiliser la vérification normale
-          try {
-            const { isTeenClass } = await import("@/hooks/useSchoolClassUtils").then(module => module.useSchoolClassUtils());
-            const isTeen = await isTeenClass(selectedChildData.school_class, selectedPeriodId);
-            setShowCM2Message(isTeen && isHolidayReservation);
-            if (onCM2SummerPeriodCheck) {
-              onCM2SummerPeriodCheck(isTeen && (isTeenHolidayReservation || isAdminTeenHolidayReservation));
-            }
-          } catch (error) {
-            console.error("Error checking teen class status:", error);
-            setShowCM2Message(false);
-            if (onCM2SummerPeriodCheck) {
-              onCM2SummerPeriodCheck(false);
-            }
-          }
-        } else {
-          setShowCM2Message(false);
-          if (onCM2SummerPeriodCheck) {
-            onCM2SummerPeriodCheck(false);
-          }
+        }
+        
+        // Si ce n'est pas une période spécifique ou pas un CM2, cacher le message
+        setShowCM2Message(false);
+        if (onCM2SummerPeriodCheck) {
+          onCM2SummerPeriodCheck(false);
         }
       } else {
         setShowCM2Message(false);
