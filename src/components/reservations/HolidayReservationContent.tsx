@@ -4,7 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { useLocation } from "react-router-dom";
 import { HolidaySelectors } from "./holiday/HolidaySelectors";
@@ -37,11 +37,11 @@ export const HolidayReservationContent = ({
     setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
-    isSubmitting,
     noSpotsDialog,
     setNoSpotsDialog,
     minimumDaysDialog,
-    setMinimumDaysDialog
+    setMinimumDaysDialog,
+    isSubmitting
   } = useHolidayReservation();
 
   const { children: allChildren } = useChildrenData();
@@ -51,10 +51,10 @@ export const HolidayReservationContent = ({
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
   
   // Fonction callback pour recevoir l'information de CM2 en période d'été
-  const handleCM2SummerPeriodCheck = (isInSummerPeriod: boolean) => {
+  const handleCM2SummerPeriodCheck = useCallback((isInSummerPeriod: boolean) => {
     console.log("CM2 en période d'été détecté:", isInSummerPeriod);
     setIsCM2SummerPeriod(isInSummerPeriod);
-  };
+  }, []);
   
   // Récupération des informations de l'enfant sélectionné
   const { data: childInfo } = useQuery({
@@ -163,16 +163,12 @@ export const HolidayReservationContent = ({
 
   // Lire l'ID de période depuis l'URL lors du montage (une seule fois)
   useEffect(() => {
-    try {
-      const searchParams = new URLSearchParams(location.search);
-      const periodId = searchParams.get("periodId");
+    const searchParams = new URLSearchParams(location.search);
+    const periodId = searchParams.get("periodId");
 
-      if (periodId && periodId !== selectedPeriod) {
-        console.log("[HolidayReservationContent] Setting period from URL:", periodId);
-        setSelectedPeriod(periodId);
-      }
-    } catch (error) {
-      console.error("[HolidayReservationContent] Error reading URL:", error);
+    if (periodId && periodId !== selectedPeriod) {
+      console.log("[HolidayReservationContent] Setting period from URL:", periodId);
+      setSelectedPeriod(periodId);
     }
   }, [location.search, selectedPeriod, setSelectedPeriod]);
 
@@ -186,7 +182,7 @@ export const HolidayReservationContent = ({
   const hasMinimumDays = validDatesCount >= 3;
   
   // Fonction pour éviter les doubles clics
-  const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const onSubmitClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -222,7 +218,7 @@ export const HolidayReservationContent = ({
       console.log("✅ DEBUG: Dates valides avant soumission:", validDates);
       handleSubmit();
     }
-  };
+  }, [selectedDates, validDatesCount, hasMinimumDays, isSubmitting, setMinimumDaysDialog, handleSubmit]);
 
   const isButtonDisabled = !selectedChild || !selectedPeriod || validDatesCount < 3 || isSubmitting || isCM2SummerPeriod;
 

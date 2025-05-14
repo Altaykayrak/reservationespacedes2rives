@@ -29,7 +29,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         if (error) {
           console.error("Error fetching holiday spots:", error);
           toast("Impossible de vérifier les places disponibles", {
-            variant: "destructive"
+            description: "Une erreur est survenue"
           });
           throw error;
         }
