@@ -70,16 +70,26 @@ const AdminLoginPage = () => {
         return;
       }
 
-      // Mettre à jour le cache de react-query avec le statut admin
-      queryClient.setQueryData(['admin-status'], true);
+      // Invalider et forcer un préchargement des données admin
+      queryClient.invalidateQueries({ queryKey: ['admin-status'] });
+      await queryClient.prefetchQuery({
+        queryKey: ['admin-status'],
+        queryFn: async () => {
+          return { isAdmin: true, isLoading: false };
+        }
+      });
 
       toast({
         title: "Succès",
         description: "Connexion administrateur réussie"
       });
       
-      // Redirection manuelle et contrôlée
-      navigate("/admin", { replace: true });
+      // Attendre un moment avant la redirection pour laisser le temps à la session de s'établir
+      setTimeout(() => {
+        setIsLoading(false);
+        // Redirection avec remplacement pour éviter de revenir en arrière
+        navigate("/admin", { replace: true });
+      }, 500);
 
     } catch (err) {
       console.error("Connection error:", err);
