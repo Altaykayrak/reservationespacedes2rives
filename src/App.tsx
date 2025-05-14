@@ -21,6 +21,9 @@ import AdminProfiles from "./pages/admin/AdminProfiles";
 import AdminNewReservation from "./pages/admin/AdminNewReservation";
 import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
+import AdminHolidays from "./pages/admin/AdminHolidays";
+import AdminChildren from "./pages/admin/AdminChildren";
+import AdminAuthorizedEmails from "./pages/admin/AdminAuthorizedEmails";
 
 function App() {
   return (
@@ -98,6 +101,31 @@ function App() {
             <AdminNavbar />
             <main className="container mx-auto p-8">
               <AdminNewTeenHolidayReservation />
+            </main>
+          </div>
+        } />
+        {/* Ajout des routes manquantes */}
+        <Route path="/admin/holidays" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminHolidays />
+            </main>
+          </div>
+        } />
+        <Route path="/admin/children" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminChildren />
+            </main>
+          </div>
+        } />
+        <Route path="/admin/authorized-emails" element={
+          <div className="min-h-screen bg-gray-50">
+            <AdminNavbar />
+            <main className="container mx-auto p-8">
+              <AdminAuthorizedEmails />
             </main>
           </div>
         } />
