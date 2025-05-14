@@ -9,12 +9,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
 import { useToast } from "@/hooks/use-toast";
 import { injectAnimationStyles } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const HolidayReservations = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isWaiting, setIsWaiting] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Injecter les styles d'animation pour améliorer l'interaction
@@ -22,31 +24,58 @@ const HolidayReservations = () => {
     
     const checkAccess = async () => {
       if (!user?.id) return;
+      setIsLoading(true);
 
-      // Récupérer les états directement de la base de données
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_waiting, is_closed')
-        .eq('id', user.id)
-        .single();
+      try {
+        // Récupérer les états directement de la base de données
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_waiting, is_closed')
+          .eq('id', user.id)
+          .single();
 
-      if (error) {
-        console.error('Error checking access:', error);
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de la vérification de l'accès",
-          variant: "destructive"
-        });
-        return;
+        if (error) {
+          console.error('Error checking access:', error);
+          toast({
+            title: "Erreur",
+            description: "Erreur lors de la vérification de l'accès",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        console.log('Profile data:', data);
+        setIsWaiting(data?.is_waiting || false);
+        setIsClosed(data?.is_closed || false);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données:", error);
+      } finally {
+        setIsLoading(false);
       }
-
-      console.log('Profile data:', data);
-      setIsWaiting(data?.is_waiting || false);
-      setIsClosed(data?.is_closed || false);
     };
 
     checkAccess();
   }, [user, toast]);
+
+  // Affiche un squelette de chargement
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-10 w-64" />
+            </div>
+            <Skeleton className="h-6 w-96" />
+          </div>
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+          <Skeleton className="h-[300px] w-full rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   // Afficher le message d'attente et empêcher la création de nouvelles réservations
   if (isWaiting) {

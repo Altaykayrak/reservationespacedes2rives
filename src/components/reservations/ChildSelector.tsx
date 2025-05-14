@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { CM2SummerAlert } from "./CM2SummerAlert";
 import { useChildFiltering } from "./hooks/useChildFiltering";
 import { useCM2ChildCheck } from "./hooks/useCM2ChildCheck";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ChildSelectorProps {
   selectedChild: string;
@@ -24,9 +25,7 @@ export const ChildSelector = ({
 }: ChildSelectorProps) => {
   const location = useLocation();
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
-  const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
-  const isInitialMount = useRef(true);
-  const previousPeriodId = useRef(selectedPeriodId);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const childSelectChanged = useRef(false);
   const selectionInProgress = useRef(false);
 
@@ -42,7 +41,6 @@ export const ChildSelector = ({
       if (periodId && periodId !== selectedPeriodId) {
         console.log("[ChildSelector] Updating selected period from URL:", periodId);
         setSelectedPeriodId(periodId);
-        previousPeriodId.current = periodId;
       }
     } catch (error) {
       console.error("[ChildSelector] Error parsing URL parameters:", error);
@@ -52,27 +50,11 @@ export const ChildSelector = ({
   // Gérer le filtrage des enfants en fonction du type de page et de la période
   const {
     filteredChildren,
-    periodInfo,
-    classMappings,
-    isSummerPeriod,
-    isHolidayReservation,
-    isTeenHolidayReservation,
-    isAdminTeenHolidayReservation
+    showCM2Message
   } = useChildFiltering(children, selectedPeriodId);
 
-  // Gérer la vérification des enfants CM2 pour les périodes d'été
-  const { showCM2Message } = useCM2ChildCheck(
-    selectedChild,
-    children,
-    selectedPeriodId,
-    periodInfo,
-    summerPeriods,
-    isHolidayReservation,
-    isTeenHolidayReservation,
-    isAdminTeenHolidayReservation,
-    setSelectedDates,
-    onCM2SummerPeriodCheck
-  );
+  // Vérifier si les enfants sont en cours de chargement
+  const isChildrenLoading = !children || isLoading;
 
   // Gérer la sélection d'un enfant avec protection anti-rebond
   const handleChildSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -84,7 +66,7 @@ export const ChildSelector = ({
     if (childId !== selectedChild && !childSelectChanged.current) {
       childSelectChanged.current = true;
       selectionInProgress.current = true;
-      console.log("[ChildSelector] Changing selected child to:", childId);
+      setIsLoading(true);
       
       // Utiliser setTimeout pour éviter les boucles de mise à jour d'état
       setTimeout(() => {
@@ -97,6 +79,7 @@ export const ChildSelector = ({
           setTimeout(() => {
             childSelectChanged.current = false;
             selectionInProgress.current = false;
+            setIsLoading(false);
           }, 150);
         }
       }, 0);
@@ -106,27 +89,32 @@ export const ChildSelector = ({
   return (
     <div onClick={e => e.stopPropagation()}>
       <Label htmlFor="child-select">Sélectionner un enfant</Label>
-      <select
-        id="child-select"
-        value={selectedChild}
-        onChange={handleChildSelect}
-        className="w-full mt-2 rounded-md border border-gray-300 p-2"
-        onClick={e => e.stopPropagation()}
-      >
-        <option value="">Choisir un enfant</option>
-        {filteredChildren?.length ? (
-          filteredChildren.map((child) => (
-            <option 
-              key={child.id} 
-              value={child.id}
-            >
-              {child.last_name} {child.first_name} ({child.school_class})
-            </option>
-          ))
-        ) : (
-          <option value="" disabled>Aucun enfant éligible trouvé</option>
-        )}
-      </select>
+      {isChildrenLoading ? (
+        <Skeleton className="w-full h-10 mt-2" />
+      ) : (
+        <select
+          id="child-select"
+          value={selectedChild}
+          onChange={handleChildSelect}
+          className="w-full mt-2 rounded-md border border-gray-300 p-2"
+          onClick={e => e.stopPropagation()}
+          disabled={isLoading}
+        >
+          <option value="">Choisir un enfant</option>
+          {filteredChildren?.length ? (
+            filteredChildren.map((child) => (
+              <option 
+                key={child.id} 
+                value={child.id}
+              >
+                {child.last_name} {child.first_name} ({child.school_class})
+              </option>
+            ))
+          ) : (
+            <option value="" disabled>Aucun enfant éligible trouvé</option>
+          )}
+        </select>
+      )}
       
       <CM2SummerAlert show={showCM2Message} />
     </div>

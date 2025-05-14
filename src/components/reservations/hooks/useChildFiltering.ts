@@ -17,31 +17,35 @@ export const useChildFiltering = (
   
   const { isTeenClassSync } = useSchoolClassUtils();
   const [summerPeriods] = useState<string[]>(["ETE-01", "ETE-02", "ETE-03", "ETE-04"]);
+  const [showCM2Message, setShowCM2Message] = useState(false);
 
-  // Requête pour obtenir les informations sur la période sélectionnée
+  // Récupérer les informations sur la période sélectionnée avec mise en cache
   const { data: periodInfo } = useQuery({
     queryKey: ["holiday_period_info", selectedPeriodId],
     queryFn: async () => {
       if (!selectedPeriodId) return null;
       
-      const { data, error } = await supabase
-        .from("available_holiday_periods")
-        .select("name")
-        .eq("id", selectedPeriodId)
-        .single();
-      
-      if (error) {
-        console.error("Erreur lors de la récupération des informations de période:", error);
+      try {
+        const { data, error } = await supabase
+          .from("available_holiday_periods")
+          .select("name")
+          .eq("id", selectedPeriodId)
+          .single();
+        
+        if (error) {
+          return null;
+        }
+        
+        return data;
+      } catch (error) {
         return null;
       }
-      
-      return data;
     },
     enabled: !!selectedPeriodId,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
-  // Récupérer les mappings de classe pour la période sélectionnée
+  // Récupérer les mappages de classe pour la période sélectionnée
   const { data: classMappings } = useQuery({
     queryKey: ["holiday_class_mappings", selectedPeriodId],
     queryFn: async () => {
@@ -53,19 +57,17 @@ export const useChildFiltering = (
         .eq("holiday_period_id", selectedPeriodId);
       
       if (error) {
-        console.error("Erreur lors de la récupération des mappings de classe:", error);
         return [];
       }
       
       return data;
     },
     enabled: !!selectedPeriodId,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes 
   });
 
-  // Mémoriser les enfants filtrés pour éviter les recalculs inutiles
+  // Calculer les enfants filtrés
   const filteredChildren = useMemo(() => {
-    // Pour un tableau d'enfants inexistant, retourner rapidement
     if (!children) return null;
     
     // Pour les réservations de vacances avec mappages de classes
@@ -98,22 +100,36 @@ export const useChildFiltering = (
         return isChildTeen;
       });
     }
-    
     // Par défaut : retourner tous les enfants
     return children;
   }, [children, classMappings, selectedPeriodId, periodInfo, isHolidayReservation, isTeenHolidayReservation, isAdminTeenHolidayReservation, isTeenClassSync, summerPeriods]);
 
-  const isSummerPeriod = useMemo(() => {
-    return periodInfo?.name && summerPeriods.includes(periodInfo.name);
-  }, [periodInfo, summerPeriods]);
+  // Vérifier si c'est un CM2 pendant l'été
+  useEffect(() => {
+    const checkCM2Summer = async () => {
+      if (!children || !selectedPeriodId || !periodInfo) {
+        setShowCM2Message(false);
+        return;
+      }
+
+      // Vérifier si un CM2 est sélectionné en période d'été
+      const hasCM2 = children.some(child => child.school_class === 'CM2');
+      const isSummerPeriod = periodInfo.name && summerPeriods.includes(periodInfo.name);
+      
+      setShowCM2Message(hasCM2 && isSummerPeriod && isHolidayReservation);
+    };
+
+    checkCM2Summer();
+  }, [children, selectedPeriodId, periodInfo, summerPeriods, isHolidayReservation]);
 
   return {
     filteredChildren,
     periodInfo,
     classMappings,
-    isSummerPeriod,
+    isSummerPeriod: periodInfo?.name && summerPeriods.includes(periodInfo.name),
     isHolidayReservation,
     isTeenHolidayReservation,
-    isAdminTeenHolidayReservation
+    isAdminTeenHolidayReservation,
+    showCM2Message
   };
 };

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { SpotsBadge } from "./SpotsBadge";
 import { useHolidaySpots } from "@/hooks/useHolidaySpots";
 import { normalizeSchoolClass } from "@/utils/schoolClassUtils";
+import { useState } from "react";
 
 interface DateItemProps {
   date: Date;
@@ -34,6 +35,9 @@ export const DateItem = ({
   periodId,
   childSchoolClass,
 }: DateItemProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
   try {
     // Vérifier si la date est une instance valide de Date
     const isValidDate = date instanceof Date && !isNaN(date.getTime());
@@ -46,58 +50,60 @@ export const DateItem = ({
       );
     }
     
-    console.log("DateItem - Props:", { 
-      childSchoolClass, 
-      periodId, 
-      date: date.toISOString(), 
-      isTeenClass 
-    });
-    
     const normalizedClass = normalizeSchoolClass(childSchoolClass);
     
     // S'assurer que la date est une instance de Date
     const safeDate = date;
     const formattedDate = format(safeDate, "yyyy-MM-dd");
     
-    // Pour les enfants CM2 pendant les périodes d'été, on force isTeenClass à true
-    let effectiveIsTeenClass = isTeenClass;
-    
     const { data: spotsLeft, isLoading } = useHolidaySpots(periodId, safeDate, normalizedClass);
-    
-    console.log(`DateItem - Date: ${formattedDate}, SpotsLeft: ${spotsLeft}, Type: ${typeof spotsLeft}, isTeenClass: ${effectiveIsTeenClass}`);
-    
-    // Debug renforcé
-    console.log(`Date ${formattedDate} - DISABLED CHECK: isReserved=${isReserved}, spotsLeft=${spotsLeft}, isStrict0=${spotsLeft === 0}`);
     
     // La date doit être désactivée uniquement si elle est déjà réservée OU si spotsLeft est strictement égal à 0
     const isDisabled = isReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
 
-    // Fonction de gestion de clic qui sera utilisée sur plusieurs éléments pour améliorer la zone cliquable
+    // Fonction de gestion de clic
     const handleDateClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (!isDisabled) {
-        e.stopPropagation();
         onDateToggle();
       }
     };
 
     return (
       <div 
-        className={`relative space-y-1 p-2 rounded-lg transition-colors ${
-          isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
-        } ${!isDisabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+        className={`relative space-y-1 p-2 rounded-lg transition-all duration-200 ${
+          isDisabled ? 'bg-gray-50 opacity-75 cursor-not-allowed' :
+          isReserved ? 'bg-gray-50' :
+          isSelected ? 'bg-blue-100/60' :
+          isHovered || isFocused ? 'bg-blue-50/80' : 'bg-blue-50/30'
+        } ${!isDisabled ? 'cursor-pointer hover:shadow-sm active:scale-[0.99] transform' : ''}`}
         onClick={handleDateClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         role="button"
         tabIndex={isDisabled ? -1 : 0}
         aria-disabled={isDisabled}
+        data-state={isSelected ? 'selected' : 'deselected'}
       >
-        <div className="flex items-start gap-2">
-          <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start gap-2" onClick={handleDateClick}>
+          <div className="mt-1">
             <Checkbox
               id={safeDate.toISOString()}
               checked={isSelected}
               onCheckedChange={() => !isDisabled && onDateToggle()}
               disabled={isDisabled}
-              className={`${isReserved ? 'border-gray-300' : 'border-blue-200'} pointer-events-auto`}
+              className={`
+                ${isReserved ? 'border-gray-300' : 'border-blue-200'} 
+                pointer-events-auto
+                ${isSelected ? 'border-primary' : ''}
+              `}
+              onClick={(e) => {
+                e.stopPropagation();
+                !isDisabled && onDateToggle();
+              }}
             />
           </div>
           <div className="flex-1">
@@ -105,14 +111,17 @@ export const DateItem = ({
               <Label
                 htmlFor={safeDate.toISOString()}
                 className={`font-medium ${
-                  isDisabled ? 'text-gray-500' : 'text-blue-900'
+                  isDisabled ? 'text-gray-500' : isSelected ? 'text-blue-800' : 'text-blue-900'
                 }`}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  !isDisabled && onDateToggle();
+                }}
               >
                 {format(safeDate, "EEEE d MMMM yyyy", { locale: fr })}
               </Label>
               {isReserved && (
-                <Badge variant="outline" className="text-[10px] md:text-xs">
+                <Badge variant="outline" className="text-[10px] md:text-xs whitespace-nowrap">
                   Déjà réservé
                 </Badge>
               )}
@@ -132,7 +141,7 @@ export const DateItem = ({
             withoutMeal={withoutMeal}
             earlyDropoff={earlyDropoff}
             onOptionChange={onOptionChange}
-            isTeenClass={effectiveIsTeenClass}
+            isTeenClass={isTeenClass}
           />
         )}
       </div>
