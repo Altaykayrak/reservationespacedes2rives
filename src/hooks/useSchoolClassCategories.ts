@@ -20,7 +20,7 @@ export const useSchoolClassCategories = () => {
       category => 
         category.category === "adolescent" && 
         schoolClass.toUpperCase() === category.name.toUpperCase()
-    );
+    ) || false;
   };
 
   return { schoolClassCategories, isTeenClass };

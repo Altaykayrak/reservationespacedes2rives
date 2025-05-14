@@ -3,9 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { getGroupName } from "@/utils/schoolClassUtils";
 
 interface SpotsBadgeProps {
-  spots: number | null;
-  schoolClass: string;
-  isLoading: boolean;
+  availableSpots: number | null;
+  isFull: boolean;
+  schoolClass?: string;
+  isLoading?: boolean;
 }
 
 const getSpotsBadgeColor = (spots: number | null) => {
@@ -15,10 +16,10 @@ const getSpotsBadgeColor = (spots: number | null) => {
   return "bg-green-100 text-green-800";
 };
 
-const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
+const getSpotsBadgeText = (spots: number | null, schoolClass: string = "") => {
   // La fonction getGroupName est utilisée uniquement pour obtenir le nom du groupe
   // et non pour déterminer la disponibilité, qui est faite par useHolidaySpots
-  const groupName = getGroupName(schoolClass);
+  const groupName = schoolClass ? getGroupName(schoolClass) : "";
   
   if (spots === null || spots === undefined) {
     return "Vérification des places en cours...";
@@ -31,15 +32,15 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string) => {
   return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
 };
 
-export const SpotsBadge = ({ spots, schoolClass, isLoading }: SpotsBadgeProps) => {
-  if (isLoading || !schoolClass) return null;
+export const SpotsBadge = ({ availableSpots, isFull, schoolClass = "", isLoading = false }: SpotsBadgeProps) => {
+  if (isLoading || (!schoolClass && availableSpots === null)) return null;
 
   return (
     <Badge 
       variant="secondary" 
-      className={`${getSpotsBadgeColor(spots)} border-none text-[10px] md:text-xs`}
+      className={`${getSpotsBadgeColor(availableSpots)} border-none text-[10px] md:text-xs`}
     >
-      {getSpotsBadgeText(spots, schoolClass)}
+      {getSpotsBadgeText(availableSpots, schoolClass)}
     </Badge>
   );
 };

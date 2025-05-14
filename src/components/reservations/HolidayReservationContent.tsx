@@ -1,5 +1,5 @@
+
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
@@ -273,7 +273,7 @@ export const HolidayReservationContent = ({
         <HolidayPeriodProvider 
           holidayPeriod={holidayPeriod} 
           childInfo={childInfo} 
-          isTeenClass={isTeenClass}
+          isTeenClass={isTeenClassSync(childInfo.school_class)}
         >
           <HolidayDateSelector
             selectedDates={selectedDates}

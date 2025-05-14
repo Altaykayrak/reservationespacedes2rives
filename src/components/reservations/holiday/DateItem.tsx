@@ -1,5 +1,5 @@
+
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -66,7 +66,7 @@ export const DateItem = ({
   }
 
   // Spots disponibles
-  const { availableSpots, isFull } = useHolidaySpots(periodId, localDate, childSchoolClass);
+  const { availableSpots, isFull, isLoading } = useHolidaySpots(periodId, localDate, childSchoolClass);
 
   const dayLabel = format(localDate, "EEEE d MMMM", { locale: fr });
 
@@ -91,7 +91,12 @@ export const DateItem = ({
         {isReserved ? (
           <span className="text-red-500 font-semibold">Réservé</span>
         ) : (
-          <SpotsBadge availableSpots={availableSpots} isFull={isFull} />
+          <SpotsBadge 
+            availableSpots={availableSpots} 
+            isFull={isFull} 
+            schoolClass={childSchoolClass}
+            isLoading={isLoading}
+          />
         )}
       </div>
       {!isReserved && !isTeenClass && (
