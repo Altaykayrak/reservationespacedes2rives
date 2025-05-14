@@ -1,12 +1,12 @@
 
-import { EmptyReservations } from "./EmptyReservations";
+import { EmptyReservations } from "../EmptyReservations";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
 import { HolidayChildReservationCard } from "./HolidayChildReservationCard";
 import { useHolidayReservations } from "@/hooks/useHolidayReservations";
-import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { Button } from "@/components/ui/button";
+import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -18,7 +18,7 @@ export const HolidayReservationsList = () => {
   const navigate = useNavigate();
   const isTeenPage = window.location.pathname === "/teenholiday-reservations";
   const { reservations, isError, error, refetch, isLoading } = useHolidayReservations();
-  const { isTeenClass } = useSchoolClassCategories();
+  const { isTeenClassSync } = useSchoolClassCategories();
 
   console.log("[HolidayReservationsList] Réservations reçues du hook:", reservations);
   console.log("[HolidayReservationsList] État de chargement:", isLoading);
@@ -80,31 +80,21 @@ export const HolidayReservationsList = () => {
 
   console.log("[HolidayReservationsList] Nombre de réservations avant filtrage:", reservations.length);
 
-  const filteredReservations = reservations.map(reservation => {
-    console.log("[HolidayReservationsList] Traitement de la réservation:", reservation);
-    console.log("[HolidayReservationsList] Données de l'enfant:", reservation.children);
-    
-    const childData = reservation.children;
-    
-    const transformedReservation = {
-      ...reservation,
-      children: {
-        id: childData.id,
-        first_name: childData.first_name,
-        last_name: childData.last_name,
-        school_class: childData.school_class,
-        profile: {
-          school_city: childData.profile?.school_city || ''
-        }
+  const filteredReservations = reservations
+    .filter(reservation => {
+      // Vérification de base des données
+      if (!reservation || !reservation.children || !reservation.children.school_class) {
+        console.warn("[HolidayReservationsList] Réservation avec données incomplètes:", reservation?.id);
+        return false;
       }
-    } as HolidayReservationWithChild;
-
-    return transformedReservation;
-  }).filter(reservation => {
-    const isTeen = isTeenClass(reservation.children.school_class);
-    console.log("[HolidayReservationsList] Classe:", reservation.children.school_class, "Est ado ?", isTeen);
-    return isTeenPage ? isTeen : !isTeen;
-  });
+      
+      // Utiliser notre fonction centralisée pour déterminer si c'est un ado
+      const isTeen = isTeenClassSync(reservation.children.school_class, reservation.period_id);
+      console.log(`[HolidayReservationsList] Enfant ${reservation.children.first_name} ${reservation.children.last_name}, Classe: ${reservation.children.school_class}, Est ado?: ${isTeen}`);
+      
+      // Filtrer selon la page actuelle
+      return isTeenPage ? isTeen : !isTeen;
+    });
 
   console.log("[HolidayReservationsList] Nombre de réservations après filtrage:", filteredReservations.length);
 

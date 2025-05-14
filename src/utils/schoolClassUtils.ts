@@ -19,6 +19,8 @@ export const normalizeSchoolClass = (schoolClass: string): string => {
   return classMap[normalizedClass] || schoolClass.trim();
 };
 
+// Cette fonction est maintenue pour la compatibilité avec le code existant
+// Mais nous recommandons d'utiliser useSchoolClassCategories pour les nouveaux développements
 export const getGroupName = (schoolClass: string) => {
   const normalizedClass = normalizeSchoolClass(schoolClass);
   if (["PS", "MS", "GS"].includes(normalizedClass)) 
@@ -30,7 +32,8 @@ export const getGroupName = (schoolClass: string) => {
   return 'adolescent';
 };
 
-// Fonction asynchrone pour vérifier la catégorie en tenant compte des mappings spécifiques
+// Cette fonction est maintenue pour la compatibilité avec le code existant
+// Mais nous recommandons d'utiliser useSchoolClassCategories pour les nouveaux développements
 export const getGroupNameForPeriod = async (schoolClass: string, periodId?: string) => {
   if (!periodId) return getGroupName(schoolClass);
 

@@ -1,17 +1,19 @@
+
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
-import { HolidayDateSelector } from "./holiday/HolidayDateSelector";
+import { HolidayDateSelector } from "./HolidayDateSelector";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Loader2 } from "lucide-react";
 import { useChildrenData } from "@/hooks/useChildrenData";
-import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
 import { useEffect, useState } from "react";
 import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
 import { EmptyHolidayState } from "./holiday/EmptyHolidayState";
+import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
+import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
 
 export const TeenHolidayReservationContent = () => {
   const {
@@ -20,7 +22,6 @@ export const TeenHolidayReservationContent = () => {
     selectedPeriod,
     setSelectedChild,
     setSelectedPeriod,
-    children,
     holidayPeriods,
     handleDateToggle,
     handleOptionChange,
@@ -36,46 +37,34 @@ export const TeenHolidayReservationContent = () => {
     setMinimumDaysDialog
   } = useHolidayReservation();
 
-  const { isTeenClassSync } = useSchoolClassUtils();
-  const { holidayPeriods: allHolidayPeriods } = useHolidayPeriods();
+  // Get all children data
   const { children: allChildren } = useChildrenData();
-  const [filteredChildrenState, setFilteredChildrenState] = useState<any[]>([]);
+  
+  // Filter children that belong to the teen category for the selected period
+  const { filteredChildren } = useCategoryFiltering(
+    allChildren,
+    selectedPeriod,
+    'adolescent'
+  );
 
-  useEffect(() => {
-    if (!allChildren) return;
-
-    const filtered = allChildren.filter(child => {
-      return isTeenClassSync(child.school_class);
-    });
-
-    setFilteredChildrenState(filtered);
-  }, [allChildren, isTeenClassSync]);
-
-  // Calculer le nombre exact de jours sélectionnés valides
+  // Calculate the number of valid dates selected
   const validDates = selectedDates.filter(d => 
     d.date instanceof Date && !isNaN(d.date.getTime())
   );
   const validDatesCount = validDates.length;
-
-  // Vérifier si le nombre de jours sélectionnés est suffisant
   const hasMinimumDays = validDatesCount >= 3;
   
   console.log(`🔍 TeenHolidayContent - Dates sélectionnées total: ${selectedDates.length}`);
   console.log(`🔍 TeenHolidayContent - Dates valides count: ${validDatesCount}`);
-  console.log(`🔍 TeenHolidayContent - hasMinimumDays: ${hasMinimumDays}`);
-
+  
   // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
     // Vérifier le nombre exact de dates sélectionnées
-    console.log(`🔍 DEBUG: (Teen) Bouton cliqué - Dates sélectionnées total: ${selectedDates.length}`);
-    console.log(`🔍 DEBUG: (Teen) Bouton cliqué - Nombre de dates valides: ${validDatesCount}`);
-    console.log(`🔍 DEBUG: (Teen) Validation minimale: ${hasMinimumDays} (${validDatesCount} >= 3)`);
-    
     if (validDatesCount < 3) {
-      console.log("🛑 DEBUG: (Teen) Moins de 3 dates valides, affichage du dialogue");
+      console.log("🛑 DEBUG: Moins de 3 dates valides, affichage du dialogue");
       setMinimumDaysDialog({ isOpen: true });
       return;
     }
@@ -90,10 +79,10 @@ export const TeenHolidayReservationContent = () => {
       <ChildSelector
         selectedChild={selectedChild}
         setSelectedChild={setSelectedChild}
-        children={filteredChildrenState}
+        children={filteredChildren}
         setSelectedDates={setSelectedDates}
       />
-
+      
       <PeriodSelector
         selectedPeriod={selectedPeriod}
         setSelectedPeriod={setSelectedPeriod}
@@ -131,8 +120,8 @@ export const TeenHolidayReservationContent = () => {
         </Button>
       </div>
 
-      <SuccessReservationDialog
-        open={showSuccessDialog}
+      <SuccessReservationDialog 
+        open={showSuccessDialog} 
         onOpenChange={setShowSuccessDialog}
       />
 
@@ -142,7 +131,7 @@ export const TeenHolidayReservationContent = () => {
         schoolClass={noSpotsDialog.schoolClass}
         date={noSpotsDialog.date}
       />
-
+      
       <MinimumDaysDialog
         open={minimumDaysDialog.isOpen}
         onOpenChange={(open) => setMinimumDaysDialog({ isOpen: open })}
