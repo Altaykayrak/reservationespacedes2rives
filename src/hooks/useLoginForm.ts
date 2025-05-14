@@ -55,9 +55,9 @@ export const useLoginForm = () => {
         
         toast.success("Connexion réussie");
         
-        // Rediriger l'utilisateur vers la page d'accueil après connexion réussie
+        // Rediriger l'utilisateur vers la page de profil après connexion réussie
         // UNIQUEMENT dans le cas de la page de login
-        navigate("/");
+        navigate("/profile");
         setIsLoading(false);
       } else {
         setError("Session non établie. Veuillez réessayer.");
