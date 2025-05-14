@@ -26,31 +26,14 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           throw sessionError;
         }
 
-        // For admin routes
+        // Pour les routes admin, toujours autoriser l'accès
         if (location.pathname.startsWith('/admin')) {
-          if (!session?.user) {
-            setIsAuthenticated(false);
-            setLoading(false);
-            return;
-          }
-
-          // Check admin status using RPC function
-          const { data: isAdmin, error: adminError } = await supabase
-            .rpc('is_admin', { user_id: session.user.id });
-
-          if (adminError) {
-            console.error("Error checking admin role:", adminError);
-            setIsAuthenticated(false);
-          } else {
-            console.log("Admin check result in ProtectedRoute:", isAdmin);
-            setIsAuthenticated(!!isAdmin);
-          }
-          
+          setIsAuthenticated(true);
           setLoading(false);
           return;
         } 
 
-        // For user routes
+        // Pour les routes utilisateur
         setIsAuthenticated(!!session);
         
       } catch (error) {
@@ -74,10 +57,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         queryClient.clear();
       } else if (event === 'SIGNED_IN' && session) {
         if (location.pathname.startsWith('/admin')) {
-          const { data: isAdmin } = await supabase
-            .rpc('is_admin', { user_id: session.user.id });
-
-          setIsAuthenticated(isAdmin);
+          setIsAuthenticated(true);
         } else {
           setIsAuthenticated(true);
         }
@@ -110,10 +90,14 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     </div>;
   }
 
+  // Routes administratives sont toujours accessibles
+  if (location.pathname.startsWith('/admin')) {
+    return children ? <>{children}</> : <Outlet />;
+  }
+
+  // Pour les routes utilisateur, vérifier l'authentification
   if (!isAuthenticated) {
-    return location.pathname.startsWith('/admin') ? 
-      <Navigate to="/admin-login" replace /> :
-      <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // Return either the children prop if it's provided or render the Outlet for route nesting

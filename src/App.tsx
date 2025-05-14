@@ -13,16 +13,21 @@ import Prices from "./pages/Prices";
 import TermsOfOperation from "./pages/TermsOfOperation";
 import RdvPage from "./pages/Rdv";
 import { AdminPage } from "./pages/admin/AdminPage";
+import AdminLoginPage from "./pages/admin/AdminLoginPage";
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Routes publiques */}
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/prices" element={<Prices />} />
         <Route path="/terms-of-operation" element={<TermsOfOperation />} />
         <Route path="/holiday-program" element={<HolidayProgram />} />
+        <Route path="/admin-login" element={<AdminLoginPage />} />
+        
+        {/* Routes protégées par authentification */}
         <Route element={<ProtectedRoute children={undefined} />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/children" element={<Children />} />
@@ -31,6 +36,8 @@ function App() {
           <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
           <Route path="/rdv" element={<RdvPage />} />
         </Route>
+        
+        {/* Routes admin - toutes accessibles sans authentification */}
         <Route path="/admin/*" element={<AdminPage />} />
       </Routes>
     </Router>

@@ -51,18 +51,22 @@ export function useAuth() {
       
       if (event === 'SIGNED_OUT') {
         setUser(null);
-        // Redirection basée sur le chemin actuel
-        if (location.pathname.startsWith('/admin')) {
-          navigate('/admin-login');
-        } else {
+        
+        // Ne pas rediriger automatiquement lors de la déconnexion
+        // Sauf si l'utilisateur est sur une page protégée
+        if (!location.pathname.startsWith('/admin') && 
+            location.pathname !== '/login' &&
+            location.pathname !== '/' &&
+            location.pathname !== '/prices' &&
+            location.pathname !== '/terms-of-operation' &&
+            location.pathname !== '/holiday-program') {
           navigate('/login');
         }
       } else if (session?.user) {
         setUser(session.user);
-        // Redirection basée sur le chemin actuel
-        if (location.pathname === '/admin-login') {
-          navigate('/admin');
-        } else if (location.pathname === '/login') {
+        
+        // Ne rediriger que si l'utilisateur est sur la page de login
+        if (location.pathname === '/login') {
           navigate('/profile');
         }
       }
@@ -73,7 +77,7 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast, location]);
+  }, [navigate, toast, location.pathname]);
 
   const signOut = async () => {
     try {
@@ -84,12 +88,7 @@ export function useAuth() {
       // Vider le localStorage pour s'assurer qu'il n'y a pas de données résiduelles
       localStorage.clear();
       
-      // Redirection basée sur le chemin actuel
-      if (location.pathname.startsWith('/admin')) {
-        navigate('/admin-login');
-      } else {
-        navigate('/login');
-      }
+      // Ne pas rediriger automatiquement, laisser l'utilisateur sur la page actuelle
       
       toast({
         title: "Déconnexion réussie",
