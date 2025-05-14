@@ -41,12 +41,12 @@ function App() {
         </Route>
         
         {/* Routes admin avec vérification des droits admin */}
-        <Route path="/admin" element={<ProtectedRoute requireAdmin={true}>
+        <Route element={<ProtectedRoute requireAdmin={true}>
           <AdminPage />
         </ProtectedRoute>}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="reservations" element={<AdminReservations />} />
-          <Route path="wednesdays" element={<AdminWednesdays />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/reservations" element={<AdminReservations />} />
+          <Route path="/admin/wednesdays" element={<AdminWednesdays />} />
           {/* Les autres sous-routes admin seront implicitement protégées */}
         </Route>
       </Routes>

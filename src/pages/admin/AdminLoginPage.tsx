@@ -12,11 +12,15 @@ const AdminLoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Vérifier l'état d'authentification initial
   useEffect(() => {
+    if (initialCheckDone) return;
+    
     const checkAdminAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -24,6 +28,7 @@ const AdminLoginPage = () => {
         if (!session?.user) {
           console.log("No active session, staying on admin login page");
           setIsLoading(false);
+          setInitialCheckDone(true);
           return;
         }
         
@@ -34,6 +39,7 @@ const AdminLoginPage = () => {
         if (adminError) {
           console.error("Error checking admin status:", adminError);
           setIsLoading(false);
+          setInitialCheckDone(true);
           return;
         }
 
@@ -50,14 +56,16 @@ const AdminLoginPage = () => {
         }
         
         setIsLoading(false);
+        setInitialCheckDone(true);
       } catch (error) {
         console.error("Error checking authentication:", error);
         setIsLoading(false);
+        setInitialCheckDone(true);
       }
     };
 
     checkAdminAuth();
-  }, [navigate, queryClient]);
+  }, [navigate, queryClient, initialCheckDone]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +78,12 @@ const AdminLoginPage = () => {
 
     try {
       setIsLoading(true);
+      
+      // D'abord, déconnexion pour éviter les problèmes d'état
+      await supabase.auth.signOut();
+      queryClient.invalidateQueries({ queryKey: ['admin-status'] });
+      
+      // Ensuite, connexion avec les nouvelles informations
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
