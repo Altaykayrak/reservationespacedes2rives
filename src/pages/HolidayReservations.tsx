@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
 import { useToast } from "@/hooks/use-toast";
+import { injectAnimationStyles } from "@/lib/utils";
 
 const HolidayReservations = () => {
   const { user } = useAuth();
@@ -16,6 +17,9 @@ const HolidayReservations = () => {
   const [isClosed, setIsClosed] = useState(false);
 
   useEffect(() => {
+    // Injecter les styles d'animation pour améliorer l'interaction
+    injectAnimationStyles();
+    
     const checkAccess = async () => {
       if (!user?.id) return;
 

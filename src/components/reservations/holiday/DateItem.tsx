@@ -72,21 +72,30 @@ export const DateItem = ({
     // La date doit être désactivée uniquement si elle est déjà réservée OU si spotsLeft est strictement égal à 0
     const isDisabled = isReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
 
+    // Fonction de gestion de clic qui sera utilisée sur plusieurs éléments pour améliorer la zone cliquable
+    const handleDateClick = (e: React.MouseEvent) => {
+      if (!isDisabled) {
+        e.stopPropagation();
+        onDateToggle();
+      }
+    };
+
     return (
       <div 
         className={`relative space-y-1 p-2 rounded-lg transition-colors ${
           isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
-        }`}
+        } ${!isDisabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+        onClick={handleDateClick}
+        role="button"
+        tabIndex={isDisabled ? -1 : 0}
+        aria-disabled={isDisabled}
       >
         <div className="flex items-start gap-2">
-          <div 
-            onClick={isDisabled ? undefined : onDateToggle}
-            className={`mt-1 ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-          >
+          <div className="mt-1" onClick={(e) => e.stopPropagation()}>
             <Checkbox
               id={safeDate.toISOString()}
               checked={isSelected}
-              onCheckedChange={onDateToggle}
+              onCheckedChange={() => !isDisabled && onDateToggle()}
               disabled={isDisabled}
               className={`${isReserved ? 'border-gray-300' : 'border-blue-200'} pointer-events-auto`}
             />
@@ -95,10 +104,10 @@ export const DateItem = ({
             <div className="flex items-center justify-between gap-2">
               <Label
                 htmlFor={safeDate.toISOString()}
-                className={`cursor-pointer font-medium ${
+                className={`font-medium ${
                   isDisabled ? 'text-gray-500' : 'text-blue-900'
                 }`}
-                onClick={isDisabled ? undefined : onDateToggle}
+                onClick={(e) => e.stopPropagation()}
               >
                 {format(safeDate, "EEEE d MMMM yyyy", { locale: fr })}
               </Label>
