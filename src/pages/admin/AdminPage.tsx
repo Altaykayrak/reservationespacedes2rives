@@ -1,6 +1,6 @@
 
 import { Navigate, Outlet } from "react-router-dom";
-import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 
 export function AdminPage() {

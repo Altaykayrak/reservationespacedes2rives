@@ -29,9 +29,9 @@ export const useAdminAuth = () => {
         return false;
       }
     },
-    retry: false,
+    retry: 0, // Ne pas réessayer pour éviter les boucles
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // Consider admin status valid for 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    staleTime: 30 * 60 * 1000, // Considérer le statut admin valide pendant 30 minutes
+    gcTime: 60 * 60 * 1000, // Garder en cache pendant 1 heure
   });
 };
