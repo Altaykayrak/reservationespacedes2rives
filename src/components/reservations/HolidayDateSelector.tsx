@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { HolidayPeriodProvider } from "./holiday/HolidayPeriodContext";
 import { useHolidayClassification } from "./holiday/hooks/useHolidayClassification";
+import { TeenClassDateSelector } from "./holiday/TeenClassDateSelector";
+import { WorkdayDateSelector } from "./holiday/WorkdayDateSelector";
 
 interface DateOption {
   date: Date;
@@ -79,12 +81,39 @@ export const HolidayDateSelector = ({
     setSelectedDates([]);
   }, [periodId, setSelectedDates]);
 
-  // Ce composant est maintenant un placeholder, car WorkdayDateSelector a été supprimé
+  // Fonction wrapper pour gérer explicitement les clics de date
+  const enhancedHandleDateToggle = (date: Date) => {
+    console.log("HolidayDateSelector - enhancedHandleDateToggle appelé pour date:", date);
+    handleDateToggle(date);
+  };
+
+  if (!holidayPeriod || !selectedChild) return null;
+
   return (
-    <div className="bg-blue-50 p-4 rounded-md">
-      <p className="text-blue-800">
-        La sélection de dates est en cours de maintenance. Elle sera disponible prochainement.
-      </p>
-    </div>
+    <HolidayPeriodProvider 
+      holidayPeriod={holidayPeriod} 
+      childInfo={childInfo} 
+      isTeenClass={!!isTeenClass}
+    >
+      {(window.location.pathname === "/teenholiday-reservations" || 
+        window.location.pathname === "/admin/reservations/new-teen-holiday" ||
+        window.location.pathname === "/admin/new-teenholiday-reservation") && isTeenClass ? (
+        <TeenClassDateSelector
+          selectedDates={selectedDates}
+          isDateAlreadyReserved={isDateAlreadyReserved}
+          handleOptionChange={handleOptionChange}
+          handleDateToggle={enhancedHandleDateToggle}
+          periodId={periodId}
+        />
+      ) : (
+        <WorkdayDateSelector
+          selectedDates={selectedDates}
+          handleDateToggle={enhancedHandleDateToggle}
+          handleOptionChange={handleOptionChange}
+          isDateAlreadyReserved={isDateAlreadyReserved}
+          periodId={periodId}
+        />
+      )}
+    </HolidayPeriodProvider>
   );
 };
