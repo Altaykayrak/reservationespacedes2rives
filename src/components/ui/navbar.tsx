@@ -1,101 +1,96 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
-
 const Navbar = () => {
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    signOut
+  } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   useEffect(() => {
     setIsAuthenticated(!!user);
   }, [user]);
-
   const handleLogout = async () => {
     await signOut();
   };
-
-  const menuItems: NavItem[] = [
-    { label: "Accueil", href: "/" },
-    { label: "Mon profil", href: "/profile" },
-    { label: "Mes enfants", href: "/children" },
-    { label: "Réservations mercredi", href: "/wednesday-reservations" },
-    { label: "Réservations vacances", href: "/holiday-reservations" },
-    { label: "Réservations Club Ado", href: "/teenholiday-reservations" },
-    { label: "Programme vacances", href: "/holiday-program" },
-    { label: "Règlement de fonctionnement", href: "/terms-of-operation" },
-    { label: "Tarifs", href: "/prices" },
-  ];
-
+  const menuItems: NavItem[] = [{
+    label: "Accueil",
+    href: "/"
+  }, {
+    label: "Mon profil",
+    href: "/profile"
+  }, {
+    label: "Mes enfants",
+    href: "/children"
+  }, {
+    label: "Réservations mercredi",
+    href: "/wednesday-reservations"
+  }, {
+    label: "Réservations vacances",
+    href: "/holiday-reservations"
+  }, {
+    label: "Réservations Club Ado",
+    href: "/teenholiday-reservations"
+  }, {
+    label: "Programme vacances",
+    href: "/holiday-program"
+  }, {
+    label: "Règlement de fonctionnement",
+    href: "/terms-of-operation"
+  }, {
+    label: "Tarifs",
+    href: "/prices"
+  }];
   const navProps: NavProps = {
     menuItems: menuItems,
     isAuthenticated: isAuthenticated,
-    onLogout: handleLogout,
+    onLogout: handleLogout
   };
-
-  return (
-    <div className="border-b bg-background sticky top-0 z-50">
+  return <div className="border-b bg-background sticky top-0 z-50">
       <div className="flex h-16 items-center px-4">
-        <Link to="/" className="font-semibold text-lg md:text-2xl">
-          Les P'tits Futés
-        </Link>
+        <Link to="/" className="font-semibold text-lg md:text-2xl">E2R</Link>
         <div className="ml-auto flex items-center space-x-4">
           <NavigationMenu {...navProps} />
-          {isAuthenticated ? (
-            <ProfileDropdown user={user} onLogout={handleLogout} />
-          ) : (
-            <Link to="/login">
+          {isAuthenticated ? <ProfileDropdown user={user} onLogout={handleLogout} /> : <Link to="/login">
               <Button variant="default" size="sm">
                 Se connecter
               </Button>
-            </Link>
-          )}
+            </Link>}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 interface NavigationMenuProps extends NavProps {}
-
-const NavigationMenu = ({ menuItems, isAuthenticated, onLogout }: NavigationMenuProps) => {
-  return (
-    <div className="hidden md:flex items-center space-x-4">
-      {menuItems.map((item) => (
-        <Link key={item.label} to={item.href} className="text-sm font-medium transition-colors hover:text-primary">
+const NavigationMenu = ({
+  menuItems,
+  isAuthenticated,
+  onLogout
+}: NavigationMenuProps) => {
+  return <div className="hidden md:flex items-center space-x-4">
+      {menuItems.map(item => <Link key={item.label} to={item.href} className="text-sm font-medium transition-colors hover:text-primary">
           {item.label}
-        </Link>
-      ))}
-      {isAuthenticated && (
-        <Button variant="ghost" size="sm" onClick={onLogout}>
+        </Link>)}
+      {isAuthenticated && <Button variant="ghost" size="sm" onClick={onLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           Déconnexion
-        </Button>
-      )}
-    </div>
-  );
+        </Button>}
+    </div>;
 };
-
 interface ProfileDropdownProps {
   user: any;
   onLogout: () => void;
 }
-
-const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
-  return (
-    <Sheet>
+const ProfileDropdown = ({
+  user,
+  onLogout
+}: ProfileDropdownProps) => {
+  return <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
@@ -142,8 +137,6 @@ const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
           Se déconnecter
         </Button>
       </SheetContent>
-    </Sheet>
-  );
+    </Sheet>;
 };
-
 export { Navbar };
