@@ -59,12 +59,23 @@ export const DateItem = ({
     }
   }, [date]);
 
-  // Always call hook - even if localDate is null, to maintain hook order
+  // Hook pour vérifier les places disponibles - s'assurer qu'il est appelé même si la date est invalide
   const { availableSpots, isFull, isLoading } = useHolidaySpots(
     periodId, 
-    localDate || new Date(), // Provide fallback value to avoid errors
+    localDate || new Date(), // Fournir une valeur par défaut pour éviter les erreurs
     childSchoolClass
   );
+
+  // Log détaillé pour déboguer les places disponibles
+  useEffect(() => {
+    console.log(`DateItem - Places disponibles pour ${localDate?.toISOString()}:`, {
+      periodId,
+      schoolClass: childSchoolClass,
+      availableSpots,
+      isFull,
+      isLoading
+    });
+  }, [localDate, periodId, childSchoolClass, availableSpots, isFull, isLoading]);
 
   // If the date is invalid and impossible to correct, don't render
   if (!localDate) {

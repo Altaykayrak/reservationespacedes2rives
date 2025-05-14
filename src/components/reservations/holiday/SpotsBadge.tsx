@@ -1,6 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { getGroupName } from "@/utils/schoolClassUtils";
+import { useEffect, useState } from "react";
 
 interface SpotsBadgeProps {
   availableSpots: number | null;
@@ -16,13 +17,17 @@ const getSpotsBadgeColor = (spots: number | null) => {
   return "bg-green-100 text-green-800";
 };
 
-const getSpotsBadgeText = (spots: number | null, schoolClass: string = "") => {
+const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", isLoading: boolean = false) => {
   // La fonction getGroupName est utilisée uniquement pour obtenir le nom du groupe
   // et non pour déterminer la disponibilité, qui est faite par useHolidaySpots
   const groupName = schoolClass ? getGroupName(schoolClass) : "";
   
+  if (isLoading) {
+    return "Chargement des places...";
+  }
+  
   if (spots === null || spots === undefined) {
-    return "Vérification des places en cours...";
+    return "Places non disponibles";
   }
   
   if (spots === 0) {
@@ -33,15 +38,22 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string = "") => {
 };
 
 export const SpotsBadge = ({ availableSpots, isFull, schoolClass = "", isLoading = false }: SpotsBadgeProps) => {
-  // Ne rien afficher si on est en chargement ou qu'on n'a pas de classe scolaire et pas de spots disponibles
-  if (isLoading || (!schoolClass && availableSpots === null)) return null;
+  const [displayText, setDisplayText] = useState<string>("");
+  const [badgeColor, setBadgeColor] = useState<string>("");
+  
+  useEffect(() => {
+    console.log("SpotsBadge rendering with:", { availableSpots, isFull, schoolClass, isLoading });
+    setDisplayText(getSpotsBadgeText(availableSpots, schoolClass, isLoading));
+    setBadgeColor(getSpotsBadgeColor(availableSpots));
+  }, [availableSpots, isFull, schoolClass, isLoading]);
 
+  // Toujours afficher le badge, même pendant le chargement ou si pas de classe
   return (
     <Badge 
       variant="secondary" 
-      className={`${getSpotsBadgeColor(availableSpots)} border-none text-[10px] md:text-xs`}
+      className={`${badgeColor} border-none text-[10px] md:text-xs`}
     >
-      {getSpotsBadgeText(availableSpots, schoolClass)}
+      {displayText}
     </Badge>
   );
 };
