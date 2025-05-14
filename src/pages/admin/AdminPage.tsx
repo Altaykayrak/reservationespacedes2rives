@@ -1,48 +1,39 @@
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export function AdminPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const navigate = useNavigate();
+  const { data: isAdmin, isLoading, isError } = useAdminAuth();
+  const { toast } = useToast();
+  const [adminChecked, setAdminChecked] = useState(false);
 
   useEffect(() => {
-    // Vérification directe du statut admin lors du chargement de la page
-    // Cela évite les problèmes liés aux hooks React Query
-    const checkAdminStatus = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
-          console.log("AdminPage: No session found");
-          setIsAdmin(false);
-          setIsLoading(false);
-          return;
-        }
-        
-        console.log("AdminPage: Checking admin status for", session.user.id);
-        const { data: adminResult, error } = await supabase
-          .rpc('is_admin', { user_id: session.user.id });
-          
-        if (error) {
-          console.error("AdminPage: Error checking admin status", error);
-          setIsAdmin(false);
-        } else {
-          console.log("AdminPage: Admin check result", adminResult);
-          setIsAdmin(!!adminResult);
-        }
-      } catch (err) {
-        console.error("AdminPage: Error in admin check", err);
-        setIsAdmin(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkAdminStatus();
-  }, []);
+    if (isLoading) return;
+
+    if (adminChecked) return;
+
+    if (isError) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de vérifier vos droits administrateur.",
+        variant: "destructive",
+      });
+      navigate("/admin-login", { replace: true });
+      return;
+    }
+
+    if (isAdmin === false) {
+      console.log("AdminPage: User is not admin, redirecting to admin login");
+      navigate("/admin-login", { replace: true });
+      return;
+    }
+
+    setAdminChecked(true);
+  }, [isAdmin, isLoading, isError, adminChecked, navigate, toast]);
 
   if (isLoading) {
     return (
@@ -55,22 +46,18 @@ export function AdminPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (!adminChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center p-8 max-w-md">
-          <h1 className="text-2xl font-bold text-red-500 mb-2">Accès non autorisé</h1>
-          <p className="text-gray-700 mb-4">
-            Vous n'avez pas les droits administrateur nécessaires pour accéder à cette page.
-          </p>
-          <p className="text-gray-600">
-            Veuillez vous connecter avec un compte administrateur ou contacter un administrateur système.
-          </p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Vérification des droits d'accès...</p>
         </div>
       </div>
     );
   }
 
+  // Si nous arrivons ici, l'utilisateur est admin
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNavbar />
