@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AdminNavbar() {
   const { signOut } = useAuth();
@@ -25,6 +26,16 @@ export function AdminNavbar() {
     { label: "Mercredis", href: "/admin/wednesdays" },
     { label: "Périodes vacances", href: "/admin/holidays" },
   ];
+
+  // Fonction de déconnexion modifiée pour ne pas rediriger
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      // Ne pas rediriger après la déconnexion
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+    }
+  };
 
   if (!isMounted) {
     return null;
@@ -54,7 +65,7 @@ export function AdminNavbar() {
           </ul>
         </nav>
         
-        <Button variant="destructive" onClick={signOut} className="ml-4">
+        <Button variant="destructive" onClick={handleSignOut} className="ml-4">
           Se déconnecter
         </Button>
       </div>

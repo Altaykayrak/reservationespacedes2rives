@@ -51,18 +51,14 @@ export function useAuth() {
       
       if (event === 'SIGNED_OUT') {
         setUser(null);
-        // Redirection basée sur le chemin actuel
-        if (location.pathname.startsWith('/admin')) {
-          navigate('/admin-login');
-        } else {
+        // Ne pas rediriger si l'URL commence par /admin
+        if (!location.pathname.startsWith('/admin')) {
           navigate('/login');
         }
       } else if (session?.user) {
         setUser(session.user);
-        // Redirection basée sur le chemin actuel
-        if (location.pathname === '/admin-login') {
-          navigate('/admin');
-        } else if (location.pathname === '/login') {
+        // Ne pas rediriger si l'URL commence par /admin
+        if (!location.pathname.startsWith('/admin') && location.pathname === '/login') {
           navigate('/profile');
         }
       }
@@ -84,10 +80,8 @@ export function useAuth() {
       // Vider le localStorage pour s'assurer qu'il n'y a pas de données résiduelles
       localStorage.clear();
       
-      // Redirection basée sur le chemin actuel
-      if (location.pathname.startsWith('/admin')) {
-        navigate('/admin-login');
-      } else {
+      // Ne pas rediriger si l'URL commence par /admin
+      if (!location.pathname.startsWith('/admin')) {
         navigate('/login');
       }
       

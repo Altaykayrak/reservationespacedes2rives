@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -7,48 +8,11 @@ export function useRdvAdmin() {
   const { toast } = useToast();
   const [rdvList, setRdvList] = useState<Rdv[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(true); // Toujours considéré comme admin
 
-  // Check if user is admin
-  useEffect(() => {
-    async function checkAdmin() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.error("No user found when checking admin status");
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
-        
-        const { data, error } = await supabase.rpc('is_admin', { user_id: user.id });
-        if (error) {
-          console.error("Error checking admin status:", error);
-          setIsAdmin(false);
-        } else {
-          console.log("Admin status check result:", data);
-          setIsAdmin(!!data);
-        }
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    checkAdmin();
-  }, []);
-
-  // Fetch all rdv
+  // Fetch all rdv without admin checks
   useEffect(() => {
     async function fetchRdv() {
-      if (!isAdmin) {
-        console.log("User is not admin, not fetching RDV data");
-        setLoading(false);
-        return;
-      }
-      
       try {
         setLoading(true);
         console.log("Fetching RDV data for admin user");
@@ -127,7 +91,7 @@ export function useRdvAdmin() {
     }
 
     fetchRdv();
-  }, [isAdmin, toast]);
+  }, [toast]);
 
   const handleDeleteRdv = async (id: string) => {
     try {

@@ -44,7 +44,7 @@ function App() {
           <Route path="/rdv" element={<RdvPage />} />
         </Route>
         
-        {/* Routes admin - maintenant sans vérification des droits admin */}
+        {/* Routes admin - sans aucune vérification ni redirection */}
         <Route path="/admin" element={
           <div className="min-h-screen bg-gray-50">
             <AdminNavbar />
