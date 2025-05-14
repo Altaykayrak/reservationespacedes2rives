@@ -1,11 +1,12 @@
-import { Navigate, useLocation } from "react-router-dom";
+
+import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children?: React.ReactNode; // Make children optional
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
@@ -115,5 +116,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  // Return either the children prop if it's provided or render the Outlet for route nesting
+  return children ? <>{children}</> : <Outlet />;
 };
