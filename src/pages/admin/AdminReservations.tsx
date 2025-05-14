@@ -1,6 +1,6 @@
 
 import { AdminNavbar } from "@/components/admin/AdminNavbar";
-import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminReservations } from "@/components/admin/reservations/hooks/useAdminReservations";
 import { AdminReservationsContent } from "@/components/admin/reservations/AdminReservationsContent";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,9 @@ import { useNavigate } from "react-router-dom";
 
 const AdminReservations = () => {
   const navigate = useNavigate();
-  const { data: isAdmin } = useAdminAuth();
+  const { data: adminData } = useAdminAuth();
+  const isAdmin = adminData?.isAdmin || false;
+  
   const { 
     data, 
     refetch: refetchReservations, 
