@@ -79,13 +79,18 @@ export const DateItem = ({
         }`}
       >
         <div className="flex items-start gap-2">
-          <Checkbox
-            id={safeDate.toISOString()}
-            checked={isSelected}
-            onCheckedChange={onDateToggle}
-            disabled={isDisabled}
-            className={`mt-1 ${isReserved ? 'border-gray-300' : 'border-blue-200'}`}
-          />
+          <div 
+            onClick={isDisabled ? undefined : onDateToggle}
+            className={`mt-1 ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+          >
+            <Checkbox
+              id={safeDate.toISOString()}
+              checked={isSelected}
+              onCheckedChange={onDateToggle}
+              disabled={isDisabled}
+              className={`${isReserved ? 'border-gray-300' : 'border-blue-200'} pointer-events-auto`}
+            />
+          </div>
           <div className="flex-1">
             <div className="flex items-center justify-between gap-2">
               <Label
@@ -93,6 +98,7 @@ export const DateItem = ({
                 className={`cursor-pointer font-medium ${
                   isDisabled ? 'text-gray-500' : 'text-blue-900'
                 }`}
+                onClick={isDisabled ? undefined : onDateToggle}
               >
                 {format(safeDate, "EEEE d MMMM yyyy", { locale: fr })}
               </Label>
