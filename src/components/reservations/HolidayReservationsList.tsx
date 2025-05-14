@@ -6,6 +6,8 @@ import { HolidayChildReservationCard } from "./holiday/HolidayChildReservationCa
 import { useHolidayReservations } from "@/hooks/useHolidayReservations";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -15,6 +17,7 @@ type GroupedReservations = Record<string, {
 
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isTeenPage = window.location.pathname === "/teenholiday-reservations";
   const { reservations, isError, error, refetch } = useHolidayReservations();
   const { isTeenClassSync } = useSchoolClassUtils();
@@ -25,25 +28,29 @@ export const HolidayReservationsList = () => {
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
-    if (errorMessage.includes("Not authenticated")) {
+    if (errorMessage.includes("Not authenticated") || !user) {
       return (
         <Alert variant="destructive">
-          <AlertDescription>
-            Vous devez être connecté pour voir vos réservations.{" "}
-            <button 
-              onClick={() => navigate("/login")}
-              className="underline hover:no-underline"
+          <AlertDescription className="flex flex-col gap-3">
+            <div>Vous devez être connecté pour voir vos réservations.</div>
+            <Button 
+              onClick={() => navigate("/login", { state: { from: location.pathname } })}
+              className="w-full sm:w-auto"
+              variant="outline"
             >
               Se connecter
-            </button>
+            </Button>
           </AlertDescription>
         </Alert>
       );
     }
     return (
       <Alert variant="destructive">
-        <AlertDescription>
-          Une erreur est survenue lors du chargement des réservations. Veuillez réessayer.
+        <AlertDescription className="flex flex-col gap-3">
+          <div>Une erreur est survenue lors du chargement des réservations.</div>
+          <Button onClick={() => refetch()} className="w-full sm:w-auto" variant="outline">
+            Réessayer
+          </Button>
         </AlertDescription>
       </Alert>
     );
@@ -67,9 +74,9 @@ export const HolidayReservationsList = () => {
       }
       
       // Filter based on page type and period-specific class mappings
-      return isTeenPage 
-        ? isTeenClassSync(reservation.children.school_class, reservation.period_id) 
-        : !isTeenClassSync(reservation.children.school_class, reservation.period_id);
+      const isTeenClass = isTeenClassSync(reservation.children.school_class, reservation.period_id);
+      console.log(`Réservation ${reservation.id}, enfant ${reservation.children.first_name}, classe ${reservation.children.school_class}, est ado: ${isTeenClass}`);
+      return isTeenPage ? isTeenClass : !isTeenClass;
     });
 
   console.log("11. Nombre de réservations après filtrage:", filteredReservations.length);

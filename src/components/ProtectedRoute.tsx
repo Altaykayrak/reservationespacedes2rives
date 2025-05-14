@@ -26,11 +26,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       console.log("[ProtectedRoute] Session valide jusqu'à:", new Date(session.expires_at * 1000).toLocaleString());
     }
 
-    // Si l'initialisation est terminée, l'utilisateur n'est pas en chargement et qu'il n'est pas connecté
-    if (initialized && !loading && !user && !location.pathname.startsWith("/admin")) {
+    // Ne rediriger que si l'initialisation est vraiment terminée et que l'utilisateur n'est pas connecté
+    if (initialized && !loading && !user && !location.pathname.startsWith("/login") && !location.pathname.startsWith("/admin") && !location.pathname.startsWith("/register") && !location.pathname.startsWith("/forgot-password")) {
       console.log("[ProtectedRoute] Redirection vers la page de connexion");
       toast.error("Veuillez vous connecter pour accéder à cette page");
-      navigate("/login", { replace: true });
+      navigate("/login", { replace: true, state: { from: location } });
     }
   }, [user, session, loading, location, initialized, navigate]);
   
@@ -54,8 +54,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
   
   // Si nous sommes sur une route admin, laisser la page admin gérer l'authentification
-  if (location.pathname.startsWith("/admin")) {
-    console.log("[ProtectedRoute] Route admin détectée, laissant AdminPage gérer l'authentification");
+  if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/login") || location.pathname.startsWith("/register") || location.pathname.startsWith("/forgot-password")) {
+    console.log("[ProtectedRoute] Route spéciale détectée, laissant la page gérer l'authentification");
     return <>{children}</>;
   }
   

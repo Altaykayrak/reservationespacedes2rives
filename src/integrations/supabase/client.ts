@@ -15,6 +15,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     storage: localStorage,
     detectSessionInUrl: true,
+    storageKey: 'sb-dddtybmradplydzymrly-auth-token',
     flowType: 'implicit'
   }
 });

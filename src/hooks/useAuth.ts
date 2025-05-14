@@ -42,6 +42,7 @@ export const useAuth = () => {
   // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
     console.log("[useAuth] Initialisation du hook...");
+    let isMounted = true; // Flag pour éviter les mises à jour sur un composant démonté
     
     // Connexion à l'event listener pour les changements d'états d'authentification
     const setupAuthSubscription = async () => {
@@ -60,23 +61,27 @@ export const useAuth = () => {
         console.log("[useAuth] Récupération de la session actuelle");
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
-        if (currentSession) {
+        if (currentSession && isMounted) {
           console.log("[useAuth] Session trouvée:", currentSession.user.email);
           setSession(currentSession);
           setUser(currentSession.user);
-        } else {
+        } else if (isMounted) {
           console.log("[useAuth] Aucune session active trouvée");
           setUser(null);
           setSession(null);
         }
       } catch (error) {
         console.error("[useAuth] Erreur lors de la récupération de la session:", error);
-        setUser(null);
-        setSession(null);
+        if (isMounted) {
+          setUser(null);
+          setSession(null);
+        }
       } finally {
-        setLoading(false);
-        setInitialized(true);
-        console.log("[useAuth] Initialisation terminée");
+        if (isMounted) {
+          setLoading(false);
+          setInitialized(true);
+          console.log("[useAuth] Initialisation terminée");
+        }
       }
     };
     
@@ -85,6 +90,7 @@ export const useAuth = () => {
     // Nettoyage de la souscription
     return () => {
       console.log("[useAuth] Nettoyage de l'abonnement aux événements d'authentification");
+      isMounted = false;
       if (authSubscription.current) {
         const { data: { subscription } } = authSubscription.current;
         if (subscription && typeof subscription.unsubscribe === 'function') {
