@@ -46,10 +46,10 @@ export const useLoginForm = () => {
         
         toast.success("Connexion réussie");
         
-        // Rediriger l'utilisateur vers la page de profil après connexion réussie
+        // Utiliser setTimeout pour permettre à la session d'être pleinement établie avant redirection
         setTimeout(() => {
           navigate("/profile", { replace: true });
-        }, 100);
+        }, 300);
       } else {
         setError("Session non établie. Veuillez réessayer.");
       }

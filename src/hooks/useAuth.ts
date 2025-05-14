@@ -18,13 +18,13 @@ export const useAuth = () => {
       console.log("[useAuth] Session initiale détectée");
     }
     
-    if (event === "SIGNED_IN") {
-      console.log("[useAuth] Event d'authentification positif détecté avec session");
+    if (event === "SIGNED_IN" || event === "INITIAL_SESSION" && newSession) {
+      console.log("[useAuth] Session détectée:", newSession.user.email);
       setSession(newSession);
-      setUser(newSession?.user || null);
+      setUser(newSession.user);
     }
     
-    if (event === "SIGNED_OUT") {
+    if (event === "SIGNED_OUT" || event === "USER_DELETED") {
       console.log("[useAuth] Event de déconnexion détecté");
       setUser(null);
       setSession(null);
@@ -44,7 +44,6 @@ export const useAuth = () => {
     console.log("[useAuth] Initialisation du hook...");
     let isMounted = true; // Flag pour éviter les mises à jour sur un composant démonté
     
-    // Connexion à l'event listener pour les changements d'états d'authentification
     const setupAuthSubscription = async () => {
       if (authSubscription.current) {
         console.log("[useAuth] L'abonnement existe déjà, évitement d'un double abonnement");
@@ -54,12 +53,24 @@ export const useAuth = () => {
       console.log("[useAuth] Configuration de l'écouteur d'événements d'authentification");
       
       // Configuration de l'écouteur d'événements d'authentification
-      authSubscription.current = supabase.auth.onAuthStateChange(handleAuthStateChange);
+      authSubscription.current = supabase.auth.onAuthStateChange((event, currentSession) => {
+        if (isMounted) {
+          handleAuthStateChange(event, currentSession);
+          
+          // Important: mettre à jour initialized ici pour garantir qu'il est définit après
+          // que la session ait été traitée
+          if (!initialized) {
+            console.log("[useAuth] Initialisation terminée depuis l'écouteur d'événements");
+            setInitialized(true);
+          }
+        }
+      });
       
       // Récupération de la session actuelle
       try {
         console.log("[useAuth] Récupération de la session actuelle");
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getSession();
+        const currentSession = data.session;
         
         if (currentSession && isMounted) {
           console.log("[useAuth] Session trouvée:", currentSession.user.email);

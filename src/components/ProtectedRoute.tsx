@@ -27,8 +27,13 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
 
     // Ne rediriger que si l'initialisation est vraiment terminée et que l'utilisateur n'est pas connecté
-    if (initialized && !loading && !user && !location.pathname.startsWith("/login") && !location.pathname.startsWith("/admin") && !location.pathname.startsWith("/register") && !location.pathname.startsWith("/forgot-password")) {
-      console.log("[ProtectedRoute] Redirection vers la page de connexion");
+    // et seulement si nous ne sommes pas déjà sur une page publique
+    if (initialized && !loading && !user && 
+        !location.pathname.startsWith("/login") && 
+        !location.pathname.startsWith("/admin") && 
+        !location.pathname.startsWith("/register") && 
+        !location.pathname.startsWith("/forgot-password")) {
+      console.log("[ProtectedRoute] Redirection vers la page de connexion depuis", location.pathname);
       toast.error("Veuillez vous connecter pour accéder à cette page");
       navigate("/login", { replace: true, state: { from: location } });
     }
@@ -53,14 +58,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <>{children}</>;
   }
   
-  // Si nous sommes sur une route admin, laisser la page admin gérer l'authentification
-  if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/login") || location.pathname.startsWith("/register") || location.pathname.startsWith("/forgot-password")) {
+  // Si nous sommes sur une route publique, laisser la page gérer l'authentification
+  if (location.pathname.startsWith("/admin") || 
+      location.pathname.startsWith("/login") || 
+      location.pathname.startsWith("/register") || 
+      location.pathname.startsWith("/forgot-password")) {
     console.log("[ProtectedRoute] Route spéciale détectée, laissant la page gérer l'authentification");
     return <>{children}</>;
   }
   
   // Cette partie ne devrait pas être atteinte grâce à la redirection dans useEffect
-  // Mais nous le gardons comme mesure de sécurité supplémentaire
-  console.log("[ProtectedRoute] Redirection de secours vers la page de connexion");
+  console.log("[ProtectedRoute] Aucune condition satisfaite, retour null");
   return null;
 }

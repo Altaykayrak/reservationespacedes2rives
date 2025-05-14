@@ -1,12 +1,13 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 export const useRdvAuth = () => {
   const { user, loading, initialized } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Redirect if not logged in
   useEffect(() => {
@@ -15,7 +16,7 @@ export const useRdvAuth = () => {
       toast.error("Veuillez vous connecter pour accéder à cette page");
       navigate("/login", { state: { from: location.pathname } });
     }
-  }, [user, loading, navigate, initialized]);
+  }, [user, loading, navigate, initialized, location]);
 
   return {
     user,
