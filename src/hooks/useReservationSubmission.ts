@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -53,6 +54,7 @@ export const useReservationSubmission = (
   const handleSubmit = async () => {
     const submissionTimestamp = Date.now();
     console.log(`DEBUG: Début de handleSubmit (timestamp: ${submissionTimestamp}) dans useReservationSubmission`);
+    console.log("DEBUG: Dates sélectionnées:", selectedDates);
     
     // Vérifier si une soumission est déjà en cours
     if (submissionInProgress || isSubmitting) {
@@ -94,7 +96,7 @@ export const useReservationSubmission = (
       const hasMinimumDays = validateMinimumDays(selectedDates, isAdminRoute);
       console.log("DEBUG: Résultat de validateMinimumDays:", hasMinimumDays);
       
-      if (!hasMinimumDays) {
+      if (!hasMinimumDays && !isAdminRoute) {
         console.log("DEBUG: La validation des jours minimum a échoué, affichage du dialogue");
         setMinimumDaysDialog({ isOpen: true });
         setIsSubmitting(false);
@@ -102,10 +104,38 @@ export const useReservationSubmission = (
         return;
       }
       
+      // S'assurer que toutes les dates sont des instances valides de Date
+      const validatedDates = selectedDates.map(dateOption => {
+        let dateObj = dateOption.date;
+        
+        // Si la date n'est pas une instance valide de Date
+        if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+          console.error("Date invalide détectée:", dateObj);
+          
+          // Tenter de convertir en Date si c'est une chaîne
+          if (typeof dateObj === 'string') {
+            dateObj = new Date(dateObj);
+          }
+          
+          // Si toujours invalide, créer une nouvelle instance
+          if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+            console.error("Impossible de convertir en date valide, utilisation de date actuelle");
+            dateObj = new Date();
+          }
+        }
+        
+        return {
+          ...dateOption,
+          date: dateObj
+        };
+      });
+      
+      console.log("DEBUG: Dates validées avant création:", validatedDates);
+      
       // Création des réservations
       const result = await createHolidayReservations(
         selectedChild,
-        selectedDates,
+        validatedDates,
         holidayPeriods,
         submissionTimestamp
       );
@@ -141,7 +171,7 @@ export const useReservationSubmission = (
         
         await sendHolidayReservationEmail(
           childFullName,
-          selectedDates,
+          validatedDates,
           result.periodName || "",
           result.reservationNumber || "",
           result.periodId || "",
@@ -152,7 +182,7 @@ export const useReservationSubmission = (
 
       toast({
         title: "Réservation confirmée",
-        description: "Votre réservation a été enregistrée avec succès.",
+        description: `${result.successfulReservations?.length || 0} jour(s) de vacances réservé(s) avec succès.`,
       });
 
       await refetchReservations();

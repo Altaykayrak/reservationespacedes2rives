@@ -30,6 +30,9 @@ export const createHolidayReservations = async (
   submissionTimestamp: number
 ): Promise<ReservationResult> => {
   try {
+    console.log(`DEBUG: Début de createHolidayReservations avec ${selectedDates.length} dates (timestamp: ${submissionTimestamp})`);
+    console.log("DEBUG: Dates à réserver:", selectedDates.map(d => d.date.toISOString()));
+    
     const { data: childData, error: childError } = await supabase
       .from("children")
       .select("first_name, last_name, school_class")
@@ -65,6 +68,12 @@ export const createHolidayReservations = async (
 
     // Check available spots for each date and create reservations
     for (const dateOption of selectedDates) {
+      // S'assurer que la date est une instance valide de Date
+      if (!(dateOption.date instanceof Date) || isNaN(dateOption.date.getTime())) {
+        console.error(`Date invalide détectée: ${dateOption.date}, ignorée`);
+        continue;
+      }
+      
       const dateStr = format(dateOption.date, "yyyy-MM-dd");
       console.log(`DEBUG: Traitement de la date ${dateStr} (timestamp: ${submissionTimestamp})`);
       
@@ -80,7 +89,8 @@ export const createHolidayReservations = async (
       });
 
       if (!period) {
-        throw new Error(`Période non trouvée pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
+        console.error(`Période non trouvée pour la date ${dateStr}`);
+        continue; // Skip to next date rather than throwing
       }
 
       // Déterminer la catégorie de la classe (maternelle, primaire, ado)
@@ -102,7 +112,10 @@ export const createHolidayReservations = async (
         .eq("id", period.id)
         .single();
         
-      if (periodError) throw periodError;
+      if (periodError) {
+        console.error(`Erreur lors de la récupération des données de période: ${periodError.message}`);
+        continue; // Skip to next date rather than throwing
+      }
       
       const maxSpots = periodData[`max_participants_${classGroup}`];
       
@@ -114,7 +127,10 @@ export const createHolidayReservations = async (
         .eq("reservation_date", dateStr)
         .eq("status", "confirmed");
         
-      if (reservationsError) throw reservationsError;
+      if (reservationsError) {
+        console.error(`Erreur lors de la vérification des réservations existantes: ${reservationsError.message}`);
+        continue; // Skip to next date rather than throwing
+      }
       
       // Filtrer les réservations par groupe de classe
       const reservationsCount = reservations.filter(res => {
@@ -132,6 +148,7 @@ export const createHolidayReservations = async (
       
       // Calculer les places restantes
       const spotsLeft = maxSpots - reservationsCount;
+      console.log(`DEBUG: Places restantes pour ${dateStr}, classe ${schoolClass}: ${spotsLeft}`);
 
       if (spotsLeft <= 0) {
         return {
@@ -152,10 +169,14 @@ export const createHolidayReservations = async (
         .eq("reservation_date", dateStr)
         .maybeSingle();
 
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error(`Erreur lors de la vérification des réservations existantes: ${checkError.message}`);
+        continue; // Skip to next date rather than throwing
+      }
 
       if (existingReservation) {
-        throw new Error(`Une réservation existe déjà pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
+        console.log(`Réservation existante pour la date ${dateStr}, ignorée`);
+        continue; // Skip to next date rather than throwing
       }
 
       // Create the reservation in the database
@@ -174,7 +195,10 @@ export const createHolidayReservations = async (
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error(`Erreur lors de l'insertion de la réservation: ${insertError.message}`);
+        continue; // Skip to next date rather than throwing
+      }
       
       console.log(`DEBUG: Réservation créée avec succès pour la date ${dateStr}, ID: ${insertedReservation?.id} (timestamp: ${submissionTimestamp})`);
       
@@ -183,13 +207,19 @@ export const createHolidayReservations = async (
       }
     }
 
+    console.log(`DEBUG: ${successfulReservations.length} réservations créées avec succès sur ${selectedDates.length} demandées`);
+
+    // Even if some dates failed, return success if at least one reservation was created
     return {
-      success: true,
+      success: successfulReservations.length > 0,
       childData,
       periodId,
       periodName,
       successfulReservations,
-      reservationNumber
+      reservationNumber,
+      error: successfulReservations.length < selectedDates.length 
+        ? `${selectedDates.length - successfulReservations.length} date(s) n'ont pas pu être réservées.` 
+        : undefined
     };
   } catch (error: any) {
     console.error(`DEBUG: Erreur lors de la création des réservations: ${error.message} (timestamp: ${submissionTimestamp})`);

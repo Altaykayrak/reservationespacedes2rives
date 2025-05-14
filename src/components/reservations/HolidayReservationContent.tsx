@@ -1,5 +1,5 @@
+
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
@@ -125,6 +125,23 @@ export const HolidayReservationContent = ({
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
+  // Appliquer les options globales à toutes les dates sélectionnées
+  const applyOptionsToAllDates = (option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
+    if (option === 'withoutMeal') {
+      setWithoutMeal(value);
+    } else {
+      setEarlyDropoff(value);
+    }
+    
+    // Appliquer l'option à toutes les dates sélectionnées
+    setSelectedDates(prev => 
+      prev.map(dateOption => ({
+        ...dateOption,
+        [option]: value
+      }))
+    );
+  };
+
   // Filtrer les enfants en fonction de leur classe et de la période sélectionnée
   useEffect(() => {
     if (!allChildren || !selectedPeriod) return;
@@ -195,6 +212,17 @@ export const HolidayReservationContent = ({
     console.log(`DEBUG: Bouton cliqué - Nombre de dates sélectionnées: ${selectedDates.length}`);
     
     if (!isSubmitting) {
+      // Vérifier que toutes les dates sont des instances valides
+      const validDates = selectedDates.filter(
+        d => d.date instanceof Date && !isNaN(d.date.getTime())
+      );
+      
+      if (validDates.length !== selectedDates.length) {
+        console.error("Certaines dates sont invalides:", 
+          selectedDates.filter(d => !(d.date instanceof Date) || isNaN(d.date.getTime())));
+      }
+      
+      console.log("DEBUG: Dates valides avant soumission:", validDates);
       handleSubmit();
     }
   };
@@ -251,6 +279,40 @@ export const HolidayReservationContent = ({
             selectedChild={selectedChild}
             setSelectedDates={setSelectedDates}
           />
+          
+          {/* Options globales pour toutes les dates */}
+          {selectedDates.length > 1 && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <div className="text-sm font-medium mb-2 text-blue-800">Options pour toutes les dates ({selectedDates.length} sélectionnées)</div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="global-without-meal"
+                    checked={withoutMeal}
+                    onCheckedChange={(checked) => {
+                      if (typeof checked === 'boolean') {
+                        applyOptionsToAllDates('withoutMeal', checked);
+                      }
+                    }}
+                  />
+                  <Label htmlFor="global-without-meal">Sans repas (toutes les dates)</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="global-early-dropoff"
+                    checked={earlyDropoff}
+                    onCheckedChange={(checked) => {
+                      if (typeof checked === 'boolean') {
+                        applyOptionsToAllDates('earlyDropoff', checked);
+                      }
+                    }}
+                  />
+                  <Label htmlFor="global-early-dropoff">Accueil avant 8h30 (toutes les dates)</Label>
+                </div>
+              </div>
+            </div>
+          )}
         </HolidayPeriodProvider>
       )}
 
@@ -267,7 +329,7 @@ export const HolidayReservationContent = ({
               Réservation en cours...
             </>
           ) : (
-            "Confirmer réservation"
+            `Confirmer réservation (${selectedDates.length} jour${selectedDates.length > 1 ? 's' : ''})`
           )}
         </Button>
       </div>
