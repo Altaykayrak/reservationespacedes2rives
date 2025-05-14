@@ -1,19 +1,22 @@
 
 import { Calendar, Info, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
 
 interface EmptyHolidayStateProps {
   message: string;
   subtitle: string;
   icon?: "calendar" | "info" | "error";
   className?: string;
+  children?: ReactNode;
 }
 
 export const EmptyHolidayState = ({ 
   message, 
   subtitle, 
   icon = "calendar",
-  className
+  className,
+  children
 }: EmptyHolidayStateProps) => {
   return (
     <div className={cn("p-8 border rounded-lg bg-blue-50 shadow-sm", className)}>
@@ -33,6 +36,7 @@ export const EmptyHolidayState = ({
         <p className="text-gray-600 max-w-2xl">
           {subtitle}
         </p>
+        {children}
       </div>
     </div>
   );
