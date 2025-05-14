@@ -45,7 +45,14 @@ export const SpotsBadge = ({ availableSpots, isFull, schoolClass = "", isLoading
   const [badgeColor, setBadgeColor] = useState<string>("");
   
   useEffect(() => {
-    console.log("SpotsBadge rendering with:", { availableSpots, isFull, schoolClass, isLoading });
+    console.log("SpotsBadge rendering with:", { 
+      availableSpots, 
+      isFull, 
+      schoolClass, 
+      isLoading,
+      valueType: availableSpots === null ? 'null' : typeof availableSpots 
+    });
+    
     setDisplayText(getSpotsBadgeText(availableSpots, schoolClass, isLoading));
     setBadgeColor(getSpotsBadgeColor(availableSpots));
   }, [availableSpots, isFull, schoolClass, isLoading]);

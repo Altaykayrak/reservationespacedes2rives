@@ -3,6 +3,26 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Translation function for school class categories
+const translateCategoryForDatabase = (schoolClass: string): string => {
+  // Normalize the input to handle case variations
+  const normalizedClass = schoolClass.trim().toUpperCase();
+  
+  // Match category patterns
+  if (["PS", "MS", "GS", "PETITE SECTION", "MOYENNE SECTION", "GRANDE SECTION"].includes(normalizedClass)) {
+    return "kindergarten";
+  } else if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(normalizedClass)) {
+    return "primary";
+  } else if (["6EME", "6ÈME", "5EME", "5ÈME", "4EME", "4ÈME", "3EME", "3ÈME", 
+              "SECONDE", "PREMIERE", "PREMIÈRE", "TERMINALE"].includes(normalizedClass)) {
+    return "teen";
+  }
+  
+  // Default to teen for other cases
+  console.log(`Category not explicitly mapped for class: ${schoolClass}, defaulting to teen`);
+  return "teen";
+};
+
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
   // Use React Query for data fetching
   const { data, isLoading, error } = useQuery({
@@ -15,10 +35,14 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       }
 
       try {
+        // Translate the schoolClass to the format expected by the database
+        const databaseCategory = translateCategoryForDatabase(schoolClass);
+        
         console.log("Calling check_holiday_spots_available with:", {
           period_id: periodId,
           reservation_date: date.toISOString().split('T')[0],
-          child_school_class: schoolClass
+          child_school_class: schoolClass,
+          translated_category: databaseCategory
         });
         
         const { data, error } = await supabase.rpc("check_holiday_spots_available", {
