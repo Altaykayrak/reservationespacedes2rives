@@ -30,6 +30,30 @@ export const useNonTeenPeriodFiltering = (
     gcTime: 10 * 60 * 1000,   // Garbage collection after 10 minutes
   });
 
+  // Fonction de tri pour les périodes de vacances
+  const sortHolidayPeriods = (periods: Tables<"available_holiday_periods">[]) => {
+    return [...periods].sort((a, b) => {
+      // Extraire les préfixes ETE-XX
+      const aMatch = a.name?.match(/^(ETE)-(\d+)$/);
+      const bMatch = b.name?.match(/^(ETE)-(\d+)$/);
+      
+      // Si les deux périodes sont des périodes d'été
+      if (aMatch && bMatch) {
+        // Comparer les numéros de périodes d'été
+        return parseInt(aMatch[2]) - parseInt(bMatch[2]);
+      }
+      
+      // Si seulement a est une période d'été, la mettre en premier
+      if (aMatch) return -1;
+      
+      // Si seulement b est une période d'été, la mettre en premier
+      if (bMatch) return 1;
+      
+      // Pour les autres périodes, conserver l'ordre chronologique
+      return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+    });
+  };
+
   // Filtrer les périodes spécifiques aux enfants non-adolescents
   useEffect(() => {
     if (holidayPeriods && classMappings && !periodsProcessed.current) {
@@ -49,16 +73,16 @@ export const useNonTeenPeriodFiltering = (
         const nonTeenPeriods = holidayPeriods.filter(
           period => nonTeenPeriodIds.includes(period.id)
         );
-        setFilteredPeriods(nonTeenPeriods);
+        setFilteredPeriods(sortHolidayPeriods(nonTeenPeriods));
       } else {
         // Sinon, afficher toutes les périodes par défaut
-        setFilteredPeriods(holidayPeriods);
+        setFilteredPeriods(sortHolidayPeriods(holidayPeriods));
       }
       
       periodsProcessed.current = true;
     } else if (holidayPeriods && !periodsProcessed.current) {
       // Si nous n'avons pas de mappings, utiliser toutes les périodes
-      setFilteredPeriods(holidayPeriods);
+      setFilteredPeriods(sortHolidayPeriods(holidayPeriods));
       periodsProcessed.current = true;
     }
   }, [holidayPeriods, classMappings]);

@@ -68,9 +68,53 @@ export const PeriodSelector = ({
       // Combiner et éliminer les doublons
       const uniquePeriods = [...new Map([...periodsWithTeenMapping, ...summerPeriods].map(item => [item.id, item])).values()];
       
-      setFilteredPeriods(uniquePeriods);
-    } else {
-      setFilteredPeriods(holidayPeriods);
+      // Trier selon l'ordre spécifique pour les périodes d'été
+      const sortedPeriods = [...uniquePeriods].sort((a, b) => {
+        // Extraire les préfixes ETE-XX
+        const aMatch = a.name?.match(/^(ETE)-(\d+)$/);
+        const bMatch = b.name?.match(/^(ETE)-(\d+)$/);
+        
+        // Si les deux périodes sont des périodes d'été
+        if (aMatch && bMatch) {
+          // Comparer les numéros de périodes d'été
+          return parseInt(aMatch[2]) - parseInt(bMatch[2]);
+        }
+        
+        // Si seulement a est une période d'été, la mettre en premier
+        if (aMatch) return -1;
+        
+        // Si seulement b est une période d'été, la mettre en premier
+        if (bMatch) return 1;
+        
+        // Pour les autres périodes, conserver l'ordre chronologique
+        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+      });
+      
+      setFilteredPeriods(sortedPeriods);
+    } else if (holidayPeriods) {
+      // Trier toutes les périodes selon l'ordre spécifique pour les périodes d'été
+      const sortedPeriods = [...holidayPeriods].sort((a, b) => {
+        // Extraire les préfixes ETE-XX
+        const aMatch = a.name?.match(/^(ETE)-(\d+)$/);
+        const bMatch = b.name?.match(/^(ETE)-(\d+)$/);
+        
+        // Si les deux périodes sont des périodes d'été
+        if (aMatch && bMatch) {
+          // Comparer les numéros de périodes d'été
+          return parseInt(aMatch[2]) - parseInt(bMatch[2]);
+        }
+        
+        // Si seulement a est une période d'été, la mettre en premier
+        if (aMatch) return -1;
+        
+        // Si seulement b est une période d'été, la mettre en premier
+        if (bMatch) return 1;
+        
+        // Pour les autres périodes, conserver l'ordre chronologique
+        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+      });
+      
+      setFilteredPeriods(sortedPeriods);
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
 
