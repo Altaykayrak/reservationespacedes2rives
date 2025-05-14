@@ -88,6 +88,14 @@ export const useReservationSubmission = (
         return;
       }
 
+      // Vérifier la contrainte de 3 jours minimum
+      if (selectedDates.length < 3) {
+        setMinimumDaysDialog({ isOpen: true });
+        setSubmissionInProgress(false);
+        setIsSubmitting(false);
+        return;
+      }
+
       // Détection de la route administrative
       const isAdminRoute = window.location.pathname.includes('/admin/');
       console.log("DEBUG: isAdminRoute détecté:", isAdminRoute, "pour pathname:", window.location.pathname);

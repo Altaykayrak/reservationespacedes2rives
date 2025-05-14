@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -114,6 +113,14 @@ export const TeenHolidayReservationContent = () => {
     setFilteredChildren(filtered);
   }, [allChildren, schoolClassCategories]);
 
+  // Calculer le nombre exact de jours sélectionnés valides
+  const validDatesCount = selectedDates.filter(d => 
+    d.date instanceof Date && !isNaN(d.date.getTime())
+  ).length;
+
+  // Vérifier si le nombre de jours sélectionnés est suffisant
+  const hasMinimumDays = validDatesCount >= 3;
+
   // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -166,7 +173,7 @@ export const TeenHolidayReservationContent = () => {
           <Button
             onClick={onSubmitClick}
             className="w-full"
-            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || isSubmitting}
+            disabled={!selectedChild || !selectedPeriod || selectedDates.length === 0 || !hasMinimumDays || isSubmitting}
             type="button"
           >
             {isSubmitting ? (

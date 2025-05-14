@@ -235,6 +235,9 @@ export const HolidayReservationContent = ({
     d.date instanceof Date && !isNaN(d.date.getTime())
   ).length;
 
+  // Vérifier si le nombre de jours sélectionnés est suffisant
+  const hasMinimumDays = validDatesCount >= 3;
+
   return (
     <div className="space-y-6">
       {invertSelectors ? (
@@ -271,7 +274,7 @@ export const HolidayReservationContent = ({
         <Button
           onClick={onSubmitClick}
           className="w-full md:w-auto"
-          disabled={!selectedChild || !selectedPeriod || validDatesCount === 0 || isSubmitting || isCM2SummerPeriod}
+          disabled={!selectedChild || !selectedPeriod || validDatesCount === 0 || !hasMinimumDays || isSubmitting || isCM2SummerPeriod}
           type="button"
         >
           {isSubmitting ? (

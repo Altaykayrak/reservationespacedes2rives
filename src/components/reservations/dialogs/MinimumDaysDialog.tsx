@@ -29,7 +29,7 @@ export const MinimumDaysDialog = ({
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-gray-700">
-            Vous devez sélectionner au minimum 3 jours par semaine pendant les vacances.
+            Veuillez sélectionner au moins 3 jours pour valider votre réservation.
           </p>
         </div>
         <DialogFooter>
