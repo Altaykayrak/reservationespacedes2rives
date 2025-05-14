@@ -1,50 +1,125 @@
 
-import Index from "@/pages/Index";
-import Login from "@/pages/Login";
-import Signup from "@/pages/Signup";
-import ForgotPassword from "@/pages/ForgotPassword";
-import ResetPassword from "@/pages/ResetPassword";
-import Profile from "@/pages/Profile";
-import Reservations from "@/pages/WednesdayReservations";
-import TeenHolidayReservations from "@/pages/TeenHolidayReservations";
-import Account from "@/pages/Account";
-import Contact from "@/pages/Contact";
-import Admin from "@/pages/admin/AdminPage";
-import { AdminUsers } from "@/pages/admin/AdminUsers";
-import AdminReservations from "@/pages/admin/AdminReservations";
-import AdminNewReservation from "@/pages/admin/AdminNewReservation";
-import AdminNewHolidayReservation from "@/pages/admin/AdminNewHolidayReservation";
-import AdminNewTeenHolidayReservation from "@/pages/admin/AdminNewTeenHolidayReservation";
-import NotFound from "@/pages/NotFound";
-import { Toaster } from "@/components/ui/toaster";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorFallback } from "./components/ErrorFallback";
+
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
+import Children from "./pages/Children";
+import WednesdayReservations from "./pages/WednesdayReservations";
+import HolidayReservations from "./pages/HolidayReservations";
+import TeenHolidayReservations from "./pages/TeenHolidayReservations";
+import RdvPage from "./pages/Rdv";
+import HolidayProgram from "./pages/HolidayProgram";
+import TermsOfService from "./pages/TermsOfService";
+import TermsOfOperation from "./pages/TermsOfOperation";
+import Prices from "./pages/Prices";
+import { AdminPage } from "./pages/admin/AdminPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminReservations from "./pages/admin/AdminReservations";
+import AdminProfiles from "./pages/admin/AdminProfiles";
+import AdminChildren from "./pages/admin/AdminChildren";
+import AdminAuthorizedEmails from "./pages/admin/AdminAuthorizedEmails";
+import AdminWednesdays from "./pages/admin/AdminWednesdays";
+import AdminHolidays from "./pages/admin/AdminHolidays";
+import AdminRdv from "./pages/admin/AdminRdv";
+import AdminNewReservation from "./pages/admin/AdminNewReservation";
+import AdminNewHolidayReservation from "./pages/admin/AdminNewHolidayReservation";
+import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+    },
+  },
+});
 
 function App() {
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      console.error("Caught an error:", error);
+    }
+  }, [error]);
+
   return (
-    <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/prices" element={<Prices />} />
+            
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/children" element={<Children />} />
+              <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
+              <Route path="/holiday-reservations" element={<HolidayReservations />} />
+              <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
+              <Route path="/rdv" element={<RdvPage />} />
+            </Route>
+            
+            <Route path="/holiday-program" element={<HolidayProgram />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/terms-of-operation" element={<TermsOfOperation />} />
+            
+            {/* Admin routes */}
+            <Route path="/admin" element={<AdminPage />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="reservations" element={<AdminReservations />} />
+              <Route path="profiles" element={<AdminProfiles />} />
+              <Route path="children" element={<AdminChildren />} />
+              <Route path="authorized-emails" element={<AdminAuthorizedEmails />} />
+              <Route path="wednesdays" element={<AdminWednesdays />} />
+              <Route path="holidays" element={<AdminHolidays />} />
+              <Route path="rdv" element={<AdminRdv />} />
+              <Route path="new-reservation" element={<AdminNewReservation />} />
+              <Route path="new-holiday-reservation" element={<AdminNewHolidayReservation />} />
+              <Route path="new-teenholiday-reservation" element={<AdminNewTeenHolidayReservation />} />
+              <Route path="reservations/new" element={<AdminNewReservation />} />
+              <Route path="reservations/new-holiday" element={<AdminNewHolidayReservation />} />
+              <Route path="reservations/new-teen-holiday" element={<AdminNewTeenHolidayReservation />} />
+            </Route>
+
+            <Route path="*" element={<div>Page not found</div>} />
+          </Routes>
+        </Router>
+      </ErrorBoundary>
       <Toaster />
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/reservations" element={<Reservations />} />
-        <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
-        <Route path="/account" element={<Account />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/reservations" element={<AdminReservations />} />
-        <Route path="/admin/reservations/new" element={<AdminNewReservation />} />
-        <Route path="/admin/reservations/new-holiday" element={<AdminNewHolidayReservation />} />
-        <Route path="/admin/reservations/new-teen-holiday" element={<AdminNewTeenHolidayReservation />} />
-        <Route path="/admin/new-teenholiday-reservation" element={<AdminNewTeenHolidayReservation />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
 export default App;
+
+function ProtectedRoute() {
+  const isLoggedIn = localStorage.getItem("sb-dddtybmradplydzymrly-auth-token");
+
+  return isLoggedIn ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/login" replace />
+  );
+}

@@ -50,8 +50,6 @@ export const DateItem = ({
       childSchoolClass, 
       periodId, 
       date: date.toISOString(), 
-      isSelected,
-      isReserved,
       isTeenClass 
     });
     
@@ -73,40 +71,18 @@ export const DateItem = ({
     
     // La date doit être désactivée uniquement si elle est déjà réservée OU si spotsLeft est strictement égal à 0
     const isDisabled = isReserved || (typeof spotsLeft === 'number' && spotsLeft === 0);
-    
-    // Log pour vérifier ce qui bloque éventuellement le clic
-    console.log(`Date ${formattedDate} - Final isDisabled=${isDisabled}, isReserved=${isReserved}`);
-
-    const handleClick = (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      if (!isDisabled) {
-        console.log("DateItem - Click handler triggered for date:", formattedDate);
-        onDateToggle();
-      }
-    };
-    
-    const handleCheckboxChange = () => {
-      if (!isDisabled) {
-        console.log("Clicked checkbox for date:", formattedDate);
-        onDateToggle();
-      }
-    };
 
     return (
       <div 
         className={`relative space-y-1 p-2 rounded-lg transition-colors ${
           isReserved ? 'bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-100/30'
         }`}
-        onClick={handleClick}
-        style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
       >
         <div className="flex items-start gap-2">
           <Checkbox
             id={safeDate.toISOString()}
             checked={isSelected}
-            onCheckedChange={handleCheckboxChange}
+            onCheckedChange={onDateToggle}
             disabled={isDisabled}
             className={`mt-1 ${isReserved ? 'border-gray-300' : 'border-blue-200'}`}
           />
@@ -117,15 +93,6 @@ export const DateItem = ({
                 className={`cursor-pointer font-medium ${
                   isDisabled ? 'text-gray-500' : 'text-blue-900'
                 }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  
-                  if (!isDisabled) {
-                    console.log("Label clicked for date:", formattedDate);
-                    onDateToggle();
-                  }
-                }}
               >
                 {format(safeDate, "EEEE d MMMM yyyy", { locale: fr })}
               </Label>
