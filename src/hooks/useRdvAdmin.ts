@@ -1,57 +1,32 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Rdv } from "@/types/rdv";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export function useRdvAdmin() {
-  const { toast } = useToast();
+  const { data: isAdmin, isLoading: isAdminLoading } = useAdminAuth();
   const [rdvList, setRdvList] = useState<Rdv[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  // Check if user is admin
-  useEffect(() => {
-    async function checkAdmin() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.error("No user found when checking admin status");
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
-        
-        const { data, error } = await supabase.rpc('is_admin', { user_id: user.id });
-        if (error) {
-          console.error("Error checking admin status:", error);
-          setIsAdmin(false);
-        } else {
-          console.log("Admin status check result:", data);
-          setIsAdmin(!!data);
-        }
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    checkAdmin();
-  }, []);
 
   // Fetch all rdv
   useEffect(() => {
     async function fetchRdv() {
+      // Attendre que la vérification admin soit terminée
+      if (isAdminLoading) {
+        return;
+      }
+      
       if (!isAdmin) {
-        console.log("User is not admin, not fetching RDV data");
+        console.log("[useRdvAdmin] Utilisateur non administrateur, pas de chargement des RDV");
         setLoading(false);
         return;
       }
       
       try {
         setLoading(true);
-        console.log("Fetching RDV data for admin user");
+        console.log("[useRdvAdmin] Chargement des RDV pour l'administrateur");
         
         // Fetch RDV data without the profiles join
         const { data, error } = await supabase
@@ -61,11 +36,11 @@ export function useRdvAdmin() {
           .order('heure_debut');
 
         if (error) {
-          console.error("Error fetching RDVs:", error);
+          console.error("[useRdvAdmin] Erreur lors du chargement des RDV:", error);
           throw error;
         }
         
-        console.log("RDV data fetched successfully:", data?.length || 0, "records");
+        console.log("[useRdvAdmin] RDV chargés avec succès:", data?.length || 0, "enregistrements");
         
         // Now fetch user profiles data separately for reserved appointments
         const reservedRdvs = data.filter(rdv => rdv.status === 'réservé' && rdv.user_id);
@@ -75,7 +50,7 @@ export function useRdvAdmin() {
         
         // Only fetch profiles if there are any reserved appointments
         if (reservedRdvs.length > 0) {
-          console.log("Fetching profiles for", reservedRdvs.length, "reserved appointments");
+          console.log("[useRdvAdmin] Chargement des profils pour", reservedRdvs.length, "rendez-vous réservés");
           
           // Fetch profiles for reserved appointments
           const userIds = reservedRdvs.map(rdv => rdv.user_id);
@@ -85,9 +60,9 @@ export function useRdvAdmin() {
             .in('id', userIds);
             
           if (profilesError) {
-            console.error("Error fetching profiles:", profilesError);
+            console.error("[useRdvAdmin] Erreur lors du chargement des profils:", profilesError);
           } else if (profilesData) {
-            console.log("Profile data fetched successfully:", profilesData.length, "profiles");
+            console.log("[useRdvAdmin] Profils chargés avec succès:", profilesData.length, "profils");
             
             // Match profiles to RDVs
             results = data.map(rdv => {
@@ -115,19 +90,15 @@ export function useRdvAdmin() {
         
         setRdvList(results);
       } catch (error) {
-        console.error("Error fetching RDVs:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les rendez-vous",
-          variant: "destructive",
-        });
+        console.error("[useRdvAdmin] Erreur lors du chargement des RDV:", error);
+        toast.error("Impossible de charger les rendez-vous");
       } finally {
         setLoading(false);
       }
     }
 
     fetchRdv();
-  }, [isAdmin, toast]);
+  }, [isAdmin, isAdminLoading]);
 
   const handleDeleteRdv = async (id: string) => {
     try {
@@ -138,20 +109,13 @@ export function useRdvAdmin() {
 
       if (error) throw error;
 
-      toast({
-        title: "Succès",
-        description: "Le rendez-vous a été supprimé avec succès",
-      });
+      toast.success("Le rendez-vous a été supprimé avec succès");
 
       // Update local state
       setRdvList(rdvList.filter(rdv => rdv.id !== id));
     } catch (error) {
-      console.error("Error deleting RDV:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer le rendez-vous",
-        variant: "destructive",
-      });
+      console.error("[useRdvAdmin] Erreur lors de la suppression du RDV:", error);
+      toast.error("Impossible de supprimer le rendez-vous");
     }
   };
 
@@ -161,8 +125,8 @@ export function useRdvAdmin() {
 
   return {
     rdvList,
-    loading,
-    isAdmin,
+    loading: loading || isAdminLoading,
+    isAdmin: !!isAdmin,
     handleDeleteRdv,
     handleAddNewRdv
   };

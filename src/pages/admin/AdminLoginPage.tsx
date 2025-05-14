@@ -2,68 +2,61 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogFooter,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import { LoginForm } from "@/components/forms/LoginForm";
 import { AuthLayout } from "@/components/layouts/AuthLayout";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogAction } from "@/components/ui/alert-dialog";
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  
   const navigate = useNavigate();
+  const { user, session, loading } = useAuth();
 
   useEffect(() => {
     const checkAdminAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
+        console.log("[AdminLoginPage] Vérification de l'authentification administrateur...");
+
+        // Attendre que le statut d'authentification soit déterminé
+        if (loading) {
+          console.log("[AdminLoginPage] Chargement de la session en cours...");
+          return;
+        }
+
         if (session?.user) {
+          console.log("[AdminLoginPage] Session trouvée, vérification si admin:", session.user.id);
           // Vérifier si l'utilisateur est admin
           const { data: isAdmin, error: adminError } = await supabase
             .rpc('is_admin', { user_id: session.user.id });
 
           if (adminError) {
-            console.error("Error checking admin status:", adminError);
+            console.error("[AdminLoginPage] Erreur lors de la vérification du statut admin:", adminError);
             setIsLoading(false);
             return;
           }
 
-          // Ne plus rediriger même si l'utilisateur est admin
-          setIsLoading(false);
-        } else {
-          // Pas de session, on laisse l'utilisateur sur la page de login
-          setIsLoading(false);
+          if (isAdmin) {
+            console.log("[AdminLoginPage] Utilisateur authentifié comme admin, redirection vers le panneau admin");
+            // On ne redirige plus automatiquement, mais on peut notifier l'utilisateur qu'il est déjà connecté
+            toast.success("Vous êtes déjà connecté en tant qu'administrateur");
+          }
         }
+        
+        setIsLoading(false);
       } catch (error) {
-        console.error("Error checking authentication:", error);
+        console.error("[AdminLoginPage] Erreur lors de la vérification de l'authentification:", error);
         setIsLoading(false);
       }
     };
 
     checkAdminAuth();
-  }, [navigate]);
+  }, [navigate, session, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,13 +70,15 @@ const AdminLoginPage = () => {
 
     try {
       setIsLoading(true);
+      
+      console.log("[AdminLoginPage] Tentative de connexion avec email:", email);
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
       });
 
       if (authError) {
-        console.error("Authentication error:", authError);
+        console.error("[AdminLoginPage] Erreur d'authentification:", authError);
         setError("Email ou mot de passe incorrect");
         setShowErrorDialog(true);
         setIsLoading(false);
@@ -97,12 +92,14 @@ const AdminLoginPage = () => {
         return;
       }
 
+      console.log("[AdminLoginPage] Connexion réussie, vérification des droits admin pour:", authData.user.id);
+      
       // Vérifier si l'utilisateur est admin
       const { data: isAdmin, error: adminError } = await supabase
         .rpc('is_admin', { user_id: authData.user.id });
 
       if (adminError) {
-        console.error("Error checking admin role:", adminError);
+        console.error("[AdminLoginPage] Erreur lors de la vérification du rôle admin:", adminError);
         setError("Une erreur est survenue lors de la vérification des droits d'accès");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
@@ -111,6 +108,7 @@ const AdminLoginPage = () => {
       }
 
       if (!isAdmin) {
+        console.log("[AdminLoginPage] L'utilisateur n'est pas admin, déconnexion");
         setError("Vous n'avez pas les droits d'accès administrateur");
         setShowErrorDialog(true);
         await supabase.auth.signOut();
@@ -118,18 +116,17 @@ const AdminLoginPage = () => {
         return;
       }
 
-      toast({
-        title: "Succès",
-        description: "Connexion administrateur réussie"
-      });
+      console.log("[AdminLoginPage] Connexion admin réussie!");
+      toast.success("Connexion administrateur réussie");
       
-      // Ne plus rediriger automatiquement
-      setIsLoading(false);
-
+      // Rediriger vers le panneau d'administration après une connexion réussie
+      navigate("/admin");
+      
     } catch (err) {
-      console.error("Connection error:", err);
+      console.error("[AdminLoginPage] Erreur de connexion:", err);
       setError("Une erreur est survenue lors de la connexion");
       setShowErrorDialog(true);
+    } finally {
       setIsLoading(false);
     }
   };

@@ -42,15 +42,57 @@ function App() {
         <Route path="/holiday-program" element={<HolidayProgram />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
         
-        {/* Toutes les routes sont désormais accessibles sans protection */}
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/children" element={<Children />} />
-        <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
-        <Route path="/holiday-reservations" element={<HolidayReservations />} />
-        <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
-        <Route path="/rdv" element={<RdvPage />} />
+        {/* Routes protégées par ProtectedRoute */}
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/children" 
+          element={
+            <ProtectedRoute>
+              <Children />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/wednesday-reservations" 
+          element={
+            <ProtectedRoute>
+              <WednesdayReservations />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/holiday-reservations" 
+          element={
+            <ProtectedRoute>
+              <HolidayReservations />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/teenholiday-reservations" 
+          element={
+            <ProtectedRoute>
+              <TeenHolidayReservations />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/rdv" 
+          element={
+            <ProtectedRoute>
+              <RdvPage />
+            </ProtectedRoute>
+          } 
+        />
         
-        {/* Routes admin */}
+        {/* Routes admin avec vérification admin intégrée dans AdminPage */}
         <Route path="/admin" element={<AdminPage />}>
           <Route index element={<AdminDashboard />} />
           <Route path="profiles" element={<AdminProfiles />} />

@@ -8,6 +8,22 @@ import { useRdvAdmin } from "@/hooks/useRdvAdmin";
 const AdminRdv = () => {
   const { rdvList, loading, isAdmin, handleDeleteRdv, handleAddNewRdv } = useRdvAdmin();
 
+  if (loading) {
+    return (
+      <div>
+        <AdminNavbar />
+        <div className="container mx-auto p-4">
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-gray-600">Chargement des rendez-vous...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div>
