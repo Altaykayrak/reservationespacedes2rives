@@ -15,7 +15,8 @@ import { useEffect } from "react";
 
 const AdminHolidays = () => {
   const { toast } = useToast();
-  const { data: isAdmin, isLoading: isAdminLoading } = useAdminAuth();
+  const { data: adminData, isLoading: isAdminLoading } = useAdminAuth();
+  const isAdmin = adminData?.isAdmin || false;
   
   const { data: holidays, refetch, isLoading, error } = useQuery({
     queryKey: ["available_holiday_periods"],
