@@ -41,14 +41,12 @@ function App() {
         <Route path="/admin-login" element={<AdminLoginPage />} />
         
         {/* Routes protégées par authentification */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/children" element={<Children />} />
-          <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
-          <Route path="/holiday-reservations" element={<HolidayReservations />} />
-          <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
-          <Route path="/rdv" element={<RdvPage />} />
-        </Route>
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/children" element={<ProtectedRoute><Children /></ProtectedRoute>} />
+        <Route path="/wednesday-reservations" element={<ProtectedRoute><WednesdayReservations /></ProtectedRoute>} />
+        <Route path="/holiday-reservations" element={<ProtectedRoute><HolidayReservations /></ProtectedRoute>} />
+        <Route path="/teenholiday-reservations" element={<ProtectedRoute><TeenHolidayReservations /></ProtectedRoute>} />
+        <Route path="/rdv" element={<ProtectedRoute><RdvPage /></ProtectedRoute>} />
         
         {/* Routes admin - accessibles sans authentification */}
         <Route path="/admin" element={<AdminPage />}>
