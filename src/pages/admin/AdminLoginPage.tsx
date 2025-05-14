@@ -50,13 +50,7 @@ const AdminLoginPage = () => {
             return;
           }
 
-          // Ne rediriger que si l'utilisateur est admin
-          if (isAdmin) {
-            navigate("/admin");
-            return;
-          }
-          
-          // Si l'utilisateur est connecté mais n'est pas admin, on le laisse sur la page
+          // Ne plus rediriger même si l'utilisateur est admin
           setIsLoading(false);
         } else {
           // Pas de session, on laisse l'utilisateur sur la page de login
@@ -129,7 +123,8 @@ const AdminLoginPage = () => {
         description: "Connexion administrateur réussie"
       });
       
-      navigate("/admin");
+      // Ne plus rediriger automatiquement
+      setIsLoading(false);
 
     } catch (err) {
       console.error("Connection error:", err);

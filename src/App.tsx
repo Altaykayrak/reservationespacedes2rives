@@ -14,6 +14,7 @@ import TermsOfOperation from "./pages/TermsOfOperation";
 import RdvPage from "./pages/Rdv";
 import { AdminPage } from "./pages/admin/AdminPage";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
+import Register from "./pages/Register";
 
 // Import des pages admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -35,20 +36,21 @@ function App() {
         {/* Routes publiques */}
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/prices" element={<Prices />} />
         <Route path="/terms-of-operation" element={<TermsOfOperation />} />
         <Route path="/holiday-program" element={<HolidayProgram />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
         
-        {/* Routes protégées par authentification */}
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/children" element={<ProtectedRoute><Children /></ProtectedRoute>} />
-        <Route path="/wednesday-reservations" element={<ProtectedRoute><WednesdayReservations /></ProtectedRoute>} />
-        <Route path="/holiday-reservations" element={<ProtectedRoute><HolidayReservations /></ProtectedRoute>} />
-        <Route path="/teenholiday-reservations" element={<ProtectedRoute><TeenHolidayReservations /></ProtectedRoute>} />
-        <Route path="/rdv" element={<ProtectedRoute><RdvPage /></ProtectedRoute>} />
+        {/* Toutes les routes sont désormais accessibles sans protection */}
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/children" element={<Children />} />
+        <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
+        <Route path="/holiday-reservations" element={<HolidayReservations />} />
+        <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
+        <Route path="/rdv" element={<RdvPage />} />
         
-        {/* Routes admin - accessibles sans authentification */}
+        {/* Routes admin */}
         <Route path="/admin" element={<AdminPage />}>
           <Route index element={<AdminDashboard />} />
           <Route path="profiles" element={<AdminProfiles />} />

@@ -55,12 +55,8 @@ export const useLoginForm = () => {
         
         toast.success("Connexion réussie");
         
-        // Attendre un moment pour assurer que la session est bien enregistrée
-        setTimeout(() => {
-          // Forcer un rafraîchissement complet de la page pour s'assurer que 
-          // tous les composants reconnaissent la nouvelle session
-          window.location.href = '/profile';
-        }, 1000);
+        // Ne plus rediriger l'utilisateur
+        setIsLoading(false);
       } else {
         setError("Session non établie. Veuillez réessayer.");
         setIsLoading(false);

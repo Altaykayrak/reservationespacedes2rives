@@ -1,6 +1,6 @@
 
 import { ReactNode, useEffect } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
@@ -22,20 +22,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       "Initialisé:", initialized);
     
     console.log("[ProtectedRoute] Route actuelle:", location.pathname, "Admin route:", isAdminRoute);
-    
-    if (!user && !loading && initialized && !isAdminRoute) {
-      console.warn("[ProtectedRoute] Protection activée: Redirection vers /login car non authentifié");
-    }
   }, [user, loading, location, isAdminRoute, initialized]);
   
-  // Accès direct aux routes admin sans authentification
-  if (isAdminRoute) {
-    console.log("[ProtectedRoute] Accès autorisé à la route admin sans vérification d'authentification");
-    return <>{children}</>;
-  }
-  
   // Pendant le chargement initial, afficher un indicateur
-  // Ne pas rediriger tant que l'authentification n'est pas initialisée
   if (loading || !initialized) {
     console.log("[ProtectedRoute] Chargement en cours ou initialisation en attente...");
     return (
@@ -48,13 +37,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
   
-  // Si non authentifié et pas sur une route admin, rediriger vers la page de connexion
-  if (!user && !isAdminRoute) {
-    console.warn("[ProtectedRoute] Redirection vers /login car non authentifié");
-    return <Navigate to="/login" replace />;
-  }
-  
-  // Authentifié ou sur une route admin, autoriser l'accès
+  // Autoriser l'accès à toutes les pages, qu'il y ait une session ou non
   console.log("[ProtectedRoute] Accès autorisé");
   return <>{children}</>;
 }

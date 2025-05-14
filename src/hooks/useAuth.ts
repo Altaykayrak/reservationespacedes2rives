@@ -101,11 +101,10 @@ export const useAuth = () => {
       localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
       console.log("useAuth: Déconnexion réussie, token supprimé du localStorage");
       
-      // Forcer le rafraîchissement de la page pour réinitialiser complètement l'état
-      window.location.href = "/login";
+      // Ne plus rediriger automatiquement
+      setLoading(false);
     } catch (error) {
       console.error("useAuth: Erreur inattendue lors de la déconnexion:", error);
-    } finally {
       setLoading(false);
     }
   };
