@@ -7,6 +7,7 @@ import Children from "./pages/Children";
 import WednesdayReservations from "./pages/WednesdayReservations";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import TeenHolidayReservations from "./pages/TeenHolidayReservations";
+import HolidayReservations from "./pages/HolidayReservations";
 import HolidayProgram from "./pages/HolidayProgram";
 import Prices from "./pages/Prices";
 import TermsOfOperation from "./pages/TermsOfOperation";
@@ -26,6 +27,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/children" element={<Children />} />
           <Route path="/wednesday-reservations" element={<WednesdayReservations />} />
+          <Route path="/holiday-reservations" element={<HolidayReservations />} />
           <Route path="/teenholiday-reservations" element={<TeenHolidayReservations />} />
           <Route path="/rdv" element={<RdvPage />} />
         </Route>
