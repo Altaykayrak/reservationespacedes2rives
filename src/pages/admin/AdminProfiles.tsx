@@ -1,7 +1,5 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminProfiles } from "@/hooks/useAdminProfiles";
 import { AdminProfilesFilters } from "@/components/admin/profiles/AdminProfilesFilters";
 import { AdminProfilesActions } from "@/components/admin/profiles/AdminProfilesActions";
@@ -32,49 +30,46 @@ const AdminProfiles = () => {
   } = useAdminProfiles();
 
   return (
-    <div>
-      <AdminNavbar />
-      <div className="container mx-auto py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Liste des utilisateurs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AdminProfilesFilters
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              automaticPaymentFilter={automaticPaymentFilter}
-              setAutomaticPaymentFilter={setAutomaticPaymentFilter}
-              waitingFilter={waitingFilter}
-              setWaitingFilter={setWaitingFilter}
-              closedFilter={closedFilter}
-              setClosedFilter={setClosedFilter}
-              hasReservationsFilter={hasReservationsFilter}
-              setHasReservationsFilter={setHasReservationsFilter}
-            />
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">Liste des utilisateurs</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AdminProfilesFilters
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            automaticPaymentFilter={automaticPaymentFilter}
+            setAutomaticPaymentFilter={setAutomaticPaymentFilter}
+            waitingFilter={waitingFilter}
+            setWaitingFilter={setWaitingFilter}
+            closedFilter={closedFilter}
+            setClosedFilter={setClosedFilter}
+            hasReservationsFilter={hasReservationsFilter}
+            setHasReservationsFilter={setHasReservationsFilter}
+          />
 
-            <AdminProfilesStatus loading={loading} error={error} />
+          <AdminProfilesStatus loading={loading} error={error} />
 
-            {!loading && !error && (
-              <>
-                <AdminProfilesActions
-                  profiles={profiles}
-                  bulkActionLoading={bulkActionLoading}
-                  handleBulkWaitingChange={handleBulkWaitingChange}
-                  handleBulkClosedChange={handleBulkClosedChange}
-                />
-                
-                <AdminProfilesTable
-                  profiles={profiles}
-                  handleAutomaticPaymentChange={handleAutomaticPaymentChange}
-                  handleWaitingChange={handleWaitingChange}
-                  handleClosedChange={handleClosedChange}
-                />
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          {!loading && !error && (
+            <>
+              <AdminProfilesActions
+                profiles={profiles}
+                bulkActionLoading={bulkActionLoading}
+                handleBulkWaitingChange={handleBulkWaitingChange}
+                handleBulkClosedChange={handleBulkClosedChange}
+              />
+              
+              <AdminProfilesTable
+                profiles={profiles}
+                handleAutomaticPaymentChange={handleAutomaticPaymentChange}
+                handleWaitingChange={handleWaitingChange}
+                handleClosedChange={handleClosedChange}
+              />
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { AdminReservationForm } from "@/components/admin/reservations/AdminReservationForm";
 
 interface DateOption {
@@ -41,19 +40,16 @@ const AdminNewReservation = () => {
   console.log("Rendering AdminNewReservation"); // Ajout d'un log pour debug
 
   return (
-    <div>
-      <AdminNavbar />
-      <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Nouvelle réservation</h1>
-        <AdminReservationForm
-          selectedChild={selectedChild}
-          setSelectedChild={setSelectedChild}
-          selectedDates={selectedDates}
-          handleDateToggle={handleDateToggle}
-          handleOptionChange={handleOptionChange}
-          resetForm={resetForm}
-        />
-      </div>
+    <div className="container mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-8">Nouvelle réservation</h1>
+      <AdminReservationForm
+        selectedChild={selectedChild}
+        setSelectedChild={setSelectedChild}
+        selectedDates={selectedDates}
+        handleDateToggle={handleDateToggle}
+        handleOptionChange={handleOptionChange}
+        resetForm={resetForm}
+      />
     </div>
   );
 };

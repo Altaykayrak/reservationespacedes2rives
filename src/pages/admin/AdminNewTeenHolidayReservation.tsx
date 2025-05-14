@@ -1,5 +1,4 @@
 
-import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
 import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
 import { CalendarDays } from "lucide-react";
@@ -36,20 +35,15 @@ const AdminNewTeenHolidayReservation = () => {
 
   if (!isAdmin) {
     return (
-      <div>
-        <AdminNavbar />
-        <div className="container mx-auto p-8">
-          <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
-          <div>Vous devez être administrateur pour accéder à cette page.</div>
-        </div>
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
+        <div>Vous devez être administrateur pour accéder à cette page.</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <AdminNavbar />
-      
       <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
         <div className="space-y-2">
           <div className="flex items-center gap-3">

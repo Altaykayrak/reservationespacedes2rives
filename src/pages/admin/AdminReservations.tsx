@@ -1,5 +1,4 @@
 
-import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
 import { useAdminReservations } from "@/components/admin/reservations/hooks/useAdminReservations";
 import { AdminReservationsContent } from "@/components/admin/reservations/AdminReservationsContent";
@@ -19,64 +18,55 @@ const AdminReservations = () => {
 
   if (!isAdmin) {
     return (
-      <div>
-        <AdminNavbar />
-        <div className="container mx-auto p-8">
-          <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
-          <div>Vous devez être administrateur pour accéder à cette page.</div>
-        </div>
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
+        <div>Vous devez être administrateur pour accéder à cette page.</div>
       </div>
     );
   }
 
   if (queryError) {
     return (
-      <div>
-        <AdminNavbar />
-        <div className="container mx-auto p-8">
-          <h1 className="text-3xl font-bold mb-8">Gestion des réservations</h1>
-          <div className="text-red-500">
-            Erreur lors du chargement des réservations: {queryError.message}
-          </div>
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-8">Gestion des réservations</h1>
+        <div className="text-red-500">
+          Erreur lors du chargement des réservations: {queryError.message}
         </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <AdminNavbar />
-      <div className="container mx-auto p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Gestion des réservations</h1>
-          <div className="flex gap-4">
-            <Button onClick={() => navigate('/admin/reservations/new')}>
-              <CalendarPlus className="mr-2 h-4 w-4" />
-              Réserver des mercredis
-            </Button>
-            <Button 
-              variant="secondary" 
-              onClick={() => navigate('/admin/reservations/new-holiday')}
-            >
-              <CalendarPlus className="mr-2 h-4 w-4" />
-              Réserver des vacances
-            </Button>
-            <Button 
-              variant="default"
-              onClick={() => navigate('/admin/reservations/new-teen-holiday')}
-            >
-              <Users className="mr-2 h-4 w-4" />
-              Réserver Club Ado
-            </Button>
-          </div>
+    <div className="container mx-auto p-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Gestion des réservations</h1>
+        <div className="flex gap-4">
+          <Button onClick={() => navigate('/admin/reservations/new')}>
+            <CalendarPlus className="mr-2 h-4 w-4" />
+            Réserver des mercredis
+          </Button>
+          <Button 
+            variant="secondary" 
+            onClick={() => navigate('/admin/reservations/new-holiday')}
+          >
+            <CalendarPlus className="mr-2 h-4 w-4" />
+            Réserver des vacances
+          </Button>
+          <Button 
+            variant="default"
+            onClick={() => navigate('/admin/reservations/new-teen-holiday')}
+          >
+            <Users className="mr-2 h-4 w-4" />
+            Réserver Club Ado
+          </Button>
         </div>
-        <AdminReservationsContent
-          wednesdayReservations={data?.wednesdayReservations || null}
-          holidayReservations={data?.holidayReservations || null}
-          isLoading={isLoading}
-          refetchReservations={refetchReservations}
-        />
       </div>
+      <AdminReservationsContent
+        wednesdayReservations={data?.wednesdayReservations || null}
+        holidayReservations={data?.holidayReservations || null}
+        isLoading={isLoading}
+        refetchReservations={refetchReservations}
+      />
     </div>
   );
 };
