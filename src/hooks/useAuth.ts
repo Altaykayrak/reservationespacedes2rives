@@ -28,10 +28,6 @@ export const useAuth = () => {
       console.log("[useAuth] Event de déconnexion détecté");
       setUser(null);
       setSession(null);
-      
-      // Nettoyage explicite du localStorage - utilisation de la clé correcte
-      localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
-      console.log("[useAuth] Token supprimé du localStorage");
     }
     
     if (event === "TOKEN_REFRESHED") {
@@ -113,8 +109,7 @@ export const useAuth = () => {
       // Nettoyage explicite après déconnexion
       setUser(null);
       setSession(null);
-      localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
-      console.log("[useAuth] Déconnexion réussie, token supprimé du localStorage");
+      console.log("[useAuth] Déconnexion réussie");
       
       setLoading(false);
     } catch (error) {

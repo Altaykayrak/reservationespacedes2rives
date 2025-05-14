@@ -24,9 +24,6 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
-      // Réinitialiser le localStorage pour éviter les conflits de session
-      localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
-      
       // Connexion avec Supabase
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -50,16 +47,14 @@ export const useLoginForm = () => {
         toast.success("Connexion réussie");
         
         // Rediriger l'utilisateur vers la page de profil après connexion réussie
-        // UNIQUEMENT dans le cas de la page de login
-        navigate("/profile");
-        setIsLoading(false);
+        navigate("/profile", { replace: true });
       } else {
         setError("Session non établie. Veuillez réessayer.");
-        setIsLoading(false);
       }
     } catch (err) {
       console.error("[useLoginForm] Erreur complète:", err);
       setError("Une erreur est survenue. Veuillez réessayer plus tard.");
+    } finally {
       setIsLoading(false);
     }
   };

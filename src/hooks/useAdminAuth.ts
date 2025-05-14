@@ -1,54 +1,47 @@
 
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 
 export const useAdminAuth = () => {
-  const { user, session, loading } = useAuth();
-  const [isChecking, setIsChecking] = useState(true);
-
-  // Utiliser useQuery pour vérifier le statut admin
-  const result = useQuery({
+  const { user, loading } = useAuth();
+  
+  const {
+    data: isAdmin = false,
+    isLoading,
+    isError,
+    isFetching
+  } = useQuery({
     queryKey: ["isAdmin", user?.id],
     queryFn: async () => {
+      if (!user?.id) return false;
+      
       try {
-        if (!session?.user) {
-          console.log("[useAdminAuth] Pas de session active, retourne false");
-          return false;
+        console.log("[useAdminAuth] Vérification des droits admin pour:", user.id);
+        const { data, error } = await supabase.rpc('is_admin', { user_id: user.id });
+        
+        if (error) {
+          console.error("[useAdminAuth] Erreur lors de la vérification admin:", error);
+          throw error;
         }
         
-        console.log("[useAdminAuth] Vérification du statut admin pour l'utilisateur:", session.user.id);
-        const { data: isAdmin, error: adminError } = await supabase
-          .rpc('is_admin', { user_id: session.user.id });
-
-        if (adminError) {
-          console.error("[useAdminAuth] Erreur lors de la vérification du statut admin:", adminError);
-          toast.error("Erreur lors de la vérification des droits administrateur");
-          return false;
-        }
-
-        console.log("[useAdminAuth] Résultat de la vérification admin:", isAdmin);
-        return !!isAdmin;
-      } catch (error) {
-        console.error("[useAdminAuth] Exception dans useAdminAuth:", error);
-        toast.error("Une erreur est survenue lors de la vérification des droits administrateur");
-        return false;
-      } finally {
-        setIsChecking(false);
+        console.log("[useAdminAuth] Résultat vérification admin:", data);
+        return !!data;
+      } catch (err) {
+        console.error("[useAdminAuth] Erreur complète:", err);
+        throw err;
       }
     },
-    enabled: !!user && !loading,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // Considérer le statut admin valide pendant 5 minutes
-    gcTime: 10 * 60 * 1000, // Garder en cache pendant 10 minutes (anciennement cacheTime)
+    enabled: !!user?.id,
   });
 
-  // Exposer à la fois le résultat de la requête et l'état de chargement
+  // Déterminer si la vérification est toujours en cours
+  const isChecking = loading || (!loading && !!user && (isLoading || isFetching));
+  
   return {
-    ...result,
-    isChecking: loading || isChecking
+    data: isAdmin,
+    isLoading,
+    isError,
+    isChecking
   };
 };

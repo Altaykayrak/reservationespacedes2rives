@@ -1,7 +1,8 @@
 
 import { ReactNode, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,6 +11,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading, initialized, session } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Log des changements d'état d'authentification pour le débogage
   useEffect(() => {
@@ -23,7 +25,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     if (session) {
       console.log("[ProtectedRoute] Session valide jusqu'à:", new Date(session.expires_at * 1000).toLocaleString());
     }
-  }, [user, session, loading, location, initialized]);
+
+    // Si l'initialisation est terminée, l'utilisateur n'est pas en chargement et qu'il n'est pas connecté
+    if (initialized && !loading && !user && !location.pathname.startsWith("/admin")) {
+      console.log("[ProtectedRoute] Redirection vers la page de connexion");
+      toast.error("Veuillez vous connecter pour accéder à cette page");
+      navigate("/login", { replace: true });
+    }
+  }, [user, session, loading, location, initialized, navigate]);
   
   // Pendant le chargement initial, afficher un indicateur
   if (loading || !initialized) {
@@ -38,7 +47,20 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
   
-  // Autoriser l'accès à toutes les pages, qu'il y ait une session ou non
-  console.log("[ProtectedRoute] Accès autorisé à", location.pathname);
-  return <>{children}</>;
+  // Si l'utilisateur est connecté, afficher le contenu protégé
+  if (user) {
+    console.log("[ProtectedRoute] Accès autorisé à", location.pathname);
+    return <>{children}</>;
+  }
+  
+  // Si nous sommes sur une route admin, laisser la page admin gérer l'authentification
+  if (location.pathname.startsWith("/admin")) {
+    console.log("[ProtectedRoute] Route admin détectée, laissant AdminPage gérer l'authentification");
+    return <>{children}</>;
+  }
+  
+  // Cette partie ne devrait pas être atteinte grâce à la redirection dans useEffect
+  // Mais nous le gardons comme mesure de sécurité supplémentaire
+  console.log("[ProtectedRoute] Redirection de secours vers la page de connexion");
+  return null;
 }

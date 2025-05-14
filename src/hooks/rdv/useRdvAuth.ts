@@ -2,20 +2,23 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export const useRdvAuth = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, initialized } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && initialized && !user) {
+      console.log("[useRdvAuth] Utilisateur non authentifié, redirection vers la page de connexion");
+      toast.error("Veuillez vous connecter pour accéder à cette page");
       navigate("/login");
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, initialized]);
 
   return {
     user,
-    loading
+    loading: loading || !initialized
   };
 };
