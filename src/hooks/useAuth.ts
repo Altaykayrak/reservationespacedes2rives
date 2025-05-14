@@ -5,32 +5,39 @@ import { Session, User } from "@supabase/supabase-js";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
   const authSubscription = useRef<{ data: { subscription: any } } | null>(null);
 
   // Fonction pour gérer le changement d'état d'authentification
-  const handleAuthStateChange = useCallback((event: string, session: Session | null) => {
-    console.log("useAuth: Changement d'état d'authentification:", event, session?.user?.email || "pas de session");
+  const handleAuthStateChange = useCallback((event: string, newSession: Session | null) => {
+    console.log("[useAuth] État d'authentification modifié:", event, newSession?.user?.email || "pas de session");
     
     if (event === "INITIAL_SESSION") {
-      console.log("useAuth: Session initiale détectée");
+      console.log("[useAuth] Session initiale détectée");
     }
     
     if (event === "SIGNED_IN") {
-      console.log("useAuth: Event d'authentification positif détecté avec session");
+      console.log("[useAuth] Event d'authentification positif détecté avec session");
+      setSession(newSession);
+      setUser(newSession?.user || null);
     }
     
     if (event === "SIGNED_OUT") {
-      console.log("useAuth: Event de déconnexion détecté");
+      console.log("[useAuth] Event de déconnexion détecté");
       setUser(null);
-      // Supprimer les données de session du localStorage
+      setSession(null);
+      
+      // Nettoyage explicite du localStorage - utilisation de la clé correcte
       localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
+      console.log("[useAuth] Token supprimé du localStorage");
     }
     
-    // Ne pas modifier l'état user lors d'un SIGNED_OUT car nous voulons gérer cela séparément
-    if (event !== "SIGNED_OUT") {
-      setUser(session?.user || null);
+    if (event === "TOKEN_REFRESHED") {
+      console.log("[useAuth] Token rafraîchi avec succès");
+      setSession(newSession);
+      setUser(newSession?.user || null);
     }
     
     setLoading(false);
@@ -38,36 +45,42 @@ export const useAuth = () => {
 
   // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
-    console.log("useAuth: Vérification de la session existante...");
+    console.log("[useAuth] Initialisation du hook...");
     
     // Connexion à l'event listener pour les changements d'états d'authentification
     const setupAuthSubscription = async () => {
       if (authSubscription.current) {
-        return; // Éviter les abonnements multiples
+        console.log("[useAuth] L'abonnement existe déjà, évitement d'un double abonnement");
+        return;
       }
+      
+      console.log("[useAuth] Configuration de l'écouteur d'événements d'authentification");
       
       // Configuration de l'écouteur d'événements d'authentification
       authSubscription.current = supabase.auth.onAuthStateChange(handleAuthStateChange);
       
       // Récupération de la session actuelle
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log("[useAuth] Récupération de la session actuelle");
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         
-        if (session) {
-          console.log("useAuth: Session trouvée:", session.user.email);
-          setUser(session.user);
+        if (currentSession) {
+          console.log("[useAuth] Session trouvée:", currentSession.user.email);
+          setSession(currentSession);
+          setUser(currentSession.user);
         } else {
-          console.log("useAuth: Aucune session active");
+          console.log("[useAuth] Aucune session active trouvée");
           setUser(null);
-          // Nettoyage explicite du localStorage pour éviter les sessions partielles
-          localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
+          setSession(null);
         }
       } catch (error) {
-        console.error("useAuth: Erreur lors de la récupération de la session:", error);
+        console.error("[useAuth] Erreur lors de la récupération de la session:", error);
         setUser(null);
+        setSession(null);
       } finally {
         setLoading(false);
         setInitialized(true);
+        console.log("[useAuth] Initialisation terminée");
       }
     };
     
@@ -75,6 +88,7 @@ export const useAuth = () => {
     
     // Nettoyage de la souscription
     return () => {
+      console.log("[useAuth] Nettoyage de l'abonnement aux événements d'authentification");
       if (authSubscription.current) {
         const { data: { subscription } } = authSubscription.current;
         if (subscription && typeof subscription.unsubscribe === 'function') {
@@ -87,27 +101,27 @@ export const useAuth = () => {
 
   // Fonction pour se déconnecter
   const signOut = async () => {
-    console.log("useAuth: Déconnexion en cours...");
+    console.log("[useAuth] Déconnexion en cours...");
     setLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error("useAuth: Erreur lors de la déconnexion:", error);
+        console.error("[useAuth] Erreur lors de la déconnexion:", error);
         throw error;
       }
       
       // Nettoyage explicite après déconnexion
       setUser(null);
+      setSession(null);
       localStorage.removeItem("sb-dddtybmradplydzymrly-auth-token");
-      console.log("useAuth: Déconnexion réussie, token supprimé du localStorage");
+      console.log("[useAuth] Déconnexion réussie, token supprimé du localStorage");
       
-      // Ne plus rediriger automatiquement
       setLoading(false);
     } catch (error) {
-      console.error("useAuth: Erreur inattendue lors de la déconnexion:", error);
+      console.error("[useAuth] Erreur inattendue lors de la déconnexion:", error);
       setLoading(false);
     }
   };
 
-  return { user, loading, signOut, initialized };
+  return { user, session, loading, signOut, initialized };
 };

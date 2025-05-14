@@ -8,21 +8,22 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading, initialized } = useAuth();
+  const { user, loading, initialized, session } = useAuth();
   const location = useLocation();
   
-  // Vérifier si l'utilisateur est sur une route admin
-  const isAdminRoute = location.pathname.startsWith('/admin');
-  
-  // Log des changements d'état d'authentification
+  // Log des changements d'état d'authentification pour le débogage
   useEffect(() => {
     console.log("[ProtectedRoute] État d'authentification:", 
       loading ? "CHARGEMENT" : (user ? "AUTHENTIFIÉ" : "NON AUTHENTIFIÉ"), 
-      user ? "Session présente" : "Session absente",
+      session ? "Session présente" : "Session absente",
       "Initialisé:", initialized);
     
-    console.log("[ProtectedRoute] Route actuelle:", location.pathname, "Admin route:", isAdminRoute);
-  }, [user, loading, location, isAdminRoute, initialized]);
+    console.log("[ProtectedRoute] Route actuelle:", location.pathname);
+    
+    if (session) {
+      console.log("[ProtectedRoute] Session valide jusqu'à:", new Date(session.expires_at * 1000).toLocaleString());
+    }
+  }, [user, session, loading, location, initialized]);
   
   // Pendant le chargement initial, afficher un indicateur
   if (loading || !initialized) {
@@ -38,6 +39,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
   
   // Autoriser l'accès à toutes les pages, qu'il y ait une session ou non
-  console.log("[ProtectedRoute] Accès autorisé");
+  console.log("[ProtectedRoute] Accès autorisé à", location.pathname);
   return <>{children}</>;
 }

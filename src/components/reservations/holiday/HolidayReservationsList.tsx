@@ -6,6 +6,7 @@ import { HolidayChildReservationCard } from "./HolidayChildReservationCard";
 import { useHolidayReservations } from "@/hooks/useHolidayReservations";
 import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
 import { HolidayReservationWithChild } from "@/types/reservations";
+import { Button } from "@/components/ui/button";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -16,52 +17,74 @@ type GroupedReservations = Record<string, {
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
   const isTeenPage = window.location.pathname === "/teenholiday-reservations";
-  const { reservations, isError, error, refetch } = useHolidayReservations();
+  const { reservations, isError, error, refetch, isLoading } = useHolidayReservations();
   const { isTeenClass } = useSchoolClassCategories();
 
-  console.log("1. Réservations reçues du hook:", reservations);
-  console.log("2. Est-ce une erreur ?", isError);
-  if (error) console.log("3. Erreur détectée:", error);
+  console.log("[HolidayReservationsList] Réservations reçues du hook:", reservations);
+  console.log("[HolidayReservationsList] État de chargement:", isLoading);
+  console.log("[HolidayReservationsList] Est-ce une erreur ?", isError);
+  if (error) console.log("[HolidayReservationsList] Erreur détectée:", error);
+
+  // Afficher un indicateur de chargement
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-gray-600">Chargement des réservations...</p>
+      </div>
+    );
+  }
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
-    if (errorMessage.includes("Not authenticated")) {
+    if (errorMessage.includes("Not authenticated") || errorMessage.includes("JWT expired")) {
       return (
         <Alert variant="destructive">
-          <AlertDescription>
-            Vous devez être connecté pour voir vos réservations.{" "}
-            <button 
+          <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div>
+              Votre session a expiré. Veuillez vous reconnecter pour voir vos réservations.
+            </div>
+            <Button 
               onClick={() => navigate("/login")}
-              className="underline hover:no-underline"
+              variant="outline"
+              className="whitespace-nowrap"
             >
               Se connecter
-            </button>
+            </Button>
           </AlertDescription>
         </Alert>
       );
     }
     return (
       <Alert variant="destructive">
-        <AlertDescription>
-          Une erreur est survenue lors du chargement des réservations. Veuillez réessayer.
+        <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div>
+            Une erreur est survenue lors du chargement des réservations. Veuillez réessayer.
+          </div>
+          <Button 
+            onClick={() => refetch()}
+            variant="outline"
+            className="whitespace-nowrap"
+          >
+            Réessayer
+          </Button>
         </AlertDescription>
       </Alert>
     );
   }
 
   if (!reservations || reservations.length === 0) {
-    console.log("4. Aucune réservation trouvée");
+    console.log("[HolidayReservationsList] Aucune réservation trouvée");
     return <EmptyReservations />;
   }
 
-  console.log("5. Nombre de réservations avant filtrage:", reservations.length);
+  console.log("[HolidayReservationsList] Nombre de réservations avant filtrage:", reservations.length);
 
   const filteredReservations = reservations.map(reservation => {
-    console.log("6. Traitement de la réservation:", reservation);
-    console.log("7. Données de l'enfant:", reservation.children);
+    console.log("[HolidayReservationsList] Traitement de la réservation:", reservation);
+    console.log("[HolidayReservationsList] Données de l'enfant:", reservation.children);
     
     const childData = reservation.children;
-    console.log("8. Structure de childData:", childData);
     
     const transformedReservation = {
       ...reservation,
@@ -76,15 +99,14 @@ export const HolidayReservationsList = () => {
       }
     } as HolidayReservationWithChild;
 
-    console.log("9. Réservation transformée:", transformedReservation);
     return transformedReservation;
   }).filter(reservation => {
     const isTeen = isTeenClass(reservation.children.school_class);
-    console.log("10. Classe:", reservation.children.school_class, "Est ado ?", isTeen);
+    console.log("[HolidayReservationsList] Classe:", reservation.children.school_class, "Est ado ?", isTeen);
     return isTeenPage ? isTeen : !isTeen;
   });
 
-  console.log("11. Nombre de réservations après filtrage:", filteredReservations.length);
+  console.log("[HolidayReservationsList] Nombre de réservations après filtrage:", filteredReservations.length);
 
   if (filteredReservations.length === 0) {
     return (
@@ -109,7 +131,7 @@ export const HolidayReservationsList = () => {
     return acc;
   }, {} as GroupedReservations);
 
-  console.log("12. Réservations groupées par enfant:", reservationsByChild);
+  console.log("[HolidayReservationsList] Réservations groupées par enfant:", reservationsByChild);
 
   return (
     <div className="space-y-4">
@@ -134,4 +156,4 @@ export const HolidayReservationsList = () => {
       </div>
     </div>
   );
-};
+}

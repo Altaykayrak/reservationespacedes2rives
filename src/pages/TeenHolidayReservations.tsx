@@ -7,21 +7,28 @@ import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const TeenHolidayReservations = () => {
-  const { user, loading } = useAuth();
-  const { toast } = useToast();
+  const { user, loading, initialized, session } = useAuth();
+  const navigate = useNavigate();
   const [isWaiting, setIsWaiting] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("[TeenHolidayReservations] État d'authentification:", 
+      loading ? "CHARGEMENT" : (user ? "AUTHENTIFIÉ" : "NON AUTHENTIFIÉ"),
+      "Session:", session ? "Présente" : "Absente",
+      "Initialisation:", initialized ? "Terminée" : "En cours");
+      
     const checkAccess = async () => {
       if (!user?.id) {
-        console.log("Aucun utilisateur trouvé, attente de l'authentification...");
+        console.log("[TeenHolidayReservations] Aucun utilisateur trouvé");
         setIsLoading(false);
         return;
       }
@@ -29,7 +36,7 @@ const TeenHolidayReservations = () => {
       setIsLoading(true);
 
       try {
-        console.log("Tentative de récupération du profil pour l'utilisateur:", user.id);
+        console.log("[TeenHolidayReservations] Tentative de récupération du profil pour l'utilisateur:", user.id);
         
         // Récupérer les états directement de la base de données avec gestion d'erreurs améliorée
         const { data, error } = await supabase
@@ -39,36 +46,60 @@ const TeenHolidayReservations = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Erreur lors de la récupération du profil:', error);
+          console.error('[TeenHolidayReservations] Erreur lors de la récupération du profil:', error);
           setProfileError(`Erreur d'accès au profil: ${error.message}`);
-          toast({
-            title: "Erreur",
-            description: "Erreur lors de la vérification du profil utilisateur",
-            variant: "destructive"
-          });
+          toast.error("Erreur lors de la vérification du profil utilisateur");
           return;
         }
 
         if (!data) {
-          console.warn('Profil non trouvé pour cet utilisateur');
+          console.warn('[TeenHolidayReservations] Profil non trouvé pour cet utilisateur');
           setProfileError("Profil utilisateur non trouvé");
           return;
         }
 
-        console.log('Données du profil récupérées:', data);
+        console.log('[TeenHolidayReservations] Données du profil récupérées:', data);
         setIsWaiting(data.is_waiting || false);
         setIsClosed(data.is_closed || false);
         setProfileError(null);
       } catch (error: any) {
-        console.error("Erreur inattendue lors de la récupération des données:", error);
+        console.error("[TeenHolidayReservations] Erreur inattendue lors de la récupération des données:", error);
         setProfileError(`Erreur inattendue: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAccess();
-  }, [user, toast]);
+    // Vérifier l'accès seulement si l'utilisateur est authentifié et l'initialisation terminée
+    if (initialized && !loading) {
+      checkAccess();
+    }
+  }, [user, loading, initialized, session]);
+
+  // Si l'utilisateur n'est pas authentifié après l'initialisation, afficher un message
+  if (initialized && !loading && !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <div className="container mx-auto p-4 md:p-6">
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+            <EmptyHolidayState 
+              message="Connexion requise" 
+              subtitle="Vous devez être connecté pour accéder aux réservations du Club Ado."
+              icon="info"
+            >
+              <Button 
+                onClick={() => navigate("/login")}
+                className="mt-4"
+              >
+                Se connecter
+              </Button>
+            </EmptyHolidayState>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Affiche un squelette de chargement pendant l'initialisation de l'auth ou le chargement du profil
   if (loading || isLoading) {
@@ -147,7 +178,9 @@ const TeenHolidayReservations = () => {
             />
           </div>
         ) : (
-          <TeenHolidayReservationContent />
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+            <TeenHolidayReservationContent />
+          </div>
         )}
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">

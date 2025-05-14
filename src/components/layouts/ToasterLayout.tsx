@@ -9,7 +9,15 @@ export const ToasterLayout = ({ children }: ToasterLayoutProps) => {
   return (
     <>
       {children}
-      <Toaster position="top-center" />
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          style: {
+            fontSize: '14px',
+          },
+          duration: 5000,
+        }}
+      />
     </>
   );
 };

@@ -1,4 +1,4 @@
 
-// Re-export from the UI component to maintain API compatibility
-// This avoids circular dependencies
-export { useToast, toast } from "@/components/ui/use-toast";
+// Re-export from sonner for all toast notifications
+export { toast } from "sonner";
+export { useToast } from "@/components/ui/use-toast";
