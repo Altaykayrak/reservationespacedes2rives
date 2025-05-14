@@ -121,24 +121,26 @@ export const HolidayDateSelector = ({
   // Using the synchronous version of isTeenClass
   const isTeenClassValue = childInfo ? isTeenClassSync(childInfo.school_class, periodId) : false;
 
-  // Effet pour réinitialiser les dates lors du changement d'enfant
+  // Effet pour réinitialiser les dates lors du changement d'enfant ou de période
   useEffect(() => {
-    if (!selectedChild) return;
-
-    const shouldUseSummerTeenLogic = (isTeenClassValue || isCM2SummerPeriod) && holidayPeriod;
-    
-    if (shouldUseSummerTeenLogic) {
-      // On n'applique la présélection que sur la page teen
-      const isTeenPage = window.location.pathname.includes("teenholiday");
-      if (isTeenPage) {
-        console.log("Sélection des dates pour adolescent/CM2 en période d'été");
-        // Ne pas présélectionner automatiquement les dates
-        setSelectedDates([]);
-      }
-    } else {
+    // Réinitialiser les dates sélectionnées lors du changement d'enfant ou de période
+    if (selectedChild || periodId) {
+      console.log("Réinitialisation des dates sélectionnées suite à un changement d'enfant ou de période");
       setSelectedDates([]);
     }
-  }, [selectedChild, isTeenClassValue, holidayPeriod, setSelectedDates, isCM2SummerPeriod]);
+  }, [selectedChild, periodId, setSelectedDates]);
+
+  // Debug - ajout de logs détaillés
+  useEffect(() => {
+    console.log("HolidayDateSelector - Current state:", {
+      childInfo,
+      holidayPeriod,
+      selectedDates: selectedDates.length,
+      isTeenClassValue,
+      isCM2SummerPeriod,
+      pathname: window.location.pathname
+    });
+  }, [childInfo, holidayPeriod, selectedDates, isTeenClassValue, isCM2SummerPeriod]);
 
   if (!holidayPeriod || !selectedChild) {
     return (
@@ -172,6 +174,12 @@ export const HolidayDateSelector = ({
   const shouldUseTeenSelector = isTeenHolidayPage && (isTeenClassValue || isCM2SummerPeriod);
   console.log("HolidayDateSelector - shouldUseTeenSelector:", shouldUseTeenSelector);
 
+  // Ajout de logs lors de la sélection de dates
+  const enhancedHandleDateToggle = (date: Date) => {
+    console.log("HolidayDateSelector - Tentative de sélection de date:", date);
+    handleDateToggle(date);
+  };
+
   return (
     <HolidayPeriodProvider 
       holidayPeriod={holidayPeriod} 
@@ -183,13 +191,13 @@ export const HolidayDateSelector = ({
           selectedDates={selectedDates}
           isDateAlreadyReserved={isDateAlreadyReserved}
           handleOptionChange={handleOptionChange}
-          handleDateToggle={handleDateToggle}
+          handleDateToggle={enhancedHandleDateToggle}
           periodId={periodId}
         />
       ) : (
         <WorkdayDateSelector
           selectedDates={selectedDates}
-          handleDateToggle={handleDateToggle}
+          handleDateToggle={enhancedHandleDateToggle}
           handleOptionChange={handleOptionChange}
           isDateAlreadyReserved={isDateAlreadyReserved}
           periodId={periodId}

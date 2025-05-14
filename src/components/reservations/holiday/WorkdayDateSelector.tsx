@@ -106,15 +106,25 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
       );
     }
 
+    // Vérifier si des dates sont sélectionnées et log pour debug
+    console.log("WorkdayDateSelector - Dates disponibles:", dates.length);
+    console.log("WorkdayDateSelector - Dates sélectionnées:", selectedDates.length);
+
     return (
       <ScrollArea className="h-[300px] pr-3">
         <div className="space-y-1">
           {dates.map((date) => {
             const selectedDateOption = selectedDates.find(
               (d) => {
-                const dateToCompare = new Date(d.date);
-                dateToCompare.setHours(0, 0, 0, 0);
-                return dateToCompare.getTime() === date.getTime();
+                if (!(d.date instanceof Date)) return false;
+                
+                const dateOnly1 = new Date(d.date);
+                dateOnly1.setHours(0, 0, 0, 0);
+                
+                const dateOnly2 = new Date(date);
+                dateOnly2.setHours(0, 0, 0, 0);
+                
+                return dateOnly1.getTime() === dateOnly2.getTime();
               }
             );
             
@@ -130,7 +140,10 @@ export const WorkdayDateSelector: React.FC<WorkdayDateSelectorProps> = ({
                 isReserved={isReserved}
                 withoutMeal={selectedDateOption?.withoutMeal || false}
                 earlyDropoff={selectedDateOption?.earlyDropoff || false}
-                onDateToggle={() => handleDateToggle(date)}
+                onDateToggle={() => {
+                  console.log(`WorkdayDateSelector - Toggle date: ${date.toISOString()}`);
+                  handleDateToggle(date);
+                }}
                 onOptionChange={(option, value) => handleOptionChange(date, option, value)}
                 isTeenClass={false}
                 periodId={periodId}

@@ -31,11 +31,18 @@ export const useReservations = () => {
 
   const handleDateToggle = (date: Date) => {
     console.log("handleDateToggle called with date:", date);
+    
+    // Créer une copie de la date pour éviter des références inattendues
+    const dateToCompare = new Date(date);
+    dateToCompare.setHours(0, 0, 0, 0);
+    
     setSelectedDates(prev => {
       // Vérifier si la date est déjà sélectionnée
       const existingIndex = prev.findIndex(d => {
-        if (!(d.date instanceof Date)) return false;
-        return d.date.getTime() === date.getTime();
+        if (!d.date) return false;
+        const itemDate = new Date(d.date);
+        itemDate.setHours(0, 0, 0, 0);
+        return itemDate.getTime() === dateToCompare.getTime();
       });
       
       console.log("existingIndex:", existingIndex);
@@ -49,7 +56,13 @@ export const useReservations = () => {
       }
       
       // Sinon l'ajouter
-      const newDates = [...prev, { date, withoutMeal: false, earlyDropoff: false }];
+      const newDate = {
+        date: new Date(date),
+        withoutMeal: false,
+        earlyDropoff: false
+      };
+      
+      const newDates = [...prev, newDate];
       console.log("Date added, new dates:", newDates);
       return newDates;
     });
@@ -58,8 +71,16 @@ export const useReservations = () => {
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
     console.log("handleOptionChange called with:", { date, option, value });
     setSelectedDates(prev => prev.map(d => {
-      if (!(d.date instanceof Date)) return d;
-      if (d.date.getTime() === date.getTime()) {
+      if (!d.date) return d;
+      
+      // Comparer uniquement la date sans l'heure
+      const dDate = new Date(d.date);
+      dDate.setHours(0, 0, 0, 0);
+      
+      const compareDate = new Date(date);
+      compareDate.setHours(0, 0, 0, 0);
+      
+      if (dDate.getTime() === compareDate.getTime()) {
         return { ...d, [option]: value };
       }
       return d;
