@@ -22,7 +22,6 @@ export function AdminNavbar() {
     { label: "Utilisateurs", href: "/admin/profiles" },
     { label: "Enfants", href: "/admin/children" },
     { label: "Emails autorisés", href: "/admin/authorized-emails" },
-    { label: "Mercredis", href: "/admin/wednesdays" },
     { label: "Périodes vacances", href: "/admin/holidays" },
   ];
 

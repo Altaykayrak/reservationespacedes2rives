@@ -29,9 +29,6 @@ const Navbar = () => {
     label: "Mes enfants",
     href: "/children"
   }, {
-    label: "Réservations mercredi",
-    href: "/wednesday-reservations"
-  }, {
     label: "Réservations vacances",
     href: "/holiday-reservations"
   }, {

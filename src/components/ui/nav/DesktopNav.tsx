@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "../button";
 import { LogOut } from "lucide-react";
@@ -13,10 +14,12 @@ interface DesktopNavProps {
 
 export function DesktopNav({ menuItems, isAuthenticated, onLogout }: DesktopNavProps) {
   const location = useLocation();
+  // Filter out the Wednesday reservations menu item if needed
+  const filteredMenuItems = menuItems.filter(item => item.label !== "Réservations mercredi");
 
   return (
     <div className="hidden md:flex items-center space-x-2">
-      {menuItems.map((item) => (
+      {filteredMenuItems.map((item) => (
         <Link
           key={item.href}
           to={item.href}
