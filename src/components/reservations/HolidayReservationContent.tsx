@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -192,7 +191,11 @@ export const HolidayReservationContent = ({
   // Vérifier si le nombre de jours sélectionnés est suffisant
   const hasMinimumDays = validDatesCount >= 3;
   
-  console.log(`Nombre de jours sélectionnés: ${validDatesCount}, Minimum atteint: ${hasMinimumDays}`);
+  // Ajoutez des logs détaillés pour déboguer le problème
+  console.log(`🔍 HolidayReservationContent - Dates sélectionnées total: ${selectedDates.length}`);
+  console.log(`🔍 HolidayReservationContent - Dates valides count: ${validDatesCount}`);
+  console.log(`🔍 HolidayReservationContent - hasMinimumDays: ${hasMinimumDays}`);
+  console.log(`🔍 HolidayReservationContent - Button disabled: ${!selectedChild || !selectedPeriod || validDatesCount === 0 || !hasMinimumDays || isSubmitting || isCM2SummerPeriod}`);
 
   // Fonction pour éviter les doubles clics
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -200,8 +203,16 @@ export const HolidayReservationContent = ({
     e.stopPropagation();
     
     // Vérifier le nombre exact de dates sélectionnées
-    console.log(`DEBUG: Bouton cliqué - Nombre de dates sélectionnées: ${validDatesCount}`);
-    console.log(`DEBUG: Validation minimale: ${hasMinimumDays} (${validDatesCount} >= 3)`);
+    console.log(`🔍 DEBUG: Bouton cliqué - Dates sélectionnées total: ${selectedDates.length}`);
+    console.log(`🔍 DEBUG: Bouton cliqué - Nombre de dates valides: ${validDatesCount}`);
+    console.log(`🔍 DEBUG: Validation minimale: ${hasMinimumDays} (${validDatesCount} >= 3)`);
+    
+    // Stop si le minimum n'est pas atteint
+    if (validDatesCount < 3) {
+      console.log("🛑 DEBUG: Moins de 3 dates valides, affichage du dialogue");
+      setMinimumDaysDialog({ isOpen: true });
+      return;
+    }
     
     if (!isSubmitting) {
       // Vérifier que toutes les dates sont des instances valides
@@ -210,7 +221,7 @@ export const HolidayReservationContent = ({
       );
       
       if (validDates.length !== selectedDates.length) {
-        console.error("Certaines dates sont invalides:", 
+        console.error("⚠️ Certaines dates sont invalides:", 
           selectedDates.filter(d => !(d.date instanceof Date) || isNaN(d.date.getTime())));
       }
       
@@ -220,15 +231,11 @@ export const HolidayReservationContent = ({
         return;
       }
       
-      console.log("DEBUG: Dates valides avant soumission:", validDates);
+      console.log("✅ DEBUG: Dates valides avant soumission:", validDates);
       handleSubmit();
     }
   };
 
-  // Déterminer si l'enfant est un adolescent (pour le vérifier si besoin)
-  const isTeenClass = childInfo ? isTeenClassSync(childInfo.school_class, selectedPeriod) : false;
-
-  // Préparation des éléments de l'interface
   const periodSelectorElement = (
     <PeriodSelector
       selectedPeriod={selectedPeriod}
@@ -284,7 +291,7 @@ export const HolidayReservationContent = ({
         <Button
           onClick={onSubmitClick}
           className="w-full md:w-auto"
-          disabled={!selectedChild || !selectedPeriod || validDatesCount === 0 || !hasMinimumDays || isSubmitting || isCM2SummerPeriod}
+          disabled={!selectedChild || !selectedPeriod || validDatesCount < 3 || isSubmitting || isCM2SummerPeriod}
           type="button"
         >
           {isSubmitting ? (

@@ -17,7 +17,10 @@ export const validateSelectedChild = (selectedChild: string): string | null => {
 };
 
 export const validateSelectedDates = (selectedDates: DateOption[]): string | null => {
+  console.log("🔍 validateSelectedDates - Vérification de", selectedDates.length, "dates");
+  
   if (selectedDates.length === 0) {
+    console.log("🛑 validateSelectedDates - Aucune date sélectionnée");
     return "Veuillez sélectionner au moins une date.";
   }
   
@@ -26,7 +29,10 @@ export const validateSelectedDates = (selectedDates: DateOption[]): string | nul
     d.date instanceof Date && !isNaN(d.date.getTime())
   );
   
+  console.log("📊 validateSelectedDates - Dates valides:", validDates.length);
+  
   if (validDates.length < 3) {
+    console.log("🛑 validateSelectedDates - Moins de 3 dates valides");
     return "Veuillez sélectionner au moins 3 jours pour valider votre réservation.";
   }
   
@@ -37,7 +43,12 @@ export const validateNotAlreadyReserved = (
   selectedDates: DateOption[],
   isDateAlreadyReserved: (date: Date) => boolean
 ): string | null => {
-  const alreadyReservedDates = selectedDates.filter(dateOption => 
+  // Filtrer pour ne garder que les dates valides
+  const validDates = selectedDates.filter(d => 
+    d.date instanceof Date && !isNaN(d.date.getTime())
+  );
+  
+  const alreadyReservedDates = validDates.filter(dateOption => 
     isDateAlreadyReserved(dateOption.date)
   );
 
@@ -56,19 +67,17 @@ export const validateMinimumDays = (
   selectedDates: DateOption[],
   isAdminRoute: boolean
 ): boolean => {
-  console.log("validateMinimumDays - DÉMARRAGE avec %d dates", selectedDates.length);
-  console.log("validateMinimumDays - selectedDates:", selectedDates);
-  console.log("validateMinimumDays - isAdminRoute:", isAdminRoute);
+  console.log("🔍 validateMinimumDays - DÉMARRAGE avec %d dates", selectedDates.length);
   
   // Si le tableau est vide ou undefined, la validation échoue immédiatement
   if (!selectedDates || selectedDates.length === 0) {
-    console.log("validateMinimumDays - pas de dates sélectionnées");
+    console.log("🛑 validateMinimumDays - pas de dates sélectionnées");
     return false;
   }
   
   // Exigence explicite de 3 jours minimum, SANS EXCEPTION
   if (selectedDates.length < 3) {
-    console.log("validateMinimumDays - moins de 3 dates au total");
+    console.log("🛑 validateMinimumDays - moins de 3 dates au total");
     return false;
   }
   
@@ -77,23 +86,22 @@ export const validateMinimumDays = (
     .filter(d => d && d.date instanceof Date && !isNaN(d.date.getTime()))
     .map(d => d.date);
   
-  console.log("validateMinimumDays - validDates:", validDates.map(d => d.toISOString()));
-  console.log("validateMinimumDays - validDates count:", validDates.length);
+  console.log("📊 validateMinimumDays - validDates count:", validDates.length);
   
   // Si pas assez de dates valides (au moins 3), la validation échoue
   if (validDates.length < 3) {
-    console.log("validateMinimumDays - moins de 3 dates valides");
+    console.log("🛑 validateMinimumDays - moins de 3 dates valides");
     return false;
   }
   
   // Pour les administrateurs, on autorise moins de 3 jours par semaine
   if (isAdminRoute) {
-    console.log("validateMinimumDays - route admin, validation OK");
+    console.log("✅ validateMinimumDays - route admin, validation OK");
     return true;
   }
   
   // Pour les utilisateurs normaux, on utilise la fonction existante avec les dates validées
   const result = validateMinimumDaysPerWeek(validDates, isAdminRoute);
-  console.log("validateMinimumDays - résultat final:", result);
+  console.log("✅ validateMinimumDays - résultat final:", result);
   return result;
 };

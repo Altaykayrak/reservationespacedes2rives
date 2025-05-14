@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -80,27 +79,41 @@ export const useHolidayReservation = () => {
     });
   };
 
-  const handleDateToggle = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    const isSelected = selectedDates.some(d => d.date.toISOString().split('T')[0] === dateStr);
+  // Version memoized du toggle pour éviter les problèmes de date
+  const handleDateToggle = useCallback((date: Date) => {
+    setSelectedDates(prev => {
+      // Vérifier que la date est valide
+      if (!(date instanceof Date) || isNaN(date.getTime())) {
+        console.error("🛑 Date invalide fournie au toggle:", date);
+        return prev;
+      }
+      
+      const dateStr = date.toISOString().split('T')[0];
+      const isSelected = prev.some(d => {
+        // Vérification de sécurité pour les dates
+        if (!(d.date instanceof Date) || isNaN(d.date.getTime())) {
+          console.error("🛑 Date invalide détectée dans le tableau:", d.date);
+          return false;
+        }
+        return d.date.toISOString().split('T')[0] === dateStr;
+      });
 
-    if (isSelected) {
-      setSelectedDates(prev => prev.filter(d => d.date.toISOString().split('T')[0] !== dateStr));
-    } else {
-      setSelectedDates(prev => [...prev, { date: new Date(date), withoutMeal: isTeenPage, earlyDropoff: false }]);
-    }
-    
-    // Log pour débogage
-    console.log(`Date ${dateStr} ${isSelected ? 'désélectionnée' : 'sélectionnée'}`);
-    
-    // Calcul immédiat des dates valides pour le logging
-    setTimeout(() => {
-      const validDates = selectedDates.filter(d => 
-        d.date instanceof Date && !isNaN(d.date.getTime())
-      );
-      console.log(`Après toggle: Nombre de dates valides: ${validDates.length}`);
-    }, 100);
-  };
+      let newDates: DateOption[];
+      if (isSelected) {
+        newDates = prev.filter(d => d.date.toISOString().split('T')[0] !== dateStr);
+      } else {
+        newDates = [...prev, { date: new Date(date), withoutMeal: window.location.pathname.includes("teenholiday"), earlyDropoff: false }];
+      }
+      
+      // Logs détaillés
+      const validDates = newDates.filter(d => d.date instanceof Date && !isNaN(d.date.getTime()));
+      console.log(`📅 Date ${dateStr} ${isSelected ? 'désélectionnée' : 'sélectionnée'}`);
+      console.log(`📊 Nombre total de dates après toggle: ${newDates.length}`);
+      console.log(`📊 Nombre de dates valides après toggle: ${validDates.length}`);
+      
+      return newDates;
+    });
+  }, []);
 
   const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
     setSelectedDates(prev => {
@@ -121,10 +134,10 @@ export const useHolidayReservation = () => {
       d.date instanceof Date && !isNaN(d.date.getTime())
     );
     
-    console.log(`DEBUG: handleSubmit - validDates.length = ${validDates.length}`);
+    console.log(`🔍 DEBUG: handleSubmit - validDates.length = ${validDates.length}`);
     
     if (validDates.length < 3) {
-      console.log("DEBUG: Pas assez de jours sélectionnés, ouverture du dialogue");
+      console.log("🛑 DEBUG: Pas assez de jours sélectionnés, ouverture du dialogue");
       setMinimumDaysDialog({ isOpen: true });
       return;
     }
@@ -230,6 +243,20 @@ export const useHolidayReservation = () => {
     
     return weeks;
   };
+
+  // Effect pour valider les dates à chaque changement
+  useEffect(() => {
+    // Vérifier et compter les dates valides à chaque changement
+    const validDates = selectedDates.filter(d => 
+      d.date instanceof Date && !isNaN(d.date.getTime())
+    );
+    console.log(`📊 useHolidayReservation - Dates valides: ${validDates.length}/${selectedDates.length}`);
+    
+    if (validDates.length !== selectedDates.length) {
+      console.warn("⚠️ Détection de dates invalides:", 
+        selectedDates.filter(d => !(d.date instanceof Date) || isNaN(d.date.getTime())));
+    }
+  }, [selectedDates]);
 
   return {
     selectedDates,
