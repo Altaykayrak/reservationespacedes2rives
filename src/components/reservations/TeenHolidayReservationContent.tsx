@@ -76,6 +76,14 @@ export const TeenHolidayReservationContent = () => {
 
   return (
     <div className="space-y-6">
+      {/* Inversé: Maintenant PeriodSelector apparaît en premier, puis ChildSelector */}
+      <PeriodSelector
+        selectedPeriod={selectedPeriod}
+        setSelectedPeriod={setSelectedPeriod}
+        holidayPeriods={holidayPeriods}
+        filterTeenOnly={true}
+      />
+      
       <ChildSelector
         selectedChild={selectedChild}
         setSelectedChild={setSelectedChild}
@@ -83,13 +91,6 @@ export const TeenHolidayReservationContent = () => {
         setSelectedDates={setSelectedDates}
       />
       
-      <PeriodSelector
-        selectedPeriod={selectedPeriod}
-        setSelectedPeriod={setSelectedPeriod}
-        holidayPeriods={holidayPeriods}
-        filterTeenOnly={true}
-      />
-
       {selectedPeriod && selectedChild && (
         <HolidayDateSelector
           selectedDates={selectedDates}
