@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { useSchoolClassCategories } from "./useSchoolClassCategories";
@@ -19,6 +20,11 @@ export const useCategoryFiltering = (
     return children.filter(child => {
       // Skip children with missing school class
       if (!child?.school_class) return false;
+      
+      // Always include CM2 children on the teen holiday page
+      if (targetCategory === 'adolescent' && child.school_class === 'CM2') {
+        return true;
+      }
       
       // Get classification for this child and period
       const childCategory = getClassCategorySync(child.school_class, selectedPeriodId);

@@ -40,7 +40,7 @@ export const TeenHolidayReservationContent = () => {
   // Get all children data
   const { children: allChildren } = useChildrenData();
   
-  // Filter children that belong to the teen category for the selected period
+  // Filter children to include adolescents and CM2
   const { filteredChildren } = useCategoryFiltering(
     allChildren,
     selectedPeriod,
