@@ -6,7 +6,6 @@ import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { DateOptions } from "./DateOptions";
 import { Skeleton } from "@/components/ui/skeleton";
-import HolidaySpotsBadge from "@/components/reservations/HolidaySpotsBadge";
 
 interface DateItemProps {
   date: Date;
@@ -64,18 +63,10 @@ export const DateItem = ({
             </Label>
           </div>
           <div className="mt-1">
-            {isReserved ? (
+            {isReserved && (
               <Badge variant="secondary" className="bg-red-100 text-red-600">
                 Déjà réservé
               </Badge>
-            ) : (
-              childSchoolClass && (
-                <HolidaySpotsBadge
-                  periodId={periodId}
-                  date={date}
-                  childSchoolClass={childSchoolClass}
-                />
-              )
             )}
           </div>
         </div>
