@@ -5,6 +5,12 @@ import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format } from "date-fns";
 import HolidaySpotsBadge from "@/components/reservations/HolidaySpotsBadge";
 
+interface DateOption {
+  date: Date;
+  withoutMeal: boolean;
+  earlyDropoff: boolean;
+}
+
 export const WorkdayDateSelector = ({
   selectedDates,
   handleDateToggle,
@@ -78,7 +84,7 @@ export const WorkdayDateSelector = ({
         {periodDates.map(date => {
           
           const dateStr = format(new Date(date), 'yyyy-MM-dd');
-          const selectedDate = selectedDatesMap.get(dateStr);
+          const selectedDate = selectedDatesMap.get(dateStr) as DateOption | undefined;
           const isSelected = !!selectedDate;
           
           return (
