@@ -11,13 +11,21 @@ interface DateOption {
   earlyDropoff: boolean;
 }
 
+interface WorkdayDateSelectorProps {
+  selectedDates: DateOption[];
+  handleDateToggle: (date: Date) => void;
+  handleOptionChange: (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
+  isDateAlreadyReserved: (date: Date) => boolean;
+  periodId: string;
+}
+
 export const WorkdayDateSelector = ({
   selectedDates,
   handleDateToggle,
   handleOptionChange,
   isDateAlreadyReserved,
   periodId
-}) => {
+}: WorkdayDateSelectorProps) => {
   const { holidayPeriod, childInfo } = useHolidayPeriodContext();
 
   const generateDatesForPeriod = () => {

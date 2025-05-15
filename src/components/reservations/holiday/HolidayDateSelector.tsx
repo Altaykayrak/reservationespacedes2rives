@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -23,6 +22,8 @@ interface HolidayDateSelectorProps {
   periodId: string;
   selectedChild: string;
   setSelectedDates: (dates: DateOption[]) => void;
+  /** true quand on est dans la page Club Ado */
+  isTeenPage: boolean;
 }
 
 export const HolidayDateSelector = ({
@@ -32,7 +33,8 @@ export const HolidayDateSelector = ({
   isDateAlreadyReserved,
   periodId,
   selectedChild,
-  setSelectedDates
+  setSelectedDates,
+  isTeenPage
 }: HolidayDateSelectorProps) => {
   const [isCM2SummerPeriod, setIsCM2SummerPeriod] = useState(false);
   
@@ -158,18 +160,8 @@ export const HolidayDateSelector = ({
     );
   }
 
-  // Déterminer le composant de sélection de dates à utiliser
-  // Vérifier si nous sommes sur une page de réservation pour adolescents
-  const isTeenHolidayPage = window.location.pathname.includes("teenholiday");
-  
-  console.log("HolidayDateSelector - isTeenHolidayPage:", isTeenHolidayPage);
-  console.log("HolidayDateSelector - isTeenClassValue:", isTeenClassValue);
-  console.log("HolidayDateSelector - isCM2SummerPeriod:", isCM2SummerPeriod);
-  console.log("HolidayDateSelector - childInfo:", childInfo);
-  console.log("HolidayDateSelector - Full pathname:", window.location.pathname);
-  
   // Déterminer si nous devons afficher le sélecteur pour adolescents
-  const shouldUseTeenSelector = isTeenHolidayPage && (isTeenClassValue || isCM2SummerPeriod);
+  const shouldUseTeenSelector = isTeenPage && (isTeenClassValue || isCM2SummerPeriod);
   console.log("HolidayDateSelector - shouldUseTeenSelector:", shouldUseTeenSelector);
 
   return (
