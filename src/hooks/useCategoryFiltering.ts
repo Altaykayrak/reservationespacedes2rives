@@ -9,7 +9,7 @@ import { useSchoolClassCategories } from "./useSchoolClassCategories";
 export const useCategoryFiltering = (
   children: Tables<"children">[] | null | undefined,
   selectedPeriodId: string,
-  targetCategory?: 'maternelle' | 'primaire' | 'adolescent'
+  targetCategory?: 'maternelle' | 'primaire' | 'adolescent' | 'non-teen'
 ) => {
   const { getClassCategorySync } = useSchoolClassCategories();
   
@@ -28,6 +28,11 @@ export const useCategoryFiltering = (
       
       // Get classification for this child and period
       const childCategory = getClassCategorySync(child.school_class, selectedPeriodId);
+      
+      // Special case: exclude teens when 'non-teen' is specified
+      if (targetCategory === 'non-teen') {
+        return childCategory !== 'adolescent';
+      }
       
       // If no target category is specified, return all children
       if (!targetCategory) return true;

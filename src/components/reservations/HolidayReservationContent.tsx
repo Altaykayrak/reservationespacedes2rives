@@ -49,11 +49,14 @@ export const HolidayReservationContent = ({
   const { children: allChildren } = useChildrenData();
   const location = useLocation();
   
+  // If we're on the holiday-reservations page, exclude teen children
+  const isHolidayPage = location.pathname === "/holiday-reservations";
+  
   // Si nous n'avons pas d'enfants filtrés fournis, utiliser notre hook de filtrage
   const { filteredChildren: categorizedChildren } = useCategoryFiltering(
     allChildren,
     selectedPeriod,
-    filterTeenPeriods ? 'adolescent' : undefined
+    isHolidayPage ? 'non-teen' : (filterTeenPeriods ? 'adolescent' : undefined)
   );
   
   // Utiliser les enfants filtrés fournis ou ceux générés par notre hook
