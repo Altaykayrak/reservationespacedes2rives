@@ -1,3 +1,4 @@
+
 // src/components/reservations/HolidayReservationContent.tsx
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -12,6 +13,7 @@ import { useChildrenData } from "@/hooks/useChildrenData";
 import { useLocation } from "react-router-dom";
 import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 import { Tables } from "@/integrations/supabase/types";
+import { useEffect } from "react";
 
 interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
@@ -113,7 +115,7 @@ export const HolidayReservationContent = ({
           periodId={selectedPeriod}
           selectedChild={selectedChild}
           setSelectedDates={setSelectedDates}
-          isTeenPage={false}
+          isTeenPage={filterTeenPeriods}
         />
       )}
 
