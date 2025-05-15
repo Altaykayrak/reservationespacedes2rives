@@ -1,4 +1,3 @@
-
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -8,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
-
 const Navbar = () => {
   const {
     user,
@@ -124,26 +122,16 @@ const ProfileDropdown = ({
           </div>
           
           <div className="grid gap-2">
-            {menuItems.map(item => (
-              <Link 
-                key={item.label} 
-                to={item.href}
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
+            {menuItems.map(item => <Link key={item.label} to={item.href} className="text-sm font-medium transition-colors hover:text-primary">
                 {item.label}
-              </Link>
-            ))}
+              </Link>)}
           </div>
           
           <Link to="/profile">
-            <Button variant="outline" className="w-full justify-start">
-              Modifier mon profil
-            </Button>
+            
           </Link>
           <Link to="/children">
-            <Button variant="outline" className="w-full justify-start">
-              Gérer mes enfants
-            </Button>
+            
           </Link>
         </div>
         <Button variant="destructive" className="w-full" onClick={onLogout}>
