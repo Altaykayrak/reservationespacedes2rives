@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ChildrenList } from "@/components/profile/ChildrenList";
 import { ProfileSection } from "@/components/profile/ProfileSection";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileData, Child } from "@/types/profile";
@@ -11,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Navbar } from "@/components/ui/navbar";
 
 const Profile = () => {
-  // Suppression de la vérification d'authentification et de la redirection
+  // Pas de redirection automatique ici
 
   const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ["profile"],
