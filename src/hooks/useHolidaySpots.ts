@@ -20,16 +20,18 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         const databaseCategory = schoolClassToDbCategory(schoolClass);
         
         console.log("Calling check_holiday_spots_available with:", {
-          p_period_id: periodId,
-          p_reservation_date: date.toISOString().split('T')[0],
-          p_child_school_class: schoolClass,
+          period_id: periodId,
+          reservation_date: date.toISOString().split('T')[0],
+          child_school_class: schoolClass,
           translated_category: databaseCategory
         });
         
+        // Use the original parameter names here, even though the SQL function
+        // uses 'p_' prefixed names. Supabase handles the mapping internally.
         const { data, error } = await supabase.rpc("check_holiday_spots_available", {
-          p_period_id: periodId,
-          p_reservation_date: date.toISOString().split('T')[0],
-          p_child_school_class: schoolClass,
+          period_id: periodId,
+          reservation_date: date.toISOString().split('T')[0],
+          child_school_class: schoolClass,
         });
 
         if (error) {
