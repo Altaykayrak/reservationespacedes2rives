@@ -1,57 +1,59 @@
-
-import { Badge } from "@/components/ui/badge";
-import { useHolidaySpots } from "@/hooks/useHolidaySpots";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HolidaySpotsBadgeProps {
   periodId: string;
-  date: Date;
-  childSchoolClass: string;
+  date: string;              // format "YYYY-MM-DD"
+  childSchoolClass: string;  // ex. "GS", "CP"…
 }
 
-const HolidaySpotsBadge = ({ periodId, date, childSchoolClass }: HolidaySpotsBadgeProps) => {
-  const { availableSpots, isFull, isLoading, error } = useHolidaySpots(
-    periodId, 
-    date, 
-    childSchoolClass
-  );
+export default function HolidaySpotsBadge({
+  periodId,
+  date,
+  childSchoolClass
+}: HolidaySpotsBadgeProps) {
+  const [spots, setSpots] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchSpots() {
+      const { data, error } = await supabase.rpc(
+        "check_holiday_spots_available",
+        {
+          p_period_id: periodId,
+          p_reservation_date: date,
+          p_child_school_class: childSchoolClass,
+        }
+      );
+      if (!mounted) return;
+      if (error) setError(error.message);
+      else setSpots(data as number);
+    }
+
+    if (periodId && date && childSchoolClass) {
+      fetchSpots();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [periodId, date, childSchoolClass]);
 
   if (error) {
-    console.error("Error fetching holiday spots:", error);
-    return null;
+    return <span className="text-red-600 text-sm">ERR</span>;
   }
-
-  if (isLoading) {
-    return <Skeleton className="h-5 w-24" />;
+  if (spots === null) {
+    return <span className="text-gray-500 text-sm">…</span>;
   }
-
-  const getBadgeColor = () => {
-    if (availableSpots === null) return "bg-gray-100 text-gray-600";
-    if (isFull) return "bg-red-100 text-red-800";
-    if (availableSpots <= 5) return "bg-orange-100 text-orange-800";
-    return "bg-green-100 text-green-800";
-  };
-
-  const getBadgeText = () => {
-    if (availableSpots === null) {
-      return "Places non disponibles";
-    }
-    
-    if (isFull) {
-      return "Groupe complet";
-    }
-    
-    return `${availableSpots} place${availableSpots > 1 ? 's' : ''} restante${availableSpots > 1 ? 's' : ''}`;
-  };
-
   return (
-    <Badge 
-      variant="secondary" 
-      className={`${getBadgeColor()} border-none text-[10px] md:text-xs`}
+    <span
+      className={`text-sm font-medium ${
+        spots > 0 ? "text-green-600" : "text-red-600"
+      }`}
     >
-      {getBadgeText()}
-    </Badge>
+      {spots > 0 ? `${spots} places` : "Complet"}
+    </span>
   );
-};
+}
 
-export default HolidaySpotsBadge;
