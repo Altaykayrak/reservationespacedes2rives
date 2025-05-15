@@ -47,7 +47,10 @@ export const DateItem = ({
         <Checkbox
           id={date.toISOString()}
           checked={isSelected}
-          onCheckedChange={() => !isReserved && onDateToggle()}
+          onCheckedChange={() => {
+            console.log("🖱️ DateItem toggle:", date.toISOString(), "reserved?", isReserved);
+            if (!isReserved) onDateToggle();
+          }}
           disabled={isReserved}
           className="mt-1"
         />
@@ -83,3 +86,4 @@ export const DateItem = ({
     </div>
   );
 };
+
