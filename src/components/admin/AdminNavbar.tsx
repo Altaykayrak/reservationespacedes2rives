@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/nav/Logo";
 
 export function AdminNavbar() {
   const { signOut } = useAuth();
@@ -30,10 +30,11 @@ export function AdminNavbar() {
   }
 
   return (
-    <div className="border-b">
+    <div className="border-b bg-background sticky top-0 z-50">
       <div className="flex h-16 items-center px-4">
+        <Logo />
         
-        <nav className="flex-1">
+        <nav className="flex-1 ml-8">
           <ul className="flex space-x-4 overflow-x-auto">
             {menuItems.map((item) => (
               <li key={item.label}>

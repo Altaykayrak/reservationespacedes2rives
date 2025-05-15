@@ -47,10 +47,12 @@ export const AdminPage = () => {
   // Si l'utilisateur est admin, afficher la page d'administration
   if (showAdmin) {
     return (
-      <>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <AdminNavbar />
-        <Outlet />
-      </>
+        <div className="container mx-auto py-6">
+          <Outlet />
+        </div>
+      </div>
     );
   }
 

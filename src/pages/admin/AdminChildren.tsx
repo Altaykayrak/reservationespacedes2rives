@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { ChildrenFilters } from "@/components/admin/children/ChildrenFilters";
 import { ChildrenTable } from "@/components/admin/children/ChildrenTable";
 import { useChildrenData } from "@/hooks/useChildrenData";
@@ -56,7 +55,6 @@ const AdminChildren = () => {
 
   return (
     <div>
-      <AdminNavbar />
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Gestion des enfants</h1>
