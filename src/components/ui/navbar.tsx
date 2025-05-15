@@ -8,7 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
-import { MobileNav } from "./nav/MobileNav";
 
 const Navbar = () => {
   const {
@@ -57,8 +56,7 @@ const Navbar = () => {
         <Link to="/" className="font-semibold text-lg md:text-2xl">E2R</Link>
         <div className="ml-auto flex items-center space-x-4">
           <NavigationMenu {...navProps} />
-          <MobileNav {...navProps} />
-          {isAuthenticated ? <ProfileDropdown user={user} onLogout={handleLogout} /> : <Link to="/login">
+          {isAuthenticated ? <ProfileDropdown user={user} menuItems={menuItems} onLogout={handleLogout} /> : <Link to="/login">
               <Button variant="default" size="sm">
                 Se connecter
               </Button>
@@ -85,10 +83,12 @@ const NavigationMenu = ({
 };
 interface ProfileDropdownProps {
   user: any;
+  menuItems: NavItem[];
   onLogout: () => void;
 }
 const ProfileDropdown = ({
   user,
+  menuItems,
   onLogout
 }: ProfileDropdownProps) => {
   return <Sheet>
@@ -122,6 +122,19 @@ const ProfileDropdown = ({
               <div className="text-muted-foreground text-sm">{user?.email}</div>
             </div>
           </div>
+          
+          <div className="grid gap-2">
+            {menuItems.map(item => (
+              <Link 
+                key={item.label} 
+                to={item.href}
+                className="text-sm font-medium transition-colors hover:text-primary"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+          
           <Link to="/profile">
             <Button variant="outline" className="w-full justify-start">
               Modifier mon profil
