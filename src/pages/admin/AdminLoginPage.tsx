@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { LoginForm } from "@/components/forms/LoginForm";
 import { AuthLayout } from "@/components/layouts/AuthLayout";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogAction } from "@/components/ui/alert-dialog";
@@ -15,6 +16,7 @@ const AdminLoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const { user, session, loading } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkAdminAuth = async () => {
@@ -42,6 +44,8 @@ const AdminLoginPage = () => {
           if (isAdmin) {
             console.log("[AdminLoginPage] Utilisateur authentifié comme admin");
             toast.success("Vous êtes déjà connecté en tant qu'administrateur");
+            // Ajouter la redirection vers la page d'administration
+            navigate("/admin");
           }
         }
         
@@ -53,7 +57,7 @@ const AdminLoginPage = () => {
     };
 
     checkAdminAuth();
-  }, [session, loading]);
+  }, [session, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +120,11 @@ const AdminLoginPage = () => {
       console.log("[AdminLoginPage] Connexion admin réussie!");
       toast.success("Connexion administrateur réussie");
       
-      // Plus de redirection automatique
+      // Ajouter la redirection vers /admin après une authentification réussie
+      setTimeout(() => {
+        navigate("/admin");
+      }, 500);
+      
       setIsLoading(false);
       
     } catch (err) {
