@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { AdminNavbar } from "@/components/admin/AdminNavbar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AddEmailForm } from "@/components/admin/authorized-emails/AddEmailForm";
@@ -83,37 +82,28 @@ const AdminAuthorizedEmails = () => {
 
   if (isCheckingAdmin) {
     return (
-      <div>
-        <AdminNavbar />
-        <div className="container mx-auto p-8">
-          <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
-          <div>Vérification des droits d'accès...</div>
-        </div>
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
+        <div>Vérification des droits d'accès...</div>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div>
-        <AdminNavbar />
-        <div className="container mx-auto p-8">
-          <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
-          <div>Vous devez être administrateur pour accéder à cette page.</div>
-        </div>
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
+        <div>Vous devez être administrateur pour accéder à cette page.</div>
       </div>
     );
   }
 
   if (queryError) {
     return (
-      <div>
-        <AdminNavbar />
-        <div className="container mx-auto p-8">
-          <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
-          <div className="text-red-500">
-            Erreur lors du chargement des emails: {queryError.message}
-          </div>
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
+        <div className="text-red-500">
+          Erreur lors du chargement des emails: {queryError.message}
         </div>
       </div>
     );
@@ -121,35 +111,29 @@ const AdminAuthorizedEmails = () => {
 
   if (isLoading) {
     return (
-      <div>
-        <AdminNavbar />
-        <div className="container mx-auto p-8">
-          <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
-          <div>Chargement...</div>
-        </div>
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-8">Gestion des emails autorisés</h1>
+        <div>Chargement...</div>
       </div>
     );
   }
 
   return (
-    <div>
-      <AdminNavbar />
-      <div className="container mx-auto p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Gestion des emails autorisés</h1>
-          <Button 
-            onClick={handleExportPdf}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            Export PDF
-          </Button>
-        </div>
-        <AddEmailForm />
-        <EmailSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-        <EmailList emails={filteredEmails || []} />
+    <div className="container mx-auto p-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Gestion des emails autorisés</h1>
+        <Button 
+          onClick={handleExportPdf}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <FileText className="w-4 h-4" />
+          Export PDF
+        </Button>
       </div>
+      <AddEmailForm />
+      <EmailSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+      <EmailList emails={filteredEmails || []} />
     </div>
   );
 };
