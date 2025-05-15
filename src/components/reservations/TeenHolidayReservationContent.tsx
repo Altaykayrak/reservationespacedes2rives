@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
@@ -8,10 +7,8 @@ import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Loader2 } from "lucide-react";
-import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 import { useChildrenData } from "@/hooks/useChildrenData";
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 
 export const TeenHolidayReservationContent = () => {
   const {
@@ -36,21 +33,13 @@ export const TeenHolidayReservationContent = () => {
   } = useHolidayReservation();
 
   const { children: allChildren } = useChildrenData();
-  const location = useLocation();
-  const { filteredChildren } = useCategoryFiltering(allChildren, selectedPeriod, 'adolescent');
+  const { filteredChildren } = useCategoryFiltering(
+    allChildren,
+    selectedPeriod,
+    'adolescent'
+  );
 
-  useEffect(() => {
-    try {
-      const searchParams = new URLSearchParams(location.search);
-      const periodId = searchParams.get("periodId");
-      if (periodId && periodId !== selectedPeriod) {
-        setSelectedPeriod(periodId);
-      }
-    } catch {}
-  }, [location.search, selectedPeriod, setSelectedPeriod]);
-
-  const validDates = selectedDates.filter(d => d.date instanceof Date && !isNaN(d.date.getTime()));
-  const validDatesCount = validDates.length;
+  const validDatesCount = selectedDates.filter(d => d.date instanceof Date && !isNaN(d.date.getTime())).length;
 
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -62,7 +51,6 @@ export const TeenHolidayReservationContent = () => {
     if (!isSubmitting) handleSubmit();
   };
 
-  // Display PeriodSelector first, then ChildSelector
   return (
     <div className="space-y-6">
       <PeriodSelector
@@ -71,7 +59,7 @@ export const TeenHolidayReservationContent = () => {
         holidayPeriods={holidayPeriods}
         filterTeenOnly={true}
       />
-      
+
       <ChildSelector
         selectedChild={selectedChild}
         setSelectedChild={setSelectedChild}
