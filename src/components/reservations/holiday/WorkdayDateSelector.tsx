@@ -1,52 +1,113 @@
---- a/src/components/reservations/holiday/WorkdayDateSelector.tsx
-+++ b/src/components/reservations/holiday/WorkdayDateSelector.tsx
-@@
--import { ScrollArea } from "@/components/ui/scroll-area";
-+import { ScrollArea } from "@/components/ui/scroll-area";
- import { DateItem } from "./DateItem";
- import { useHolidayPeriodContext } from "./HolidayPeriodContext";
- import { format } from "date-fns";
-+import HolidaySpotsBadge from "@/components/reservations/HolidaySpotsBadge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { DateItem } from "./DateItem";
+import { useHolidayPeriodContext } from "./HolidayPeriodContext";
+import { format } from "date-fns";
+import HolidaySpotsBadge from "@/components/reservations/HolidaySpotsBadge";
 
-@@ {periodDates.map(date => { … })}
--          return (
--            <DateItem 
--              key={dateStr} 
--              date={date} 
--              isSelected={isSelected} 
--              isReserved={isDateAlreadyReserved(date)} 
--              withoutMeal={selectedDate?.withoutMeal || false} 
--              earlyDropoff={selectedDate?.earlyDropoff || false} 
--              onDateToggle={() => handleDateToggle(date)} 
--              onOptionChange={(option, value) => handleOptionChange(date, option, value)} 
--              isTeenClass={false} 
--              periodId={periodId} 
--              childSchoolClass={childInfo?.school_class || ''}
--            />
--          );
-+          return (
-+            <div
-+              key={dateStr}
-+              className="flex items-center justify-between px-2 py-1 hover:bg-gray-50 rounded"
-+            >
-+              <DateItem
-+                date={date}
-+                isSelected={isSelected}
-+                isReserved={isDateAlreadyReserved(date)}
-+                withoutMeal={selectedDate?.withoutMeal || false}
-+                earlyDropoff={selectedDate?.earlyDropoff || false}
-+                onDateToggle={() => handleDateToggle(date)}
-+                onOptionChange={(option, value) =>
-+                  handleOptionChange(date, option, value)
-+                }
-+                isTeenClass={false}
-+                periodId={periodId}
-+                childSchoolClass={childInfo?.school_class || ""}
-+              />
-+              <HolidaySpotsBadge
-+                periodId={periodId}
-+                date={dateStr}
-+                childSchoolClass={childInfo?.school_class || ""}
-+              />
-+            </div>
-+          );
+export const WorkdayDateSelector = ({
+  selectedDates,
+  handleDateToggle,
+  handleOptionChange,
+  isDateAlreadyReserved,
+  periodId
+}) => {
+  const { holidayPeriod, childInfo } = useHolidayPeriodContext();
+
+  const generateDatesForPeriod = () => {
+    if (!holidayPeriod) return [];
+
+    try {
+      let startDate: Date;
+      let endDate: Date;
+
+      try {
+        startDate = new Date(holidayPeriod.start_date);
+        if (isNaN(startDate.getTime())) {
+          console.error("Start date invalide:", holidayPeriod.start_date);
+          return [];
+        }
+      } catch (err) {
+        console.error("Erreur lors du parsing de la start_date:", err);
+        return [];
+      }
+
+      try {
+        endDate = new Date(holidayPeriod.end_date);
+        if (isNaN(endDate.getTime())) {
+          console.error("End date invalide:", holidayPeriod.end_date);
+          return [];
+        }
+      } catch (err) {
+        console.error("Erreur lors du parsing de la end_date:", err);
+        return [];
+      }
+
+      const dateArray = [];
+      let currentDate = new Date(startDate);
+
+      while (currentDate <= endDate) {
+        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+          dateArray.push(new Date(currentDate));
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      return dateArray;
+    } catch (error) {
+      console.error("Erreur lors de la génération des dates:", error);
+      return [];
+    }
+  };
+
+  const periodDates = generateDatesForPeriod();
+
+  const selectedDatesMap = new Map(
+    selectedDates.map(d => {
+      if (!(d.date instanceof Date) || isNaN(d.date.getTime())) {
+        console.error("Date invalide détectée dans selectedDates:", d.date);
+        return ["invalid-date", d];
+      }
+      const dateStr = format(new Date(d.date), 'yyyy-MM-dd');
+      return [dateStr, d];
+    })
+  );
+
+  return (
+    <ScrollArea className="h-[300px] pr-3">
+      <div className="space-y-1">
+        {periodDates.map(date => {
+          
+          const dateStr = format(new Date(date), 'yyyy-MM-dd');
+          const selectedDate = selectedDatesMap.get(dateStr);
+          const isSelected = !!selectedDate;
+          
+          return (
+            <div
+              key={dateStr}
+              className="flex items-center justify-between px-2 py-1 hover:bg-gray-50 rounded"
+            >
+              <DateItem
+                date={date}
+                isSelected={isSelected}
+                isReserved={isDateAlreadyReserved(date)}
+                withoutMeal={selectedDate?.withoutMeal || false}
+                earlyDropoff={selectedDate?.earlyDropoff || false}
+                onDateToggle={() => handleDateToggle(date)}
+                onOptionChange={(option, value) =>
+                  handleOptionChange(date, option, value)
+                }
+                isTeenClass={false}
+                periodId={periodId}
+                childSchoolClass={childInfo?.school_class || ""}
+              />
+              <HolidaySpotsBadge
+                periodId={periodId}
+                date={dateStr}
+                childSchoolClass={childInfo?.school_class || ""}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </ScrollArea>
+  );
+};

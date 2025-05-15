@@ -1,4 +1,3 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateItem } from "./DateItem";
@@ -154,21 +153,30 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
             const selectedDate = selectedDatesMap.get(dateStr);
             const isSelected = !!selectedDate;
             
-            // Afficher toutes les dates disponibles pour l'enfant
             return (
-              <DateItem 
-                key={dateStr} 
-                date={date} 
-                isSelected={isSelected} 
-                isReserved={isDateAlreadyReserved(date)} 
-                withoutMeal={selectedDate?.withoutMeal || false} 
-                earlyDropoff={selectedDate?.earlyDropoff || false} 
-                onDateToggle={() => onDateToggle(date)} 
-                onOptionChange={(option, value) => handleOptionChange(date, option, value)} 
-                isTeenClass={true} 
-                periodId={periodId} 
-                childSchoolClass={childInfo?.school_class || ''}
-              />
+              <div
+                key={dateStr}
+                className="flex items-center justify-between px-2 py-1 hover:bg-gray-50 rounded"
+              >
+                <DateItem 
+                  key={dateStr} 
+                  date={date} 
+                  isSelected={isSelected} 
+                  isReserved={isDateAlreadyReserved(date)} 
+                  withoutMeal={selectedDate?.withoutMeal || false} 
+                  earlyDropoff={selectedDate?.earlyDropoff || false} 
+                  onDateToggle={() => onDateToggle(date)} 
+                  onOptionChange={(option, value) => handleOptionChange(date, option, value)} 
+                  isTeenClass={true} 
+                  periodId={periodId} 
+                  childSchoolClass={childInfo?.school_class || ''}
+                />
+                <HolidaySpotsBadge
+                  periodId={periodId}
+                  date={dateStr}
+                  childSchoolClass={childInfo?.school_class || ''}
+                />
+              </div>
             );
           })}
         </div>
