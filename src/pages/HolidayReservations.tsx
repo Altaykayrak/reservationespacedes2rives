@@ -171,6 +171,9 @@ const HolidayReservations = () => {
           <p className="text-muted-foreground text-base md:text-lg">
             Réservez les périodes de vacances pour vos enfants de maternelle et primaire.
           </p>
+          <p className="text-amber-600 text-sm md:text-base font-medium">
+            Merci de sélectionner au moins 3 jours par semaine.
+          </p>
         </div>
 
         {isClosed ? (
