@@ -4,7 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { Label } from "../ui/label";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Info } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
 import { useQuery } from "@tanstack/react-query";
@@ -58,32 +58,34 @@ export const ChildSelector = ({
   
   // Périodes d'été où les CM2 doivent s'inscrire en Club Ado
   const cm2TeenSummerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04"];
-  const isCM2TeenPeriod = periodInfo?.name && cm2TeenSummerPeriods.includes(periodInfo.name);
+  const isCM2TeenPeriod = useMemo(() => {
+    return periodInfo?.name && cm2TeenSummerPeriods.includes(periodInfo.name);
+  }, [periodInfo, cm2TeenSummerPeriods]);
+
+  console.log(`Période actuelle: ${periodInfo?.name}, Est période CM2 Teen: ${isCM2TeenPeriod}`);
 
   // Filtrer les enfants qui sont dans le groupe adolescent ou CM2 pendant certaines périodes d'été
-  const filteredChildren = isHolidayReservation && children
-    ? children.filter(child => {
-        console.log(`Vérification de l'enfant ${child.first_name} ${child.last_name} - Classe: ${child.school_class}`);
+  const filteredChildren = useMemo(() => {
+    if (!children) return [];
+
+    return isHolidayReservation ? children.filter(child => {
+      console.log(`Vérification de l'enfant ${child.first_name} ${child.last_name} - Classe: ${child.school_class}`);
         
-        // Filtrer les adolescents
-        const category = getClassCategorySync(child.school_class, periodId);
-        console.log(`Catégorie pour ${child.first_name}: ${category}`);
+      // Normalisation de la classe pour une comparaison cohérente
+      const normalizedClass = child.school_class.trim().toUpperCase();
         
-        // Vérification explicite pour les CM2 pendant les périodes spécifiques
-        if (isCM2TeenPeriod) {
-          console.log(`Période ${periodInfo?.name} - Vérification CM2 pour ${child.first_name}`);
-          // Vérification stricte de la classe CM2 (avec normalisation)
-          const normalizedClass = child.school_class.trim().toUpperCase();
-          if (normalizedClass === "CM2") {
-            console.log(`${child.first_name} est en CM2 et période ${periodInfo?.name} - filtré`);
-            return false;
-          }
-        }
+      // Vérification explicite pour les CM2 pendant les périodes spécifiques
+      if (isCM2TeenPeriod && normalizedClass === "CM2") {
+        console.log(`${child.first_name} est en CM2 et période ${periodInfo?.name} - filtré (Teen summer)`);
+        return false;
+      }
         
-        // Filtrer les adolescents dans tous les cas
-        return category !== 'adolescent';
-      })
-    : children;
+      // Filtrer les adolescents dans tous les cas
+      const category = getClassCategorySync(child.school_class, periodId);
+      console.log(`Catégorie pour ${child.first_name}: ${category}`);
+      return category !== 'adolescent';
+    }) : children;
+  }, [children, isHolidayReservation, isCM2TeenPeriod, periodInfo?.name, getClassCategorySync, periodId]);
 
   // Réinitialiser les dates lorsqu'un nouvel enfant est sélectionné
   useEffect(() => {
@@ -119,6 +121,7 @@ export const ChildSelector = ({
     if (selectedChild && filteredChildren) {
       const isChildInFilteredList = filteredChildren.some(child => child.id === selectedChild);
       if (!isChildInFilteredList) {
+        console.log(`L'enfant sélectionné n'est plus dans la liste filtrée - désélection`);
         setSelectedChild("");
       }
     }
