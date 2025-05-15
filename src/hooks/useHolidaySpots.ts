@@ -20,16 +20,16 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         const databaseCategory = schoolClassToDbCategory(schoolClass);
         
         console.log("Calling check_holiday_spots_available with:", {
-          period_id: periodId,
-          reservation_date: date.toISOString().split('T')[0],
-          child_school_class: schoolClass,
+          p_period_id: periodId,
+          p_reservation_date: date.toISOString().split('T')[0],
+          p_child_school_class: schoolClass,
           translated_category: databaseCategory
         });
         
         const { data, error } = await supabase.rpc("check_holiday_spots_available", {
-          period_id: periodId,
-          reservation_date: date.toISOString().split('T')[0],
-          child_school_class: schoolClass,
+          p_period_id: periodId,
+          p_reservation_date: date.toISOString().split('T')[0],
+          p_child_school_class: schoolClass,
         });
 
         if (error) {

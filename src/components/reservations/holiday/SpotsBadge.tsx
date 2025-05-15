@@ -1,6 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 interface SpotsBadgeProps {
   availableSpots: number | null;
@@ -11,7 +12,7 @@ interface SpotsBadgeProps {
 
 const getSpotsBadgeColor = (spots: number | null) => {
   if (spots === null || spots === undefined) return "bg-gray-100 text-gray-600";
-  if (spots === 0) return "bg-red-100 text-red-800";
+  if (spots <= 0) return "bg-red-100 text-red-800";
   if (spots <= 5) return "bg-orange-100 text-orange-800";
   return "bg-green-100 text-green-800";
 };
@@ -26,8 +27,8 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", isLoa
     return "Places non disponibles";
   }
   
-  // Si spots est 0, le groupe est complet
-  if (spots === 0) {
+  // Si spots est 0 ou négatif, le groupe est complet
+  if (spots <= 0) {
     return `Groupe complet, contactez l'accueil si vous souhaitez être en liste d'attente`;
   }
   
