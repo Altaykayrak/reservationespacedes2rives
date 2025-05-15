@@ -633,9 +633,9 @@ export type Database = {
     Functions: {
       check_holiday_spots_available: {
         Args: {
-          period_id: string
-          reservation_date: string
-          child_school_class: string
+          p_period_id: string
+          p_reservation_date: string
+          p_child_school_class: string
         }
         Returns: number
       }

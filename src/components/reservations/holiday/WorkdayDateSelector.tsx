@@ -3,6 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format } from "date-fns";
+import HolidaySpotsBadge from "@/components/reservations/HolidaySpotsBadge";
 
 interface WorkdayDateSelectorProps {
   selectedDates: {

@@ -1,10 +1,12 @@
 
-import { DateCheckbox } from "@/components/ui/date-checkbox";
-import { DateOptions } from "./DateOptions";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useHolidaySpots } from "@/hooks/useHolidaySpots";
-import { SpotsBadge } from "./SpotsBadge";
+import { Badge } from "@/components/ui/badge";
+import { DateOptions } from "./DateOptions";
+import { Skeleton } from "@/components/ui/skeleton";
+import HolidaySpotsBadge from "@/components/reservations/HolidaySpotsBadge";
 
 interface DateItemProps {
   date: Date;
@@ -31,51 +33,54 @@ export const DateItem = ({
   periodId,
   childSchoolClass
 }: DateItemProps) => {
-  const formattedDate = format(date, "dd MMMM", { locale: fr });
-  const dayOfWeek = format(date, "EEEE", { locale: fr });
-
-  // Use the hook to check for available spots
-  const { availableSpots, isFull, isLoading } = useHolidaySpots(
-    periodId,
-    date,
-    childSchoolClass
-  );
-
-  // Log detailed spot information
-  console.log(`DateItem for ${formattedDate}:`, { 
-    availableSpots, 
-    isFull, 
-    isLoading, 
-    childSchoolClass,
-    periodId
-  });
+  if (!date || isNaN(date.getTime())) {
+    console.error("Date invalide dans DateItem:", date);
+    return null;
+  }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col">
-          <div className="flex gap-2 items-center">
-            <span className="font-semibold">{dayOfWeek}</span>
-            <span>{formattedDate}</span>
+    <div
+      className={`relative space-y-1 p-2 rounded-lg transition-colors ${
+        isSelected ? 'bg-green-50/60' : 'hover:bg-green-50/30'
+      }`}
+    >
+      <div className="flex items-start gap-2">
+        <Checkbox
+          id={date.toISOString()}
+          checked={isSelected}
+          onCheckedChange={() => !isReserved && onDateToggle()}
+          disabled={isReserved}
+          className="mt-1"
+        />
+        <div className="flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <Label
+              htmlFor={date.toISOString()}
+              className={`cursor-pointer font-medium ${
+                isReserved ? 'text-gray-500' : ''
+              }`}
+            >
+              {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+            </Label>
           </div>
-          
-          {/* Add SpotsBadge component to display availability */}
           <div className="mt-1">
-            <SpotsBadge 
-              availableSpots={availableSpots}
-              isFull={isFull}
-              schoolClass={childSchoolClass}
-              isLoading={isLoading}
-            />
+            {isReserved ? (
+              <Badge variant="secondary" className="bg-red-100 text-red-600">
+                Déjà réservé
+              </Badge>
+            ) : (
+              childSchoolClass && (
+                <HolidaySpotsBadge
+                  periodId={periodId}
+                  date={date}
+                  childSchoolClass={childSchoolClass}
+                />
+              )
+            )}
           </div>
         </div>
-        <DateCheckbox
-          checked={isSelected}
-          disabled={isReserved}
-          onCheckedChange={onDateToggle}
-        />
       </div>
-      {isSelected && (
+      {isSelected && !isReserved && (
         <DateOptions
           date={date}
           withoutMeal={withoutMeal}
