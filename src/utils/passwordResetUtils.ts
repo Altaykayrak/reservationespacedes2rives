@@ -1,4 +1,5 @@
 
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Définition explicite des types dont nous avons besoin
@@ -49,3 +50,4 @@ export const sendPasswordResetEmail = async (email: string) => {
   // Log pour debug
   console.log("Email de réinitialisation envoyé avec redirectTo:", redirectUrl);
 };
+
