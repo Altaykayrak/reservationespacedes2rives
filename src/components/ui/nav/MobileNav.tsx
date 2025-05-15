@@ -16,9 +16,6 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ menuItems, isAuthenticated, onLogout }: MobileNavProps) {
-  // Filter out the Wednesday reservations menu item if needed
-  const filteredMenuItems = menuItems.filter(item => item.label !== "Réservations mercredi");
-  
   return (
     <div className="md:hidden">
       <Sheet>
@@ -29,7 +26,7 @@ export function MobileNav({ menuItems, isAuthenticated, onLogout }: MobileNavPro
         </SheetTrigger>
         <SheetContent side="right">
           <div className="flex flex-col space-y-4 mt-4">
-            {filteredMenuItems.map((item) => (
+            {menuItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
