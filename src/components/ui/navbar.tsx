@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
+import { Logo } from "./nav/Logo";
+
 const Navbar = () => {
   const {
     user,
@@ -51,7 +53,7 @@ const Navbar = () => {
   };
   return <div className="border-b bg-background sticky top-0 z-50">
       <div className="flex h-16 items-center px-4">
-        <Link to="/" className="font-semibold text-lg md:text-2xl">E2R</Link>
+        <Logo />
         <div className="ml-auto flex items-center space-x-4">
           <NavigationMenu {...navProps} />
           {isAuthenticated ? <ProfileDropdown user={user} menuItems={menuItems} onLogout={handleLogout} /> : <Link to="/login">
@@ -63,6 +65,7 @@ const Navbar = () => {
       </div>
     </div>;
 };
+
 interface NavigationMenuProps extends NavProps {}
 const NavigationMenu = ({
   menuItems,
