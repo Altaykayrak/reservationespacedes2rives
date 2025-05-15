@@ -1,3 +1,4 @@
+
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -7,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
+import { MobileNav } from "./nav/MobileNav";
+
 const Navbar = () => {
   const {
     user,
@@ -54,6 +57,7 @@ const Navbar = () => {
         <Link to="/" className="font-semibold text-lg md:text-2xl">E2R</Link>
         <div className="ml-auto flex items-center space-x-4">
           <NavigationMenu {...navProps} />
+          <MobileNav {...navProps} />
           {isAuthenticated ? <ProfileDropdown user={user} onLogout={handleLogout} /> : <Link to="/login">
               <Button variant="default" size="sm">
                 Se connecter
