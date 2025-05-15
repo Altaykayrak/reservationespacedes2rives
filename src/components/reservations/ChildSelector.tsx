@@ -55,11 +55,22 @@ export const ChildSelector = ({
   // Liste des périodes d'été
   const summerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04", "ETE-05", "ETE-06", "ETE-07", "ETE-08"];
   const isSummerPeriod = periodInfo?.name && summerPeriods.includes(periodInfo.name);
+  
+  // Périodes d'été où les CM2 doivent s'inscrire en Club Ado
+  const cm2TeenSummerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04"];
+  const isCM2TeenPeriod = periodInfo?.name && cm2TeenSummerPeriods.includes(periodInfo.name);
 
   // Filtrer les enfants qui sont dans le groupe adolescent pour la page holiday-reservations
   const filteredChildren = isHolidayReservation && children 
     ? children.filter(child => {
+        // Filtrer les adolescents
         const category = getClassCategorySync(child.school_class, periodId);
+        
+        // Filtrer également les CM2 pour les périodes ETE-01 à ETE-04
+        if (isCM2TeenPeriod && child.school_class === "CM2") {
+          return false;
+        }
+        
         return category !== 'adolescent';
       })
     : children;
