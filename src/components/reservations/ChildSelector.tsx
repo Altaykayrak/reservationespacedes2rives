@@ -56,6 +56,14 @@ export const ChildSelector = ({
   const summerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04", "ETE-05", "ETE-06", "ETE-07", "ETE-08"];
   const isSummerPeriod = periodInfo?.name && summerPeriods.includes(periodInfo.name);
 
+  // Filtrer les enfants qui sont dans le groupe adolescent pour la page holiday-reservations
+  const filteredChildren = isHolidayReservation && children 
+    ? children.filter(child => {
+        const category = getClassCategorySync(child.school_class, periodId);
+        return category !== 'adolescent';
+      })
+    : children;
+
   // Réinitialiser les dates lorsqu'un nouvel enfant est sélectionné
   useEffect(() => {
     if (selectedChild && setSelectedDates) {
@@ -85,7 +93,7 @@ export const ChildSelector = ({
     }
   }, [selectedChild, periodId, isSummerPeriod, children, onCM2SummerPeriodCheck, isHolidayReservation, isTeenHolidayReservation]);
 
-  if (!children || children.length === 0) {
+  if (!filteredChildren || filteredChildren.length === 0) {
     return (
       <Alert>
         <Info className="h-4 w-4" />
@@ -100,7 +108,7 @@ export const ChildSelector = ({
   const showCM2Message = selectedChild && 
                          isSummerPeriod && 
                          isHolidayReservation && 
-                         children.find(child => child.id === selectedChild)?.school_class === "CM2";
+                         children?.find(child => child.id === selectedChild)?.school_class === "CM2";
 
   return (
     <div className="space-y-4">
@@ -116,7 +124,7 @@ export const ChildSelector = ({
             <SelectValue placeholder="Sélectionner un enfant" />
           </SelectTrigger>
           <SelectContent>
-            {children.map((child) => (
+            {filteredChildren.map((child) => (
               <SelectItem key={child.id} value={child.id}>
                 {child.first_name} {child.last_name} - {child.school_class}
               </SelectItem>
