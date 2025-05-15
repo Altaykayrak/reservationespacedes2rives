@@ -60,17 +60,27 @@ export const ChildSelector = ({
   const cm2TeenSummerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04"];
   const isCM2TeenPeriod = periodInfo?.name && cm2TeenSummerPeriods.includes(periodInfo.name);
 
-  // Filtrer les enfants qui sont dans le groupe adolescent pour la page holiday-reservations
-  const filteredChildren = isHolidayReservation && children 
+  // Filtrer les enfants qui sont dans le groupe adolescent ou CM2 pendant certaines périodes d'été
+  const filteredChildren = isHolidayReservation && children
     ? children.filter(child => {
+        console.log(`Vérification de l'enfant ${child.first_name} ${child.last_name} - Classe: ${child.school_class}`);
+        
         // Filtrer les adolescents
         const category = getClassCategorySync(child.school_class, periodId);
+        console.log(`Catégorie pour ${child.first_name}: ${category}`);
         
-        // Filtrer également les CM2 pour les périodes ETE-01 à ETE-04
-        if (isCM2TeenPeriod && child.school_class === "CM2") {
-          return false;
+        // Vérification explicite pour les CM2 pendant les périodes spécifiques
+        if (isCM2TeenPeriod) {
+          console.log(`Période ${periodInfo?.name} - Vérification CM2 pour ${child.first_name}`);
+          // Vérification stricte de la classe CM2 (avec normalisation)
+          const normalizedClass = child.school_class.trim().toUpperCase();
+          if (normalizedClass === "CM2") {
+            console.log(`${child.first_name} est en CM2 et période ${periodInfo?.name} - filtré`);
+            return false;
+          }
         }
         
+        // Filtrer les adolescents dans tous les cas
         return category !== 'adolescent';
       })
     : children;
@@ -103,6 +113,16 @@ export const ChildSelector = ({
       onCM2SummerPeriodCheck(false);
     }
   }, [selectedChild, periodId, isSummerPeriod, children, onCM2SummerPeriodCheck, isHolidayReservation, isTeenHolidayReservation]);
+
+  // Si l'enfant sélectionné n'est plus dans la liste filtrée, le désélectionner
+  useEffect(() => {
+    if (selectedChild && filteredChildren) {
+      const isChildInFilteredList = filteredChildren.some(child => child.id === selectedChild);
+      if (!isChildInFilteredList) {
+        setSelectedChild("");
+      }
+    }
+  }, [filteredChildren, selectedChild, setSelectedChild]);
 
   if (!filteredChildren || filteredChildren.length === 0) {
     return (
