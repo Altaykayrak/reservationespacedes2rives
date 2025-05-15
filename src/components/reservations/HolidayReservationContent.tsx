@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
 import { PeriodSelector } from "./PeriodSelector";
-import { HolidayDateSelector } from "./HolidayDateSelector";
+import { HolidayDateSelector } from "./holiday/HolidayDateSelector";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
@@ -68,7 +68,6 @@ export const HolidayReservationContent = ({
 
   const validDates = selectedDates.filter(d => d.date instanceof Date && !isNaN(d.date.getTime()));
   const validDatesCount = validDates.length;
-  const hasMinimumDays = validDatesCount >= 3;
 
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();

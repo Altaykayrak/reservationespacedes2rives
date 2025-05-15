@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -131,7 +132,6 @@ export const HolidayDateSelector = ({
     
     if (shouldUseSummerTeenLogic) {
       // On n'applique la présélection que sur la page teen
-      const isTeenPage = window.location.pathname.includes("teenholiday");
       if (isTeenPage) {
         console.log("Sélection des dates pour adolescent/CM2 en période d'été");
         // Ne pas présélectionner automatiquement les dates
@@ -140,7 +140,7 @@ export const HolidayDateSelector = ({
     } else {
       setSelectedDates([]);
     }
-  }, [selectedChild, isTeenClassValue, holidayPeriod, setSelectedDates, isCM2SummerPeriod]);
+  }, [selectedChild, isTeenClassValue, holidayPeriod, setSelectedDates, isCM2SummerPeriod, isTeenPage]);
 
   if (!holidayPeriod || !selectedChild) {
     return (
