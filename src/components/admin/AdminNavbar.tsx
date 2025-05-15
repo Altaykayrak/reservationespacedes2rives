@@ -1,15 +1,17 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/nav/Logo";
+import { toast } from "sonner";
 
 export function AdminNavbar() {
   const { signOut } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsMounted(true);
@@ -24,6 +26,17 @@ export function AdminNavbar() {
     { label: "Emails autorisés", href: "/admin/authorized-emails" },
     { label: "Périodes vacances", href: "/admin/holidays" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Déconnexion réussie");
+      navigate("/admin-login");
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      toast.error("Une erreur est survenue lors de la déconnexion");
+    }
+  };
 
   if (!isMounted) {
     return null;
@@ -54,7 +67,7 @@ export function AdminNavbar() {
           </ul>
         </nav>
         
-        <Button variant="destructive" onClick={signOut} className="ml-4">
+        <Button variant="destructive" onClick={handleLogout} className="ml-4">
           Se déconnecter
         </Button>
       </div>
