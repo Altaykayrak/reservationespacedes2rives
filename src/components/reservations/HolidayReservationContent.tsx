@@ -1,4 +1,4 @@
-```tsx
+
 // src/components/reservations/HolidayReservationContent.tsx
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -171,4 +171,3 @@ export const HolidayReservationContent = ({
     </div>
   );
 };
-```
