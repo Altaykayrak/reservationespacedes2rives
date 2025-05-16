@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -9,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 
 interface AdminProfilesActionsProps {
   profiles: ProfileData[];
@@ -24,78 +24,46 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
   handleBulkClosedChange,
 }) => {
   const [globalSettingsLoading, setGlobalSettingsLoading] = React.useState(false);
-  const [hideWednesdayReservations, setHideWednesdayReservations] = React.useState(false);
-  const [hideRdvPage, setHideRdvPage] = React.useState(false);
+  const { settings, loading, updateGlobalSettings } = useGlobalSettings();
   
-  // Charger les paramètres globaux au chargement du composant
-  React.useEffect(() => {
-    const fetchGlobalSettings = async () => {
-      try {
-        const { data: settings, error } = await supabase
-          .from("global_settings")
-          .select("hide_wednesday_reservations, hide_rdv_page")
-          .single();
-          
-        if (error && error.code !== "PGRST116") { // PGRST116 est "no rows returned"
-          console.error("Erreur lors du chargement des paramètres globaux:", error);
-          toast.error("Erreur lors du chargement des paramètres globaux");
-          return;
-        }
-        
-        if (settings) {
-          setHideWednesdayReservations(settings.hide_wednesday_reservations);
-          setHideRdvPage(settings.hide_rdv_page);
-        } else {
-          // Créer les paramètres globaux s'ils n'existent pas
-          await supabase
-            .from("global_settings")
-            .insert([{ hide_wednesday_reservations: false, hide_rdv_page: false }]);
-        }
-      } catch (err) {
-        console.error("Exception lors du chargement des paramètres globaux:", err);
-        toast.error("Erreur lors du chargement des paramètres globaux");
-      }
-    };
-    
-    fetchGlobalSettings();
-  }, []);
-  
-  // Mettre à jour les paramètres globaux
-  const updateGlobalSettings = async (settings: { 
-    hide_wednesday_reservations?: boolean; 
-    hide_rdv_page?: boolean; 
-  }) => {
+  const handleWednesdayVisibilityChange = async (isVisible: boolean) => {
     setGlobalSettingsLoading(true);
     try {
-      const { error } = await supabase
-        .from("global_settings")
-        .update(settings)
-        .eq("id", "00000000-0000-0000-0000-000000000000")
-        .not("id", "is", null);
-        
-      if (error) {
-        console.error("Erreur lors de la mise à jour des paramètres globaux:", error);
-        toast.error("Erreur lors de la mise à jour des paramètres globaux");
-        return;
-      }
+      const result = await updateGlobalSettings({ 
+        hide_wednesday_reservations: !isVisible 
+      });
       
-      toast.success("Paramètres globaux mis à jour avec succès");
+      if (result) {
+        toast.success("Paramètres globaux mis à jour avec succès");
+      } else {
+        toast.error("Erreur lors de la mise à jour des paramètres globaux");
+      }
     } catch (err) {
-      console.error("Exception lors de la mise à jour des paramètres globaux:", err);
+      console.error("Erreur lors de la mise à jour des paramètres globaux:", err);
       toast.error("Erreur lors de la mise à jour des paramètres globaux");
     } finally {
       setGlobalSettingsLoading(false);
     }
   };
   
-  const handleWednesdayVisibilityChange = (isVisible: boolean) => {
-    setHideWednesdayReservations(!isVisible);
-    updateGlobalSettings({ hide_wednesday_reservations: !isVisible });
-  };
-  
-  const handleRdvVisibilityChange = (isVisible: boolean) => {
-    setHideRdvPage(!isVisible);
-    updateGlobalSettings({ hide_rdv_page: !isVisible });
+  const handleRdvVisibilityChange = async (isVisible: boolean) => {
+    setGlobalSettingsLoading(true);
+    try {
+      const result = await updateGlobalSettings({ 
+        hide_rdv_page: !isVisible 
+      });
+      
+      if (result) {
+        toast.success("Paramètres globaux mis à jour avec succès");
+      } else {
+        toast.error("Erreur lors de la mise à jour des paramètres globaux");
+      }
+    } catch (err) {
+      console.error("Erreur lors de la mise à jour des paramètres globaux:", err);
+      toast.error("Erreur lors de la mise à jour des paramètres globaux");
+    } finally {
+      setGlobalSettingsLoading(false);
+    }
   };
 
   return (
@@ -112,9 +80,9 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
             </Label>
             <Switch 
               id="global-wednesday-visibility" 
-              checked={!hideWednesdayReservations}
+              checked={!settings.hide_wednesday_reservations}
               onCheckedChange={handleWednesdayVisibilityChange}
-              disabled={globalSettingsLoading}
+              disabled={globalSettingsLoading || loading}
             />
           </div>
           
@@ -127,9 +95,9 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
             </Label>
             <Switch 
               id="global-rdv-visibility" 
-              checked={!hideRdvPage}
+              checked={!settings.hide_rdv_page}
               onCheckedChange={handleRdvVisibilityChange}
-              disabled={globalSettingsLoading}
+              disabled={globalSettingsLoading || loading}
             />
           </div>
         </CardContent>

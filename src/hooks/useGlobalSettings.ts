@@ -91,6 +91,8 @@ export const useGlobalSettings = () => {
         return false;
       }
 
+      // Update the local state to reflect the changes
+      setSettings(prev => ({...prev, ...newSettings}));
       toast.success("Paramètres mis à jour avec succès");
       return true;
     } catch (err) {
@@ -104,9 +106,11 @@ export const useGlobalSettings = () => {
 
   const updateGlobalSettings = async (newSettings: Partial<GlobalSettings>) => {
     try {
+      // Make sure we're updating the global settings record with ID 00000000-0000-0000-0000-000000000000 or equivalent
       const { error } = await supabase
         .from("global_settings")
-        .update(newSettings);
+        .update(newSettings)
+        .eq("id", "00000000-0000-0000-0000-000000000000");
 
       if (error) {
         console.error("Error updating global settings:", error);
@@ -114,7 +118,8 @@ export const useGlobalSettings = () => {
         return false;
       }
 
-      toast.success("Paramètres globaux mis à jour avec succès");
+      // Update the local state to reflect the changes
+      setSettings(prev => ({...prev, ...newSettings}));
       return true;
     } catch (err) {
       console.error("Exception in updateGlobalSettings:", err);
