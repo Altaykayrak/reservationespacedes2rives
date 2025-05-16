@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
 import { Logo } from "./nav/Logo";
+import { MobileNav } from "./nav/MobileNav";
+import { DesktopNav } from "./nav/DesktopNav";
 
 const Navbar = () => {
   const {
@@ -39,11 +41,17 @@ const Navbar = () => {
     label: "Mes enfants",
     href: "/children"
   }, {
+    label: "Réservations mercredis",
+    href: "/wednesday-reservations"
+  }, {
     label: "Réservations vacances",
     href: "/holiday-reservations"
   }, {
     label: "Réservations Club Ado",
     href: "/teenholiday-reservations"
+  }, {
+    label: "RDV Inscription 2025-2026",
+    href: "/rdv"
   }, {
     label: "Programme vacances",
     href: "/holiday-program"
@@ -65,7 +73,16 @@ const Navbar = () => {
       <div className="flex h-16 items-center px-4">
         <Logo />
         <div className="ml-auto flex items-center space-x-4">
-          <NavigationMenu {...navProps} />
+          <div className="hidden md:flex items-center space-x-4">
+            {menuItems.map(item => <Link key={item.label} to={item.href} className="text-sm font-medium transition-colors hover:text-primary">
+                {item.label}
+              </Link>)}
+            {isAuthenticated && <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Déconnexion
+              </Button>}
+          </div>
+          <MobileNav {...navProps} />
           {isAuthenticated ? <ProfileDropdown user={user} menuItems={menuItems} onLogout={handleLogout} /> : <Link to="/login">
               <Button variant="default" size="sm">
                 Se connecter
