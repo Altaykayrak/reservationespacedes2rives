@@ -481,6 +481,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          created_at: string
+          hide_rdv_page: boolean
+          hide_wednesday_reservations: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hide_rdv_page?: boolean
+          hide_wednesday_reservations?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hide_rdv_page?: boolean
+          hide_wednesday_reservations?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_with_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wednesday_allowed_classes: {
         Row: {
           created_at: string

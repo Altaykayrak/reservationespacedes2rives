@@ -1,8 +1,9 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export interface GlobalSettings {
+interface GlobalSettings {
   hide_wednesday_reservations: boolean;
   hide_rdv_page: boolean;
 }
@@ -10,38 +11,70 @@ export interface GlobalSettings {
 export const useGlobalSettings = () => {
   const [settings, setSettings] = useState<GlobalSettings>({
     hide_wednesday_reservations: false,
-    hide_rdv_page: false,
+    hide_rdv_page: false
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const loadSettings = async () => {
+    const fetchSettings = async () => {
       try {
-        const { data, error } = await supabase
-          .from("global_settings")
-          .select("*")
-          .single();
+        setLoading(true);
+        // For users, fetch their own settings
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const { data, error } = await supabase
+            .from("user_settings")
+            .select("hide_wednesday_reservations, hide_rdv_page")
+            .eq("user_id", session.user.id)
+            .single();
 
-        if (error && error.code !== "PGRST116") {
-          // PGRST116 is "no rows returned" error, which is expected on first run
-          console.error("Error loading global settings:", error);
+          if (error && error.code !== "PGRST116") { // PGRST116 is "no rows returned"
+            console.error("Error fetching user settings:", error);
+            setError(error);
+            toast.error("Erreur lors du chargement des paramètres utilisateur");
+          } else if (data) {
+            setSettings(data);
+          }
         }
-
-        if (data) {
-          setSettings({
-            hide_wednesday_reservations: data.hide_wednesday_reservations || false,
-            hide_rdv_page: data.hide_rdv_page || false,
-          });
+      } catch (err) {
+        console.error("Exception in fetchSettings:", err);
+        if (err instanceof Error) {
+          setError(err);
+          toast.error(`Erreur: ${err.message}`);
         }
-      } catch (error) {
-        console.error("Exception loading global settings:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadSettings();
+    fetchSettings();
   }, []);
 
-  return { settings, loading };
+  const updateSettings = async (userId: string, newSettings: Partial<GlobalSettings>) => {
+    try {
+      const { error } = await supabase
+        .from("user_settings")
+        .update(newSettings)
+        .eq("user_id", userId);
+
+      if (error) {
+        console.error("Error updating user settings:", error);
+        toast.error("Erreur lors de la mise à jour des paramètres utilisateur");
+        return false;
+      }
+
+      toast.success("Paramètres mis à jour avec succès");
+      return true;
+    } catch (err) {
+      console.error("Exception in updateSettings:", err);
+      if (err instanceof Error) {
+        toast.error(`Erreur: ${err.message}`);
+      }
+      return false;
+    }
+  };
+
+  return { settings, loading, error, updateSettings };
 };

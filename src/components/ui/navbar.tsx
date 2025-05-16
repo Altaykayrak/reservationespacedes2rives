@@ -45,8 +45,8 @@ const Navbar = () => {
     href: "/children"
   }];
   
-  // Add Wednesday reservations if not hidden
-  if (!settings.hide_wednesday_reservations) {
+  // Add Wednesday reservations if not hidden for this user
+  if (!settingsLoading && !settings.hide_wednesday_reservations) {
     baseMenuItems.push({
       label: "Mercredis",
       href: "/wednesday-reservations"
@@ -67,8 +67,8 @@ const Navbar = () => {
   
   baseMenuItems = [...baseMenuItems, ...additionalMenuItems];
   
-  // Add RDV if not hidden
-  if (!settings.hide_rdv_page) {
+  // Add RDV if not hidden for this user
+  if (!settingsLoading && !settings.hide_rdv_page) {
     baseMenuItems.push({
       label: "Inscription 2025-2026",
       href: "/rdv"

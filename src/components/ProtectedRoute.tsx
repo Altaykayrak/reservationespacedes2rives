@@ -23,7 +23,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     }
   }, [loading, settingsLoading]);
 
-  // Vérifier si l'accès à la page est bloqué par les paramètres globaux
+  // Vérifier si l'accès à la page est bloqué par les paramètres spécifiques à l'utilisateur
   const isPageBlocked = () => {
     if (location.pathname === "/wednesday-reservations" && settings.hide_wednesday_reservations) {
       return true;

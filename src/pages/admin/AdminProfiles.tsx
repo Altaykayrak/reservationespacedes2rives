@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminProfiles } from "@/hooks/useAdminProfiles";
 import { AdminProfilesFilters } from "@/components/admin/profiles/AdminProfilesFilters";
@@ -9,6 +9,7 @@ import { AdminProfilesStatus } from "@/components/admin/profiles/AdminProfilesSt
 import { GlobalMenuSettings } from "@/components/admin/profiles/GlobalMenuSettings";
 
 const AdminProfiles = () => {
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const {
     profiles,
     loading,
@@ -33,7 +34,9 @@ const AdminProfiles = () => {
 
   return (
     <div className="container mx-auto py-10">
-      <GlobalMenuSettings />
+      {selectedProfile && (
+        <GlobalMenuSettings profile={selectedProfile} />
+      )}
       
       <Card>
         <CardHeader>
@@ -69,6 +72,8 @@ const AdminProfiles = () => {
                 handleAutomaticPaymentChange={handleAutomaticPaymentChange}
                 handleWaitingChange={handleWaitingChange}
                 handleClosedChange={handleClosedChange}
+                onSelectProfile={setSelectedProfile}
+                selectedProfile={selectedProfile}
               />
             </>
           )}

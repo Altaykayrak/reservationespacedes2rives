@@ -2,6 +2,8 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
 import type { ProfileData } from "@/types/profile";
 
 interface AdminProfilesTableProps {
@@ -9,6 +11,8 @@ interface AdminProfilesTableProps {
   handleAutomaticPaymentChange: (id: string, automatic_payment: boolean) => Promise<void>;
   handleWaitingChange: (id: string, is_waiting: boolean) => Promise<void>;
   handleClosedChange: (id: string, is_closed: boolean) => Promise<void>;
+  onSelectProfile: (profile: ProfileData | null) => void;
+  selectedProfile: ProfileData | null;
 }
 
 export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
@@ -16,6 +20,8 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
   handleAutomaticPaymentChange,
   handleWaitingChange,
   handleClosedChange,
+  onSelectProfile,
+  selectedProfile,
 }) => {
   return (
     <Table>
@@ -26,11 +32,15 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
           <TableHead>Prélèvement automatique</TableHead>
           <TableHead>En attente</TableHead>
           <TableHead>Fermé</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {profiles.map((profile) => (
-          <TableRow key={profile.id}>
+          <TableRow 
+            key={profile.id}
+            className={selectedProfile?.id === profile.id ? "bg-muted" : ""}
+          >
             <TableCell>{profile.last_name}</TableCell>
             <TableCell>{profile.first_name}</TableCell>
             <TableCell>
@@ -50,6 +60,22 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
                 checked={profile.is_closed}
                 onCheckedChange={() => handleClosedChange(profile.id, profile.is_closed)}
               />
+            </TableCell>
+            <TableCell>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => {
+                  if (selectedProfile?.id === profile.id) {
+                    onSelectProfile(null);
+                  } else {
+                    onSelectProfile(profile);
+                  }
+                }}
+                className={selectedProfile?.id === profile.id ? "bg-primary text-primary-foreground" : ""}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
             </TableCell>
           </TableRow>
         ))}
