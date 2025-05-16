@@ -186,6 +186,30 @@ export type Database = {
         }
         Relationships: []
       }
+      global_settings: {
+        Row: {
+          created_at: string
+          hide_rdv_page: boolean
+          hide_wednesday_reservations: boolean
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hide_rdv_page?: boolean
+          hide_wednesday_reservations?: boolean
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hide_rdv_page?: boolean
+          hide_wednesday_reservations?: boolean
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       holiday_allowed_classes: {
         Row: {
           created_at: string
