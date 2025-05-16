@@ -11,6 +11,7 @@ import { NavItem, NavProps } from "./nav/types";
 import { Logo } from "./nav/Logo";
 import { MobileNav } from "./nav/MobileNav";
 import { DesktopNav } from "./nav/DesktopNav";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 
 const Navbar = () => {
   const {
@@ -22,6 +23,7 @@ const Navbar = () => {
     first_name: string | null;
     last_name: string | null;
   } | null>(null);
+  const { settings, loading: settingsLoading } = useGlobalSettings();
 
   useEffect(() => {
     setIsAuthenticated(!!user);
@@ -31,7 +33,8 @@ const Navbar = () => {
     await signOut();
   };
 
-  const menuItems: NavItem[] = [{
+  // Base menu items
+  let baseMenuItems: NavItem[] = [{
     label: "Accueil",
     href: "/"
   }, {
@@ -40,10 +43,18 @@ const Navbar = () => {
   }, {
     label: "Mes enfants",
     href: "/children"
-  }, {
-    label: "Mercredis",
-    href: "/wednesday-reservations"
-  }, {
+  }];
+  
+  // Add Wednesday reservations if not hidden
+  if (!settings.hide_wednesday_reservations) {
+    baseMenuItems.push({
+      label: "Mercredis",
+      href: "/wednesday-reservations"
+    });
+  }
+  
+  // Add other regular items
+  const additionalMenuItems: NavItem[] = [{
     label: "Vacances",
     href: "/holiday-reservations"
   }, {
@@ -52,16 +63,28 @@ const Navbar = () => {
   }, {
     label: "Programme vacances",
     href: "/holiday-program"
-  }, {
-    label: "Inscription 2025-2026",
-    href: "/rdv"
-  }, {
+  }];
+  
+  baseMenuItems = [...baseMenuItems, ...additionalMenuItems];
+  
+  // Add RDV if not hidden
+  if (!settings.hide_rdv_page) {
+    baseMenuItems.push({
+      label: "Inscription 2025-2026",
+      href: "/rdv"
+    });
+  }
+  
+  // Add remaining items
+  const finalMenuItems: NavItem[] = [...baseMenuItems, {
     label: "Règlement",
     href: "/terms-of-operation"
   }, {
     label: "Tarifs",
     href: "/prices"
   }];
+  
+  const menuItems = finalMenuItems;
   
   const navProps: NavProps = {
     menuItems: menuItems,
@@ -73,15 +96,7 @@ const Navbar = () => {
       <div className="flex h-16 items-center px-4">
         <Logo />
         <div className="ml-auto flex items-center space-x-4">
-          <div className="hidden md:flex items-center space-x-4">
-            {menuItems.map(item => <Link key={item.label} to={item.href} className="text-sm font-medium transition-colors hover:text-primary">
-                {item.label}
-              </Link>)}
-            {isAuthenticated && <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Déconnexion
-              </Button>}
-          </div>
+          <DesktopNav {...navProps} />
           <MobileNav {...navProps} />
           {isAuthenticated ? <ProfileDropdown user={user} menuItems={menuItems} onLogout={handleLogout} /> : <Link to="/login">
               <Button variant="default" size="sm">

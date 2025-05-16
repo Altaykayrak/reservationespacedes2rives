@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminProfiles } from "@/hooks/useAdminProfiles";
@@ -5,6 +6,7 @@ import { AdminProfilesFilters } from "@/components/admin/profiles/AdminProfilesF
 import { AdminProfilesActions } from "@/components/admin/profiles/AdminProfilesActions";
 import { AdminProfilesTable } from "@/components/admin/profiles/AdminProfilesTable";
 import { AdminProfilesStatus } from "@/components/admin/profiles/AdminProfilesStatus";
+import { GlobalMenuSettings } from "@/components/admin/profiles/GlobalMenuSettings";
 
 const AdminProfiles = () => {
   const {
@@ -31,6 +33,8 @@ const AdminProfiles = () => {
 
   return (
     <div className="container mx-auto py-10">
+      <GlobalMenuSettings />
+      
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Liste des utilisateurs</CardTitle>

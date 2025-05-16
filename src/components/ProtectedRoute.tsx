@@ -3,6 +3,8 @@ import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -13,21 +15,50 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   const { user, loading, isAuthenticated } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   const location = useLocation();
+  const { settings, loading: settingsLoading } = useGlobalSettings();
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !settingsLoading) {
       setIsChecking(false);
     }
-  }, [loading]);
+  }, [loading, settingsLoading]);
+
+  // Vérifier si l'accès à la page est bloqué par les paramètres globaux
+  const isPageBlocked = () => {
+    if (location.pathname === "/wednesday-reservations" && settings.hide_wednesday_reservations) {
+      return true;
+    }
+    
+    if (location.pathname === "/rdv" && settings.hide_rdv_page) {
+      return true;
+    }
+    
+    return false;
+  };
 
   // Afficher un indicateur de chargement pendant la vérification
-  if (isChecking || loading) {
+  if (isChecking || loading || settingsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-full max-w-md space-y-4">
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  // Vérifier si l'accès à la page est bloqué
+  if (isPageBlocked()) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <div className="my-8 p-6 bg-red-50 rounded-lg shadow border border-red-200">
+          <h2 className="text-2xl font-bold mb-4 text-red-700">Accès non disponible</h2>
+          <p className="mb-4">Cette fonctionnalité n'est pas disponible actuellement.</p>
+          <a href="/" className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            Retour à l'accueil
+          </a>
         </div>
       </div>
     );
