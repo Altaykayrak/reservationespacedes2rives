@@ -8,11 +8,11 @@ interface GlobalSettings {
   hide_rdv_page: boolean;
 }
 
-export const useGlobalSettings = () => {
-  const [settings, setSettings] = useState<GlobalSettings>({
+export function useGlobalSettings() {
+  const [globalSettings, setGlobalSettings] = useState<GlobalSettings>({
     id: "",
     hide_wednesday_reservations: false,
-    hide_rdv_page: false
+    hide_rdv_page: false,
   });
   const [loading, setLoading] = useState(true);
 
@@ -25,14 +25,7 @@ export const useGlobalSettings = () => {
           .select("id, hide_wednesday_reservations, hide_rdv_page")
           .single();
         if (error && error.code !== "PGRST116") throw error;
-
-        if (data) {
-          setSettings({
-            id: data.id,
-            hide_wednesday_reservations: data.hide_wednesday_reservations,
-            hide_rdv_page: data.hide_rdv_page
-          });
-        }
+        if (data) setGlobalSettings(data);
       } catch (err: any) {
         console.error("Erreur loading global_settings:", err);
         toast.error("Impossible de charger les paramètres globaux");
@@ -40,23 +33,20 @@ export const useGlobalSettings = () => {
         setLoading(false);
       }
     };
-
     fetchSettings();
   }, []);
 
-  const updateGlobalSettings = async (newSettings: Partial<Omit<GlobalSettings, "id">>) => {
-    if (!settings.id) {
-      console.error("updateGlobalSettings: settings.id is empty");
-      return false;
-    }
+  const updateGlobalSettings = async (
+    updates: Partial<Omit<GlobalSettings, "id">>
+  ) => {
+    if (!globalSettings.id) return false;
     try {
       const { error } = await supabase
         .from("global_settings")
-        .update(newSettings)
-        .eq("id", settings.id);
+        .update(updates)
+        .eq("id", globalSettings.id);
       if (error) throw error;
-
-      setSettings(prev => ({ ...prev, ...newSettings }));
+      setGlobalSettings((gs) => ({ ...gs, ...updates }));
       return true;
     } catch (err: any) {
       console.error("Erreur update global_settings:", err);
@@ -65,5 +55,5 @@ export const useGlobalSettings = () => {
     }
   };
 
-  return { settings, loading, updateGlobalSettings };
-};
+  return { globalSettings, loading, updateGlobalSettings };
+}
