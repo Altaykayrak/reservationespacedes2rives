@@ -19,7 +19,8 @@ export function useAdminUserSettings(userId: string) {
     if (!userId) return;
     (async () => {
       setLoading(true);
-      // 1) lire
+
+      // 1) Tentative de lecture
       const { data, error } = await supabase
         .from("user_settings")
         .select("hide_wednesday_reservations, hide_rdv_page")
@@ -34,14 +35,19 @@ export function useAdminUserSettings(userId: string) {
       if (data) {
         setSettings(data);
       } else {
-        // 2) si pas de ligne, on insère la ligne par défaut
+        // 2) Si pas de ligne, on insère les valeurs par défaut
         const { error: insertError } = await supabase
           .from("user_settings")
-          .insert({ user_id: userId, hide_wednesday_reservations: false, hide_rdv_page: false });
+          .insert({
+            user_id: userId,
+            hide_wednesday_reservations: false,
+            hide_rdv_page: false,
+          });
         if (insertError) {
           console.error("insert default user_settings:", insertError);
           toast.error("Impossible d'initialiser les paramètres utilisateur");
         }
+        // On garde les defaults en frontend
       }
 
       setLoading(false);
@@ -50,11 +56,15 @@ export function useAdminUserSettings(userId: string) {
 
   const updateSettings = async (updates: Partial<UserSettingsRecord>) => {
     try {
-      // upsert : insert ou update selon la clé user_id
+      // UPSERT : modifie ou insère si absent
       const { error } = await supabase
         .from("user_settings")
-        .upsert({ user_id: userId, ...updates }, { onConflict: "user_id" });
+        .upsert(
+          { user_id: userId, ...updates },
+          { onConflict: "user_id" }
+        );
       if (error) throw error;
+
       setSettings((s) => ({ ...s, ...updates }));
       toast.success("Paramètres utilisateur mis à jour");
       return true;
