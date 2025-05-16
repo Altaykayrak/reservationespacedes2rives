@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
 import { Logo } from "./nav/Logo";
-
 const Navbar = () => {
   const {
     user,
@@ -65,7 +64,6 @@ const Navbar = () => {
       </div>
     </div>;
 };
-
 interface NavigationMenuProps extends NavProps {}
 const NavigationMenu = ({
   menuItems,
@@ -107,8 +105,7 @@ const ProfileDropdown = ({
         <SheetHeader>
           <SheetTitle>Mon Profil</SheetTitle>
           <SheetDescription>
-            Accéder aux paramètres de votre compte et plus.
-          </SheetDescription>
+        </SheetDescription>
         </SheetHeader>
         <div className="grid gap-4 py-4">
           <div className="flex items-center space-x-2">
