@@ -35,28 +35,28 @@ const Navbar = () => {
     label: "Accueil",
     href: "/"
   }, {
-    label: "Mon profil",
+    label: "Profil",
     href: "/profile"
   }, {
     label: "Mes enfants",
     href: "/children"
   }, {
-    label: "Réservations mercredis",
+    label: "Mercredis",
     href: "/wednesday-reservations"
   }, {
-    label: "Réservations vacances",
+    label: "Vacances",
     href: "/holiday-reservations"
   }, {
-    label: "Réservations Club Ado",
+    label: "Club Ado",
     href: "/teenholiday-reservations"
   }, {
-    label: "RDV Inscription 2025-2026",
+    label: "Inscription 2025-2026",
     href: "/rdv"
   }, {
     label: "Programme vacances",
     href: "/holiday-program"
   }, {
-    label: "Règlement de fonctionnement",
+    label: "Règlement",
     href: "/terms-of-operation"
   }, {
     label: "Tarifs",
