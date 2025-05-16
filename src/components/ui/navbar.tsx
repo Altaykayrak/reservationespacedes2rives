@@ -103,7 +103,7 @@ const ProfileDropdown = ({
       </SheetTrigger>
       <SheetContent side="right" className="w-80">
         <SheetHeader>
-          <SheetTitle>Mon Profil</SheetTitle>
+          <SheetTitle>E2R Réservation</SheetTitle>
           <SheetDescription>
         </SheetDescription>
         </SheetHeader>
