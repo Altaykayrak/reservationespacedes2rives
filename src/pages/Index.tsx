@@ -1,79 +1,98 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Navbar } from "@/components/ui/navbar";
-import { Calendar, Users, Image } from "lucide-react";
-const Index = () => {
-  return <div className="min-h-screen bg-white">
-      <Navbar />
-      
-      {/* Hero Section */}
-      <div className="relative bg-cover text-white py-24" style={{
-      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Betterfront.jpg')`,
-      backgroundPosition: "0% 20%"
-    }}>
-        <div className="container mx-auto px-4 text-center">
-          <div className="mt-0">
-            <img src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png" alt="L'espace des deux rives" className="h-24 mx-auto" />
+import {
+  Card, CardHeader, CardTitle, CardContent
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
+
+interface AdminProfilesActionsProps {
+  profiles: any[];                // ou ProfileData[]
+  bulkActionLoading: boolean;
+  handleBulkWaitingChange: (value: boolean) => Promise<void>;
+  handleBulkClosedChange: (value: boolean) => Promise<void>;
+}
+
+export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
+  profiles,
+  bulkActionLoading,
+  handleBulkWaitingChange,
+  handleBulkClosedChange,
+}) => {
+  const [globalSettingsLoading, setGlobalSettingsLoading] = React.useState(false);
+  const { settings, loading, updateGlobalSettings } = useGlobalSettings();
+
+  const handleWednesdayVisibilityChange = async (isVisible: boolean) => {
+    setGlobalSettingsLoading(true);
+    const success = await updateGlobalSettings({
+      hide_wednesday_reservations: !isVisible
+    });
+    if (success) toast.success("Paramètres globaux mis à jour");
+    setGlobalSettingsLoading(false);
+  };
+
+  const handleRdvVisibilityChange = async (isVisible: boolean) => {
+    setGlobalSettingsLoading(true);
+    const success = await updateGlobalSettings({
+      hide_rdv_page: !isVisible
+    });
+    if (success) toast.success("Paramètres globaux mis à jour");
+    setGlobalSettingsLoading(false);
+  };
+
+  return (
+    <div className="space-y-4 mb-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Paramètres globaux de visibilité</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="global-wednesday-visibility" className="flex flex-col space-y-1">
+              <span>Page Mercredis</span>
+              <span className="text-sm text-muted-foreground">
+                Activer/désactiver l'accès pour tous les utilisateurs
+              </span>
+            </Label>
+            <Switch
+              id="global-wednesday-visibility"
+              checked={!settings.hide_wednesday_reservations}
+              onCheckedChange={handleWednesdayVisibilityChange}
+              disabled={globalSettingsLoading || loading}
+            />
           </div>
-          <h1 className="text-5xl font-bold mb-6"></h1>
-          <p className="text-xl mb-12 max-w-3xl mx-auto text-red-300">
-          </p>
-          <div className="mt-48 space-x-4">
-            <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700">
-              <Link to="/login">Connexion</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="bg-white text-indigo-600 hover:bg-gray-100">
-              <Link to="/register">Inscription</Link>
-            </Button>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="global-rdv-visibility" className="flex flex-col space-y-1">
+              <span>Page RDV</span>
+              <span className="text-sm text-muted-foreground">
+                Activer/désactiver l'accès pour tous les utilisateurs
+              </span>
+            </Label>
+            <Switch
+              id="global-rdv-visibility"
+              checked={!settings.hide_rdv_page}
+              onCheckedChange={handleRdvVisibilityChange}
+              disabled={globalSettingsLoading || loading}
+            />
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Welcome Text */}
-      <div className="py-8 bg-white">
-        <div className="container mx-auto px-4 text-center">
-          <p className="max-w-4xl mx-auto text-base text-center text-gray-600">
-            Bienvenue sur la plateforme de réservation du centre social de Pîtres et du Manoir-Sur-Seine, votre partenaire de confiance pour l'épanouissement de vos enfants.
-          </p>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {/* Activités variées */}
-            <div className="text-center">
-              <Calendar className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
-              <h2 className="text-2xl font-bold mb-4">Activités variées</h2>
-              <p className="text-gray-600">
-                Un programme riche en activités éducatives, sportives et créatives pour
-                les mercredis et les vacances scolaires.
-              </p>
-            </div>
-
-            {/* Équipe qualifiée */}
-            <div className="text-center">
-              <Users className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
-              <h2 className="text-2xl font-bold mb-4">Équipe qualifiée</h2>
-              <p className="text-gray-600">
-                Une équipe d'animateurs professionnels et passionnés pour
-                accompagner vos enfants dans leur développement.
-              </p>
-            </div>
-
-            {/* Cadre exceptionnel */}
-            <div className="text-center">
-              <Image className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
-              <h2 className="text-2xl font-bold mb-4">Cadre exceptionnel</h2>
-              <p className="text-gray-600">
-                Un environnement sécurisé et adapté, avec des espaces intérieurs et
-                extérieurs propices à l'épanouissement des enfants.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>;
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Actions de masse</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          {/* Vos AlertDialogs pour bulk actions ici */}
+          {/* ... */}
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
-export default Index;
