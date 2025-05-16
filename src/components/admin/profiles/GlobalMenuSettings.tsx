@@ -13,13 +13,6 @@ interface GlobalMenuSettingsProps {
 export function GlobalMenuSettings({ profile }: GlobalMenuSettingsProps) {
   const { settings, loading, updateSettings } = useAdminUserSettings(profile.id);
 
-  const onToggleWed = (visible: boolean) => {
-    updateSettings({ hide_wednesday_reservations: !visible });
-  };
-  const onToggleRdv = (visible: boolean) => {
-    updateSettings({ hide_rdv_page: !visible });
-  };
-
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -31,7 +24,9 @@ export function GlobalMenuSettings({ profile }: GlobalMenuSettingsProps) {
           <Switch
             id="user-wed"
             checked={!settings.hide_wednesday_reservations}
-            onCheckedChange={onToggleWed}
+            onCheckedChange={(vis) =>
+              updateSettings({ hide_wednesday_reservations: !vis })
+            }
             disabled={loading}
           />
         </div>
@@ -40,7 +35,7 @@ export function GlobalMenuSettings({ profile }: GlobalMenuSettingsProps) {
           <Switch
             id="user-rdv"
             checked={!settings.hide_rdv_page}
-            onCheckedChange={onToggleRdv}
+            onCheckedChange={(vis) => updateSettings({ hide_rdv_page: !vis })}
             disabled={loading}
           />
         </div>
