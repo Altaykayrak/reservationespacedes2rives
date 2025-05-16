@@ -1,65 +1,50 @@
-
+// src/components/admin/profiles/GlobalMenuSettings.tsx
 import React from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import type { ProfileData } from "@/types/profile";
 import { useAdminUserSettings } from "@/hooks/useAdminUserSettings";
+import type { ProfileData } from "@/types/profile";
 
 interface GlobalMenuSettingsProps {
-  profile?: ProfileData;
+  profile: ProfileData;
 }
 
-export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile }) => {
-  const { settings, loading, updateSettings } = useAdminUserSettings(profile?.id || '');
+export function GlobalMenuSettings({ profile }: GlobalMenuSettingsProps) {
+  const { settings, loading, updateSettings } = useAdminUserSettings(profile.id);
 
-  if (!profile) {
-    return null;
-  }
-
-  const handleWednesdayVisibilityChange = async (isVisible: boolean) => {
-    await updateSettings({ hide_wednesday_reservations: !isVisible });
+  const onToggleWed = (visible: boolean) => {
+    updateSettings({ hide_wednesday_reservations: !visible });
   };
-
-  const handleRdvVisibilityChange = async (isVisible: boolean) => {
-    await updateSettings({ hide_rdv_page: !isVisible });
+  const onToggleRdv = (visible: boolean) => {
+    updateSettings({ hide_rdv_page: !visible });
   };
 
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="text-lg">Paramètres de visibilité des menus</CardTitle>
+        <CardTitle>Visibilité pour {profile.last_name}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         <div className="flex items-center justify-between">
-          <Label htmlFor="wednesday-visibility" className="flex flex-col space-y-1">
-            <span>Page Mercredis</span>
-            <span className="text-sm text-muted-foreground">Permet l'accès aux réservations des mercredis</span>
-          </Label>
-          <Switch 
-            id="wednesday-visibility" 
-            onCheckedChange={handleWednesdayVisibilityChange} 
+          <Label htmlFor="user-wed">Page Mercredis</Label>
+          <Switch
+            id="user-wed"
             checked={!settings.hide_wednesday_reservations}
+            onCheckedChange={onToggleWed}
             disabled={loading}
           />
         </div>
-        
-        <Separator />
-        
-        <div className="flex items-center justify-between">
-          <Label htmlFor="rdv-visibility" className="flex flex-col space-y-1">
-            <span>Page RDV</span>
-            <span className="text-sm text-muted-foreground">Permet l'accès à la page d'inscription</span>
-          </Label>
-          <Switch 
-            id="rdv-visibility" 
-            onCheckedChange={handleRdvVisibilityChange} 
+        <div className="flex items-center justify-between mt-4">
+          <Label htmlFor="user-rdv">Page RDV</Label>
+          <Switch
+            id="user-rdv"
             checked={!settings.hide_rdv_page}
+            onCheckedChange={onToggleRdv}
             disabled={loading}
           />
         </div>
       </CardContent>
     </Card>
   );
-};
+}
