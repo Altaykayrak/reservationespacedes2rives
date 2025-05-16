@@ -20,7 +20,7 @@ export function useAdminUserSettings(userId: string) {
     (async () => {
       setLoading(true);
 
-      // 1) Tentative de lecture
+      // 1) Lecture
       const { data, error } = await supabase
         .from("user_settings")
         .select("hide_wednesday_reservations, hide_rdv_page")
@@ -35,7 +35,7 @@ export function useAdminUserSettings(userId: string) {
       if (data) {
         setSettings(data);
       } else {
-        // 2) Si pas de ligne, on insère les valeurs par défaut
+        // 2) Si pas de ligne existante, on insère la ligne par défaut
         const { error: insertError } = await supabase
           .from("user_settings")
           .insert({
@@ -47,7 +47,7 @@ export function useAdminUserSettings(userId: string) {
           console.error("insert default user_settings:", insertError);
           toast.error("Impossible d'initialiser les paramètres utilisateur");
         }
-        // On garde les defaults en frontend
+        // On conserve les valeurs par défaut en front
       }
 
       setLoading(false);
@@ -56,20 +56,29 @@ export function useAdminUserSettings(userId: string) {
 
   const updateSettings = async (updates: Partial<UserSettingsRecord>) => {
     try {
-      // UPSERT : modifie ou insère si absent
-      const { error } = await supabase
+      // UPSERT + debug
+      const { data, error } = await supabase
         .from("user_settings")
         .upsert(
-          { user_id: userId, ...updates },
-          { onConflict: "user_id" }
-        );
-      if (error) throw error;
+          [{ user_id: userId, ...updates }],
+          { onConflict: "user_id", returning: "representation" }
+        )
+        .select();
 
-      setSettings((s) => ({ ...s, ...updates }));
-      toast.success("Paramètres utilisateur mis à jour");
-      return true;
+      console.log("⟳ user_settings upsert result:", { data, error });
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        // on récupère la première ligne retournée
+        setSettings(data[0]);
+        toast.success("Paramètres utilisateur mis à jour");
+        return true;
+      } else {
+        console.warn("⚠️ upsert n'a retourné aucune ligne", data);
+        return false;
+      }
     } catch (err: any) {
-      console.error("update user_settings:", err);
+      console.error("❌ update user_settings error:", err);
       toast.error("Impossible de mettre à jour les paramètres utilisateur");
       return false;
     }
