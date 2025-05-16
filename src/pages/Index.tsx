@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,3 +97,13 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
     </div>
   );
 };
+
+// Adding default export to fix the TS1192 error
+export default function Index() {
+  return (
+    <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold mb-6">Bienvenue</h1>
+      <p className="mb-4">Sélectionnez une option dans le menu pour continuer.</p>
+    </div>
+  );
+}

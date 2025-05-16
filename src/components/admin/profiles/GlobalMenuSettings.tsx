@@ -7,34 +7,50 @@ import { Separator } from "@/components/ui/separator";
 import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { toast } from "sonner";
 import type { ProfileData } from "@/types/profile";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GlobalMenuSettingsProps {
   profile?: ProfileData;
 }
 
 export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile }) => {
-  const { updateSettings } = useGlobalSettings();
+  const { updateGlobalSettings } = useGlobalSettings();
+  const [isUpdating, setIsUpdating] = React.useState(false);
 
   if (!profile) {
     return null;
   }
 
-  const handleWednesdayVisibilityChange = async (isVisible: boolean) => {
-    const success = await updateSettings(profile.id, {
-      hide_wednesday_reservations: !isVisible
-    });
-    if (success) {
-      toast.success(`Page mercredis ${isVisible ? 'affichée' : 'masquée'} pour ${profile.first_name} ${profile.last_name}`);
+  const updateUserSetting = async (setting: string, value: boolean) => {
+    setIsUpdating(true);
+    try {
+      // Update the user_settings table for this specific user
+      const { error } = await supabase
+        .from("user_settings")
+        .upsert({
+          user_id: profile.id,
+          [setting]: value
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+      
+      toast.success(`Paramètre mis à jour pour ${profile.first_name} ${profile.last_name}`);
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des paramètres:", error);
+      toast.error("Erreur lors de la mise à jour des paramètres");
+      return false;
+    } finally {
+      setIsUpdating(false);
     }
   };
 
+  const handleWednesdayVisibilityChange = async (isVisible: boolean) => {
+    await updateUserSetting('hide_wednesday_reservations', !isVisible);
+  };
+
   const handleRdvVisibilityChange = async (isVisible: boolean) => {
-    const success = await updateSettings(profile.id, {
-      hide_rdv_page: !isVisible
-    });
-    if (success) {
-      toast.success(`Page RDV ${isVisible ? 'affichée' : 'masquée'} pour ${profile.first_name} ${profile.last_name}`);
-    }
+    await updateUserSetting('hide_rdv_page', !isVisible);
   };
 
   return (
@@ -52,6 +68,7 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
             id="wednesday-visibility" 
             onCheckedChange={handleWednesdayVisibilityChange} 
             defaultChecked={true}
+            disabled={isUpdating}
           />
         </div>
         
@@ -66,6 +83,7 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
             id="rdv-visibility" 
             onCheckedChange={handleRdvVisibilityChange} 
             defaultChecked={true}
+            disabled={isUpdating}
           />
         </div>
       </CardContent>
