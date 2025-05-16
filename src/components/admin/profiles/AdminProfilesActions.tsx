@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -5,7 +6,17 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 
-export const AdminProfilesActions: React.FC = () => {
+interface AdminProfilesActionsProps {
+  bulkActionLoading: boolean;
+  handleBulkWaitingChange: (value: boolean) => Promise<void>;
+  handleBulkClosedChange: (value: boolean) => Promise<void>;
+}
+
+export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
+  bulkActionLoading,
+  handleBulkWaitingChange,
+  handleBulkClosedChange
+}) => {
   const { globalSettings, loading, updateGlobalSettings } = useGlobalSettings();
 
   const toggleWednesday = async (visible: boolean) => {
@@ -14,6 +25,7 @@ export const AdminProfilesActions: React.FC = () => {
     });
     if (ok) toast.success("Paramètres globaux mis à jour");
   };
+  
   const toggleRdv = async (visible: boolean) => {
     const ok = await updateGlobalSettings({ hide_rdv_page: !visible });
     if (ok) toast.success("Paramètres globaux mis à jour");

@@ -4,7 +4,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { toast } from "sonner";
 import type { ProfileData } from "@/types/profile";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +13,6 @@ interface GlobalMenuSettingsProps {
 }
 
 export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile }) => {
-  const { updateGlobalSettings } = useGlobalSettings();
   const [isUpdating, setIsUpdating] = React.useState(false);
 
   if (!profile) {

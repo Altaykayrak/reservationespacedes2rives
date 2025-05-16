@@ -24,7 +24,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
   handleBulkClosedChange,
 }) => {
   const [globalSettingsLoading, setGlobalSettingsLoading] = React.useState(false);
-  const { settings, loading, updateGlobalSettings } = useGlobalSettings();
+  const { globalSettings, loading, updateGlobalSettings } = useGlobalSettings();
 
   const handleWednesdayVisibilityChange = async (isVisible: boolean) => {
     setGlobalSettingsLoading(true);
@@ -60,7 +60,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
             </Label>
             <Switch
               id="global-wednesday-visibility"
-              checked={!settings.hide_wednesday_reservations}
+              checked={!globalSettings.hide_wednesday_reservations}
               onCheckedChange={handleWednesdayVisibilityChange}
               disabled={globalSettingsLoading || loading}
             />
@@ -77,7 +77,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
             </Label>
             <Switch
               id="global-rdv-visibility"
-              checked={!settings.hide_rdv_page}
+              checked={!globalSettings.hide_rdv_page}
               onCheckedChange={handleRdvVisibilityChange}
               disabled={globalSettingsLoading || loading}
             />
@@ -98,7 +98,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
   );
 };
 
-// Adding default export to fix the TS1192 error
+// Default export function
 export default function Index() {
   return (
     <div className="container mx-auto py-10">

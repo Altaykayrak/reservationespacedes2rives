@@ -4,6 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGlobalSettings } from "@/hooks/useGlobalSettings";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { toast } from "sonner";
 
 interface ProtectedRouteProps {
@@ -15,21 +16,25 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   const { user, loading, isAuthenticated } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   const location = useLocation();
-  const { settings, loading: settingsLoading } = useGlobalSettings();
-
+  const { globalSettings, loading: globalSettingsLoading } = useGlobalSettings();
+  const { userSettings, loading: userSettingsLoading } = useUserSettings();
+  
   useEffect(() => {
-    if (!loading && !settingsLoading) {
+    if (!loading && !globalSettingsLoading && !userSettingsLoading) {
       setIsChecking(false);
     }
-  }, [loading, settingsLoading]);
+  }, [loading, globalSettingsLoading, userSettingsLoading]);
 
   // Vérifier si l'accès à la page est bloqué par les paramètres spécifiques à l'utilisateur
   const isPageBlocked = () => {
-    if (location.pathname === "/wednesday-reservations" && settings.hide_wednesday_reservations) {
+    const hideWednesday = globalSettings.hide_wednesday_reservations || userSettings.hide_wednesday_reservations;
+    const hideRdv = globalSettings.hide_rdv_page || userSettings.hide_rdv_page;
+    
+    if (location.pathname === "/wednesday-reservations" && hideWednesday) {
       return true;
     }
     
-    if (location.pathname === "/rdv" && settings.hide_rdv_page) {
+    if (location.pathname === "/rdv" && hideRdv) {
       return true;
     }
     
@@ -37,7 +42,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   };
 
   // Afficher un indicateur de chargement pendant la vérification
-  if (isChecking || loading || settingsLoading) {
+  if (isChecking || loading || globalSettingsLoading || userSettingsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-full max-w-md space-y-4">
