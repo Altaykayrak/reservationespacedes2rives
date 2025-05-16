@@ -1,4 +1,4 @@
-
+// src/hooks/useAdminUserSettings.ts
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,28 +19,43 @@ export function useAdminUserSettings(userId: string) {
     if (!userId) return;
     (async () => {
       setLoading(true);
+      // 1) lire
       const { data, error } = await supabase
         .from("user_settings")
         .select("hide_wednesday_reservations, hide_rdv_page")
         .eq("user_id", userId)
         .single();
+
       if (error && error.code !== "PGRST116") {
         console.error("fetch user_settings:", error);
         toast.error("Impossible de charger les paramètres utilisateur");
       }
-      if (data) setSettings(data);
+
+      if (data) {
+        setSettings(data);
+      } else {
+        // 2) si pas de ligne, on insère la ligne par défaut
+        const { error: insertError } = await supabase
+          .from("user_settings")
+          .insert({ user_id: userId, hide_wednesday_reservations: false, hide_rdv_page: false });
+        if (insertError) {
+          console.error("insert default user_settings:", insertError);
+          toast.error("Impossible d'initialiser les paramètres utilisateur");
+        }
+      }
+
       setLoading(false);
     })();
   }, [userId]);
 
   const updateSettings = async (updates: Partial<UserSettingsRecord>) => {
     try {
+      // upsert : insert ou update selon la clé user_id
       const { error } = await supabase
         .from("user_settings")
-        .update(updates)
-        .eq("user_id", userId);
+        .upsert({ user_id: userId, ...updates }, { onConflict: "user_id" });
       if (error) throw error;
-      setSettings(s => ({ ...s, ...updates }));
+      setSettings((s) => ({ ...s, ...updates }));
       toast.success("Paramètres utilisateur mis à jour");
       return true;
     } catch (err: any) {
