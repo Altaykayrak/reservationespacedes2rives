@@ -50,11 +50,11 @@ const Navbar = () => {
     label: "Club Ado",
     href: "/teenholiday-reservations"
   }, {
-    label: "Inscription 2025-2026",
-    href: "/rdv"
-  }, {
     label: "Programme vacances",
     href: "/holiday-program"
+  }, {
+    label: "Inscription 2025-2026",
+    href: "/rdv"
   }, {
     label: "Règlement",
     href: "/terms-of-operation"
