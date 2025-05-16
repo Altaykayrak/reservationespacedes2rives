@@ -1,5 +1,5 @@
-
 // src/components/reservations/HolidayReservationContent.tsx
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
@@ -13,19 +13,18 @@ import { useChildrenData } from "@/hooks/useChildrenData";
 import { useLocation } from "react-router-dom";
 import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 import { Tables } from "@/integrations/supabase/types";
-import { useEffect } from "react";
 
-interface HolidayReservationContentProps {
+export interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
   filterTeenPeriods?: boolean;
   invertSelectors?: boolean;
 }
 
-export const HolidayReservationContent = ({
+export const HolidayReservationContent: React.FC<HolidayReservationContentProps> = ({
   filteredChildren,
   filterTeenPeriods = false,
-  invertSelectors = false
-}: HolidayReservationContentProps) => {
+  invertSelectors = false,
+}) => {
   const {
     selectedDates,
     selectedChild,
@@ -44,37 +43,30 @@ export const HolidayReservationContent = ({
     noSpotsDialog,
     setNoSpotsDialog,
     minimumDaysDialog,
-    setMinimumDaysDialog
+    setMinimumDaysDialog,
   } = useHolidayReservation();
 
   const { children: allChildren } = useChildrenData();
   const location = useLocation();
 
-  // 1) Filtrage de catégorie (maternelle, primaire, ados selon filterTeenPeriods)
+  // Filtrage par catégorie
   const { filteredChildren: categorizedChildren } = useCategoryFiltering(
     allChildren,
     selectedPeriod,
     filterTeenPeriods ? 'adolescent' : undefined
   );
 
-  // 2) Exclusion CM2 sur périodes ETE-01 à ETE-04
-  // On récupère le code de la période sélectionnée
+  // Exclusion des CM2 sur ETE-01 à ETE-04
   const periodObj = holidayPeriods?.find(p => p.id === selectedPeriod);
   const periodCode = (periodObj as any)?.code || (periodObj as any)?.name || '';
   const earlySummerCodes = ['ETE-01', 'ETE-02', 'ETE-03', 'ETE-04'];
   const isEarlySummer = earlySummerCodes.includes(periodCode);
-
-  // 3) Construction de la liste finale
+  
   const baseChildren = filteredChildren || categorizedChildren || [];
-  const childrenToDisplay = baseChildren.filter(child => {
-    // Exclure les CM2 sur les premières périodes d'été
-    if (isEarlySummer && child.school_class === 'CM2') {
-      return false;
-    }
-    return true;
-  });
+  const childrenToDisplay = baseChildren.filter(child =>
+    !(isEarlySummer && child.school_class === 'CM2')
+  );
 
-  // Mise à jour du param periodId depuis l'URL
   useEffect(() => {
     try {
       const searchParams = new URLSearchParams(location.search);
@@ -85,10 +77,9 @@ export const HolidayReservationContent = ({
     } catch {}
   }, [location.search, selectedPeriod, setSelectedPeriod]);
 
-  const validDates = selectedDates.filter(
+  const validDatesCount = selectedDates.filter(
     d => d.date instanceof Date && !isNaN(d.date.getTime())
-  );
-  const validDatesCount = validDates.length;
+  ).length;
 
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -100,30 +91,38 @@ export const HolidayReservationContent = ({
     if (!isSubmitting) handleSubmit();
   };
 
-  const periodSelectorElement = (
-    <PeriodSelector
-      selectedPeriod={selectedPeriod}
-      setSelectedPeriod={setSelectedPeriod}
-      holidayPeriods={holidayPeriods}
-      filterTeenOnly={filterTeenPeriods}
-    />
-  );
-
-  const childSelectorElement = (
-    <ChildSelector
-      selectedChild={selectedChild}
-      setSelectedChild={setSelectedChild}
-      children={childrenToDisplay}
-      setSelectedDates={setSelectedDates}
-    />
-  );
-
   return (
     <div className="space-y-6">
       {invertSelectors ? (
-        <>{periodSelectorElement}{childSelectorElement}</>
+        <>
+          <PeriodSelector
+            selectedPeriod={selectedPeriod}
+            setSelectedPeriod={setSelectedPeriod}
+            holidayPeriods={holidayPeriods}
+            filterTeenOnly={filterTeenPeriods}
+          />
+          <ChildSelector
+            selectedChild={selectedChild}
+            setSelectedChild={setSelectedChild}
+            children={childrenToDisplay}
+            setSelectedDates={setSelectedDates}
+          />
+        </>
       ) : (
-        <>{childSelectorElement}{periodSelectorElement}</>
+        <>
+          <ChildSelector
+            selectedChild={selectedChild}
+            setSelectedChild={setSelectedChild}
+            children={childrenToDisplay}
+            setSelectedDates={setSelectedDates}
+          />
+          <PeriodSelector
+            selectedPeriod={selectedPeriod}
+            setSelectedPeriod={setSelectedPeriod}
+            holidayPeriods={holidayPeriods}
+            filterTeenOnly={filterTeenPeriods}
+          />
+        </>
       )}
 
       {selectedPeriod && selectedChild && (
