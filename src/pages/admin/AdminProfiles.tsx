@@ -38,6 +38,13 @@ const AdminProfiles = () => {
         <GlobalMenuSettings profile={selectedProfile} />
       )}
       
+      <AdminProfilesActions
+        profiles={profiles}
+        bulkActionLoading={bulkActionLoading}
+        handleBulkWaitingChange={handleBulkWaitingChange}
+        handleBulkClosedChange={handleBulkClosedChange}
+      />
+      
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Liste des utilisateurs</CardTitle>
@@ -60,13 +67,6 @@ const AdminProfiles = () => {
 
           {!loading && !error && (
             <>
-              <AdminProfilesActions
-                profiles={profiles}
-                bulkActionLoading={bulkActionLoading}
-                handleBulkWaitingChange={handleBulkWaitingChange}
-                handleBulkClosedChange={handleBulkClosedChange}
-              />
-              
               <AdminProfilesTable
                 profiles={profiles}
                 handleAutomaticPaymentChange={handleAutomaticPaymentChange}
