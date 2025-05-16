@@ -1,4 +1,4 @@
-
+```tsx
 // src/components/reservations/HolidayReservationContent.tsx
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -49,13 +49,32 @@ export const HolidayReservationContent = ({
 
   const { children: allChildren } = useChildrenData();
   const location = useLocation();
+
+  // 1) Filtrage de catégorie (maternelle, primaire, ados selon filterTeenPeriods)
   const { filteredChildren: categorizedChildren } = useCategoryFiltering(
     allChildren,
     selectedPeriod,
     filterTeenPeriods ? 'adolescent' : undefined
   );
-  const childrenToDisplay = filteredChildren || categorizedChildren;
 
+  // 2) Exclusion CM2 sur périodes ETE-01 à ETE-04
+  // On récupère le code de la période sélectionnée
+  const periodObj = holidayPeriods?.find(p => p.id === selectedPeriod);
+  const periodCode = (periodObj as any)?.code || (periodObj as any)?.name || '';
+  const earlySummerCodes = ['ETE-01', 'ETE-02', 'ETE-03', 'ETE-04'];
+  const isEarlySummer = earlySummerCodes.includes(periodCode);
+
+  // 3) Construction de la liste finale
+  const baseChildren = filteredChildren || categorizedChildren || [];
+  const childrenToDisplay = baseChildren.filter(child => {
+    // Exclure les CM2 sur les premières périodes d'été
+    if (isEarlySummer && child.school_class === 'CM2') {
+      return false;
+    }
+    return true;
+  });
+
+  // Mise à jour du param periodId depuis l'URL
   useEffect(() => {
     try {
       const searchParams = new URLSearchParams(location.search);
@@ -66,7 +85,9 @@ export const HolidayReservationContent = ({
     } catch {}
   }, [location.search, selectedPeriod, setSelectedPeriod]);
 
-  const validDates = selectedDates.filter(d => d.date instanceof Date && !isNaN(d.date.getTime()));
+  const validDates = selectedDates.filter(
+    d => d.date instanceof Date && !isNaN(d.date.getTime())
+  );
   const validDatesCount = validDates.length;
 
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -133,9 +154,21 @@ export const HolidayReservationContent = ({
         </Button>
       </div>
 
-      <SuccessReservationDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
-      <NoSpotsDialog open={noSpotsDialog.isOpen} onOpenChange={open => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })} schoolClass={noSpotsDialog.schoolClass} date={noSpotsDialog.date} />
-      <MinimumDaysDialog open={minimumDaysDialog.isOpen} onOpenChange={open => setMinimumDaysDialog({ isOpen: open })} />
+      <SuccessReservationDialog
+        open={showSuccessDialog}
+        onOpenChange={setShowSuccessDialog}
+      />
+      <NoSpotsDialog
+        open={noSpotsDialog.isOpen}
+        onOpenChange={open => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })}
+        schoolClass={noSpotsDialog.schoolClass}
+        date={noSpotsDialog.date}
+      />
+      <MinimumDaysDialog
+        open={minimumDaysDialog.isOpen}
+        onOpenChange={open => setMinimumDaysDialog({ isOpen: open })}
+      />
     </div>
   );
 };
+```
