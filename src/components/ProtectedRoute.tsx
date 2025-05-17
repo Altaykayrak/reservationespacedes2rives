@@ -22,11 +22,22 @@ export function ProtectedRoute({
   const { userSettings, loading: uLoad } = useUserSettings();
 
   useEffect(() => {
-    if (!authLoading && !gLoad && !uLoad) setChecking(false);
-  }, [authLoading, gLoad, uLoad]);
+    // Wait for all data to be loaded before making decisions
+    if (!authLoading && !gLoad && !uLoad) {
+      console.log("ProtectedRoute: All data loaded, authentication status:", isAuthenticated);
+      setChecking(false);
+    }
+  }, [authLoading, gLoad, uLoad, isAuthenticated]);
 
-  if (checking) return <Skeleton className="h-32 w-full" />;
+  // Show loading state while checking
+  if (checking || authLoading) {
+    console.log("ProtectedRoute: Still checking authentication...");
+    return <Skeleton className="h-32 w-full" />;
+  }
 
+  console.log("ProtectedRoute: Path:", location.pathname, "Auth status:", isAuthenticated);
+
+  // Check if the current page is blocked based on settings
   const isBlocked = (path: string) => {
     if (path === "/wednesday-reservations") {
       return (
@@ -43,13 +54,19 @@ export function ProtectedRoute({
     return false;
   };
 
+  // If the page is blocked by settings, redirect to home
   if (isBlocked(location.pathname)) {
+    console.log("ProtectedRoute: Page is blocked by settings, redirecting to home");
     return <Navigate to="/" replace />;
   }
 
+  // If not authenticated, redirect to login
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    console.log("ProtectedRoute: Not authenticated, redirecting to login");
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
+  // User is authenticated and page is not blocked, render the children
+  console.log("ProtectedRoute: User is authenticated, rendering children");
   return <>{children}</>;
 }

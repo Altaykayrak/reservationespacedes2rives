@@ -24,6 +24,7 @@ export const useLoginForm = () => {
     setError(null);
 
     try {
+      console.log("[useLoginForm] Tentative d'authentification avec Supabase");
       // Connexion avec Supabase
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -46,6 +47,7 @@ export const useLoginForm = () => {
         toast.success("Connexion réussie");
         
         // Garder uniquement cette redirection de login vers profile
+        console.log("[useLoginForm] Redirection vers /profile dans 1.5 secondes");
         setTimeout(() => {
           navigate("/profile", { replace: true });
         }, 1500);
