@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,7 +36,8 @@ export function ProtectedRoute({
     }
     if (path === "/rdv") {
       return (
-        globalSettings.hide_rdv_page || userSettings.hide_rdv_page
+        globalSettings.hide_rdv_page || 
+        userSettings.hide_rdv_page
       );
     }
     return false;
