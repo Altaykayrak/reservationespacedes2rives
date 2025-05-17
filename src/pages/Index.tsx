@@ -1,104 +1,79 @@
-
-import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useGlobalSettings } from "@/hooks/useGlobalSettings";
-import { Navbar } from "@/components/ui/navbar";
 import { Link } from "react-router-dom";
-import { CalendarDays, BookUser, School, Info } from "lucide-react";
-
-// Default export function
-export default function Index() {
-  const { globalSettings, loading } = useGlobalSettings();
-  
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+import { Navbar } from "@/components/ui/navbar";
+import { Calendar, Users, Image } from "lucide-react";
+const Index = () => {
+  return <div className="min-h-screen bg-white">
       <Navbar />
-      <div className="container mx-auto py-10 px-4">
-        <h1 className="text-3xl font-bold mb-6 tracking-tight">Bienvenue dans votre espace</h1>
-        <p className="mb-8 text-lg text-muted-foreground">Accédez à vos services et gérez vos réservations facilement.</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-all">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <CalendarDays className="h-5 w-5 text-primary" />
-                Réservations Vacances
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">Réservez les périodes de vacances pour vos enfants.</p>
-              <Button asChild className="w-full">
-                <Link to="/holiday-reservations">Accéder</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {!loading && !globalSettings.hide_wednesday_reservations && (
-            <Card className="hover:shadow-lg transition-all">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <CalendarDays className="h-5 w-5 text-primary" />
-                  Réservations Mercredis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">Gérez les réservations pour les mercredis.</p>
-                <Button asChild className="w-full">
-                  <Link to="/wednesday-reservations">Accéder</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {!loading && !globalSettings.hide_rdv_page && (
-            <Card className="hover:shadow-lg transition-all">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <BookUser className="h-5 w-5 text-primary" />
-                  Rendez-vous
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">Prenez rendez-vous avec notre équipe.</p>
-                <Button asChild className="w-full">
-                  <Link to="/rdv">Accéder</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="hover:shadow-lg transition-all">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <School className="h-5 w-5 text-primary" />
-                Vos Enfants
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">Gérez les informations de vos enfants.</p>
-              <Button asChild className="w-full">
-                <Link to="/children">Accéder</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-all">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Info className="h-5 w-5 text-primary" />
-                Tarifs
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">Consultez nos grilles tarifaires.</p>
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/prices">Voir les tarifs</Link>
-              </Button>
-            </CardContent>
-          </Card>
+      
+      {/* Hero Section */}
+      <div className="relative bg-cover text-white py-24" style={{
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Betterfront.jpg')`,
+      backgroundPosition: "0% 20%"
+    }}>
+        <div className="container mx-auto px-4 text-center">
+          <div className="mt-0">
+            <img src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png" alt="L'espace des deux rives" className="h-24 mx-auto" />
+          </div>
+          <h1 className="text-5xl font-bold mb-6"></h1>
+          <p className="text-xl mb-12 max-w-3xl mx-auto text-red-300">
+          </p>
+          <div className="mt-48 space-x-4">
+            <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700">
+              <Link to="/login">Connexion</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="bg-white text-indigo-600 hover:bg-gray-100">
+              <Link to="/register">Inscription</Link>
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+
+      {/* Welcome Text */}
+      <div className="py-8 bg-white">
+        <div className="container mx-auto px-4 text-center">
+          <p className="max-w-4xl mx-auto text-base text-center text-gray-600">
+            Bienvenue sur la plateforme de réservation du centre social de Pîtres et du Manoir-Sur-Seine, votre partenaire de confiance pour l'épanouissement de vos enfants.
+          </p>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {/* Activités variées */}
+            <div className="text-center">
+              <Calendar className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
+              <h2 className="text-2xl font-bold mb-4">Activités variées</h2>
+              <p className="text-gray-600">
+                Un programme riche en activités éducatives, sportives et créatives pour
+                les mercredis et les vacances scolaires.
+              </p>
+            </div>
+
+            {/* Équipe qualifiée */}
+            <div className="text-center">
+              <Users className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
+              <h2 className="text-2xl font-bold mb-4">Équipe qualifiée</h2>
+              <p className="text-gray-600">
+                Une équipe d'animateurs professionnels et passionnés pour
+                accompagner vos enfants dans leur développement.
+              </p>
+            </div>
+
+            {/* Cadre exceptionnel */}
+            <div className="text-center">
+              <Image className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
+              <h2 className="text-2xl font-bold mb-4">Cadre exceptionnel</h2>
+              <p className="text-gray-600">
+                Un environnement sécurisé et adapté, avec des espaces intérieurs et
+                extérieurs propices à l'épanouissement des enfants.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>;
+};
+export default Index;
