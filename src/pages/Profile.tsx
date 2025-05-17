@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Navbar } from "@/components/ui/navbar";
 
 const Profile = () => {
-  // Pas de redirection automatique ici
+  // Suppression de la redirection automatique ici
 
   const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ["profile"],

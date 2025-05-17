@@ -45,8 +45,7 @@ export const useLoginForm = () => {
         console.log("[useLoginForm] Connexion réussie, session établie:", data.session);
         toast.success("Connexion réussie");
         
-        // Gardons uniquement cette redirection de login vers profile
-        // avec un délai suffisant pour que la session soit bien établie
+        // Garder uniquement cette redirection de login vers profile
         setTimeout(() => {
           navigate("/profile", { replace: true });
         }, 1500);
