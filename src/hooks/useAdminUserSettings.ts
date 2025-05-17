@@ -1,3 +1,4 @@
+
 // src/hooks/useAdminUserSettings.ts
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +61,7 @@ export function useAdminUserSettings(userId: string) {
       const { data, error } = await supabase
         .from("user_settings")
         .upsert(
-          [{ user_id: userId, ...updates }],
+          { user_id: userId, ...updates },
           { onConflict: "user_id", returning: "representation" }
         )
         .select();
