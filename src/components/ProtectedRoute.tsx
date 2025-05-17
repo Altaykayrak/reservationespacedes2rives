@@ -1,72 +1,90 @@
 
-import React, { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useGlobalSettings } from "@/hooks/useGlobalSettings";
-import { useUserSettings } from "@/hooks/useUserSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
   requireAdmin?: boolean;
 }
 
-export function ProtectedRoute({
-  children,
-  requireAdmin = false,
-}: ProtectedRouteProps) {
-  const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [checking, setChecking] = useState(true);
+export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+  const { user, loading, isAuthenticated } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
   const location = useLocation();
-  const { globalSettings, loading: gLoad } = useGlobalSettings();
-  const { userSettings, loading: uLoad } = useUserSettings();
+  const { settings, loading: settingsLoading } = useGlobalSettings();
 
   useEffect(() => {
-    // Wait for all data to be loaded before making decisions
-    if (!authLoading && !gLoad && !uLoad) {
-      console.log("ProtectedRoute: All data loaded, authentication status:", isAuthenticated);
-      setChecking(false);
+    if (!loading && !settingsLoading) {
+      setIsChecking(false);
     }
-  }, [authLoading, gLoad, uLoad, isAuthenticated]);
+  }, [loading, settingsLoading]);
 
-  // Show loading state while checking
-  if (checking || authLoading) {
-    console.log("ProtectedRoute: Still checking authentication...");
-    return <Skeleton className="h-32 w-full" />;
-  }
-
-  console.log("ProtectedRoute: Path:", location.pathname, "Auth status:", isAuthenticated);
-
-  // Check if the current page is blocked based on settings
-  const isBlocked = (path: string) => {
-    if (path === "/wednesday-reservations") {
-      return (
-        globalSettings.hide_wednesday_reservations ||
-        userSettings.hide_wednesday_reservations
-      );
+  // Vérifier si l'accès à la page est bloqué par les paramètres spécifiques à l'utilisateur
+  const isPageBlocked = () => {
+    if (location.pathname === "/wednesday-reservations" && settings.hide_wednesday_reservations) {
+      return true;
     }
-    if (path === "/rdv") {
-      return (
-        globalSettings.hide_rdv_page || 
-        userSettings.hide_rdv_page
-      );
+    
+    if (location.pathname === "/rdv" && settings.hide_rdv_page) {
+      return true;
     }
+    
     return false;
   };
 
-  // If the page is blocked by settings, redirect to home
-  if (isBlocked(location.pathname)) {
-    console.log("ProtectedRoute: Page is blocked by settings, redirecting to home");
-    return <Navigate to="/" replace />;
+  // Afficher un indicateur de chargement pendant la vérification
+  if (isChecking || loading || settingsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-full max-w-md space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      </div>
+    );
   }
 
-  // If not authenticated, redirect to login
+  // Vérifier si l'accès à la page est bloqué
+  if (isPageBlocked()) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <div className="my-8 p-6 bg-red-50 rounded-lg shadow border border-red-200">
+          <h2 className="text-2xl font-bold mb-4 text-red-700">Accès non disponible</h2>
+          <p className="mb-4">Cette fonctionnalité n'est pas disponible actuellement.</p>
+          <a href="/" className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            Retour à l'accueil
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // Rediriger vers la page de connexion seulement pour les routes admin
   if (!isAuthenticated) {
-    console.log("ProtectedRoute: Not authenticated, redirecting to login");
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    // Pour les routes admin, rediriger vers /admin-login
+    if (location.pathname.startsWith('/admin')) {
+      return <Navigate to="/admin-login" state={{ from: location }} replace />;
+    }
+    // Pour toutes les autres routes protégées, afficher un message ou un bouton de redirection
+    // sans faire de redirection automatique
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <div className="my-8 p-6 bg-gray-50 rounded-lg shadow">
+          <h2 className="text-2xl font-bold mb-4">Accès restreint</h2>
+          <p className="mb-4">Vous devez être connecté pour accéder à cette page.</p>
+          <a href="/login" className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            Se connecter
+          </a>
+        </div>
+      </div>
+    );
   }
 
-  // User is authenticated and page is not blocked, render the children
-  console.log("ProtectedRoute: User is authenticated, rendering children");
+  // Si l'utilisateur est authentifié, permettre l'accès
   return <>{children}</>;
 }

@@ -44,8 +44,8 @@ const AdminLoginPage = () => {
           if (isAdmin) {
             console.log("[AdminLoginPage] Utilisateur authentifié comme admin");
             toast.success("Vous êtes déjà connecté en tant qu'administrateur");
-            // Commenté pour supprimer la redirection automatique
-            // navigate("/admin");
+            // Ajouter la redirection vers la page d'administration
+            navigate("/admin");
           }
         }
         
@@ -120,9 +120,7 @@ const AdminLoginPage = () => {
       console.log("[AdminLoginPage] Connexion admin réussie!");
       toast.success("Connexion administrateur réussie");
       
-      // Redirection manuelle vers /admin après une authentification réussie
-      // Cette redirection est intentionnellement laissée pour que l'administrateur
-      // soit redirigé vers le bon endroit après une connexion réussie
+      // Ajouter la redirection vers /admin après une authentification réussie
       setTimeout(() => {
         navigate("/admin");
       }, 500);

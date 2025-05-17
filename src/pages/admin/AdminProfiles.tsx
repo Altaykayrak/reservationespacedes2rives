@@ -7,10 +7,9 @@ import { AdminProfilesActions } from "@/components/admin/profiles/AdminProfilesA
 import { AdminProfilesTable } from "@/components/admin/profiles/AdminProfilesTable";
 import { AdminProfilesStatus } from "@/components/admin/profiles/AdminProfilesStatus";
 import { GlobalMenuSettings } from "@/components/admin/profiles/GlobalMenuSettings";
-import type { ProfileData } from "@/types/profile";
 
 const AdminProfiles = () => {
-  const [selectedProfile, setSelectedProfile] = useState<ProfileData | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const {
     profiles,
     loading,
@@ -39,8 +38,8 @@ const AdminProfiles = () => {
         <GlobalMenuSettings profile={selectedProfile} />
       )}
       
-      {/* We're not passing profiles prop since it doesn't exist on AdminProfilesActions component */}
       <AdminProfilesActions
+        profiles={profiles}
         bulkActionLoading={bulkActionLoading}
         handleBulkWaitingChange={handleBulkWaitingChange}
         handleBulkClosedChange={handleBulkClosedChange}

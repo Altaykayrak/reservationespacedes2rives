@@ -1,96 +1,200 @@
 
-import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useGlobalSettings } from "@/hooks/useGlobalSettings";
-import { useUserSettings } from "@/hooks/useUserSettings";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { LogOut, Home, CalendarDays, User, BookUser } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { LogOut } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "react-router-dom";
+import { NavItem, NavProps } from "./nav/types";
+import { Logo } from "./nav/Logo";
+import { MobileNav } from "./nav/MobileNav";
+import { DesktopNav } from "./nav/DesktopNav";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 
-export function Navbar() {
-  const { globalSettings, loading: gLoad } = useGlobalSettings();
-  const { userSettings, loading: uLoad } = useUserSettings();
-  const { user, signOut } = useAuth();
-  const [isMounted, setIsMounted] = useState(false);
-  const location = useLocation();
-  const loading = gLoad || uLoad;
+const Navbar = () => {
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [profileData, setProfileData] = useState<{
+    first_name: string | null;
+    last_name: string | null;
+  } | null>(null);
+  const { settings, loading: settingsLoading } = useGlobalSettings();
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
-
-  const hideWed =
-    globalSettings.hide_wednesday_reservations ||
-    userSettings.hide_wednesday_reservations;
-  const hideRdv = 
-    globalSettings.hide_rdv_page || 
-    userSettings.hide_rdv_page;
+    setIsAuthenticated(!!user);
+  }, [user]);
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-    }
+    await signOut();
   };
 
-  const navItems = [
-    { label: "Accueil", href: "/", icon: Home },
-    { label: "Vacances", href: "/holiday-reservations", icon: CalendarDays },
-    ...(hideWed ? [] : [{ label: "Mercredis", href: "/wednesday-reservations", icon: CalendarDays }]),
-    ...(hideRdv ? [] : [{ label: "Rendez-vous", href: "/rdv", icon: BookUser }]),
-    { label: "Mon Profil", href: "/profile", icon: User },
-  ];
+  // Base menu items
+  let baseMenuItems: NavItem[] = [{
+    label: "Accueil",
+    href: "/"
+  }, {
+    label: "Profil",
+    href: "/profile"
+  }, {
+    label: "Mes enfants",
+    href: "/children"
+  }];
+  
+  // Add Wednesday reservations if not hidden for this user
+  if (!settingsLoading && !settings.hide_wednesday_reservations) {
+    baseMenuItems.push({
+      label: "Mercredis",
+      href: "/wednesday-reservations"
+    });
+  }
+  
+  // Add other regular items
+  const additionalMenuItems: NavItem[] = [{
+    label: "Vacances",
+    href: "/holiday-reservations"
+  }, {
+    label: "Club Ado",
+    href: "/teenholiday-reservations"
+  }, {
+    label: "Programme vacances",
+    href: "/holiday-program"
+  }];
+  
+  baseMenuItems = [...baseMenuItems, ...additionalMenuItems];
+  
+  // Add RDV if not hidden for this user
+  if (!settingsLoading && !settings.hide_rdv_page) {
+    baseMenuItems.push({
+      label: "Inscription 2025-2026",
+      href: "/rdv"
+    });
+  }
+  
+  // Add remaining items
+  const finalMenuItems: NavItem[] = [...baseMenuItems, {
+    label: "Règlement",
+    href: "/terms-of-operation"
+  }, {
+    label: "Tarifs",
+    href: "/prices"
+  }];
+  
+  const menuItems = finalMenuItems;
+  
+  const navProps: NavProps = {
+    menuItems: menuItems,
+    isAuthenticated: isAuthenticated,
+    onLogout: handleLogout
+  };
+  
+  return <div className="border-b bg-background sticky top-0 z-50">
+      <div className="flex h-16 items-center px-4">
+        <Logo />
+        <div className="ml-auto flex items-center space-x-4">
+          <DesktopNav {...navProps} />
+          <MobileNav {...navProps} />
+          {isAuthenticated ? <ProfileDropdown user={user} menuItems={menuItems} onLogout={handleLogout} /> : <Link to="/login">
+              <Button variant="default" size="sm">
+                Se connecter
+              </Button>
+            </Link>}
+        </div>
+      </div>
+    </div>;
+};
 
-  return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container flex h-16 items-center">
-        <div className="mr-4 flex">
-          <Link className="flex items-center space-x-2 font-bold text-xl text-primary" to="/">
-            <span>MonEspace</span>
+interface NavigationMenuProps extends NavProps {}
+
+const NavigationMenu = ({
+  menuItems,
+  isAuthenticated,
+  onLogout
+}: NavigationMenuProps) => {
+  return <div className="hidden md:flex items-center space-x-4">
+      {menuItems.map(item => <Link key={item.label} to={item.href} className="text-sm font-medium transition-colors hover:text-primary">
+          {item.label}
+        </Link>)}
+      {isAuthenticated && <Button variant="ghost" size="sm" onClick={onLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Déconnexion
+        </Button>}
+    </div>;
+};
+
+interface ProfileDropdownProps {
+  user: any;
+  menuItems: NavItem[];
+  onLogout: () => void;
+}
+
+const ProfileDropdown = ({
+  user,
+  menuItems,
+  onLogout
+}: ProfileDropdownProps) => {
+  // Récupérer le prénom et le nom depuis user_metadata, ou fallback sur email
+  const firstName = user?.user_metadata?.first_name || user?.user_metadata?.firstName || "";
+  const lastName = user?.user_metadata?.last_name || user?.user_metadata?.lastName || "";
+  const fullName = firstName && lastName ? `${firstName} ${lastName}` : user?.email;
+  const initials = firstName && lastName 
+    ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+    : user?.email?.[0].toUpperCase() || "?";
+
+  return <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user?.user_metadata?.avatar_url} />
+            <AvatarFallback>
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-80">
+        <SheetHeader>
+          <SheetTitle>E2R Réservation</SheetTitle>
+          <SheetDescription>
+          </SheetDescription>
+        </SheetHeader>
+        <div className="grid gap-4 py-4">
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user?.user_metadata?.avatar_url} />
+              <AvatarFallback>
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-medium">{fullName}</div>
+              <div className="text-muted-foreground text-sm">{user?.email}</div>
+            </div>
+          </div>
+          
+          <div className="grid gap-2">
+            {menuItems.map(item => <Link key={item.label} to={item.href} className="text-sm font-medium transition-colors hover:text-primary">
+                {item.label}
+              </Link>)}
+          </div>
+          
+          <Link to="/profile">
+            
+          </Link>
+          <Link to="/children">
+            
           </Link>
         </div>
-        
-        <nav className="flex flex-1 items-center justify-center md:justify-start space-x-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                "inline-flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                location.pathname === item.href
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
-            >
-              <item.icon className="mr-2 h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        
-        {user && (
-          <div className="ml-auto flex items-center gap-3">
-            <span className="text-sm text-muted-foreground hidden md:block">
-              {user.email}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden md:inline">Déconnexion</span>
-            </Button>
-          </div>
-        )}
-      </div>
-    </header>
-  );
-}
+        <Button variant="destructive" className="w-full" onClick={onLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Se déconnecter
+        </Button>
+      </SheetContent>
+    </Sheet>;
+};
+
+export { Navbar };
