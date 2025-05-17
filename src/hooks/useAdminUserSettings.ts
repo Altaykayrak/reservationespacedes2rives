@@ -60,10 +60,12 @@ export function useAdminUserSettings(userId: string) {
       // UPSERT + debug
       const { data, error } = await supabase
         .from("user_settings")
-        .upsert(
-          { user_id: userId, ...updates },
-          { onConflict: "user_id", returning: "representation" }
-        )
+        .upsert({
+          user_id: userId, 
+          ...updates
+        }, { 
+          onConflict: "user_id"
+        })
         .select();
 
       console.log("⟳ user_settings upsert result:", { data, error });
