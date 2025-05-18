@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { Progress } from "@/components/ui/progress";
+import { useEffect, useState } from "react";
 
 export const WednesdayReservationContent = () => {
   const {
@@ -31,6 +32,19 @@ export const WednesdayReservationContent = () => {
     wednesdayEligibleChildren,
     isLoading
   } = useChildrenData();
+  
+  // State for blinking animation
+  const [isBlinking, setIsBlinking] = useState(true);
+  
+  // Effect for controlling the 6-second blinking animation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsBlinking(false);
+    }, 6000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
   if (isLoading) {
     return <div className="flex justify-center items-center p-6">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -40,7 +54,7 @@ export const WednesdayReservationContent = () => {
   // Logs pour déboguer
   console.log("wednesdayEligibleChildren dans WednesdayReservationContent:", wednesdayEligibleChildren);
   return <div className="space-y-6">
-      <Alert>
+      <Alert className={isBlinking ? "animate-blink border-2 border-red-500 bg-red-50 text-red-800" : ""}>
         <CalendarDays className="h-4 w-4" />
         <AlertDescription>Vous pouvez sélectionner plusieurs mercredis à la fois pour créer vos réservations. Pour vos enfants en petite section nous vous invitons à contacter l'accueil.</AlertDescription>
       </Alert>
