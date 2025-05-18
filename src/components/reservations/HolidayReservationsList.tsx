@@ -1,4 +1,3 @@
-
 import { EmptyReservations } from "./EmptyReservations";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
@@ -56,7 +55,6 @@ export const HolidayReservationsList = () => {
     );
   }
 
-  // Add additional check for empty array, not just null or undefined
   if (!reservations || reservations.length === 0) {
     console.log("4. Aucune réservation trouvée");
     return <EmptyReservations />;
@@ -64,19 +62,22 @@ export const HolidayReservationsList = () => {
 
   console.log("5. Nombre de réservations avant filtrage:", reservations.length);
 
-  // Make sure we properly handle the reservation data structure
   const filteredReservations = reservations
     .filter(reservation => {
-      // Make sure the reservation and its children data exists
       if (!reservation || !reservation.children || !reservation.children.school_class || !reservation.period_id) {
         console.warn("Données manquantes pour la réservation:", reservation?.id);
         return false;
       }
-      
-      // Filter based on page type and period-specific class mappings
-      const isTeenClass = isTeenClassSync(reservation.children.school_class, reservation.period_id);
-      console.log(`Réservation ${reservation.id}, enfant ${reservation.children.first_name}, classe ${reservation.children.school_class}, est ado: ${isTeenClass}`);
-      return isTeenPage ? isTeenClass : !isTeenClass;
+
+      const schoolClass = reservation.children.school_class;
+      const isTeenClass = isTeenClassSync(schoolClass, reservation.period_id);
+      const isCm2 = schoolClass.toUpperCase() === "CM2";
+
+      const keepReservation = isTeenPage ? (isTeenClass || isCm2) : !isTeenClass;
+
+      console.log(`Réservation ${reservation.id}, enfant ${reservation.children.first_name}, classe ${schoolClass}, ado: ${isTeenClass}, CM2: ${isCm2}, incluse: ${keepReservation}`);
+
+      return keepReservation;
     });
 
   console.log("11. Nombre de réservations après filtrage:", filteredReservations.length);
@@ -85,7 +86,7 @@ export const HolidayReservationsList = () => {
     return (
       <div className="p-6 text-center">
         <p className="text-gray-600">
-          Aucune réservation trouvée pour {isTeenPage ? "les adolescents" : "les enfants de maternelle et primaire"}.
+          Aucune réservation trouvée pour {isTeenPage ? "les adolescents et les CM2" : "les enfants de maternelle et primaire"}.
         </p>
       </div>
     );
@@ -110,7 +111,7 @@ export const HolidayReservationsList = () => {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos {isTeenPage ? "activités Club Ado" : "vacances"} réservées (sous réserve de règlement)
+          Vos {isTeenPage ? "activités Club Ado (CM2 inclus)" : "vacances"} réservées (sous réserve de règlement)
         </h2>
         <p className="text-sm text-red-600 mb-4">
           Pour toute modification de vos réservations (ajout ou suppression de journées), merci de contacter l'accueil.
