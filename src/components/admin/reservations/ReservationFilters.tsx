@@ -86,7 +86,7 @@ export const ReservationFilters = ({
               <SelectItem value="all">Tous les groupes</SelectItem>
               <SelectItem value="maternelle">Maternelle</SelectItem>
               <SelectItem value="primaire">Primaire</SelectItem>
-              <SelectItem value="ado">Ado</SelectItem>
+              <SelectItem value="adolescent">Adolescent</SelectItem>
             </SelectContent>
           </Select>
         </div>

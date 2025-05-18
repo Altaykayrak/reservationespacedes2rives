@@ -22,6 +22,13 @@ export const useFilteredReservations = (
 
   // Utiliser notre hook central pour les catégories
   const { getClassCategorySync } = useSchoolClassCategories();
+  
+  // Pour déboguer le problème de filtrage
+  useEffect(() => {
+    if (selectedGroup !== 'all') {
+      console.log(`Filtrage par groupe: "${selectedGroup}"`);
+    }
+  }, [selectedGroup]);
 
   const sortReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
     reservations: T[] | null | undefined
@@ -76,6 +83,12 @@ export const useFilteredReservations = (
         let groupMatch = selectedGroup === "all" ? true : false;
         if (selectedGroup !== "all" && reservation.children?.school_class) {
           const group = getClassCategorySync(reservation.children.school_class);
+          
+          // Log pour débogage du problème de filtrage
+          if (selectedGroup === 'adolescent' && reservation.children.school_class) {
+            console.log(`Classe: ${reservation.children.school_class}, Catégorie: ${group}`);
+          }
+          
           groupMatch = group === selectedGroup;
         }
 
@@ -116,6 +129,12 @@ export const useFilteredReservations = (
         let groupMatch = selectedGroup === "all" ? true : false;
         if (selectedGroup !== "all" && reservation.children?.school_class) {
           const group = getClassCategorySync(reservation.children.school_class, reservation.period_id);
+          
+          // Log pour débogage du problème de filtrage
+          if (selectedGroup === 'adolescent' && reservation.children.school_class) {
+            console.log(`Holiday - Période: ${reservation.period_id}, Classe: ${reservation.children.school_class}, Catégorie: ${group}`);
+          }
+          
           groupMatch = group === selectedGroup;
         }
         
