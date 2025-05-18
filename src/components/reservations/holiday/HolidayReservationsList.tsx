@@ -88,12 +88,17 @@ export const HolidayReservationsList = () => {
         return false;
       }
       
-      // Utiliser notre fonction centralisée pour déterminer si c'est un ado
-      const isTeen = isTeenClassSync(reservation.children.school_class, reservation.period_id);
-      console.log(`[HolidayReservationsList] Enfant ${reservation.children.first_name} ${reservation.children.last_name}, Classe: ${reservation.children.school_class}, Est ado?: ${isTeen}`);
-      
-      // Filtrer selon la page actuelle
-      return isTeenPage ? isTeen : !isTeen;
+      // Sur la page des ados, inclure les CM2 et les ados
+      if (isTeenPage) {
+        const isCM2 = reservation.children.school_class === "CM2";
+        const isTeen = isTeenClassSync(reservation.children.school_class, reservation.period_id);
+        return isTeen || isCM2;
+      } else {
+        // Sur la page des enfants, exclure les CM2 et les ados
+        const isCM2 = reservation.children.school_class === "CM2";
+        const isTeen = isTeenClassSync(reservation.children.school_class, reservation.period_id);
+        return !isTeen && !isCM2;
+      }
     });
 
   console.log("[HolidayReservationsList] Nombre de réservations après filtrage:", filteredReservations.length);
@@ -102,7 +107,7 @@ export const HolidayReservationsList = () => {
     return (
       <div className="p-6 text-center">
         <p className="text-gray-600">
-          Aucune réservation trouvée pour {isTeenPage ? "les adolescents" : "les enfants de maternelle et primaire"}.
+          Aucune réservation trouvée pour {isTeenPage ? "les adolescents et CM2" : "les enfants de maternelle et primaire (hors CM2)"}.
         </p>
       </div>
     );
@@ -127,7 +132,7 @@ export const HolidayReservationsList = () => {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos {isTeenPage ? "activités Club Ado" : "vacances"} réservées (sous réserve de règlement)
+          Vos {isTeenPage ? "activités Club Ado et CM2" : "vacances"} réservées (sous réserve de règlement)
         </h2>
         <p className="text-sm text-red-600 mb-4">
           Pour toute modification de vos réservations (ajout ou suppression de journées), merci de contacter l'accueil.
