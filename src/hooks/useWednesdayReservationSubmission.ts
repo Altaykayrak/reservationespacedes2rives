@@ -126,6 +126,7 @@ export const useWednesdayReservationSubmission = (
       // Forcer la mise à jour des données après les réservations
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["available_wednesdays"] }),
+        queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] }),
         refetchReservations()
       ]);
 

@@ -1,12 +1,11 @@
 
-import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyReservations } from "./EmptyReservations";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { ChildWednesdayReservationCard } from "./ChildWednesdayReservationCard";
 import { WednesdayReservationWithChild } from "@/types/reservations";
-import { useChildrenData } from "@/hooks/useChildrenData";
+import { useWednesdayReservations } from "@/hooks/useWednesdayReservations";
+import { useNavigate } from "react-router-dom";
 
 type GroupedReservations = Record<string, {
   childName: string;
@@ -15,73 +14,52 @@ type GroupedReservations = Record<string, {
 }>;
 
 export const WednesdayReservationsList = () => {
-  // Utiliser les données des enfants depuis le hook
-  const { children } = useChildrenData();
+  const navigate = useNavigate();
+  const { wednesdayReservations, refetchReservations, isLoading, isError, error } = useWednesdayReservations();
   
-  // Utiliser directement useQuery pour récupérer les réservations
-  const { data: wednesdayReservations = [], refetch: refetchReservations } = useQuery({
-    queryKey: ["wednesday_reservations"],
-    queryFn: async () => {
-      console.log("Récupération des réservations du mercredi...");
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("État de la session:", session);
-      
-      if (!session?.user?.id) {
-        console.log("Aucune session trouvée");
-        return [];
-      }
-
-      const { data: reservations, error: reservationsError } = await supabase
-        .from('wednesday_reservations_with_children')
-        .select(`
-          id,
-          child_id,
-          wednesday_id,
-          without_meal,
-          early_dropoff,
-          status,
-          created_at,
-          updated_at,
-          reservation_number,
-          children,
-          available_wednesdays!fk_wednesday_id (
-            id,
-            date,
-            max_participants_kindergarten,
-            max_participants_primary
-          )
-        `)
-        .eq('status', 'confirmed')
-        .not('children', 'is', null);
-
-      console.log("Réservations depuis la vue:", reservations);
-      if (reservationsError) {
-        console.error("Erreur lors de la récupération des réservations:", reservationsError);
-        throw reservationsError;
-      }
-
-      // Filtrer les réservations pour ne garder que celles des enfants de l'utilisateur courant
-      const filteredReservations = reservations?.filter(reservation => {
-        const childData = reservation.children as any;
-        return children?.some(child => child.id === childData.id);
-      }) || [];
-
-      const transformedData = filteredReservations.map(reservation => {
-        const childData = reservation.children as any;
-        return {
-          ...reservation,
-          children: childData,
-          available_wednesdays: reservation.available_wednesdays
-        } as WednesdayReservationWithChild;
-      });
-
-      console.log("Données finales transformées:", transformedData);
-      return transformedData;
-    },
-    staleTime: 30000,
-    gcTime: 3600000,
-    enabled: !!children // Activer la requête uniquement si nous avons des données d'enfants
-  });
+  if (isLoading) {
+    return (
+      <div className="p-4 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+        <p className="text-sm text-gray-600">Chargement des réservations...</p>
+      </div>
+    );
+  }
+  
+  if (isError) {
+    const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
+    if (errorMessage.includes("Not authenticated") || errorMessage.includes("JWT expired")) {
+      return (
+        <Alert variant="destructive">
+          <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div>Votre session a expiré. Veuillez vous reconnecter pour voir vos réservations.</div>
+            <Button 
+              onClick={() => navigate("/login", { state: { from: location.pathname } })}
+              variant="outline"
+              className="whitespace-nowrap"
+            >
+              Se connecter
+            </Button>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
+    return (
+      <Alert variant="destructive">
+        <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div>Une erreur est survenue lors du chargement de vos réservations.</div>
+          <Button 
+            onClick={() => refetchReservations()}
+            variant="outline"
+            className="whitespace-nowrap"
+          >
+            Réessayer
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   console.log("Réservations du mercredi :", wednesdayReservations);
 

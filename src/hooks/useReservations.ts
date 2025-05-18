@@ -112,13 +112,17 @@ export const useReservations = () => {
     selectedChild,
     selectedDates,
     (date) => isDateReservedForChild(selectedChild, date),
-    refetchReservations,
+    async () => {
+      await refetchReservations();
+      // Invalider la requête de la liste des réservations également
+      queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] });
+    },
     resetForm
   );
 
   return {
     selectedDates,
-    setSelectedDates, // Make sure this is exposed from the hook
+    setSelectedDates,
     selectedChild,
     setSelectedChild,
     children,
