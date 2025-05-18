@@ -8,7 +8,7 @@ import { useExistingReservations } from "./useExistingReservations";
 
 export const useReservations = () => {
   const queryClient = useQueryClient();
-  const isSubmitting = useIsMutating() > 0;
+  const isQueryMutating = useIsMutating() > 0;
   const [selectedChild, setSelectedChild] = useState("");
   const [selectedDates, setSelectedDates] = useState<Array<{
     date: Date;
@@ -108,7 +108,7 @@ export const useReservations = () => {
     setSelectedDates([]);
   };
 
-  const { handleSubmit, showSuccessDialog, setShowSuccessDialog } = useWednesdayReservationSubmission(
+  const { handleSubmit, showSuccessDialog, setShowSuccessDialog, isSubmitting } = useWednesdayReservationSubmission(
     selectedChild,
     selectedDates,
     (date) => isDateReservedForChild(selectedChild, date),

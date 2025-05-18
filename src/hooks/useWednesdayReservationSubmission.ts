@@ -22,6 +22,7 @@ export const useWednesdayReservationSubmission = (
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (!selectedChild) {
@@ -58,6 +59,8 @@ export const useWednesdayReservationSubmission = (
       });
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       // Récupérer les informations de l'enfant
@@ -140,12 +143,15 @@ export const useWednesdayReservationSubmission = (
         description: error.message || "Une erreur est survenue lors de la création des réservations.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return { 
     handleSubmit, 
     showSuccessDialog, 
-    setShowSuccessDialog 
+    setShowSuccessDialog,
+    isSubmitting
   };
 };

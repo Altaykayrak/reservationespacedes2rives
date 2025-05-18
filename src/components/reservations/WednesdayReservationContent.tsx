@@ -1,13 +1,16 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useReservations } from "@/hooks/useReservations";
 import { ChildSelector } from "./ChildSelector";
 import { WednesdayDateSelector } from "./WednesdayDateSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CalendarDays, CheckSquare, Utensils } from "lucide-react";
+import { CalendarDays, CheckSquare, Loader, Utensils } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { useChildrenData } from "@/hooks/useChildrenData";
+import { Progress } from "@/components/ui/progress";
+
 export const WednesdayReservationContent = () => {
   const {
     selectedDates,
@@ -21,7 +24,8 @@ export const WednesdayReservationContent = () => {
     showSuccessDialog,
     setShowSuccessDialog,
     selectAllDates,
-    selectAllDatesWithoutMeal
+    selectAllDatesWithoutMeal,
+    isSubmitting
   } = useReservations();
   const {
     wednesdayEligibleChildren,
@@ -61,9 +65,22 @@ export const WednesdayReservationContent = () => {
             <WednesdayDateSelector selectedDates={selectedDates} handleDateToggle={handleDateToggle} handleOptionChange={handleOptionChange} isDateAlreadyReserved={date => isDateReservedForChild(selectedChild, date)} selectedChild={selectedChild} />
           </ScrollArea>
 
-          <Button onClick={handleSubmit} className="w-full" disabled={!selectedChild || selectedDates.length === 0}>
-            Confirmer {selectedDates.length > 1 ? 'les réservations' : 'la réservation'}
-          </Button>
+          {isSubmitting ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium">Réservation en cours...</span>
+                <span className="text-sm">{Math.floor(Math.random() * 31) + 70}%</span>
+              </div>
+              <Progress value={Math.floor(Math.random() * 31) + 70} className="h-2" />
+              <div className="flex justify-center mt-2">
+                <Loader className="h-4 w-4 animate-spin text-primary" />
+              </div>
+            </div>
+          ) : (
+            <Button onClick={handleSubmit} className="w-full" disabled={!selectedChild || selectedDates.length === 0}>
+              Confirmer {selectedDates.length > 1 ? 'les réservations' : 'la réservation'}
+            </Button>
+          )}
         </div>
       </Card>
 
