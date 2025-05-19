@@ -1,89 +1,140 @@
 
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { fr } from "date-fns/locale";
-import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
-import { ExportData } from "./types";
+import { Child } from "@/types/profile";
+import { HolidayReservationWithChild, WednesdayReservationWithChild } from "@/types/reservations";
 
-export const getAllDates = (
-  wednesdayReservations: WednesdayReservationWithChild[] | null,
-  holidayReservations: HolidayReservationWithChild[] | null
-) => {
-  const dates = new Set<string>();
-  
-  wednesdayReservations?.forEach(res => {
-    dates.add(res.available_wednesdays.date);
-  });
-  
-  holidayReservations?.forEach(res => {
-    dates.add(res.reservation_date);
-  });
-  
-  return Array.from(dates).sort();
+export interface ClassData {
+  children: {
+    firstName: string;
+    lastName: string;
+    schoolClass: string;
+    reservations: Map<string, string>;
+  }[];
+}
+
+export interface ExportData {
+  dates: string[];
+  childrenByClass: Map<string, ClassData>;
+}
+
+export const formatDate = (dateStr: string, shortFormat: boolean = false) => {
+  try {
+    const date = parse(dateStr, "yyyy-MM-dd", new Date());
+    
+    if (shortFormat) {
+      // Format court pour les en-têtes de colonne
+      return format(date, "EEE. dd MMM", { locale: fr }).charAt(0).toUpperCase() + 
+             format(date, "EEE. dd MMM", { locale: fr }).slice(1);
+    } else {
+      // Format complet
+      return format(date, "EEEE d MMMM", { locale: fr }).charAt(0).toUpperCase() + 
+             format(date, "EEEE d MMMM", { locale: fr }).slice(1);
+    }
+  } catch (error) {
+    console.error("Erreur lors du formatage de la date:", dateStr, error);
+    return dateStr;
+  }
 };
 
 export const prepareExportData = (
   wednesdayReservations: WednesdayReservationWithChild[] | null,
   holidayReservations: HolidayReservationWithChild[] | null
 ): ExportData => {
-  const dates = getAllDates(wednesdayReservations, holidayReservations);
-  const childrenByClass = new Map<string, {
-    children: {
-      firstName: string;
-      lastName: string;
-      schoolClass: string;
-      reservations: Map<string, string>;
-    }[];
-  }>();
-
-  const addChildToClass = (
-    child: {
-      first_name: string;
-      last_name: string;
-      school_class: string;
-    },
-    date: string,
-    withoutMeal: boolean
-  ) => {
+  // Récupérer toutes les dates uniques
+  const allDates = new Set<string>();
+  
+  // Traiter les réservations du mercredi
+  if (wednesdayReservations) {
+    wednesdayReservations.forEach(reservation => {
+      if (reservation.available_wednesdays?.date) {
+        allDates.add(reservation.available_wednesdays.date);
+      }
+    });
+  }
+  
+  // Traiter les réservations des vacances
+  if (holidayReservations) {
+    holidayReservations.forEach(reservation => {
+      if (reservation.reservation_date) {
+        allDates.add(reservation.reservation_date);
+      }
+    });
+  }
+  
+  // Trier les dates
+  const dates = Array.from(allDates).sort();
+  
+  // Map pour regrouper les enfants par classe
+  const childrenByClass = new Map<string, ClassData>();
+  
+  // Fonction pour ajouter un enfant au map
+  const addChild = (child: Child) => {
     const schoolClass = child.school_class;
-    const classData = childrenByClass.get(schoolClass) || { children: [] };
     
-    let childData = classData.children.find(
+    if (!childrenByClass.has(schoolClass)) {
+      childrenByClass.set(schoolClass, { children: [] });
+    }
+    
+    // Vérifier si l'enfant existe déjà dans la classe
+    const existingChildIndex = childrenByClass.get(schoolClass)!.children.findIndex(
       c => c.firstName === child.first_name && c.lastName === child.last_name
     );
     
-    if (!childData) {
-      childData = {
+    if (existingChildIndex === -1) {
+      // Si l'enfant n'existe pas encore, l'ajouter
+      childrenByClass.get(schoolClass)!.children.push({
         firstName: child.first_name,
         lastName: child.last_name,
         schoolClass: child.school_class,
-        reservations: new Map<string, string>()
-      };
-      classData.children.push(childData);
+        reservations: new Map()
+      });
     }
-    
-    childData.reservations.set(date, withoutMeal ? "Sans repas" : "Avec repas");
-    childrenByClass.set(schoolClass, classData);
   };
-
-  wednesdayReservations?.forEach(res => {
-    addChildToClass(
-      res.children,
-      res.available_wednesdays.date,
-      res.without_meal
+  
+  // Fonction pour marquer la réservation d'un enfant
+  const addReservation = (child: Child, date: string, withoutMeal: boolean) => {
+    const schoolClass = child.school_class;
+    
+    // Trouver l'enfant dans sa classe
+    const childIndex = childrenByClass.get(schoolClass)!.children.findIndex(
+      c => c.firstName === child.first_name && c.lastName === child.last_name
     );
-  });
-
-  holidayReservations?.forEach(res => {
-    addChildToClass(
-      res.children,
-      res.reservation_date,
-      res.without_meal
-    );
-  });
-
+    
+    if (childIndex !== -1) {
+      // Mettre à jour le statut de réservation
+      const reservationType = withoutMeal ? "Sans repas" : "Avec repas";
+      childrenByClass.get(schoolClass)!.children[childIndex].reservations.set(date, reservationType);
+    }
+  };
+  
+  // Traiter toutes les réservations du mercredi
+  if (wednesdayReservations) {
+    wednesdayReservations.forEach(reservation => {
+      if (reservation.children && reservation.available_wednesdays?.date) {
+        addChild(reservation.children);
+        addReservation(
+          reservation.children,
+          reservation.available_wednesdays.date,
+          !!reservation.without_meal
+        );
+      }
+    });
+  }
+  
+  // Traiter toutes les réservations des vacances
+  if (holidayReservations) {
+    holidayReservations.forEach(reservation => {
+      if (reservation.children && reservation.reservation_date) {
+        addChild(reservation.children);
+        addReservation(
+          reservation.children,
+          reservation.reservation_date,
+          !!reservation.without_meal
+        );
+      }
+    });
+  }
+  
   return { dates, childrenByClass };
-};
-
-export const formatDate = (date: string) => {
-  return format(new Date(date), "EEE dd MMM", { locale: fr });
 };
