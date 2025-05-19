@@ -42,14 +42,14 @@ export default function HolidaySpotsBadge({
   }, [periodId, date, childSchoolClass]);
 
   if (error) {
-    return <span className="text-red-600 text-sm">ERR</span>;
+    return <span className="text-red-600 text-xs">ERR</span>;
   }
   if (spots === null) {
-    return <span className="text-gray-500 text-sm">…</span>;
+    return <span className="text-gray-500 text-xs">…</span>;
   }
   return (
     <span
-      className={`text-sm font-medium ${
+      className={`text-xs font-medium ${
         spots > 0 ? "text-green-600" : "text-red-600"
       }`}
     >
