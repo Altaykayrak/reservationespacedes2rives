@@ -73,7 +73,7 @@ export const useReservations = () => {
     setSelectedDates(allAvailableDates);
   };
 
-  // Nouvelle fonction pour sélectionner tous les mercredis disponibles sans repas
+  // Fonction pour sélectionner tous les mercredis disponibles sans repas
   const selectAllDatesWithoutMeal = () => {
     if (!selectedChild || availableWednesdays.length === 0) return;
     
@@ -95,6 +95,31 @@ export const useReservations = () => {
       });
 
     console.log("Dates disponibles sélectionnées sans repas:", allAvailableDates);
+    setSelectedDates(allAvailableDates);
+  };
+
+  // Nouvelle fonction pour sélectionner tous les mercredis disponibles avec accueil avant 8h30
+  const selectAllDatesWithEarlyDropoff = () => {
+    if (!selectedChild || availableWednesdays.length === 0) return;
+    
+    console.log("Tentative de sélectionner tous les mercredis disponibles avec accueil avant 8h30");
+
+    const allAvailableDates = availableWednesdays
+      .filter(wednesday => {
+        // Ne pas inclure les dates déjà réservées
+        const date = new Date(wednesday.date);
+        return !isDateAlreadyReserved(date) && !wednesday.isFull;
+      })
+      .map(wednesday => {
+        const date = new Date(wednesday.date);
+        return {
+          date,
+          withoutMeal: false,
+          earlyDropoff: true
+        };
+      });
+
+    console.log("Dates disponibles sélectionnées avec accueil avant 8h30:", allAvailableDates);
     setSelectedDates(allAvailableDates);
   };
 
@@ -137,6 +162,7 @@ export const useReservations = () => {
     showSuccessDialog,
     setShowSuccessDialog,
     selectAllDates,
-    selectAllDatesWithoutMeal
+    selectAllDatesWithoutMeal,
+    selectAllDatesWithEarlyDropoff
   };
 };

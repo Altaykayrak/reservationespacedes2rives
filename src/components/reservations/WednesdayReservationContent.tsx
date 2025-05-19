@@ -5,7 +5,7 @@ import { useReservations } from "@/hooks/useReservations";
 import { ChildSelector } from "./ChildSelector";
 import { WednesdayDateSelector } from "./WednesdayDateSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CalendarDays, CheckSquare, Loader, Utensils } from "lucide-react";
+import { CalendarDays, CheckSquare, Clock, Loader, Utensils } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { useChildrenData } from "@/hooks/useChildrenData";
@@ -26,6 +26,7 @@ export const WednesdayReservationContent = () => {
     setShowSuccessDialog,
     selectAllDates,
     selectAllDatesWithoutMeal,
+    selectAllDatesWithEarlyDropoff,
     isSubmitting
   } = useReservations();
   const {
@@ -72,6 +73,11 @@ export const WednesdayReservationContent = () => {
               <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2" onClick={selectAllDatesWithoutMeal}>
                 <Utensils className="h-4 w-4" />
                 Sélectionner tous les mercredis sans repas
+              </Button>
+
+              <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2" onClick={selectAllDatesWithEarlyDropoff}>
+                <Clock className="h-4 w-4" />
+                Sélectionner tous les mercredis avec un accueil avant 8h30
               </Button>
             </>}
 
