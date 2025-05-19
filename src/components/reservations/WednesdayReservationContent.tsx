@@ -77,7 +77,7 @@ export const WednesdayReservationContent = () => {
 
               <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2" onClick={selectAllDatesWithEarlyDropoff}>
                 <Clock className="h-4 w-4" />
-                Sélectionner tous les mercredis avec un accueil avant 8h30
+                Tous avec un accueil avant 8h30
               </Button>
             </>}
 
@@ -107,3 +107,4 @@ export const WednesdayReservationContent = () => {
       <SuccessReservationDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
     </div>;
 };
+
