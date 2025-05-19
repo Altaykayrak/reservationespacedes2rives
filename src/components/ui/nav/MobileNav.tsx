@@ -1,13 +1,16 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "../button";
 import { Menu, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../sheet";
 import { NavItem } from "./types";
+
 interface MobileNavProps {
   menuItems: NavItem[];
   isAuthenticated: boolean;
   onLogout: () => void;
 }
+
 export function MobileNav({
   menuItems,
   isAuthenticated,
@@ -16,7 +19,10 @@ export function MobileNav({
   return <div className="md:hidden">
       <Sheet>
         <SheetTrigger asChild>
-          
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
         </SheetTrigger>
         <SheetContent side="right">
           <div className="flex flex-col space-y-4 mt-4">

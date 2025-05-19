@@ -1,4 +1,3 @@
-
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -98,7 +97,10 @@ const Navbar = () => {
         <div className="ml-auto flex items-center space-x-4">
           <DesktopNav {...navProps} />
           <MobileNav {...navProps} />
-          {isAuthenticated ? <ProfileDropdown user={user} menuItems={menuItems} onLogout={handleLogout} /> : <Link to="/login">
+          {isAuthenticated && <div className="hidden md:block">
+            <ProfileDropdown user={user} menuItems={menuItems} onLogout={handleLogout} />
+          </div>}
+          {!isAuthenticated && <Link to="/login">
               <Button variant="default" size="sm">
                 Se connecter
               </Button>
