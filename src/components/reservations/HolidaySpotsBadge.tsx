@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -52,8 +53,7 @@ export default function HolidaySpotsBadge({
         spots > 0 ? "text-green-600" : "text-red-600"
       }`}
     >
-      {spots > 0 ? `${spots} places` : "Complet"}
+      {spots > 0 ? `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}` : "Complet"}
     </span>
   );
 }
-
