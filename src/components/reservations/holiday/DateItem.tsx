@@ -62,7 +62,7 @@ export const DateItem = ({
                 isReserved ? 'text-gray-500' : ''
               }`}
             >
-              {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+              {format(date, "EEEE d MMMM", { locale: fr })}
             </Label>
           </div>
           <div className="mt-1">
