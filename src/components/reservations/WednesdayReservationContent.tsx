@@ -72,7 +72,7 @@ export const WednesdayReservationContent = () => {
               
               <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2" onClick={selectAllDatesWithoutMeal}>
                 <Utensils className="h-4 w-4" />
-                Sélectionner tous les mercredis sans repas
+                Tous sans repas
               </Button>
 
               <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2" onClick={selectAllDatesWithEarlyDropoff}>
