@@ -1,6 +1,6 @@
 
 // src/components/reservations/HolidayReservationContent.tsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
@@ -19,12 +19,14 @@ export interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
   filterTeenPeriods?: boolean;
   invertSelectors?: boolean;
+  enforceCM2Summer?: boolean;
 }
 
 export const HolidayReservationContent: React.FC<HolidayReservationContentProps> = ({
   filteredChildren,
   filterTeenPeriods = false,
   invertSelectors = false,
+  enforceCM2Summer = false,
 }) => {
   const {
     selectedDates,
@@ -47,6 +49,9 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     setMinimumDaysDialog,
   } = useHolidayReservation();
 
+  // Ajouter un état pour stocker l'enfant sélectionné et éviter le comportement indésirable
+  const [storedChild, setStoredChild] = useState<string | null>(null);
+
   const { children: allChildren } = useChildrenData();
   const location = useLocation();
 
@@ -63,14 +68,35 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
   const earlySummerCodes = ['ETE-01', 'ETE-02', 'ETE-03', 'ETE-04'];
   const isEarlySummer = earlySummerCodes.includes(periodCode);
   
-  // Si on a des enfants filtrés en props, les utiliser directement
-  // Sinon, utiliser le résultat du filtrage par catégorie
+  // Si on a des enfants filtrés en props et qu'on est sur une page Club Ado, conserver tous les CM2
   const baseChildren = filteredChildren || categorizedChildren || [];
   
-  // Encore appliquer le filtre CM2/été si nécessaire
-  const childrenToDisplay = baseChildren.filter(child =>
-    !(isEarlySummer && child.school_class === 'CM2')
-  );
+  // Ne pas filtrer les CM2 en été si enforceCM2Summer est activé
+  const childrenToDisplay = baseChildren.filter(child => {
+    if (enforceCM2Summer && child.school_class === 'CM2') {
+      return true; // Toujours inclure les CM2 si enforceCM2Summer est activé
+    }
+    // Filtrer uniquement dans le cas non-Club Ado
+    return !(isEarlySummer && !filterTeenPeriods && child.school_class === 'CM2');
+  });
+
+  // Effet pour stocker l'enfant sélectionné lorsqu'il change
+  useEffect(() => {
+    if (selectedChild) {
+      setStoredChild(selectedChild);
+    }
+  }, [selectedChild]);
+
+  // Effet pour restaurer l'enfant sélectionné si possible après un changement de période
+  useEffect(() => {
+    if (storedChild && !selectedChild) {
+      // Vérifier si l'enfant stocké est toujours dans la liste actuelle
+      const isChildStillAvailable = childrenToDisplay.some(child => child.id === storedChild);
+      if (isChildStillAvailable) {
+        setSelectedChild(storedChild);
+      }
+    }
+  }, [childrenToDisplay, selectedChild, storedChild, setSelectedChild]);
 
   useEffect(() => {
     try {

@@ -64,6 +64,7 @@ const AdminNewTeenHolidayReservation = () => {
         <HolidayReservationContent 
           filteredChildren={teenChildren} 
           filterTeenPeriods={true}
+          enforceCM2Summer={true}
         />
       </div>
     </div>

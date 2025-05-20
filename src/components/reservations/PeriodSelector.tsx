@@ -55,6 +55,7 @@ export const PeriodSelector = ({
       const includedSummerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04"];
       const excludedSummerPeriods = ["ETE-05", "ETE-06", "ETE-07", "ETE-08"];
       
+      // Trouver les périodes d'été pour les CM2
       const summerPeriods = holidayPeriods.filter(period => 
         period.name && includedSummerPeriods.includes(period.name)
       );
