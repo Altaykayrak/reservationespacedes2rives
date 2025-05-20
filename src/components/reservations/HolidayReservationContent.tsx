@@ -14,6 +14,7 @@ import { useChildrenData } from "@/hooks/useChildrenData";
 import { useLocation } from "react-router-dom";
 import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 import { Tables } from "@/integrations/supabase/types";
+import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
 
 export interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
@@ -38,7 +39,6 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
-    isDateAlreadyReserved,
     setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
@@ -48,6 +48,9 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     minimumDaysDialog,
     setMinimumDaysDialog,
   } = useHolidayReservation();
+  
+  // Utiliser le hook pour récupérer les réservations existantes
+  const { isDateAlreadyReserved } = useExistingHolidayReservations(selectedChild || '');
 
   // Ajouter un état pour stocker l'enfant sélectionné et éviter le comportement indésirable
   const [storedChild, setStoredChild] = useState<string | null>(null);

@@ -6,6 +6,7 @@ import { useChildrenData } from "@/hooks/useChildrenData";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
 
 const AdminNewTeenHolidayReservation = () => {
   const { data: isAdmin } = useAdminAuth();

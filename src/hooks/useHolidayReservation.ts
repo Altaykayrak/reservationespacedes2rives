@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,32 +53,6 @@ export const useHolidayReservation = () => {
       return data;
     },
   });
-
-  const { data: existingReservations } = useQuery({
-    queryKey: ["existing_holiday_reservations", selectedChild],
-    queryFn: async () => {
-      if (!selectedChild) return [];
-      const { data, error } = await supabase
-        .from("holiday_reservations")
-        .select("*")
-        .eq("child_id", selectedChild);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!selectedChild,
-  });
-
-  const isDateAlreadyReserved = (date: Date): boolean => {
-    if (!existingReservations) return false;
-    return existingReservations.some(reservation => {
-      const reservationDate = new Date(reservation.reservation_date);
-      return (
-        reservationDate.getFullYear() === date.getFullYear() &&
-        reservationDate.getMonth() === date.getMonth() &&
-        reservationDate.getDate() === date.getDate()
-      );
-    });
-  };
 
   // Version memoized du toggle pour éviter les problèmes de date
   const handleDateToggle = useCallback((date: Date) => {
@@ -225,25 +200,6 @@ export const useHolidayReservation = () => {
     }
   };
 
-  // Helper function to group dates by week
-  const getDatesPerWeek = (dates: Date[]) => {
-    const weeks: Record<string, Date[]> = {};
-    
-    dates.forEach(date => {
-      // Get the week number (ISO week, starting on Monday)
-      const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-      const weekKey = format(weekStart, 'yyyy-MM-dd');
-      
-      if (!weeks[weekKey]) {
-        weeks[weekKey] = [];
-      }
-      
-      weeks[weekKey].push(date);
-    });
-    
-    return weeks;
-  };
-
   // Effect pour valider les dates à chaque changement
   useEffect(() => {
     // Vérifier et compter les dates valides à chaque changement
@@ -269,7 +225,6 @@ export const useHolidayReservation = () => {
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
-    isDateAlreadyReserved,
     setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
