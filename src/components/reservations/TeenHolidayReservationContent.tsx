@@ -51,7 +51,8 @@ export const TeenHolidayReservationContent = () => {
     }
     if (!isSubmitting) handleSubmit();
   };
-
+console.log("🔍 isDateAlreadyReserved vaut :", isDateAlreadyReserved);
+console.log("🔍 type de isDateAlreadyReserved :", typeof isDateAlreadyReserved);
   return (
     <div className="space-y-6">
       <PeriodSelector
