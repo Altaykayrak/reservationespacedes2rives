@@ -4,6 +4,8 @@ import { Button } from "../button";
 import { Menu, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../sheet";
 import { NavItem } from "./types";
+import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 
 interface MobileNavProps {
   menuItems: NavItem[];
@@ -16,27 +18,61 @@ export function MobileNav({
   isAuthenticated,
   onLogout
 }: MobileNavProps) {
-  return <div className="md:hidden">
+  const location = useLocation();
+  
+  return (
+    <div className="md:hidden">
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-            <Menu className="h-5 w-5" />
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="h-10 w-10 rounded-full shadow-md hover:shadow-lg transition-all border-2 bg-gradient-to-tr from-white to-gray-50"
+          >
+            <Menu className="h-5 w-5 text-indigo-600" />
             <span className="sr-only">Toggle menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="right">
-          <div className="flex flex-col space-y-4 mt-4">
-            {menuItems.map(item => <Link key={item.href} to={item.href} className="text-gray-600 hover:text-gray-900">
+        <SheetContent side="right" className="bg-gradient-to-br from-white to-gray-50 border-l-2 shadow-lg">
+          <div className="flex flex-col space-y-5 mt-6">
+            {menuItems.map(item => (
+              <Link 
+                key={item.href} 
+                to={item.href} 
+                className={cn(
+                  "text-base font-medium px-4 py-2.5 rounded-lg transition-all",
+                  "bg-white shadow hover:shadow-md transform hover:-translate-y-0.5",
+                  "border border-gray-100 hover:border-gray-200",
+                  location.pathname === item.href
+                    ? "bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600"
+                    : "text-gray-700 hover:text-indigo-600"
+                )}
+              >
                 {item.label}
-              </Link>)}
-            {isAuthenticated ? <Button variant="ghost" onClick={onLogout} className="flex items-center gap-2">
+              </Link>
+            ))}
+            
+            {isAuthenticated ? (
+              <Button 
+                variant="outline" 
+                onClick={onLogout} 
+                className="flex items-center gap-3 mt-2 px-4 py-2.5 h-auto bg-white border border-gray-100 hover:border-red-200 shadow hover:shadow-md transform hover:-translate-y-0.5 text-gray-700 hover:text-red-600"
+              >
                 <LogOut className="h-4 w-4" />
                 Déconnexion
-              </Button> : <Button asChild variant="outline">
+              </Button>
+            ) : (
+              <Button 
+                asChild 
+                variant="default"
+                className="bg-indigo-600 hover:bg-indigo-700 transform hover:-translate-y-0.5 transition-all shadow-md hover:shadow-lg"
+              >
                 <Link to="/login">Connexion</Link>
-              </Button>}
+              </Button>
+            )}
           </div>
         </SheetContent>
       </Sheet>
-    </div>;
+    </div>
+  );
 }
