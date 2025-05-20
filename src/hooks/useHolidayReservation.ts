@@ -1,6 +1,6 @@
-
+// src/hooks/useHolidayReservation.ts
 import { useState, useCallback, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { format, startOfWeek } from "date-fns";
@@ -8,8 +8,8 @@ import { fr } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { createHolidayReservations } from "@/utils/reservationCreationUtils";
 import { sendHolidayReservationEmail } from "@/utils/emailUtils";
-import { useHolidayReservations } from "./useHolidayReservations";
 import { validateMinimumDays } from "@/utils/reservationValidationUtils";
+import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
 
 interface DateOption {
   date: Date;
@@ -23,21 +23,23 @@ export const useHolidayReservation = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [noSpotsDialog, setNoSpotsDialog] = useState({ isOpen: false, schoolClass: '', date: new Date() });
+  const [noSpotsDialog, setNoSpotsDialog] = useState({ isOpen: false, schoolClass: "", date: new Date() });
   const [minimumDaysDialog, setMinimumDaysDialog] = useState({ isOpen: false });
   const { toast } = useToast();
-  const { refetch: refetchReservations } = useHolidayReservations();
-  
-  const isTeenPage = window.location.pathname === "/teenholiday-reservations" || 
-                      window.location.pathname === "/admin/reservations/new-teen-holiday" ||
-                      window.location.pathname === "/admin/new-teenholiday-reservation";
+  const queryClient = useQueryClient();
 
+  // → Intégration du hook des réservations existantes
+  const {
+    existingReservations,
+    refetchReservations: refetchHolidayReservations,
+    isDateAlreadyReserved
+  } = useExistingHolidayReservations(selectedChild || "");
+
+  // On garde l’ancien pour les listes (uniquement si tu en as besoin ailleurs)
   const { data: children } = useQuery({
     queryKey: ["children"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("children")
-        .select("*");
+      const { data, error } = await supabase.from("children").select("*");
       if (error) throw error;
       return data;
     },
@@ -46,133 +48,60 @@ export const useHolidayReservation = () => {
   const { data: holidayPeriods } = useQuery({
     queryKey: ["available_holiday_periods"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("available_holiday_periods")
-        .select("*");
+      const { data, error } = await supabase.from("available_holiday_periods").select("*");
       if (error) throw error;
       return data;
     },
   });
 
-  // Version memoized du toggle pour éviter les problèmes de date
   const handleDateToggle = useCallback((date: Date) => {
     setSelectedDates(prev => {
-      // Vérifier que la date est valide
-      if (!(date instanceof Date) || isNaN(date.getTime())) {
-        console.error("🛑 Date invalide fournie au toggle:", date);
-        return prev;
-      }
-      
-      const dateStr = date.toISOString().split('T')[0];
-      const isSelected = prev.some(d => {
-        // Vérification de sécurité pour les dates
-        if (!(d.date instanceof Date) || isNaN(d.date.getTime())) {
-          console.error("🛑 Date invalide détectée dans le tableau:", d.date);
-          return false;
-        }
-        return d.date.toISOString().split('T')[0] === dateStr;
-      });
-
-      let newDates: DateOption[];
-      if (isSelected) {
-        newDates = prev.filter(d => d.date.toISOString().split('T')[0] !== dateStr);
-      } else {
-        newDates = [...prev, { date: new Date(date), withoutMeal: window.location.pathname.includes("teenholiday"), earlyDropoff: false }];
-      }
-      
-      // Logs détaillés
-      const validDates = newDates.filter(d => d.date instanceof Date && !isNaN(d.date.getTime()));
-      console.log(`📅 Date ${dateStr} ${isSelected ? 'désélectionnée' : 'sélectionnée'}`);
-      console.log(`📊 Nombre total de dates après toggle: ${newDates.length}`);
-      console.log(`📊 Nombre de dates valides après toggle: ${validDates.length}`);
-      
+      const dateStr = date.toISOString().split("T")[0];
+      const isSelected = prev.some(d => d.date.toISOString().split("T")[0] === dateStr);
+      const newDates = isSelected
+        ? prev.filter(d => d.date.toISOString().split("T")[0] !== dateStr)
+        : [...prev, { date: new Date(date), withoutMeal: window.location.pathname.includes("teenholiday"), earlyDropoff: false }];
       return newDates;
     });
   }, []);
 
-  const handleOptionChange = (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => {
-    setSelectedDates(prev => {
-      return prev.map(d => {
-        if (d.date.toISOString().split('T')[0] === date.toISOString().split('T')[0]) {
-          return { ...d, [option]: value };
-        }
-        return d;
-      });
-    });
+  const handleOptionChange = (date: Date, option: "withoutMeal" | "earlyDropoff", value: boolean) => {
+    setSelectedDates(prev =>
+      prev.map(d => 
+        d.date.toISOString().split("T")[0] === date.toISOString().split("T")[0]
+          ? { ...d, [option]: value }
+          : d
+      )
+    );
   };
 
   const handleSubmit = async () => {
     if (!selectedChild || !selectedPeriod) return;
-    
-    // Vérifier qu'il y a au moins 3 jours sélectionnés (dates valides uniquement)
-    const validDates = selectedDates.filter(d => 
-      d.date instanceof Date && !isNaN(d.date.getTime())
-    );
-    
-    console.log(`🔍 DEBUG: handleSubmit - validDates.length = ${validDates.length}`);
-    
+
+    const validDates = selectedDates.filter(d => d.date instanceof Date && !isNaN(d.date.getTime()));
     if (validDates.length < 3) {
-      console.log("🛑 DEBUG: Pas assez de jours sélectionnés, ouverture du dialogue");
       setMinimumDaysDialog({ isOpen: true });
       return;
     }
-    
-    // Generate a timestamp to trace this specific submission
-    const submissionTimestamp = Date.now();
-    console.log(`DEBUG: handleSubmit called - timestamp: ${submissionTimestamp}`);
-    
+
     setIsSubmitting(true);
-    
     try {
-      // Détection de la route administrative
-      const isAdminRoute = window.location.pathname.includes('/admin/');
-      console.log("DEBUG: isAdminRoute détecté:", isAdminRoute, "pour pathname:", window.location.pathname);
-      
-      // Vérifier ici si les dates sélectionnées respectent la règle des 3 jours minimum
-      const hasMinimumDays = validateMinimumDays(validDates, isAdminRoute);
-      console.log(`DEBUG: Résultat validation minimum jours: ${hasMinimumDays}`);
-      
-      if (!hasMinimumDays) {
-        console.log("DEBUG: Validation des jours minimum échouée, affichage du dialogue");
-        setMinimumDaysDialog({ isOpen: true });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Create the reservations
       const result = await createHolidayReservations(
-        selectedChild, 
-        selectedDates, 
+        selectedChild,
+        selectedDates,
         holidayPeriods,
-        submissionTimestamp
+        Date.now()
       );
-      
+
       if (result.success) {
         setSelectedDates([]);
-        
-        // Send the confirmation email
-        try {
-          console.log(`DEBUG: Sending confirmation email - timestamp: ${submissionTimestamp}`);
-          const childFullName = `${result.childData?.first_name} ${result.childData?.last_name}`;
-          const childSchoolClass = result.childData?.school_class || "";
-          
-          const emailResult = await sendHolidayReservationEmail(
-            childFullName,
-            selectedDates,
-            result.periodName || "",
-            result.reservationNumber || "",
-            result.periodId || "",
-            submissionTimestamp,
-            childSchoolClass
-          );
-          
-          console.log(`DEBUG: Email result:`, emailResult, `- timestamp: ${submissionTimestamp}`);
-        } catch (emailError) {
-          console.error(`DEBUG: Error sending email: ${emailError} - timestamp: ${submissionTimestamp}`);
-          // Don't fail the whole operation if just the email fails
-        }
-        
-        await refetchReservations();
+
+        // 👉 on rafraîchit les réservations existantes
+        await refetchHolidayReservations();
+
+        // 👉 on invalide la query des périodes pour recalculer max_participants_*
+        queryClient.invalidateQueries(["available_holiday_periods"]);
+
         setShowSuccessDialog(true);
       } else if (result.noSpots) {
         setNoSpotsDialog({
@@ -181,38 +110,19 @@ export const useHolidayReservation = () => {
           date: result.noSpots.date,
         });
       } else {
-        console.error(`DEBUG: Error creating reservations: ${result.error} - timestamp: ${submissionTimestamp}`);
-        toast({
-          title: "Erreur",
-          description: result.error || "Une erreur est survenue lors de la création des réservations.",
-          variant: "destructive",
-        });
+        toast({ title: "Erreur", description: result.error || "Erreur inconnue", variant: "destructive" });
       }
     } catch (error: any) {
-      console.error(`DEBUG: Unexpected error in handleSubmit: ${error.message} - timestamp: ${submissionTimestamp}`);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la création des réservations.",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Effect pour valider les dates à chaque changement
+  // Debug / logs éventuels...
   useEffect(() => {
-    // Vérifier et compter les dates valides à chaque changement
-    const validDates = selectedDates.filter(d => 
-      d.date instanceof Date && !isNaN(d.date.getTime())
-    );
-    console.log(`📊 useHolidayReservation - Dates valides: ${validDates.length}/${selectedDates.length}`);
-    
-    if (validDates.length !== selectedDates.length) {
-      console.warn("⚠️ Détection de dates invalides:", 
-        selectedDates.filter(d => !(d.date instanceof Date) || isNaN(d.date.getTime())));
-    }
-  }, [selectedDates]);
+    console.log("Existing reservations (hook):", existingReservations);
+  }, [existingReservations]);
 
   return {
     selectedDates,
@@ -225,13 +135,14 @@ export const useHolidayReservation = () => {
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
-    setSelectedDates,
+    isDateAlreadyReserved,
     showSuccessDialog,
     setShowSuccessDialog,
     isSubmitting,
     noSpotsDialog,
     setNoSpotsDialog,
     minimumDaysDialog,
-    setMinimumDaysDialog
+    setMinimumDaysDialog,
+    existingReservations,
   };
 };
