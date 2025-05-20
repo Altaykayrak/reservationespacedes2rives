@@ -1,12 +1,14 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { toast } from "@/hooks/use-toast";
 
 export const useExistingHolidayReservations = (selectedChild: string) => {
-  // Using the correct query structure for React Query v5
-  const { data: existingReservations, refetch: refetchReservations } = useQuery({
+  // On récupère existingReservations et la fonction refetchReservations
+  const { 
+    data: existingReservations, 
+    refetch: refetchReservations 
+  } = useQuery({
     queryKey: ["existing_holiday_reservations", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return [];
@@ -16,18 +18,17 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
         .select("*")
         .eq("child_id", selectedChild)
         .eq("status", "confirmed");
-      
+
       if (error) {
         console.error("Error fetching reservations:", error);
         throw error;
       }
       console.log("Raw existing reservations:", data);
-      
-      // Transform the data safely to match our HolidayReservationWithChild type
+
+      // Transformation pour correspondre au type HolidayReservationWithChild
       const transformedData = data?.map(reservation => {
-        // We need to safely cast the children object
         const childrenData = reservation.children as Record<string, any> || {};
-        
+
         return {
           id: reservation.id || '',
           child_id: reservation.child_id || '',
@@ -50,11 +51,10 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
           }
         } as HolidayReservationWithChild;
       }) || [];
-      
+
       return transformedData;
     },
     enabled: !!selectedChild,
-    // Using correct React Query v5 options
     staleTime: 0,
     gcTime: 0
   });
@@ -63,21 +63,16 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
     if (!existingReservations) return false;
     try {
       console.log("Checking date:", date.toISOString(), "against reservations:", existingReservations);
-      
+
       const result = existingReservations.some(reservation => {
-        // S'assurer que la date est valide
         if (!reservation.reservation_date) return false;
-        
-        // Récupérer la date de réservation et la transformer en date locale
+
         const reservationDate = new Date(reservation.reservation_date);
         const dateToCheck = new Date(date);
-        
-        // Normaliser les dates pour la comparaison en local
         dateToCheck.setHours(0, 0, 0, 0);
         reservationDate.setHours(0, 0, 0, 0);
-        
+
         const isSameDate = dateToCheck.getTime() === reservationDate.getTime();
-        
         if (isSameDate) {
           console.log("Found matching reservation:", reservation);
         }
@@ -92,12 +87,11 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
     }
   };
 
-  // Ajout d'un effet de log pour déboguer
   console.log("Current existingReservations:", existingReservations);
 
-  return { 
-    existingReservations, 
-    refetchReservations, 
-    isDateAlreadyReserved 
+  return {
+    existingReservations,
+    refetchReservations,    // ← exposé pour rafraîchir depuis l'extérieur
+    isDateAlreadyReserved
   };
 };
