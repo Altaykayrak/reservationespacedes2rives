@@ -34,13 +34,13 @@ export function MobileNav({
           </Button>
         </SheetTrigger>
         <SheetContent side="right" className="bg-gradient-to-br from-white to-gray-50 border-l-2 shadow-lg">
-          <div className="flex flex-col space-y-5 mt-6">
+          <div className="flex flex-col space-y-4 mt-6">
             {menuItems.map(item => (
               <Link 
                 key={item.href} 
                 to={item.href} 
                 className={cn(
-                  "text-base font-medium px-4 py-2.5 rounded-lg transition-all",
+                  "text-base font-medium px-4 py-2 rounded-lg transition-all",
                   "bg-white shadow hover:shadow-md transform hover:-translate-y-0.5",
                   "border border-gray-100 hover:border-gray-200",
                   location.pathname === item.href
@@ -56,7 +56,7 @@ export function MobileNav({
               <Button 
                 variant="outline" 
                 onClick={onLogout} 
-                className="flex items-center gap-3 mt-2 px-4 py-2.5 h-auto bg-white border border-gray-100 hover:border-red-200 shadow hover:shadow-md transform hover:-translate-y-0.5 text-gray-700 hover:text-red-600"
+                className="flex items-center gap-3 mt-2 px-4 py-2 h-auto bg-white border border-gray-100 hover:border-red-200 shadow hover:shadow-md transform hover:-translate-y-0.5 text-gray-700 hover:text-red-600"
               >
                 <LogOut className="h-4 w-4" />
                 Déconnexion
@@ -65,7 +65,7 @@ export function MobileNav({
               <Button 
                 asChild 
                 variant="default"
-                className="bg-indigo-600 hover:bg-indigo-700 transform hover:-translate-y-0.5 transition-all shadow-md hover:shadow-lg"
+                className="bg-indigo-600 hover:bg-indigo-700 transform hover:-translate-y-0.5 transition-all shadow-md hover:shadow-lg py-2 h-auto"
               >
                 <Link to="/login">Connexion</Link>
               </Button>

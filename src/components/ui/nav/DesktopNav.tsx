@@ -24,7 +24,7 @@ export function DesktopNav({ menuItems, isAuthenticated, onLogout }: DesktopNavP
           key={item.href}
           to={item.href}
           className={cn(
-            "px-3 py-2 rounded-md text-sm font-medium transition-all",
+            "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
             "hover:shadow transform hover:-translate-y-0.5",
             location.pathname === item.href
               ? "bg-indigo-600 text-white shadow-md"
@@ -38,13 +38,13 @@ export function DesktopNav({ menuItems, isAuthenticated, onLogout }: DesktopNavP
         <Button 
           variant="ghost" 
           onClick={onLogout} 
-          className="flex items-center gap-2 ml-2 text-gray-700 hover:text-red-600 hover:bg-white hover:bg-opacity-80 hover:shadow transform hover:-translate-y-0.5 transition-all"
+          className="flex items-center gap-2 ml-2 py-1.5 h-auto text-gray-700 hover:text-red-600 hover:bg-white hover:bg-opacity-80 hover:shadow transform hover:-translate-y-0.5 transition-all"
         >
           <LogOut className="h-4 w-4" />
           Déconnexion
         </Button>
       ) : (
-        <Button asChild variant="default" className="ml-2 bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
+        <Button asChild variant="default" className="ml-2 bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all py-1.5 h-auto">
           <Link to="/login">Connexion</Link>
         </Button>
       )}
