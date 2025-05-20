@@ -11,7 +11,6 @@ import { injectAnimationStyles } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-
 const HolidayReservations = () => {
   const {
     user,
@@ -25,17 +24,15 @@ const HolidayReservations = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isBlinking, setIsBlinking] = useState(true);
-  
   useEffect(() => {
     // Injecter les styles d'animation pour améliorer l'interaction
     injectAnimationStyles();
     console.log("[HolidayReservations] État d'authentification:", loading ? "CHARGEMENT" : user ? "AUTHENTIFIÉ" : "NON AUTHENTIFIÉ", "Session:", session ? "Présente" : "Absente", "Initialisation:", initialized ? "Terminée" : "En cours");
-    
+
     // Timer pour arrêter l'animation de clignotement après 6 secondes
     const blinkTimer = setTimeout(() => {
       setIsBlinking(false);
     }, 6000);
-    
     const checkAccess = async () => {
       if (!user?.id) {
         console.log("[HolidayReservations] Aucun utilisateur trouvé");
@@ -78,7 +75,7 @@ const HolidayReservations = () => {
     if (initialized && !loading) {
       checkAccess();
     }
-    
+
     // Nettoyer le timer lors du démontage du composant
     return () => clearTimeout(blinkTimer);
   }, [user, loading, initialized, session]);
@@ -136,7 +133,6 @@ const HolidayReservations = () => {
         </div>
       </div>;
   }
-  
   return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <Navbar />
       <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
@@ -150,10 +146,10 @@ const HolidayReservations = () => {
           <p className="text-muted-foreground text-base md:text-lg">
             Réservez les périodes de vacances pour vos enfants de maternelle et primaire.
           </p>
-          <p className={`text-red-600 font-bold text-sm md:text-base ${isBlinking ? 'animate-blink' : ''}`}>
-            Sélectionnez au moins 3 jours/semaine.
-            Pour les CM2, réservez août sur cette page ; pour juillet, utilisez le menu « Réservations Club Ado ».
-          </p>
+          <p className={`text-red-600 font-bold text-sm md:text-base ${isBlinking ? 'animate-blink' : ''}`}>Sélectionner au moins 3 jours par semaine.
+Pour les enfants en CM2, les réservations du mois d’août se font sur cette page.
+Pour le mois de juillet, rendez-vous dans le menu « Club Ado ».
+En cas de journée complète, merci de contacter l’accueil pour une inscription sur liste d’attente.</p>
         </div>
 
         {isClosed ? <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
@@ -170,5 +166,4 @@ const HolidayReservations = () => {
       </div>
     </div>;
 };
-
 export default HolidayReservations;
