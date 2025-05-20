@@ -1,7 +1,6 @@
 
 import { format, parse } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Child } from "@/types/profile";
 import { HolidayReservationWithChild, WednesdayReservationWithChild } from "@/types/reservations";
 
 export interface ClassData {
@@ -16,6 +15,17 @@ export interface ClassData {
 export interface ExportData {
   dates: string[];
   childrenByClass: Map<string, ClassData>;
+}
+
+// Interface for the child data structure used in this module
+interface ChildData {
+  id: string;
+  first_name: string;
+  last_name: string;
+  school_class: string;
+  profile: {
+    school_city: string;
+  };
 }
 
 export const formatDate = (dateStr: string, shortFormat: boolean = false) => {
@@ -69,7 +79,7 @@ export const prepareExportData = (
   const childrenByClass = new Map<string, ClassData>();
   
   // Fonction pour ajouter un enfant au map
-  const addChild = (child: Child) => {
+  const addChild = (child: ChildData) => {
     const schoolClass = child.school_class;
     
     if (!childrenByClass.has(schoolClass)) {
@@ -93,7 +103,7 @@ export const prepareExportData = (
   };
   
   // Fonction pour marquer la réservation d'un enfant
-  const addReservation = (child: Child, date: string, withoutMeal: boolean) => {
+  const addReservation = (child: ChildData, date: string, withoutMeal: boolean) => {
     const schoolClass = child.school_class;
     
     // Trouver l'enfant dans sa classe
