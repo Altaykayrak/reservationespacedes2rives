@@ -1,3 +1,4 @@
+
 // src/components/reservations/HolidayReservationContent.tsx
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -49,20 +50,24 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
   const { children: allChildren } = useChildrenData();
   const location = useLocation();
 
-  // Filtrage par catégorie
+  // N'utiliser le filtrage par catégorie que si aucun enfant filtré externe n'est fourni
   const { filteredChildren: categorizedChildren } = useCategoryFiltering(
-    allChildren,
+    filteredChildren ? null : allChildren,  // Ne pas appliquer le filtrage si on a déjà des enfants filtrés
     selectedPeriod,
     filterTeenPeriods ? 'adolescent' : undefined
   );
 
-  // Exclusion des CM2 sur ETE-01 à ETE-04
+  // Utiliser les enfants filtrés fournis en props ou le résultat du filtrage par catégorie
   const periodObj = holidayPeriods?.find(p => p.id === selectedPeriod);
   const periodCode = (periodObj as any)?.code || (periodObj as any)?.name || '';
   const earlySummerCodes = ['ETE-01', 'ETE-02', 'ETE-03', 'ETE-04'];
   const isEarlySummer = earlySummerCodes.includes(periodCode);
   
+  // Si on a des enfants filtrés en props, les utiliser directement
+  // Sinon, utiliser le résultat du filtrage par catégorie
   const baseChildren = filteredChildren || categorizedChildren || [];
+  
+  // Encore appliquer le filtre CM2/été si nécessaire
   const childrenToDisplay = baseChildren.filter(child =>
     !(isEarlySummer && child.school_class === 'CM2')
   );

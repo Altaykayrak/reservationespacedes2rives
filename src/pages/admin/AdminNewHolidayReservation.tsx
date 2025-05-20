@@ -14,6 +14,7 @@ const AdminNewHolidayReservation = () => {
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const { children } = useChildrenData();
 
+  // Filtrage initial des enfants selon le groupe sélectionné
   const filteredChildren = children?.filter(child => {
     if (selectedGroup === "all") return true;
     if (selectedGroup === "maternelle") {
@@ -77,7 +78,12 @@ const AdminNewHolidayReservation = () => {
           </div>
         </Card>
 
-        <HolidayReservationContent filteredChildren={filteredChildren as Tables<"children">[] | null} />
+        {/* Important: Désactiver le filtrage supplémentaire dans HolidayReservationContent 
+            en passant directement les enfants déjà filtrés */}
+        <HolidayReservationContent 
+          filteredChildren={filteredChildren as Tables<"children">[] | null} 
+          filterTeenPeriods={false} 
+        />
       </div>
     </div>
   );
