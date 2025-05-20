@@ -3,8 +3,6 @@ import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { format, startOfWeek } from "date-fns";
-import { fr } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { createHolidayReservations } from "@/utils/reservationCreationUtils";
 import { sendHolidayReservationEmail } from "@/utils/emailUtils";
@@ -69,11 +67,9 @@ export const useHolidayReservation = () => {
         (d) => d.date.toISOString().split("T")[0] === dateStr
       );
 
-      const newDates = isSelected
+      return isSelected
         ? prev.filter((d) => d.date.toISOString().split("T")[0] !== dateStr)
         : [...prev, { date: new Date(date), withoutMeal: false, earlyDropoff: false }];
-
-      return newDates;
     });
   }, []);
 
@@ -96,7 +92,6 @@ export const useHolidayReservation = () => {
   const handleSubmit = async () => {
     if (!selectedChild || !selectedPeriod) return;
 
-    // Minimum 3 jours
     const validDates = selectedDates.filter(
       (d) => d.date instanceof Date && !isNaN(d.date.getTime())
     );
@@ -107,7 +102,6 @@ export const useHolidayReservation = () => {
 
     setIsSubmitting(true);
     try {
-      // Création des réservations sur le back
       const result = await createHolidayReservations(
         selectedChild,
         selectedDates,
@@ -116,10 +110,10 @@ export const useHolidayReservation = () => {
       );
 
       if (result.success) {
-        // Réinitialisation et rafraîchissement
+        // On vide et on rafraîchit
         setSelectedDates([]);
-        await refetchExisting();                // ← rafraîchir les réservations existantes
-        queryClient.invalidateQueries({          // ← rafraîchir le compteur period_spots_available
+        await refetchExisting(); // badge “déjà réservé”
+        queryClient.invalidateQueries({
           queryKey: ["period_spots_available", selectedPeriod, result.schoolClass],
         });
         setShowSuccessDialog(true);
@@ -147,20 +141,14 @@ export const useHolidayReservation = () => {
     }
   };
 
-  // Log pour debug
-  useEffect(() => {
-    console.log(
-      `useHolidayReservation: ${selectedDates.length} dates sélectionnées, child=${selectedChild}, period=${selectedPeriod}`
-    );
-  }, [selectedDates, selectedChild, selectedPeriod]);
-
   return {
     children,
     holidayPeriods,
     selectedDates,
+    setSelectedDates,         // ← on réintègre bien setSelectedDates
     selectedChild,
-    selectedPeriod,
     setSelectedChild,
+    selectedPeriod,
     setSelectedPeriod,
     handleDateToggle,
     handleOptionChange,
