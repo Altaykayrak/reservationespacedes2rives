@@ -1,4 +1,4 @@
-
+// src/components/reservations/TeenHolidayReservationContent.tsx
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { ChildSelector } from "./ChildSelector";
@@ -11,6 +11,9 @@ import { Loader2 } from "lucide-react";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 
+// **NOUVEAU** : on importe notre hook dédié aux résa de vacances
+import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
+
 export const TeenHolidayReservationContent = () => {
   const {
     selectedDates,
@@ -22,7 +25,7 @@ export const TeenHolidayReservationContent = () => {
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
-    isDateAlreadyReserved,
+    // **ON SUPPRIME** isDateAlreadyReserved issu de useHolidayReservation
     setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
@@ -33,6 +36,12 @@ export const TeenHolidayReservationContent = () => {
     setMinimumDaysDialog
   } = useHolidayReservation();
 
+  // **NOUVEAU** : on appelle notre hook qui va récupérer _vraiment_ les réservations
+  const {
+    isDateAlreadyReserved,
+    isLoading: loadingHolidayRes
+  } = useExistingHolidayReservations(selectedChild);
+
   const { children: allChildren } = useChildrenData();
   const { filteredChildren } = useCategoryFiltering(
     allChildren,
@@ -40,7 +49,19 @@ export const TeenHolidayReservationContent = () => {
     'adolescent'
   );
 
-  const validDatesCount = selectedDates.filter(d => d.date instanceof Date && !isNaN(d.date.getTime())).length;
+  // Si les réservations ne sont pas encore chargées, on affiche un loader
+  if (loadingHolidayRes) {
+    return (
+      <div className="text-center py-8">
+        <Loader2 className="animate-spin mx-auto mb-2" />
+        Chargement des réservations existantes…
+      </div>
+    );
+  }
+
+  const validDatesCount = selectedDates.filter(
+    d => d.date instanceof Date && !isNaN(d.date.getTime())
+  ).length;
 
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -51,8 +72,7 @@ export const TeenHolidayReservationContent = () => {
     }
     if (!isSubmitting) handleSubmit();
   };
-console.log("🔍 isDateAlreadyReserved vaut :", isDateAlreadyReserved);
-console.log("🔍 type de isDateAlreadyReserved :", typeof isDateAlreadyReserved);
+
   return (
     <div className="space-y-6">
       <PeriodSelector
@@ -74,6 +94,7 @@ console.log("🔍 type de isDateAlreadyReserved :", typeof isDateAlreadyReserved
           selectedDates={selectedDates}
           handleDateToggle={handleDateToggle}
           handleOptionChange={handleOptionChange}
+          // ON PASSE ICI la vraie fonction de vérification
           isDateAlreadyReserved={isDateAlreadyReserved}
           periodId={selectedPeriod}
           selectedChild={selectedChild}
@@ -90,16 +111,30 @@ console.log("🔍 type de isDateAlreadyReserved :", typeof isDateAlreadyReserved
           type="button"
         >
           {isSubmitting ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Réservation en cours...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Réservation en cours...
+            </>
           ) : (
             "Confirmer réservation"
           )}
         </Button>
       </div>
 
-      <SuccessReservationDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
-      <NoSpotsDialog open={noSpotsDialog.isOpen} onOpenChange={open => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })} schoolClass={noSpotsDialog.schoolClass} date={noSpotsDialog.date} />
-      <MinimumDaysDialog open={minimumDaysDialog.isOpen} onOpenChange={open => setMinimumDaysDialog({ isOpen: open })} />
+      <SuccessReservationDialog 
+        open={showSuccessDialog} 
+        onOpenChange={setShowSuccessDialog} 
+      />
+      <NoSpotsDialog
+        open={noSpotsDialog.isOpen}
+        onOpenChange={open => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })}
+        schoolClass={noSpotsDialog.schoolClass}
+        date={noSpotsDialog.date}
+      />
+      <MinimumDaysDialog
+        open={minimumDaysDialog.isOpen}
+        onOpenChange={open => setMinimumDaysDialog({ isOpen: open })}
+      />
     </div>
   );
 };
