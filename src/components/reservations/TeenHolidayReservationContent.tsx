@@ -1,3 +1,4 @@
+
 // src/components/reservations/TeenHolidayReservationContent.tsx
 import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
@@ -11,7 +12,7 @@ import { Loader2 } from "lucide-react";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 
-// **NOUVEAU** : on importe notre hook dédié aux résa de vacances
+// Import our hook dedicated to holiday reservations
 import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
 
 export const TeenHolidayReservationContent = () => {
@@ -25,7 +26,7 @@ export const TeenHolidayReservationContent = () => {
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
-    // **ON SUPPRIME** isDateAlreadyReserved issu de useHolidayReservation
+    // REMOVED: isDateAlreadyReserved - no longer provided by useHolidayReservation
     setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
@@ -36,11 +37,11 @@ export const TeenHolidayReservationContent = () => {
     setMinimumDaysDialog
   } = useHolidayReservation();
 
-  // **NOUVEAU** : on appelle notre hook qui va récupérer _vraiment_ les réservations
+  // Use the dedicated hook to get reservation data including isDateAlreadyReserved
   const {
     isDateAlreadyReserved,
     isLoading: loadingHolidayRes
-  } = useExistingHolidayReservations(selectedChild);
+  } = useExistingHolidayReservations(selectedChild || "");
 
   const { children: allChildren } = useChildrenData();
   const { filteredChildren } = useCategoryFiltering(
@@ -49,7 +50,7 @@ export const TeenHolidayReservationContent = () => {
     'adolescent'
   );
 
-  // Si les réservations ne sont pas encore chargées, on affiche un loader
+  // If the reservations are not loaded yet, display a loader
   if (loadingHolidayRes) {
     return (
       <div className="text-center py-8">
@@ -94,7 +95,7 @@ export const TeenHolidayReservationContent = () => {
           selectedDates={selectedDates}
           handleDateToggle={handleDateToggle}
           handleOptionChange={handleOptionChange}
-          // ON PASSE ICI la vraie fonction de vérification
+          // Pass the correct isDateAlreadyReserved function from our hook
           isDateAlreadyReserved={isDateAlreadyReserved}
           periodId={selectedPeriod}
           selectedChild={selectedChild}
