@@ -4,7 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 
-interface HolidayReservationWithChild extends Tables<"holiday_reservations_with_children"> {}
+// On définit explicitement le shape de la propriété `children`
+interface ChildData {
+  first_name: string;
+  last_name: string;
+}
+
+interface HolidayReservationWithChild
+  extends Omit<Tables<"holiday_reservations_with_children">, "children"> {
+  children: ChildData;
+}
 
 export function TeenHolidayReservationsList({ periodId }: { periodId: string }) {
   const { data: list = [], isLoading } = useQuery<HolidayReservationWithChild[]>({
@@ -12,13 +21,20 @@ export function TeenHolidayReservationsList({ periodId }: { periodId: string }) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("holiday_reservations_with_children")
-        .select("*")
+        .select(
+          `
+          *,
+          children ( id, first_name, last_name )
+        `
+        )
         .eq("period_id", periodId)
         .eq("status", "confirmed")
         .order("reservation_date", { ascending: true });
       if (error) throw error;
-      return data;
-    }
+      return data as HolidayReservationWithChild[];
+    },
+    // On ré-active le fetch dès que periodId change
+    enabled: Boolean(periodId),
   });
 
   if (isLoading) {
@@ -35,7 +51,7 @@ export function TeenHolidayReservationsList({ periodId }: { periodId: string }) 
 
   return (
     <ul className="space-y-2">
-      {list.map(r => (
+      {list.map((r) => (
         <li key={r.id} className="p-2 border rounded">
           {r.children.first_name} {r.children.last_name} — {r.reservation_date}
         </li>
