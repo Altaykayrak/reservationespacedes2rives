@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 
-// On définit explicitement le shape de la propriété `children`
 interface ChildData {
+  id: string;
   first_name: string;
   last_name: string;
 }
@@ -21,20 +21,19 @@ export function TeenHolidayReservationsList({ periodId }: { periodId: string }) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("holiday_reservations_with_children")
-        .select(
-          `
+        .select(`
           *,
           children ( id, first_name, last_name )
-        `
-        )
+        `)
         .eq("period_id", periodId)
         .eq("status", "confirmed")
         .order("reservation_date", { ascending: true });
+
       if (error) throw error;
       return data as HolidayReservationWithChild[];
     },
-    // On ré-active le fetch dès que periodId change
     enabled: Boolean(periodId),
+    staleTime: 30_000, // tu peux ajuster la durée de cache si tu veux
   });
 
   if (isLoading) {
