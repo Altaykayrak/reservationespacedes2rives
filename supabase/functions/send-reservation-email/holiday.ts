@@ -8,24 +8,36 @@ export async function processHolidayReservation(
   resend: Resend,
   requestId: string
 ): Promise<Response> {
-  console.log(`[${Date.now()}] Processing a ${requestData.reservationType} reservation`);
+  console.log(`[${Date.now()}] Processing a ${requestData.reservationType} reservation with ${requestData.dates?.length || 0} dates`);
   
-  let tableRows = '';
-  if (requestData.dates && requestData.dates.length > 0) {
-    requestData.dates.forEach((date, index) => {
-      const earlyDropoff = requestData.earlyDropoff && requestData.earlyDropoff[index] ? '✓' : '';
-      const withoutMeal = requestData.withoutMeal && requestData.withoutMeal[index] ? '✓' : '';
-      
-      tableRows += `
-        <tr>
-          <td style="border: 1px solid #ddd; padding: 8px;">${date}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${earlyDropoff}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${withoutMeal}</td>
-        </tr>
-      `;
-    });
+  // Vérifier si les dates sont présentes
+  if (!requestData.dates || requestData.dates.length === 0) {
+    console.error(`[${Date.now()}] No dates provided in request data`);
+    return new Response(
+      JSON.stringify({ error: "No dates provided in request" }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
   }
   
+  // Génération du tableau HTML pour les dates
+  let tableRows = '';
+  requestData.dates.forEach((date, index) => {
+    const earlyDropoff = requestData.earlyDropoff && requestData.earlyDropoff[index] ? '✓' : '';
+    const withoutMeal = requestData.withoutMeal && requestData.withoutMeal[index] ? '✓' : '';
+    
+    tableRows += `
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">${date}</td>
+        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${earlyDropoff}</td>
+        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${withoutMeal}</td>
+      </tr>
+    `;
+  });
+  
+  // Template HTML pour l'email
   const tableHtml = `
     <table style="border-collapse: collapse; width: 100%; margin-top: 10px;">
       <thead>
@@ -41,7 +53,7 @@ export async function processHolidayReservation(
     </table>
   `;
 
-  // Determine the type of reservation
+  // Déterminer le type de réservation pour l'affichage
   let reservationTypeDisplay = "vacances";
   let additionalNote = "";
   
@@ -52,6 +64,7 @@ export async function processHolidayReservation(
     additionalNote = `<p><strong>Note:</strong> Pour les réservations Club Ado, les enfants sont accueillis à 11h30 (avec un pique-nique à apporter) ou à 13h30, selon l'option "Sans Repas" sélectionnée. Une "Carte jeune" d'une valeur de 5 euros par enfant est facturée pour l'année civile.</p>`;
   }
   
+  // Corps HTML complet de l'email
   const emailHtml = `
     <h1>Nouvelle réservation de ${reservationTypeDisplay}</h1>
     ${requestData.userId ? `<p><strong>ID Utilisateur:</strong> ${requestData.userId}</p>` : ''}
@@ -64,12 +77,16 @@ export async function processHolidayReservation(
     ${additionalNote}
   `;
   
+  // Objet de l'email
   const emailSubject = `Nouvelle réservation - ${
     requestData.reservationType === "wednesday" ? "Mercredi" : 
     requestData.reservationType === "teen-holiday" ? "Club Ado" : "Vacances"
   }${requestData.childName ? " - " + requestData.childName : ""}`;
   
+  // Tentative d'envoi d'email
   try {
+    console.log(`[${Date.now()}] Attempting to send email to accueil@e2rives.fr with subject: ${emailSubject}`);
+    
     const emailResponse = await resend.emails.send({
       from: "Réservation <onboarding@resend.dev>",
       to: ["accueil@e2rives.fr"],
@@ -86,10 +103,10 @@ export async function processHolidayReservation(
         ...corsHeaders,
       },
     });
-  } catch (emailError) {
-    console.error(`[${Date.now()}] Error sending email:`, emailError);
+  } catch (emailError: any) {
+    console.error(`[${Date.now()}] Error sending email:`, emailError.message || emailError);
     
-    return new Response(JSON.stringify({ error: emailError.message }), {
+    return new Response(JSON.stringify({ error: emailError.message || "Unknown error sending email" }), {
       status: 500,
       headers: {
         "Content-Type": "application/json",

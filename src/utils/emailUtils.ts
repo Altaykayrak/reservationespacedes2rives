@@ -49,6 +49,7 @@ export const sendHolidayReservationEmail = async (
   
   const reservationType = isTeenReservation ? 'teen-holiday' : 'holiday';
   console.log(`DEBUG: Reservation type determined as: ${reservationType} for class ${childSchoolClass} (timestamp: ${submissionTimestamp})`);
+  console.log(`DEBUG: About to invoke send-reservation-email function with ${formattedDates.length} valid dates`);
   
   try {
     // Invoke the Supabase Edge Function to send the email

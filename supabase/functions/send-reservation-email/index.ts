@@ -6,26 +6,34 @@ import { corsHeaders, isRequestProcessed, markRequestAsProcessed, setupCacheClea
 import { processHolidayReservation } from "./holiday.ts";
 import { processRdvReservation } from "./rdv.ts";
 
-const resendApiKey = Deno.env.get("RESEND_API_KEY") || "";
-const resend = new Resend(resendApiKey);
+// Récupérer la clé API Resend
+const resendApiKey = Deno.env.get("RESEND_API_KEY");
+// Initialiser Resend
+const resend = new Resend(resendApiKey || "");
 
 // Setup cache cleanup interval
 setupCacheCleanup();
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log(`[${Date.now()}] New send-reservation-email request received`);
+  
+  // Gérer les requêtes CORS OPTIONS
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Extraire les données de la requête
     const requestData: ReservationEmailRequest = await req.json();
     console.log(`[${Date.now()}] Received request data:`, JSON.stringify(requestData));
 
+    // Générer un ID de requête unique s'il n'est pas fourni
     const requestId = requestData.requestId || 
       `${requestData.childName || ''}-${requestData.reservationType || ''}-${requestData.period || ''}-${Date.now()}`;
 
     console.log(`[${Date.now()}] Request ID:`, requestId);
 
+    // Vérifier si cette requête a déjà été traitée (éviter les doublons)
     if (isRequestProcessed(requestId)) {
       console.log(`[${Date.now()}] Duplicate request detected. Skipping email send:`, requestId);
       return new Response(
@@ -40,14 +48,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Marquer la requête comme traitée
     markRequestAsProcessed(requestId);
     console.log(`[${Date.now()}] Request marked as processed:`, requestId);
 
-    // Vérifier si resendApiKey est défini
+    // Vérifier la présence de la clé API Resend
     if (!resendApiKey) {
-      console.error(`[${Date.now()}] Resend API key is missing`);
+      console.error(`[${Date.now()}] CRITICAL ERROR: Resend API key is missing`);
       return new Response(
-        JSON.stringify({ error: "Resend API key is missing" }),
+        JSON.stringify({ error: "Resend API key is missing. Please add RESEND_API_KEY to your environment variables." }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -55,8 +64,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Process based on reservation type
-    // Vérification plus robuste des types de réservation
+    console.log(`[${Date.now()}] Processing reservation of type: ${requestData.reservationType}`);
+    
+    // Traiter la demande selon le type de réservation
     if (requestData.reservationType === "holiday" || 
         requestData.reservationType === "wednesday" || 
         requestData.reservationType === "teen-holiday") {
@@ -82,4 +92,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
+// Démarrer le serveur
 serve(handler);
