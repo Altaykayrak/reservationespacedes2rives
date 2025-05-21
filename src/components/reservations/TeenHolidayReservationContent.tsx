@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 import { Loader2 } from "lucide-react";
+import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
 
 export function TeenHolidayReservationContent() {
   const {
@@ -23,7 +24,6 @@ export function TeenHolidayReservationContent() {
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
-    isDateAlreadyReserved,
     setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
@@ -33,6 +33,11 @@ export function TeenHolidayReservationContent() {
     minimumDaysDialog,
     setMinimumDaysDialog,
   } = useHolidayReservation();
+
+  // Récupérer les réservations existantes et la fonction de vérification
+  const { isDateAlreadyReserved } = useExistingHolidayReservations(
+    selectedChild || ""
+  );
 
   // Filtrer les enfants pour la catégorie "adolescent"
   const { children: allChildren } = useChildrenData();
@@ -46,7 +51,7 @@ export function TeenHolidayReservationContent() {
 
   return (
     <div className="space-y-6">
-      {/* Choix de la période (teens only) */}
+      {/* Choix de la période */}
       <PeriodSelector
         selectedPeriod={selectedPeriod || ""}
         setSelectedPeriod={setSelectedPeriod}
