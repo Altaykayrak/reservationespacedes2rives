@@ -1,7 +1,7 @@
-
 import { useAuth } from "@/hooks/useAuth";
+import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { TeenHolidayReservationContent } from "@/components/reservations/TeenHolidayReservationContent";
-import { HolidayReservationsList } from "@/components/reservations/HolidayReservationsList";
+import { TeenHolidayReservationsList } from "@/components/reservations/TeenHolidayReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
@@ -13,95 +13,63 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 const TeenHolidayReservations = () => {
+  const { selectedPeriod } = useHolidayReservation();
   const { user, loading, initialized, session } = useAuth();
   const navigate = useNavigate();
+
   const [isWaiting, setIsWaiting] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("[TeenHolidayReservations] État d'authentification:", 
-      loading ? "CHARGEMENT" : (user ? "AUTHENTIFIÉ" : "NON AUTHENTIFIÉ"),
-      "Session:", session ? "Présente" : "Absente",
-      "Initialisation:", initialized ? "Terminée" : "En cours");
-      
     const checkAccess = async () => {
       if (!user?.id) {
-        console.log("[TeenHolidayReservations] Aucun utilisateur trouvé");
         setIsLoading(false);
         return;
       }
-      
       setIsLoading(true);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_waiting, is_closed")
+        .eq("id", user.id)
+        .maybeSingle();
 
-      try {
-        console.log("[TeenHolidayReservations] Tentative de récupération du profil pour l'utilisateur:", user.id);
-        
-        // Récupérer les états directement de la base de données avec gestion d'erreurs améliorée
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_waiting, is_closed')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error('[TeenHolidayReservations] Erreur lors de la récupération du profil:', error);
-          setProfileError(`Erreur d'accès au profil: ${error.message}`);
-          toast.error("Erreur lors de la vérification du profil utilisateur");
-          return;
-        }
-
-        if (!data) {
-          console.warn('[TeenHolidayReservations] Profil non trouvé pour cet utilisateur');
-          setProfileError("Profil utilisateur non trouvé");
-          return;
-        }
-
-        console.log('[TeenHolidayReservations] Données du profil récupérées:', data);
-        setIsWaiting(data.is_waiting || false);
-        setIsClosed(data.is_closed || false);
+      if (error) {
+        setProfileError(`Erreur d'accès au profil : ${error.message}`);
+        toast.error("Erreur lors de la vérification du profil utilisateur");
+      } else if (!data) {
+        setProfileError("Profil utilisateur non trouvé");
+      } else {
+        setIsWaiting(data.is_waiting);
+        setIsClosed(data.is_closed);
         setProfileError(null);
-      } catch (error: any) {
-        console.error("[TeenHolidayReservations] Erreur inattendue lors de la récupération des données:", error);
-        setProfileError(`Erreur inattendue: ${error.message}`);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
-    // Vérifier l'accès seulement si l'utilisateur est authentifié et l'initialisation terminée
-    if (initialized && !loading) {
-      checkAccess();
-    }
-  }, [user, loading, initialized, session]);
+    if (initialized && !loading) checkAccess();
+  }, [user, loading, initialized, session, toast]);
 
-  // Si l'utilisateur n'est pas authentifié après l'initialisation, afficher un message
   if (initialized && !loading && !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <Navbar />
         <div className="container mx-auto p-4 md:p-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
-            <EmptyHolidayState 
-              message="Connexion requise" 
-              subtitle="Vous devez être connecté pour accéder aux réservations du Club Ado."
-              icon="info"
-            >
-              <Button 
-                onClick={() => navigate("/login")}
-                className="mt-4"
-              >
-                Se connecter
-              </Button>
-            </EmptyHolidayState>
-          </div>
+          <EmptyHolidayState
+            message="Connexion requise"
+            subtitle="Vous devez être connecté pour accéder aux réservations Club Ado."
+            icon="info"
+          >
+            <Button onClick={() => navigate("/login")} className="mt-4">
+              Se connecter
+            </Button>
+          </EmptyHolidayState>
         </div>
       </div>
     );
   }
 
-  // Affiche un squelette de chargement pendant l'initialisation de l'auth ou le chargement du profil
   if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -121,14 +89,13 @@ const TeenHolidayReservations = () => {
     );
   }
 
-  // Afficher une erreur si le profil n'a pas pu être récupéré
   if (profileError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <Navbar />
         <div className="container mx-auto p-4 md:p-6">
-          <EmptyHolidayState 
-            message="Erreur lors du chargement du profil" 
+          <EmptyHolidayState
+            message="Erreur lors du chargement du profil"
             subtitle={profileError}
             icon="error"
           />
@@ -137,15 +104,14 @@ const TeenHolidayReservations = () => {
     );
   }
 
-  // Afficher le message d'attente et empêcher la création de nouvelles réservations
   if (isWaiting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <Navbar />
         <div className="container mx-auto p-4 md:p-6">
-          <EmptyHolidayState 
-            message="Réservations bientôt disponibles !" 
-            subtitle="Les inscriptions ne sont pas encore ouvertes. Vous serez informé(e) par e-mail dès leur lancement. Restez à l'affût ! ✉️📅"
+          <EmptyHolidayState
+            message="Réservations bientôt disponibles !"
+            subtitle="Les inscriptions ne sont pas encore ouvertes."
             icon="info"
           />
         </div>
@@ -171,9 +137,9 @@ const TeenHolidayReservations = () => {
 
         {isClosed ? (
           <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
-            <EmptyHolidayState 
-              message="Réservations clôturées !" 
-              subtitle="Les inscriptions sont désormais fermées. Vous serez informé(e) par e-mail dès l'ouverture des inscriptions pour les prochaines vacances. À bientôt ! ✉️📅"
+            <EmptyHolidayState
+              message="Réservations clôturées !"
+              subtitle="Les inscriptions sont désormais fermées."
               icon="info"
             />
           </div>
@@ -185,7 +151,7 @@ const TeenHolidayReservations = () => {
 
         <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
           <div className="p-4 md:p-6">
-            <HolidayReservationsList />
+            <TeenHolidayReservationsList periodId={selectedPeriod!} />
           </div>
         </div>
       </div>
