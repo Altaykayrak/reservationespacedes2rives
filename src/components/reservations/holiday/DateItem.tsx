@@ -1,11 +1,9 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
 import { DateOptions } from "./DateOptions";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 interface DateItemProps {
   date: Date;
@@ -15,12 +13,13 @@ interface DateItemProps {
   earlyDropoff: boolean;
   onDateToggle: () => void;
   onOptionChange: (option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
-  isTeenClass: boolean;
-  periodId: string;
-  childSchoolClass: string;
+  isTeenClass?: boolean;
+  periodId?: string;
+  childSchoolClass?: string;
+  isDisabled?: boolean; // New prop to handle full dates
 }
 
-export const DateItem = ({
+export const DateItem: React.FC<DateItemProps> = ({
   date,
   isSelected,
   isReserved,
@@ -28,55 +27,56 @@ export const DateItem = ({
   earlyDropoff,
   onDateToggle,
   onOptionChange,
-  isTeenClass,
+  isTeenClass = false,
   periodId,
-  childSchoolClass
-}: DateItemProps) => {
-  if (!date || isNaN(date.getTime())) {
-    console.error("Date invalide dans DateItem:", date);
-    return null;
-  }
-
+  childSchoolClass,
+  isDisabled = false // Default to false
+}) => {
+  // Formatter la date pour l'affichage
+  const formattedDate = format(date, 'EEEE d MMMM', { locale: fr });
+  
+  // Premier caractère en majuscule
+  const displayDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+  
+  const handleToggle = () => {
+    if (isDisabled && !isReserved) return; // Don't allow toggle when disabled and not already reserved
+    onDateToggle();
+  };
+  
   return (
-    <div
-      className={`relative space-y-1 p-2 rounded-lg transition-colors ${
-        isSelected ? 'bg-green-50/60' : 'hover:bg-green-50/30'
-      }`}
-    >
-      <div className="flex items-start gap-2">
+    <div className="flex items-center flex-1 ml-2">
+      <div 
+        className={`flex items-center cursor-pointer ${isDisabled && !isReserved ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+        onClick={handleToggle}
+      >
         <Checkbox
-          id={date.toISOString()}
+          id={`date-${date.toISOString()}`}
           checked={isSelected}
-          onCheckedChange={() => {
-            console.log("🖱️ DateItem toggle:", date.toISOString(), "reserved?", isReserved);
-            if (!isReserved) onDateToggle();
-          }}
-          disabled={isReserved}
-          className="mt-1"
+          className="mr-2"
+          disabled={isDisabled && !isReserved}
         />
-        <div className="flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <Label
-              htmlFor={date.toISOString()}
-              className={`cursor-pointer font-medium ${
-                isReserved ? 'text-gray-500' : ''
-              }`}
-            >
-              {format(date, "EEEE d MMMM", { locale: fr })}
-            </Label>
-          </div>
-          <div className="mt-1">
-            {isReserved && (
-              <Badge variant="secondary" className="bg-red-100 text-red-600">
-                Déjà réservé
-              </Badge>
-            )}
-          </div>
-        </div>
+        <label
+          htmlFor={`date-${date.toISOString()}`}
+          className="cursor-pointer flex flex-col sm:flex-row sm:items-center gap-1"
+        >
+          <span>{displayDate}</span>
+          
+          {isReserved && (
+            <Badge variant="outline" className="bg-blue-100 text-blue-800 ml-1 text-[10px]">
+              Déjà réservé
+            </Badge>
+          )}
+          
+          {isDisabled && !isReserved && (
+            <Badge variant="outline" className="bg-red-100 text-red-800 ml-1 text-[10px]">
+              Complet
+            </Badge>
+          )}
+        </label>
       </div>
-      {isSelected && !isReserved && (
+      
+      {isSelected && (
         <DateOptions
-          date={date}
           withoutMeal={withoutMeal}
           earlyDropoff={earlyDropoff}
           onOptionChange={onOptionChange}
@@ -86,4 +86,3 @@ export const DateItem = ({
     </div>
   );
 };
-

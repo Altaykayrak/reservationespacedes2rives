@@ -7,6 +7,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import HolidaySpotsBadge from "@/components/reservations/HolidaySpotsBadge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TeenClassDateSelectorProps {
   selectedDates: {
@@ -34,6 +36,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
   } = useHolidayPeriodContext();
   
   const [isBlinking, setIsBlinking] = useState(true);
+  const [fullDates, setFullDates] = useState<{[key: string]: boolean}>({});
   
   // Effect to disable blinking after 6 seconds
   useEffect(() => {
@@ -44,10 +47,55 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
-  console.log("TeenClassDateSelector - isTeenClass:", isTeenClass);
-  console.log("TeenClassDateSelector - childInfo:", childInfo);
-  console.log("TeenClassDateSelector - periodId:", periodId);
-  console.log("TeenClassDateSelector - selectedDates:", selectedDates);
+  // Récupérer les informations sur la disponibilité des places
+  const { data: spotsData } = useQuery({
+    queryKey: ["teen_spots_availability", periodId, childInfo?.school_class],
+    queryFn: async () => {
+      if (!periodId || !childInfo?.school_class) return {};
+      
+      // Générer les dates pour la période
+      const dates = generateDatesForPeriod();
+      if (!dates.length) return {};
+      
+      const spots: {[key: string]: number} = {};
+      
+      // Récupérer les places disponibles pour chaque date
+      for (const date of dates) {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        try {
+          const { data, error } = await supabase.rpc(
+            'check_holiday_spots_available',
+            {
+              p_period_id: periodId,
+              p_reservation_date: dateStr,
+              p_child_school_class: childInfo?.school_class
+            }
+          );
+          
+          if (error) {
+            console.error(`Erreur lors de la vérification des places pour ${dateStr}:`, error);
+            spots[dateStr] = -1; // Valeur d'erreur
+          } else {
+            spots[dateStr] = data;
+            // Si pas de places disponibles, on marque la date comme complète
+            if (data <= 0) {
+              setFullDates(prev => ({...prev, [dateStr]: true}));
+            }
+          }
+        } catch (err) {
+          console.error(`Erreur lors de la vérification des places pour ${dateStr}:`, err);
+          spots[dateStr] = -1; // Valeur d'erreur
+        }
+      }
+      
+      return spots;
+    },
+    enabled: !!periodId && !!childInfo?.school_class,
+    staleTime: 60000 // 1 minute
+  });
+
+  console.log("TeenClassDateSelector - Dates complètes:", fullDates);
+  console.log("TeenClassDateSelector - spotsData:", spotsData);
 
   // Générer les dates de la période
   const generateDatesForPeriod = () => {
@@ -112,9 +160,6 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
       return [dateStr, d];
     })
   );
-
-  console.log("TeenClassDateSelector - Period dates:", periodDates);
-  console.log("TeenClassDateSelector - Child class:", childInfo?.school_class);
   
   // Fonction pour vérifier explicitement si une date est sélectionnée
   const isDateSelected = (date: Date) => {
@@ -125,12 +170,28 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
     return selectedDatesMap.has(dateStr);
   };
   
+  // Fonction pour vérifier si une date est complète (plus de places)
+  const isDateFull = (date: Date) => {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      return false;
+    }
+    const dateStr = format(new Date(date), 'yyyy-MM-dd');
+    return fullDates[dateStr] === true || (spotsData && spotsData[dateStr] <= 0);
+  };
+  
   // Fonction pour gérer le click sur une date
   const onDateToggle = (date: Date) => {
     if (!(date instanceof Date) || isNaN(date.getTime())) {
       console.error("Tentative de toggle sur une date invalide:", date);
       return;
     }
+    
+    // Vérifier si la date est complète et déjà réservée par cet enfant
+    if (isDateFull(date) && !isDateAlreadyReserved(date)) {
+      console.log("Cette date est complète, impossible de la réserver:", format(date, 'yyyy-MM-dd'));
+      return; // On bloque le toggle pour cette date
+    }
+    
     console.log("Date toggle clicked for:", format(date, 'yyyy-MM-dd'));
     handleDateToggle(date);
   };
@@ -153,17 +214,22 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
             const dateStr = format(new Date(date), 'yyyy-MM-dd');
             const selectedDate = selectedDatesMap.get(dateStr);
             const isSelected = !!selectedDate;
+            const alreadyReserved = isDateAlreadyReserved(date);
+            const isFull = isDateFull(date);
+            
+            // Si la date est complète et pas déjà réservée par cet enfant, elle n'est pas sélectionnable
+            const isDisabled = isFull && !alreadyReserved;
             
             return (
               <div
                 key={dateStr}
-                className="flex items-center justify-between px-2 py-1 hover:bg-gray-50 rounded"
+                className={`flex items-center justify-between px-2 py-1 hover:bg-gray-50 rounded ${isDisabled ? 'opacity-60' : ''}`}
               >
                 <DateItem 
                   key={dateStr} 
                   date={date} 
                   isSelected={isSelected} 
-                  isReserved={isDateAlreadyReserved(date)} 
+                  isReserved={alreadyReserved} 
                   withoutMeal={selectedDate?.withoutMeal || false} 
                   earlyDropoff={selectedDate?.earlyDropoff || false} 
                   onDateToggle={() => onDateToggle(date)} 
@@ -171,6 +237,7 @@ export const TeenClassDateSelector: React.FC<TeenClassDateSelectorProps> = ({
                   isTeenClass={true} 
                   periodId={periodId} 
                   childSchoolClass={childInfo?.school_class || ''}
+                  isDisabled={isDisabled}
                 />
                 <HolidaySpotsBadge
                   periodId={periodId}

@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HolidayReservationWithChild } from "@/types/reservations";
@@ -7,7 +8,8 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
   // On récupère existingReservations et la fonction refetchReservations
   const { 
     data: existingReservations, 
-    refetch: refetchReservations 
+    refetch: refetchReservations,
+    isLoading
   } = useQuery({
     queryKey: ["existing_holiday_reservations", selectedChild],
     queryFn: async () => {
@@ -92,6 +94,7 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
   return {
     existingReservations,
     refetchReservations,    // ← exposé pour rafraîchir depuis l'extérieur
-    isDateAlreadyReserved
+    isDateAlreadyReserved,
+    isLoading               // ← Exposé l'état de chargement
   };
 };
