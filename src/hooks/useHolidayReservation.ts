@@ -1,3 +1,4 @@
+// src/hooks/useHolidayReservation.ts
 import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,7 +65,6 @@ export const useHolidayReservation = () => {
       const isSelected = prev.some(
         (d) => d.date.toISOString().split("T")[0] === dateStr
       );
-
       return isSelected
         ? prev.filter((d) => d.date.toISOString().split("T")[0] !== dateStr)
         : [...prev, { date: new Date(date), withoutMeal: false, earlyDropoff: false }];
@@ -99,18 +99,18 @@ export const useHolidayReservation = () => {
     }
 
     setIsSubmitting(true);
-    const submissionTimestamp = Date.now();
+    const timestamp = Date.now();
 
     try {
       const result = await createHolidayReservations(
         selectedChild,
         selectedDates,
         holidayPeriods,
-        submissionTimestamp
+        timestamp
       );
 
       if (result.success) {
-        // Envoyer l'email de confirmation
+        // Envoi de l'email
         try {
           const childFullName = `${result.childData?.first_name} ${result.childData?.last_name}`;
           await sendHolidayReservationEmail(
@@ -119,21 +119,24 @@ export const useHolidayReservation = () => {
             result.periodName || "",
             result.reservationNumber || "",
             result.periodId || "",
-            submissionTimestamp,
+            timestamp,
             result.childData?.school_class || ""
           );
-          console.log("Email vacances envoyé");
-        } catch (emailError) {
-          console.error("Erreur envoi email vacances:", emailError);
+        } catch (emailErr) {
+          console.error("Erreur envoi email vacances:", emailErr);
         }
 
-        // On vide et on rafraîchit
+        // Vide la sélection et rafraîchit tout :
         setSelectedDates([]);
-        await refetchExisting(); // badge "déjà réservé"
+        await refetchExisting(); // met à jour le badge “déjà réservé”
         queryClient.invalidateQueries({
           queryKey: ["period_spots_available", selectedPeriod, result.childData?.school_class],
-        });
+        }); // rafraîchit le compteur de places
+        queryClient.invalidateQueries({
+          queryKey: ["holiday_reservations_list", selectedPeriod],
+        }); // rafraîchit la liste en bas de page
         setShowSuccessDialog(true);
+
       } else if (result.noSpots) {
         setNoSpotsDialog({
           isOpen: true,
