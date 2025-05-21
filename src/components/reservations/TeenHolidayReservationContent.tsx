@@ -1,19 +1,21 @@
+
 // src/components/reservations/TeenHolidayReservationContent.tsx
-import React from "react";
+import { Button } from "@/components/ui/button";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
-import { PeriodSelector } from "./PeriodSelector";
 import { ChildSelector } from "./ChildSelector";
+import { PeriodSelector } from "./PeriodSelector";
 import { HolidayDateSelector } from "./holiday/HolidayDateSelector";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { NoSpotsDialog } from "./NoSpotsDialog";
 import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
-import { Loader2 } from "lucide-react";
+
+// Import our hook dedicated to holiday reservations
 import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
 
-export function TeenHolidayReservationContent() {
+export const TeenHolidayReservationContent = () => {
   const {
     selectedDates,
     selectedChild,
@@ -24,6 +26,7 @@ export function TeenHolidayReservationContent() {
     handleDateToggle,
     handleOptionChange,
     handleSubmit,
+    // REMOVED: isDateAlreadyReserved - no longer provided by useHolidayReservation
     setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
@@ -31,48 +34,68 @@ export function TeenHolidayReservationContent() {
     noSpotsDialog,
     setNoSpotsDialog,
     minimumDaysDialog,
-    setMinimumDaysDialog,
+    setMinimumDaysDialog
   } = useHolidayReservation();
 
-  // Récupérer les réservations existantes et la fonction de vérification
-  const { isDateAlreadyReserved } = useExistingHolidayReservations(
-    selectedChild || ""
-  );
+  // Use the dedicated hook to get reservation data including isDateAlreadyReserved
+  const {
+    isDateAlreadyReserved,
+    isLoading: loadingHolidayRes
+  } = useExistingHolidayReservations(selectedChild || "");
 
-  // Filtrer les enfants pour la catégorie "adolescent"
   const { children: allChildren } = useChildrenData();
   const { filteredChildren } = useCategoryFiltering(
     allChildren,
     selectedPeriod,
-    "adolescent"
+    'adolescent'
   );
 
-  const validDatesCount = selectedDates.length;
+  // If the reservations are not loaded yet, display a loader
+  if (loadingHolidayRes) {
+    return (
+      <div className="text-center py-8">
+        <Loader2 className="animate-spin mx-auto mb-2" />
+        Chargement des réservations existantes…
+      </div>
+    );
+  }
+
+  const validDatesCount = selectedDates.filter(
+    d => d.date instanceof Date && !isNaN(d.date.getTime())
+  ).length;
+
+  const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (validDatesCount < 3) {
+      setMinimumDaysDialog({ isOpen: true });
+      return;
+    }
+    if (!isSubmitting) handleSubmit();
+  };
 
   return (
     <div className="space-y-6">
-      {/* Choix de la période */}
       <PeriodSelector
-        selectedPeriod={selectedPeriod || ""}
+        selectedPeriod={selectedPeriod}
         setSelectedPeriod={setSelectedPeriod}
         holidayPeriods={holidayPeriods}
         filterTeenOnly={true}
       />
 
-      {/* Sélecteur d’enfant */}
       <ChildSelector
-        selectedChild={selectedChild || ""}
+        selectedChild={selectedChild}
         setSelectedChild={setSelectedChild}
         children={filteredChildren}
         setSelectedDates={setSelectedDates}
       />
 
-      {/* Sélecteur de dates */}
       {selectedPeriod && selectedChild && (
         <HolidayDateSelector
           selectedDates={selectedDates}
           handleDateToggle={handleDateToggle}
           handleOptionChange={handleOptionChange}
+          // Pass the correct isDateAlreadyReserved function from our hook
           isDateAlreadyReserved={isDateAlreadyReserved}
           periodId={selectedPeriod}
           selectedChild={selectedChild}
@@ -81,24 +104,12 @@ export function TeenHolidayReservationContent() {
         />
       )}
 
-      {/* Bouton de soumission */}
       <div className="flex justify-end mt-6">
         <Button
-          onClick={(e) => {
-            e.preventDefault();
-            if (validDatesCount < 3) {
-              setMinimumDaysDialog({ isOpen: true });
-              return;
-            }
-            if (!isSubmitting) handleSubmit();
-          }}
+          onClick={onSubmitClick}
           className="w-full md:w-auto"
-          disabled={
-            !selectedChild ||
-            !selectedPeriod ||
-            validDatesCount < 3 ||
-            isSubmitting
-          }
+          disabled={!selectedChild || !selectedPeriod || validDatesCount < 3 || isSubmitting}
+          type="button"
         >
           {isSubmitting ? (
             <>
@@ -111,23 +122,20 @@ export function TeenHolidayReservationContent() {
         </Button>
       </div>
 
-      {/* Dialogues */}
-      <SuccessReservationDialog
-        open={showSuccessDialog}
-        onOpenChange={setShowSuccessDialog}
+      <SuccessReservationDialog 
+        open={showSuccessDialog} 
+        onOpenChange={setShowSuccessDialog} 
       />
       <NoSpotsDialog
         open={noSpotsDialog.isOpen}
-        onOpenChange={(open) =>
-          setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })
-        }
+        onOpenChange={open => setNoSpotsDialog({ ...noSpotsDialog, isOpen: open })}
         schoolClass={noSpotsDialog.schoolClass}
         date={noSpotsDialog.date}
       />
       <MinimumDaysDialog
         open={minimumDaysDialog.isOpen}
-        onOpenChange={(open) => setMinimumDaysDialog({ isOpen: open })}
+        onOpenChange={open => setMinimumDaysDialog({ isOpen: open })}
       />
     </div>
   );
-}
+};
