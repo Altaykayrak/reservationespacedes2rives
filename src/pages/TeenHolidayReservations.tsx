@@ -1,7 +1,7 @@
+// src/pages/TeenHolidayReservations.tsx
 import { useAuth } from "@/hooks/useAuth";
 import { useHolidayReservation } from "@/hooks/useHolidayReservation";
 import { TeenHolidayReservationContent } from "@/components/reservations/TeenHolidayReservationContent";
-import { TeenHolidayReservationsList } from "@/components/reservations/TeenHolidayReservationsList";
 import { CalendarDays } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
@@ -29,6 +29,7 @@ const TeenHolidayReservations = () => {
         return;
       }
       setIsLoading(true);
+
       const { data, error } = await supabase
         .from("profiles")
         .select("is_waiting, is_closed")
@@ -45,12 +46,16 @@ const TeenHolidayReservations = () => {
         setIsClosed(data.is_closed);
         setProfileError(null);
       }
+
       setIsLoading(false);
     };
 
-    if (initialized && !loading) checkAccess();
+    if (initialized && !loading) {
+      checkAccess();
+    }
   }, [user, loading, initialized, session, toast]);
 
+  // non-authenticated
   if (initialized && !loading && !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -70,6 +75,7 @@ const TeenHolidayReservations = () => {
     );
   }
 
+  // loading skeleton
   if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -89,6 +95,7 @@ const TeenHolidayReservations = () => {
     );
   }
 
+  // profile load error
   if (profileError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -104,6 +111,7 @@ const TeenHolidayReservations = () => {
     );
   }
 
+  // waiting state
   if (isWaiting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -123,6 +131,7 @@ const TeenHolidayReservations = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <Navbar />
       <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
+        {/* header */}
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <CalendarDays className="h-6 w-6 md:h-8 md:w-8 text-primary" />
@@ -135,6 +144,7 @@ const TeenHolidayReservations = () => {
           </p>
         </div>
 
+        {/* closed state */}
         {isClosed ? (
           <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
             <EmptyHolidayState
@@ -145,18 +155,15 @@ const TeenHolidayReservations = () => {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+            {/* ici on affiche uniquement le formulaire */}
             <TeenHolidayReservationContent />
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
-          <div className="p-4 md:p-6">
-            <TeenHolidayReservationsList periodId={selectedPeriod!} />
-          </div>
-        </div>
       </div>
     </div>
   );
 };
 
 export default TeenHolidayReservations;
+
