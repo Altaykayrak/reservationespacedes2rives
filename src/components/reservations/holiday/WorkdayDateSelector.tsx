@@ -4,6 +4,8 @@ import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format } from "date-fns";
 import HolidaySpotsBadge from "@/components/reservations/HolidaySpotsBadge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DateOption {
   date: Date;
@@ -86,6 +88,34 @@ export const WorkdayDateSelector = ({
     })
   );
 
+  // Récupérer les informations de disponibilité pour chaque date
+  const { data: spotsInfo = {}, isLoading: isLoadingSpots } = useQuery({
+    queryKey: ["holiday_spots", periodId, childInfo?.school_class],
+    queryFn: async () => {
+      if (!periodId || !childInfo?.school_class) return {};
+      
+      const spotsByDate: Record<string, number> = {};
+      
+      // Pour chaque date de la période, récupérer le nombre de places disponibles
+      for (const date of periodDates) {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        const { data } = await supabase.rpc(
+          'check_holiday_spots_available',
+          {
+            p_period_id: periodId,
+            p_reservation_date: dateStr,
+            p_child_school_class: childInfo.school_class
+          }
+        );
+        spotsByDate[dateStr] = data;
+      }
+      
+      return spotsByDate;
+    },
+    enabled: !!periodId && !!childInfo?.school_class,
+    refetchOnWindowFocus: false
+  });
+
   return (
     <ScrollArea className="h-[300px] pr-3">
       <div className="space-y-1">
@@ -94,6 +124,11 @@ export const WorkdayDateSelector = ({
           const dateStr = format(new Date(date), 'yyyy-MM-dd');
           const selectedDate = selectedDatesMap.get(dateStr) as DateOption | undefined;
           const isSelected = !!selectedDate;
+          const isReserved = isDateAlreadyReserved(date);
+          
+          // Vérifier si la date est complète (0 ou moins de places disponibles)
+          const availableSpots = spotsInfo[dateStr] ?? null;
+          const isDateFull = typeof availableSpots === 'number' && availableSpots <= 0;
           
           return (
             <div
@@ -103,7 +138,7 @@ export const WorkdayDateSelector = ({
               <DateItem
                 date={date}
                 isSelected={isSelected}
-                isReserved={isDateAlreadyReserved(date)}
+                isReserved={isReserved}
                 withoutMeal={selectedDate?.withoutMeal || false}
                 earlyDropoff={selectedDate?.earlyDropoff || false}
                 onDateToggle={() => handleDateToggle(date)}
@@ -113,6 +148,7 @@ export const WorkdayDateSelector = ({
                 isTeenClass={false}
                 periodId={periodId}
                 childSchoolClass={childInfo?.school_class || ""}
+                isDisabled={isDateFull && !isReserved} // Désactiver la date si elle est complète et pas déjà réservée
               />
               <HolidaySpotsBadge
                 periodId={periodId}
