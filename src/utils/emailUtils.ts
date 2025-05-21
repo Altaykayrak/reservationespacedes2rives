@@ -23,7 +23,19 @@ export const sendHolidayReservationEmail = async (
   console.log(`DEBUG: Sending email with requestId: ${requestId} (timestamp: ${submissionTimestamp})`);
   
   // Format the dates for better readability in the email
-  const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
+  const formattedDates = selectedDates.map(d => {
+    try {
+      if (d.date instanceof Date && !isNaN(d.date.getTime())) {
+        return format(d.date, "EEEE d MMMM yyyy", { locale: fr });
+      } else {
+        console.error(`DEBUG: Invalid date in selectedDates: ${d.date} (timestamp: ${submissionTimestamp})`);
+        return "Date invalide";
+      }
+    } catch (error) {
+      console.error(`DEBUG: Error formatting date: ${error} (timestamp: ${submissionTimestamp})`);
+      return "Date invalide";
+    }
+  }).filter(date => date !== "Date invalide");
   
   // Determine reservation type (standard or teen)
   const isTeenReservation = childSchoolClass === "6ème" || 

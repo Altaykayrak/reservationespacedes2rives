@@ -43,6 +43,18 @@ const handler = async (req: Request): Promise<Response> => {
     markRequestAsProcessed(requestId);
     console.log(`[${Date.now()}] Request marked as processed:`, requestId);
 
+    // Vérifier si resendApiKey est défini
+    if (!resendApiKey) {
+      console.error(`[${Date.now()}] Resend API key is missing`);
+      return new Response(
+        JSON.stringify({ error: "Resend API key is missing" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     // Process based on reservation type
     // Vérification plus robuste des types de réservation
     if (requestData.reservationType === "holiday" || 

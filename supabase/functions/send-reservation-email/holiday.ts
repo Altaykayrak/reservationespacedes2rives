@@ -69,20 +69,32 @@ export async function processHolidayReservation(
     requestData.reservationType === "teen-holiday" ? "Club Ado" : "Vacances"
   }${requestData.childName ? " - " + requestData.childName : ""}`;
   
-  const emailResponse = await resend.emails.send({
-    from: "Réservation <onboarding@resend.dev>",
-    to: ["accueil@e2rives.fr"],
-    subject: emailSubject,
-    html: emailHtml,
-  });
+  try {
+    const emailResponse = await resend.emails.send({
+      from: "Réservation <onboarding@resend.dev>",
+      to: ["accueil@e2rives.fr"],
+      subject: emailSubject,
+      html: emailHtml,
+    });
 
-  console.log(`[${Date.now()}] Email sent successfully:`, emailResponse);
-  
-  return new Response(JSON.stringify({ success: true, data: emailResponse }), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-      ...corsHeaders,
-    },
-  });
+    console.log(`[${Date.now()}] Email sent successfully:`, JSON.stringify(emailResponse));
+    
+    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+      },
+    });
+  } catch (emailError) {
+    console.error(`[${Date.now()}] Error sending email:`, emailError);
+    
+    return new Response(JSON.stringify({ error: emailError.message }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+      },
+    });
+  }
 }
