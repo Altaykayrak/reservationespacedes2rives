@@ -1,133 +1,45 @@
-import { EmptyReservations } from "./EmptyReservations";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useNavigate } from "react-router-dom";
-import { HolidayChildReservationCard } from "./holiday/HolidayChildReservationCard";
-import { useHolidayReservations } from "@/hooks/useHolidayReservations";
-import { HolidayReservationWithChild } from "@/types/reservations";
-import { useSchoolClassUtils } from "@/hooks/useSchoolClassUtils";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+// src/components/reservations/HolidayReservationsList.tsx
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+import { Loader2 } from "lucide-react";
 
-type GroupedReservations = Record<string, {
-  childName: string;
-  schoolClass: string;
-  reservations: HolidayReservationWithChild[];
-}>;
+interface HolidayReservationWithChild extends Tables<"holiday_reservations_with_children"> {}
 
-export const HolidayReservationsList = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const isTeenPage = window.location.pathname === "/teenholiday-reservations";
-  const { reservations, isError, error, refetch } = useHolidayReservations();
-  const { isTeenClassSync } = useSchoolClassUtils();
-
-  console.log("1. Réservations reçues du hook:", reservations);
-  console.log("2. Est-ce une erreur ?", isError);
-  if (error) console.log("3. Erreur détectée:", error);
-
-  if (isError) {
-    const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
-    if (errorMessage.includes("Not authenticated") || !user) {
-      return (
-        <Alert variant="destructive">
-          <AlertDescription className="flex flex-col gap-3">
-            <div>Vous devez être connecté pour voir vos réservations.</div>
-            <Button 
-              onClick={() => navigate("/login", { state: { from: location.pathname } })}
-              className="w-full sm:w-auto"
-              variant="outline"
-            >
-              Se connecter
-            </Button>
-          </AlertDescription>
-        </Alert>
-      );
+export function HolidayReservationsList({ periodId }: { periodId: string }) {
+  const { data: list = [], isLoading } = useQuery<HolidayReservationWithChild[]>({
+    queryKey: ["holiday_reservations_list", periodId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("holiday_reservations_with_children")
+        .select("*")
+        .eq("period_id", periodId)
+        .eq("status", "confirmed")
+        .order("reservation_date", { ascending: true });
+      if (error) throw error;
+      return data;
     }
+  });
+
+  if (isLoading) {
     return (
-      <Alert variant="destructive">
-        <AlertDescription className="flex flex-col gap-3">
-          <div>Une erreur est survenue lors du chargement des réservations.</div>
-          <Button onClick={() => refetch()} className="w-full sm:w-auto" variant="outline">
-            Réessayer
-          </Button>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (!reservations || reservations.length === 0) {
-    console.log("4. Aucune réservation trouvée");
-    return <EmptyReservations />;
-  }
-
-  console.log("5. Nombre de réservations avant filtrage:", reservations.length);
-
-  const filteredReservations = reservations
-    .filter(reservation => {
-      if (!reservation || !reservation.children || !reservation.children.school_class || !reservation.period_id) {
-        console.warn("Données manquantes pour la réservation:", reservation?.id);
-        return false;
-      }
-
-      const schoolClass = reservation.children.school_class;
-      const isTeenClass = isTeenClassSync(schoolClass, reservation.period_id);
-      const isCm2 = schoolClass.toUpperCase() === "CM2";
-
-      const keepReservation = isTeenPage ? (isTeenClass || isCm2) : !isTeenClass;
-
-      console.log(`Réservation ${reservation.id}, enfant ${reservation.children.first_name}, classe ${schoolClass}, ado: ${isTeenClass}, CM2: ${isCm2}, incluse: ${keepReservation}`);
-
-      return keepReservation;
-    });
-
-  console.log("11. Nombre de réservations après filtrage:", filteredReservations.length);
-
-  if (filteredReservations.length === 0) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-gray-600">
-          Aucune réservation trouvée pour {isTeenPage ? "les adolescents et les CM2" : "les enfants de maternelle et primaire"}.
-        </p>
+      <div className="flex justify-center p-6">
+        <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
   }
 
-  const reservationsByChild = filteredReservations.reduce((acc, reservation) => {
-    const childId = reservation.child_id;
-    if (!acc[childId]) {
-      acc[childId] = {
-        childName: `${reservation.children.first_name} ${reservation.children.last_name}`,
-        schoolClass: reservation.children.school_class,
-        reservations: [],
-      };
-    }
-    acc[childId].reservations.push(reservation);
-    return acc;
-  }, {} as GroupedReservations);
-
-  console.log("12. Réservations groupées par enfant:", reservationsByChild);
+  if (list.length === 0) {
+    return <p>Aucune réservation pour cette période.</p>;
+  }
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos {isTeenPage ? "activités Club Ado (CM2 inclus)" : "vacances"} réservées (sous réserve de règlement)
-        </h2>
-        <p className="text-sm text-red-600 mb-4">
-          Pour toute modification de vos réservations (ajout ou suppression de journées), merci de contacter l'accueil.
-        </p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Object.entries(reservationsByChild).map(([childId, data]) => (
-          <HolidayChildReservationCard
-            key={childId}
-            childName={data.childName}
-            schoolClass={data.schoolClass}
-            reservations={data.reservations}
-            onUpdate={refetch}
-          />
-        ))}
-      </div>
-    </div>
+    <ul className="space-y-2">
+      {list.map(r => (
+        <li key={r.id} className="p-2 border rounded">
+          {r.children.first_name} {r.children.last_name} — {r.reservation_date}
+        </li>
+      ))}
+    </ul>
   );
-};
+}
