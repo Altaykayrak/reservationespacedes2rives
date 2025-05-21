@@ -1,6 +1,4 @@
-
-// src/hooks/useHolidayReservation.ts
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -101,15 +99,34 @@ export const useHolidayReservation = () => {
     }
 
     setIsSubmitting(true);
+    const submissionTimestamp = Date.now();
+
     try {
       const result = await createHolidayReservations(
         selectedChild,
         selectedDates,
         holidayPeriods,
-        Date.now()
+        submissionTimestamp
       );
 
       if (result.success) {
+        // Envoyer l'email de confirmation
+        try {
+          const childFullName = `${result.childData?.first_name} ${result.childData?.last_name}`;
+          await sendHolidayReservationEmail(
+            childFullName,
+            selectedDates,
+            result.periodName || "",
+            result.reservationNumber || "",
+            result.periodId || "",
+            submissionTimestamp,
+            result.childData?.school_class || ""
+          );
+          console.log("Email vacances envoyé");
+        } catch (emailError) {
+          console.error("Erreur envoi email vacances:", emailError);
+        }
+
         // On vide et on rafraîchit
         setSelectedDates([]);
         await refetchExisting(); // badge "déjà réservé"
@@ -145,7 +162,7 @@ export const useHolidayReservation = () => {
     children,
     holidayPeriods,
     selectedDates,
-    setSelectedDates,         // ← on réintègre bien setSelectedDates
+    setSelectedDates,
     selectedChild,
     setSelectedChild,
     selectedPeriod,
