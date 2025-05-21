@@ -30,14 +30,14 @@ export const useHolidayReservation = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // --- on récupère ici aussi isDateAlreadyReserved ---
+  // Hook pour récupérer et rafraîchir les réservations existantes
   const {
     existingReservations,
     refetchReservations: refetchExisting,
-    isDateAlreadyReserved
+    isDateAlreadyReserved,
   } = useExistingHolidayReservations(selectedChild || "");
 
-  // Liste des enfants
+  // Charger la liste des enfants
   const { data: children } = useQuery<Tables<"children">[]>({
     queryKey: ["children"],
     queryFn: async () => {
@@ -47,10 +47,8 @@ export const useHolidayReservation = () => {
     },
   });
 
-  // Périodes de vacances
-  const { data: holidayPeriods } = useQuery<
-    Tables<"available_holiday_periods">[]
-  >({
+  // Charger les périodes de vacances
+  const { data: holidayPeriods } = useQuery<Tables<"available_holiday_periods">[]>({
     queryKey: ["available_holiday_periods"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -61,20 +59,21 @@ export const useHolidayReservation = () => {
     },
   });
 
-  // Toggle d’une date
+  // Sélection d'une date
   const handleDateToggle = useCallback((date: Date) => {
     setSelectedDates((prev) => {
       const dateStr = date.toISOString().split("T")[0];
       const isSelected = prev.some(
         (d) => d.date.toISOString().split("T")[0] === dateStr
       );
+
       return isSelected
         ? prev.filter((d) => d.date.toISOString().split("T")[0] !== dateStr)
         : [...prev, { date: new Date(date), withoutMeal: false, earlyDropoff: false }];
     });
   }, []);
 
-  // Changement d’option (sans repas / accueil matinal)
+  // Changement d'option (sans repas / accueil matinal)
   const handleOptionChange = (
     date: Date,
     option: "withoutMeal" | "earlyDropoff",
@@ -89,7 +88,7 @@ export const useHolidayReservation = () => {
     );
   };
 
-  // Soumission
+  // Soumission du formulaire
   const handleSubmit = async () => {
     if (!selectedChild || !selectedPeriod) return;
 
@@ -102,41 +101,39 @@ export const useHolidayReservation = () => {
     }
 
     setIsSubmitting(true);
+    const submissionTimestamp = Date.now();
+
     try {
-      const timestamp = Date.now();
       const result = await createHolidayReservations(
         selectedChild,
         selectedDates,
         holidayPeriods,
-        timestamp
+        submissionTimestamp
       );
 
       if (result.success) {
-        // envoi mail
+        // Envoyer l'email de confirmation
         try {
-          const fullName = `${result.childData?.first_name} ${result.childData?.last_name}`;
+          const childFullName = `${result.childData?.first_name} ${result.childData?.last_name}`;
           await sendHolidayReservationEmail(
-            fullName,
+            childFullName,
             selectedDates,
             result.periodName || "",
             result.reservationNumber || "",
             result.periodId || "",
-            timestamp,
+            submissionTimestamp,
             result.childData?.school_class || ""
           );
-        } catch (e) {
-          console.error("Erreur mail vacances:", e);
+          console.log("Email vacances envoyé");
+        } catch (emailError) {
+          console.error("Erreur envoi email vacances:", emailError);
         }
 
-        // refresh badges et compteur de places
+        // On vide et on rafraîchit
         setSelectedDates([]);
-        await refetchExisting();
+        await refetchExisting(); // badge "déjà réservé"
         queryClient.invalidateQueries({
-          queryKey: [
-            "period_spots_available",
-            selectedPeriod,
-            result.childData?.school_class,
-          ],
+          queryKey: ["period_spots_available", selectedPeriod, result.childData?.school_class],
         });
         setShowSuccessDialog(true);
       } else if (result.noSpots) {
@@ -163,7 +160,6 @@ export const useHolidayReservation = () => {
     }
   };
 
-  // On renvoie désormais isDateAlreadyReserved
   return {
     children,
     holidayPeriods,
@@ -177,7 +173,7 @@ export const useHolidayReservation = () => {
     handleOptionChange,
     handleSubmit,
     existingReservations,
-    isDateAlreadyReserved,        // ← ajouté
+    isDateAlreadyReserved,
     showSuccessDialog,
     setShowSuccessDialog,
     noSpotsDialog,
