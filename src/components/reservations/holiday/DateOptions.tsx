@@ -3,7 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 interface DateOptionsProps {
-  date: Date;
+  date?: Date; // Make date optional since it sometimes might not be provided
   withoutMeal: boolean;
   earlyDropoff: boolean;
   onOptionChange: (option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
@@ -24,6 +24,14 @@ export const DateOptions = ({
   // Pour les ados sur la page Club Ado, la case "Sans repas" est toujours cochée et non-modifiable
   const isReadOnly = isTeenPage && isTeenClass;
   
+  // Generate a unique ID that doesn't rely on date if it's not provided
+  const generateId = (prefix: string) => {
+    if (date) {
+      return `${prefix}-${date.toISOString()}`;
+    }
+    return `${prefix}-${Math.random().toString(36).substring(2, 9)}`;
+  };
+  
   // Fonction pour arrêter la propagation des événements afin d'éviter de déclencher l'événement de la date parent
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -41,7 +49,7 @@ export const DateOptions = ({
       <div className="flex items-center space-x-2">
         <div onClick={handleCheckboxClick}>
           <Checkbox
-            id={`without-meal-${date.toISOString()}`}
+            id={generateId("without-meal")}
             checked={isReadOnly ? true : withoutMeal}
             onCheckedChange={(checked) =>
               isReadOnly ? null : onOptionChange('withoutMeal', checked as boolean)
@@ -51,7 +59,7 @@ export const DateOptions = ({
           />
         </div>
         <Label 
-          htmlFor={`without-meal-${date.toISOString()}`}
+          htmlFor={generateId("without-meal")}
           className={`text-sm text-blue-900 ${isReadOnly ? 'opacity-70' : ''}`}
           onClick={handleLabelClick}
         >
@@ -64,7 +72,7 @@ export const DateOptions = ({
         <div className="flex items-center space-x-2">
           <div onClick={handleCheckboxClick}>
             <Checkbox
-              id={`early-dropoff-${date.toISOString()}`}
+              id={generateId("early-dropoff")}
               checked={earlyDropoff}
               onCheckedChange={(checked) =>
                 onOptionChange('earlyDropoff', checked as boolean)
@@ -73,7 +81,7 @@ export const DateOptions = ({
             />
           </div>
           <Label 
-            htmlFor={`early-dropoff-${date.toISOString()}`}
+            htmlFor={generateId("early-dropoff")}
             className="text-sm text-blue-900"
             onClick={handleLabelClick}
           >

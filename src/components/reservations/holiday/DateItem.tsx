@@ -77,6 +77,7 @@ export const DateItem: React.FC<DateItemProps> = ({
       
       {isSelected && (
         <DateOptions
+          date={date} // Always pass the date
           withoutMeal={withoutMeal}
           earlyDropoff={earlyDropoff}
           onOptionChange={onOptionChange}
