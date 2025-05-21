@@ -16,7 +16,7 @@ interface DateItemProps {
   isTeenClass?: boolean;
   periodId?: string;
   childSchoolClass?: string;
-  isDisabled?: boolean; // New prop to handle full dates
+  isDisabled?: boolean; // For full dates
 }
 
 export const DateItem: React.FC<DateItemProps> = ({
@@ -39,21 +39,23 @@ export const DateItem: React.FC<DateItemProps> = ({
   const displayDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
   
   const handleToggle = () => {
-    if (isDisabled && !isReserved) return; // Don't allow toggle when disabled and not already reserved
+    // Don't allow toggle when disabled (full) or when already reserved but not selected
+    // Allow toggling if already reserved AND selected so users can unselect it
+    if ((isDisabled && !isReserved) || (isReserved && !isSelected)) return;
     onDateToggle();
   };
   
   return (
     <div className="flex items-center flex-1 ml-2">
       <div 
-        className={`flex items-center cursor-pointer ${isDisabled && !isReserved ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+        className={`flex items-center ${(isDisabled && !isReserved) || (isReserved && !isSelected) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
         onClick={handleToggle}
       >
         <Checkbox
           id={`date-${date.toISOString()}`}
           checked={isSelected}
           className="mr-2"
-          disabled={isDisabled && !isReserved}
+          disabled={(isDisabled && !isReserved) || (isReserved && !isSelected)}
         />
         <label
           htmlFor={`date-${date.toISOString()}`}
