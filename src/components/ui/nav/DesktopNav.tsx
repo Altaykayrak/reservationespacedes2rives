@@ -14,8 +14,13 @@ interface DesktopNavProps {
 
 export function DesktopNav({ menuItems, isAuthenticated, onLogout }: DesktopNavProps) {
   const location = useLocation();
-  // Filter out the Wednesday reservations menu item if needed
-  const filteredMenuItems = menuItems.filter(item => item.label !== "Réservations mercredi");
+  // Filter out the hidden pages
+  const filteredMenuItems = menuItems.filter(item => 
+    item.href !== "/rdv" && 
+    item.href !== "/wednesday-reservations" && 
+    item.label !== "Réservations mercredi" &&
+    item.label !== "Inscription 2025-2026"
+  );
 
   return (
     <div className="hidden md:flex items-center gap-2">

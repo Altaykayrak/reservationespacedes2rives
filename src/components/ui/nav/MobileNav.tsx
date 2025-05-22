@@ -20,6 +20,14 @@ export function MobileNav({
 }: MobileNavProps) {
   const location = useLocation();
   
+  // Filter out the hidden pages
+  const filteredMenuItems = menuItems.filter(item => 
+    item.href !== "/rdv" && 
+    item.href !== "/wednesday-reservations" && 
+    item.label !== "Réservations mercredi" &&
+    item.label !== "Inscription 2025-2026"
+  );
+  
   return (
     <div className="md:hidden">
       <Sheet>
@@ -35,7 +43,7 @@ export function MobileNav({
         </SheetTrigger>
         <SheetContent side="right" className="bg-gradient-to-br from-white to-gray-50 border-l-2 shadow-lg">
           <div className="flex flex-col space-y-4 mt-6">
-            {menuItems.map(item => (
+            {filteredMenuItems.map(item => (
               <Link 
                 key={item.href} 
                 to={item.href} 
