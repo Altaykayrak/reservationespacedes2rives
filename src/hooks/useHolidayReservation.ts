@@ -1,3 +1,4 @@
+
 // src/hooks/useHolidayReservation.ts
 import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -128,13 +129,20 @@ export const useHolidayReservation = () => {
 
         // Vide la sélection et rafraîchit tout :
         setSelectedDates([]);
-        await refetchExisting(); // met à jour le badge “déjà réservé”
+        await refetchExisting(); // met à jour le badge "déjà réservé"
+        
+        // Invalider toutes les requêtes liées aux réservations
+        queryClient.invalidateQueries({
+          queryKey: ["holiday_reservations"],
+        }); // requête principale pour la liste des réservations
+        
         queryClient.invalidateQueries({
           queryKey: ["period_spots_available", selectedPeriod, result.childData?.school_class],
         }); // rafraîchit le compteur de places
         queryClient.invalidateQueries({
           queryKey: ["holiday_reservations_list", selectedPeriod],
         }); // rafraîchit la liste en bas de page
+        
         setShowSuccessDialog(true);
 
       } else if (result.noSpots) {

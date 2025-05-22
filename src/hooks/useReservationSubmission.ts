@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { 
   validateSelectedChild, 
   validateSelectedDates, 
@@ -47,6 +48,7 @@ export const useReservationSubmission = (
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Utiliser un état local pour suivre si une soumission est en cours
   const [submissionInProgress, setSubmissionInProgress] = useState<boolean>(false);
@@ -207,6 +209,11 @@ export const useReservationSubmission = (
           result.childData.school_class // Passage de la classe de l'enfant
         );
       }
+
+      // Invalider toutes les requêtes liées aux réservations après une réservation réussie
+      queryClient.invalidateQueries({
+        queryKey: ["holiday_reservations"],
+      }); // requête principale pour la liste des réservations
 
       toast({
         title: "Réservation confirmée",
