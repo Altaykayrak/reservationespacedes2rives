@@ -1,4 +1,3 @@
-
 // src/components/reservations/HolidayReservationContent.tsx
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -15,12 +14,14 @@ import { useLocation } from "react-router-dom";
 import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 import { Tables } from "@/integrations/supabase/types";
 import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
+import { useReservationSubmission } from "@/hooks/useReservationSubmission";
 
 export interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
   filterTeenPeriods?: boolean;
   invertSelectors?: boolean;
   enforceCM2Summer?: boolean;
+  disableMinimumDaysRule?: boolean; // New prop to disable minimum days rule
 }
 
 export const HolidayReservationContent: React.FC<HolidayReservationContentProps> = ({
@@ -28,6 +29,7 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
   filterTeenPeriods = false,
   invertSelectors = false,
   enforceCM2Summer = false,
+  disableMinimumDaysRule = false, // Default to false to maintain current behavior
 }) => {
   const {
     selectedDates,
@@ -38,7 +40,7 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     holidayPeriods,
     handleDateToggle,
     handleOptionChange,
-    handleSubmit,
+    handleSubmit: originalHandleSubmit,
     setSelectedDates,
     showSuccessDialog,
     setShowSuccessDialog,
@@ -48,13 +50,10 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     minimumDaysDialog,
     setMinimumDaysDialog,
   } = useHolidayReservation();
-  
-  // Utiliser le hook pour récupérer les réservations existantes
+
+  // Use the new hook for form submission
   const { isDateAlreadyReserved } = useExistingHolidayReservations(selectedChild || '');
-
-  // Ajouter un état pour stocker l'enfant sélectionné et éviter le comportement indésirable
   const [storedChild, setStoredChild] = useState<string | null>(null);
-
   const { children: allChildren } = useChildrenData();
   const location = useLocation();
 
@@ -115,15 +114,26 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     d => d.date instanceof Date && !isNaN(d.date.getTime())
   ).length;
 
+  // Wrapper pour handleSubmit qui utilise disableMinimumDaysRule
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (validDatesCount < 3) {
+    
+    // Si disableMinimumDaysRule est true, on ignore la vérification des 3 jours minimum
+    if (!disableMinimumDaysRule && validDatesCount < 3) {
       setMinimumDaysDialog({ isOpen: true });
       return;
     }
-    if (!isSubmitting) handleSubmit();
+    
+    if (!isSubmitting) originalHandleSubmit();
   };
+
+  // Détermination si le bouton doit être désactivé, selon la règle des jours minimum
+  const isButtonDisabled = !selectedChild || 
+                          !selectedPeriod || 
+                          validDatesCount < 1 || // Au moins 1 date requise même en mode admin
+                          (!disableMinimumDaysRule && validDatesCount < 3) || // 3 jours minimum sauf si désactivé
+                          isSubmitting;
 
   return (
     <div className="space-y-6">
@@ -176,7 +186,7 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
         <Button
           onClick={onSubmitClick}
           className="w-full md:w-auto"
-          disabled={!selectedChild || !selectedPeriod || validDatesCount < 3 || isSubmitting}
+          disabled={isButtonDisabled}
           type="button"
         >
           {isSubmitting ? (

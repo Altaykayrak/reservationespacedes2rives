@@ -101,9 +101,11 @@ const AdminNewHolidayReservation = () => {
         ) : (
           // Passer directement les enfants filtrés à HolidayReservationContent
           // sans filtrage supplémentaire par profil utilisateur
+          // Ajouter disableMinimumDaysRule pour ignorer la règle des 3 jours minimum
           <HolidayReservationContent 
             filteredChildren={filteredChildren as Tables<"children">[] | null} 
             filterTeenPeriods={false} 
+            disableMinimumDaysRule={true}
           />
         )}
       </div>

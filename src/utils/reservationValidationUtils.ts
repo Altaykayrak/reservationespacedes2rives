@@ -24,16 +24,16 @@ export const validateSelectedDates = (selectedDates: DateOption[]): string | nul
     return "Veuillez sélectionner au moins une date.";
   }
   
-  // Vérifier qu'il y a au moins 3 dates valides
+  // Vérifier qu'il y a au moins une date valide (même si règle minimum désactivée)
   const validDates = selectedDates.filter(d => 
     d.date instanceof Date && !isNaN(d.date.getTime())
   );
   
   console.log("📊 validateSelectedDates - Dates valides:", validDates.length);
   
-  if (validDates.length < 3) {
-    console.log("🛑 validateSelectedDates - Moins de 3 dates valides");
-    return "Veuillez sélectionner au moins 3 jours pour valider votre réservation.";
+  if (validDates.length === 0) {
+    console.log("🛑 validateSelectedDates - Aucune date valide");
+    return "Veuillez sélectionner au moins une date valide pour votre réservation.";
   }
   
   return null;
@@ -75,12 +75,6 @@ export const validateMinimumDays = (
     return false;
   }
   
-  // Exigence explicite de 3 jours minimum, SANS EXCEPTION
-  if (selectedDates.length < 3) {
-    console.log("🛑 validateMinimumDays - moins de 3 dates au total");
-    return false;
-  }
-  
   // S'assurer que les dates sont bien des objets Date valides
   const validDates = selectedDates
     .filter(d => d && d.date instanceof Date && !isNaN(d.date.getTime()))
@@ -88,9 +82,9 @@ export const validateMinimumDays = (
   
   console.log("📊 validateMinimumDays - validDates count:", validDates.length);
   
-  // Si pas assez de dates valides (au moins 3), la validation échoue
-  if (validDates.length < 3) {
-    console.log("🛑 validateMinimumDays - moins de 3 dates valides");
+  // Si pas de dates valides (au moins 1), la validation échoue
+  if (validDates.length === 0) {
+    console.log("🛑 validateMinimumDays - aucune date valide");
     return false;
   }
   
@@ -98,6 +92,12 @@ export const validateMinimumDays = (
   if (isAdminRoute) {
     console.log("✅ validateMinimumDays - route admin, validation OK");
     return true;
+  }
+  
+  // Exigence de 3 jours minimum pour les utilisateurs normaux
+  if (validDates.length < 3) {
+    console.log("🛑 validateMinimumDays - moins de 3 dates au total pour utilisateur standard");
+    return false;
   }
   
   // Pour les utilisateurs normaux, on utilise la fonction existante avec les dates validées
