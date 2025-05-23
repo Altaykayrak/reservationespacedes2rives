@@ -65,9 +65,11 @@ export const validateNotAlreadyReserved = (
 
 export const validateMinimumDays = (
   selectedDates: DateOption[],
-  isAdminRoute: boolean
+  isAdminRoute: boolean,
+  disableMinimumDaysRule: boolean = false
 ): boolean => {
   console.log("🔍 validateMinimumDays - DÉMARRAGE avec %d dates", selectedDates.length);
+  console.log("🔍 validateMinimumDays - disableMinimumDaysRule:", disableMinimumDaysRule);
   
   // Si le tableau est vide ou undefined, la validation échoue immédiatement
   if (!selectedDates || selectedDates.length === 0) {
@@ -88,9 +90,9 @@ export const validateMinimumDays = (
     return false;
   }
   
-  // Pour les administrateurs, on autorise moins de 3 jours par semaine
-  if (isAdminRoute) {
-    console.log("✅ validateMinimumDays - route admin, validation OK");
+  // Pour les administrateurs ou si la règle est désactivée, on autorise moins de 3 jours par semaine
+  if (isAdminRoute || disableMinimumDaysRule) {
+    console.log("✅ validateMinimumDays - règle ignorée (admin ou désactivée), validation OK");
     return true;
   }
   

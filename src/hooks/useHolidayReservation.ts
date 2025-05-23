@@ -94,10 +94,9 @@ export const useHolidayReservation = () => {
     const validDates = selectedDates.filter(
       (d) => d.date instanceof Date && !isNaN(d.date.getTime())
     );
-    if (validDates.length < 3) {
-      setMinimumDaysDialog({ isOpen: true });
-      return;
-    }
+    
+    // Vérification des 3 jours min déplacée vers le composant qui utilise le hook
+    // pour permettre de la désactiver avec disableMinimumDaysRule
 
     setIsSubmitting(true);
     const timestamp = Date.now();
