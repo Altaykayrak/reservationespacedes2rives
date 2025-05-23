@@ -6,13 +6,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { useChildrenData } from "@/hooks/useChildrenData";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
 const AdminNewHolidayReservation = () => {
   const { data: isAdmin } = useAdminAuth();
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
-  const { children } = useChildrenData();
+
+  // Requête pour récupérer tous les enfants (administrateur)
+  const { data: children, isLoading } = useQuery<Tables<"children">[]>({
+    queryKey: ["admin_all_children"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("children")
+        .select("*")
+        .order('last_name', { ascending: true })
+        .order('first_name', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!isAdmin,
+  });
 
   // Filtrage initial des enfants selon le groupe sélectionné
   const filteredChildren = children?.filter(child => {
@@ -78,12 +94,18 @@ const AdminNewHolidayReservation = () => {
           </div>
         </Card>
 
-        {/* Important: Désactiver le filtrage supplémentaire dans HolidayReservationContent 
-            en passant directement les enfants déjà filtrés */}
-        <HolidayReservationContent 
-          filteredChildren={filteredChildren as Tables<"children">[] | null} 
-          filterTeenPeriods={false} 
-        />
+        {isLoading ? (
+          <Card className="p-6">
+            <p className="text-center">Chargement des enfants...</p>
+          </Card>
+        ) : (
+          // Passer directement les enfants filtrés à HolidayReservationContent
+          // sans filtrage supplémentaire par profil utilisateur
+          <HolidayReservationContent 
+            filteredChildren={filteredChildren as Tables<"children">[] | null} 
+            filterTeenPeriods={false} 
+          />
+        )}
       </div>
     </div>
   );
