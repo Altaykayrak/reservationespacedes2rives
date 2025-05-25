@@ -24,7 +24,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         });
         
         // Première vérification : compter les réservations directement pour cette date/période
-        console.log("🔍 DEBUG - Vérification directe des réservations pour debug:");
+        console.log("🔍 DEBUG useHolidaySpots - Vérification directe des réservations pour debug:");
         const { data: debugReservations, error: debugError } = await supabase
           .from("holiday_reservations")
           .select(`
@@ -42,19 +42,19 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           .eq("status", "confirmed");
           
         if (debugError) {
-          console.error("❌ DEBUG - Erreur lors de la vérification directe:", debugError);
+          console.error("❌ DEBUG useHolidaySpots - Erreur lors de la vérification directe:", debugError);
         } else {
-          console.log("📊 DEBUG - Réservations trouvées directement:", debugReservations);
-          console.log("📊 DEBUG - Nombre total de réservations confirmées pour cette date:", debugReservations?.length || 0);
+          console.log("📊 DEBUG useHolidaySpots - Réservations trouvées directement:", debugReservations);
+          console.log("📊 DEBUG useHolidaySpots - Nombre total de réservations confirmées pour cette date:", debugReservations?.length || 0);
           
           // Filtrer par classe pour voir combien correspondent au groupe
           const reservationsForClass = debugReservations?.filter(res => {
             const childClass = (res.children as any)?.school_class;
-            console.log("📊 DEBUG - Enfant classe:", childClass, "recherchée:", schoolClass);
+            console.log("📊 DEBUG useHolidaySpots - Enfant classe:", childClass, "recherchée:", schoolClass);
             return childClass && childClass.toLowerCase() === schoolClass.toLowerCase();
           }) || [];
           
-          console.log("📊 DEBUG - Réservations pour la classe", schoolClass, ":", reservationsForClass.length);
+          console.log("📊 DEBUG useHolidaySpots - Réservations pour la classe", schoolClass, ":", reservationsForClass.length);
         }
         
         // Use the corrected SQL function with proper period-specific mappings
