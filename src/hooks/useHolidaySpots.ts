@@ -8,27 +8,22 @@ const getClassGroupForPeriod = (schoolClass: string, periodName: string): 'kinde
   const normalizedClass = schoolClass.trim().toUpperCase();
   const isSummerPeriod = ['ETE-01', 'ETE-02', 'ETE-03', 'ETE-04'].includes(periodName);
   
-  // Maternelle (toujours kindergarten sur toutes les périodes)
+  // PS, MS → Maternelle (kindergarten) sur toutes les périodes
   if (['PS', 'MS'].includes(normalizedClass)) {
     return 'kindergarten';
   }
   
-  // GS avec les primaires sur toutes les périodes
-  if (normalizedClass === 'GS') {
+  // GS, CP, CE1, CE2, CM1 → Primaire (primary) sur toutes les périodes
+  if (['GS', 'CP', 'CE1', 'CE2', 'CM1'].includes(normalizedClass)) {
     return 'primary';
   }
   
-  // CP, CE1, CE2, CM1 toujours primaire
-  if (['CP', 'CE1', 'CE2', 'CM1'].includes(normalizedClass)) {
-    return 'primary';
-  }
-  
-  // CM2 : primaire SAUF en été où il passe avec les adolescents
+  // CM2 - Règle spéciale : été = teen, autres = primary
   if (normalizedClass === 'CM2') {
     return isSummerPeriod ? 'teen' : 'primary';
   }
   
-  // Adolescents
+  // 6ème à Terminale → Adolescent (teen)
   if (['6EME', '6ÈME', '5EME', '5ÈME', '4EME', '4ÈME', '3EME', '3ÈME', 
        'SECONDE', 'PREMIERE', 'PREMIÈRE', 'TERMINALE'].includes(normalizedClass)) {
     return 'teen';
@@ -50,7 +45,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       try {
         const dateStr = date.toISOString().split('T')[0];
         
-        console.log("🔄 useHolidaySpots - Calcul manuel des places pour:", {
+        console.log("🔄 useHolidaySpots - Calcul des places pour:", {
           periodId,
           date: dateStr,
           schoolClass
@@ -95,15 +90,10 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
             return null;
         }
 
-        // 4. Compter les réservations confirmées pour ce groupe à cette date
+        // 4. Récupérer toutes les réservations confirmées pour cette période et cette date
         const { data: reservations, error: reservationsError } = await supabase
-          .from("holiday_reservations")
-          .select(`
-            id,
-            children:child_id (
-              school_class
-            )
-          `)
+          .from("holiday_reservations_with_children")
+          .select("*")
           .eq("period_id", periodId)
           .eq("reservation_date", dateStr)
           .eq("status", "confirmed");
@@ -115,11 +105,25 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
 
         // 5. Filtrer les réservations qui appartiennent au même groupe
         const reservationsInGroup = reservations?.filter(reservation => {
-          const childClass = (reservation.children as any)?.school_class;
-          if (!childClass) return false;
+          if (!reservation.children || typeof reservation.children !== 'object') {
+            console.warn("⚠️ Données enfant manquantes pour la réservation:", reservation.id);
+            return false;
+          }
+          
+          const childData = reservation.children as any;
+          const childClass = childData?.school_class;
+          
+          if (!childClass) {
+            console.warn("⚠️ Classe enfant manquante:", reservation.id);
+            return false;
+          }
           
           const reservationGroup = getClassGroupForPeriod(childClass, periodData.name);
-          return reservationGroup === classGroup;
+          const belongs = reservationGroup === classGroup;
+          
+          console.log("🔍 Réservation", reservation.id, "- Classe:", childClass, "→ Groupe:", reservationGroup, "Correspond:", belongs);
+          
+          return belongs;
         }) || [];
 
         const reservedCount = reservationsInGroup.length;
@@ -132,7 +136,9 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           availableSpots,
           periodName: periodData.name,
           schoolClass,
-          date: dateStr
+          date: dateStr,
+          totalReservations: reservations?.length || 0,
+          reservationsInGroup: reservationsInGroup.length
         });
 
         return availableSpots;
