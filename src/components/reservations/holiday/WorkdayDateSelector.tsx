@@ -4,7 +4,7 @@ import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format } from "date-fns";
 import { HolidaySpotsBadge } from "@/components/reservations/HolidaySpotsBadge";
-import { useHolidaySpots } from "@/hooks/useHolidaySpots";
+import { useMemo } from "react";
 
 interface DateOption {
   date: Date;
@@ -74,7 +74,7 @@ export const WorkdayDateSelector = ({
     }
   };
 
-  const periodDates = generateDatesForPeriod();
+  const periodDates = useMemo(() => generateDatesForPeriod(), [holidayPeriod]);
 
   const selectedDatesMap = new Map(
     selectedDates.map(d => {
@@ -87,25 +87,6 @@ export const WorkdayDateSelector = ({
     })
   );
 
-  // Create a map to store spots data for each date using the useHolidaySpots hook
-  const spotsDataMap = new Map<string, { availableSpots: number | null; isFull: boolean; isLoading: boolean }>();
-  
-  // Use the useHolidaySpots hook for each date
-  periodDates.forEach(date => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    
-    // Call useHolidaySpots hook for each date
-    const { availableSpots, isFull, isLoading } = useHolidaySpots(
-      periodId, 
-      date, 
-      childInfo?.school_class || ""
-    );
-    
-    spotsDataMap.set(dateStr, { availableSpots, isFull, isLoading });
-  });
-
-  console.log("🎯 Données spots dans WorkdayDateSelector depuis useHolidaySpots:", Object.fromEntries(spotsDataMap));
-
   return (
     <ScrollArea className="h-[300px] pr-3">
       <div className="space-y-1">
@@ -115,13 +96,6 @@ export const WorkdayDateSelector = ({
           const selectedDate = selectedDatesMap.get(dateStr) as DateOption | undefined;
           const isSelected = !!selectedDate;
           const isReserved = isDateAlreadyReserved(date);
-          
-          // Get spots data from the map
-          const spotsData = spotsDataMap.get(dateStr);
-          const availableSpots = spotsData?.availableSpots ?? null;
-          const isDateFull = typeof availableSpots === 'number' && availableSpots <= 0;
-          
-          console.log(`📅 Date ${dateStr}: spots=${availableSpots}, isFull=${isDateFull}, isReserved=${isReserved}, isLoading=${spotsData?.isLoading}`);
           
           return (
             <div
@@ -141,7 +115,7 @@ export const WorkdayDateSelector = ({
                 isTeenClass={false}
                 periodId={periodId}
                 childSchoolClass={childInfo?.school_class || ""}
-                isDisabled={isDateFull && !isReserved} // Désactiver la date si elle est complète et pas déjà réservée
+                isDisabled={false} // We'll handle this in HolidaySpotsBadge
               />
               <HolidaySpotsBadge
                 periodId={periodId}

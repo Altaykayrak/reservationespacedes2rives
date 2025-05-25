@@ -1,9 +1,9 @@
 
-import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { DateCheckbox } from "@/components/ui/date-checkbox";
 import { DateOptions } from "./DateOptions";
-import { Badge } from "@/components/ui/badge";
+import { useHolidaySpots } from "@/hooks/useHolidaySpots";
 
 interface DateItemProps {
   date: Date;
@@ -13,13 +13,13 @@ interface DateItemProps {
   earlyDropoff: boolean;
   onDateToggle: () => void;
   onOptionChange: (option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
-  isTeenClass?: boolean;
-  periodId?: string;
-  childSchoolClass?: string;
-  isDisabled?: boolean; // For full dates
+  isTeenClass: boolean;
+  periodId: string;
+  childSchoolClass: string;
+  isDisabled?: boolean;
 }
 
-export const DateItem: React.FC<DateItemProps> = ({
+export const DateItem = ({
   date,
   isSelected,
   isReserved,
@@ -27,64 +27,44 @@ export const DateItem: React.FC<DateItemProps> = ({
   earlyDropoff,
   onDateToggle,
   onOptionChange,
-  isTeenClass = false,
+  isTeenClass,
   periodId,
   childSchoolClass,
-  isDisabled = false // Default to false
-}) => {
-  // Formatter la date pour l'affichage
-  const formattedDate = format(date, 'EEEE d MMMM', { locale: fr });
+  isDisabled = false
+}: DateItemProps) => {
+  const { availableSpots, isFull } = useHolidaySpots(periodId, date, childSchoolClass);
   
-  // Premier caractère en majuscule
-  const displayDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-  
-  const handleToggle = () => {
-    // Don't allow toggle when disabled (full) or when already reserved but not selected
-    // Allow toggling if already reserved AND selected so users can unselect it
-    if ((isDisabled && !isReserved) || (isReserved && !isSelected)) return;
-    onDateToggle();
-  };
-  
+  // Disable the date if it's full and not already reserved
+  const shouldDisable = isDisabled || (isFull && !isReserved);
+
   return (
-    <div className="flex items-center flex-1 ml-2">
-      <div 
-        className={`flex items-center ${(isDisabled && !isReserved) || (isReserved && !isSelected) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-        onClick={handleToggle}
-      >
-        <Checkbox
-          id={`date-${date.toISOString()}`}
+    <div className="flex-1">
+      <div className="flex items-center space-x-3">
+        <DateCheckbox
           checked={isSelected}
-          className="mr-2"
-          disabled={(isDisabled && !isReserved) || (isReserved && !isSelected)}
+          onCheckedChange={onDateToggle}
+          disabled={shouldDisable}
         />
-        <label
-          htmlFor={`date-${date.toISOString()}`}
-          className="cursor-pointer flex flex-col sm:flex-row sm:items-center gap-1"
-        >
-          <span>{displayDate}</span>
-          
-          {isReserved && (
-            <Badge variant="outline" className="bg-blue-100 text-blue-800 ml-1 text-[10px]">
-              Déjà réservé
-            </Badge>
+        <div className="flex flex-col">
+          <span className={`text-sm font-medium ${shouldDisable ? 'text-gray-400' : ''}`}>
+            {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+          </span>
+          {shouldDisable && !isReserved && (
+            <span className="text-xs text-red-500">
+              Journée complète
+            </span>
           )}
-          
-          {isDisabled && !isReserved && (
-            <Badge variant="outline" className="bg-red-100 text-red-800 ml-1 text-[10px]">
-              Complet
-            </Badge>
-          )}
-        </label>
+        </div>
       </div>
       
-      {isSelected && (
-        <DateOptions
-          date={date} // Always pass the date
-          withoutMeal={withoutMeal}
-          earlyDropoff={earlyDropoff}
-          onOptionChange={onOptionChange}
-          isTeenClass={isTeenClass}
-        />
+      {isSelected && !isTeenClass && (
+        <div className="mt-2 ml-6">
+          <DateOptions
+            withoutMeal={withoutMeal}
+            earlyDropoff={earlyDropoff}
+            onOptionChange={onOptionChange}
+          />
+        </div>
       )}
     </div>
   );
