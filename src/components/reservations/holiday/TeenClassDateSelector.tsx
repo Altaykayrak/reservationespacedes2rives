@@ -1,3 +1,4 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
@@ -93,14 +94,21 @@ export const TeenClassDateSelector = ({
   const { data: spotsInfo = {}, isLoading: isLoadingSpots } = useQuery({
     queryKey: ["teen_holiday_spots", periodId, childInfo?.school_class],
     queryFn: async () => {
-      if (!periodId || !childInfo?.school_class) return {};
+      if (!periodId || !childInfo?.school_class) {
+        console.log("❌ Paramètres manquants pour la requête teen spots:", { periodId, schoolClass: childInfo?.school_class });
+        return {};
+      }
+      
+      console.log("🔄 Récupération des teen spots pour la période:", periodId, "classe:", childInfo.school_class);
       
       const spotsByDate: Record<string, number> = {};
       
       // Pour chaque date de la période, récupérer le nombre de places disponibles
       for (const date of periodDates) {
         const dateStr = format(date, 'yyyy-MM-dd');
-        const { data } = await supabase.rpc(
+        console.log(`🔍 Vérification des teen spots pour le ${dateStr}`);
+        
+        const { data, error } = await supabase.rpc(
           'check_holiday_spots_available',
           {
             p_period_id: periodId,
@@ -108,14 +116,26 @@ export const TeenClassDateSelector = ({
             p_child_school_class: childInfo.school_class
           }
         );
-        spotsByDate[dateStr] = data;
+        
+        if (error) {
+          console.error(`❌ Erreur lors de la vérification des teen spots pour ${dateStr}:`, error);
+          spotsByDate[dateStr] = 0;
+        } else {
+          console.log(`✅ Teen spots disponibles pour ${dateStr}:`, data);
+          spotsByDate[dateStr] = data;
+        }
       }
       
+      console.log("📊 Résumé des teen spots par date:", spotsByDate);
       return spotsByDate;
     },
     enabled: !!periodId && !!childInfo?.school_class,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000, // 30 secondes
+    gcTime: 2 * 60 * 1000, // 2 minutes
   });
+
+  console.log("🎯 Données teen spots dans TeenClassDateSelector:", spotsInfo);
 
   return (
     <ScrollArea className="h-[300px] pr-3">
@@ -130,6 +150,8 @@ export const TeenClassDateSelector = ({
           // Vérifier si la date est complète (0 ou moins de places disponibles)
           const availableSpots = spotsInfo[dateStr] ?? null;
           const isDateFull = typeof availableSpots === 'number' && availableSpots <= 0;
+          
+          console.log(`📅 Teen date ${dateStr}: spots=${availableSpots}, isFull=${isDateFull}, isReserved=${isReserved}`);
           
           return (
             <div
