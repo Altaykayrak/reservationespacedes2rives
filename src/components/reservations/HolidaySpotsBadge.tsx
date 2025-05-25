@@ -46,7 +46,7 @@ export const HolidaySpotsBadge = ({
   const badgeColor = getSpotsBadgeColor(availableSpots);
   const badgeText = getSpotsBadgeText(availableSpots, isLoading);
 
-  // Ajout d'un log pour débugger l'affichage
+  // Log pour débugger l'affichage
   console.log("🎨 HolidaySpotsBadge - Affichage:", {
     periodId,
     date,
