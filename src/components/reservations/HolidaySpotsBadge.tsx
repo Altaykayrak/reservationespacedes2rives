@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface HolidaySpotsBadgeProps {
   periodId: string;
@@ -15,31 +16,58 @@ export default function HolidaySpotsBadge({
 }: HolidaySpotsBadgeProps) {
   const [spots, setSpots] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     let mounted = true;
+    
     async function fetchSpots() {
-      const { data, error } = await supabase.rpc(
-        "check_holiday_spots_available",
-        {
-          p_period_id: periodId,
-          p_reservation_date: date,
-          p_child_school_class: childSchoolClass,
+      try {
+        console.log("HolidaySpotsBadge - Fetching spots for:", {
+          periodId,
+          date,
+          childSchoolClass
+        });
+
+        const { data, error } = await supabase.rpc(
+          "check_holiday_spots_available",
+          {
+            p_period_id: periodId,
+            p_reservation_date: date,
+            p_child_school_class: childSchoolClass,
+          }
+        );
+        
+        if (!mounted) return;
+        
+        if (error) {
+          console.error("Error fetching spots:", error);
+          setError(error.message);
+        } else {
+          console.log("HolidaySpotsBadge - Spots received:", data, "for class:", childSchoolClass);
+          setSpots(data as number);
+          setError(null);
         }
-      );
-      if (!mounted) return;
-      if (error) setError(error.message);
-      else setSpots(data as number);
+      } catch (err: any) {
+        if (!mounted) return;
+        console.error("Exception fetching spots:", err);
+        setError(err.message);
+      }
     }
 
     if (periodId && date && childSchoolClass) {
       fetchSpots();
+      
+      // Invalidate related cache entries to ensure fresh data
+      queryClient.invalidateQueries({
+        queryKey: ["holidaySpots", periodId]
+      });
     }
 
     return () => {
       mounted = false;
     };
-  }, [periodId, date, childSchoolClass]);
+  }, [periodId, date, childSchoolClass, queryClient]);
 
   if (error) {
     return <span className="text-red-600 text-xs">ERR</span>;

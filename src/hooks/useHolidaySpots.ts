@@ -2,10 +2,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { schoolClassToDbCategory } from "@/utils/categoryTranslationUtils";
 
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
-  // Use React Query for data fetching
+  // Use React Query for data fetching with improved cache management
   const { data, isLoading, error } = useQuery({
     queryKey: ["holidaySpots", periodId, date.toISOString(), schoolClass],
     queryFn: async () => {
@@ -16,17 +15,13 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       }
 
       try {
-        // Translate the schoolClass to the database category format
-        const databaseCategory = schoolClassToDbCategory(schoolClass);
-        
         console.log("Calling check_holiday_spots_available with:", {
           p_period_id: periodId,
           p_reservation_date: date.toISOString().split('T')[0],
-          p_child_school_class: schoolClass,
-          translated_category: databaseCategory
+          p_child_school_class: schoolClass
         });
         
-        // Use the p_ prefixed parameter names as expected by the SQL function
+        // Use the corrected SQL function with proper period-specific mappings
         const { data, error } = await supabase.rpc("check_holiday_spots_available", {
           p_period_id: periodId,
           p_reservation_date: date.toISOString().split('T')[0],
@@ -39,7 +34,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           throw error;
         }
 
-        console.log("Spots available response:", data);
+        console.log("Spots available response for", schoolClass, "on", date.toISOString().split('T')[0], ":", data);
         return data;
       } catch (error) {
         console.error("Exception in holidaySpots query:", error);
@@ -48,6 +43,9 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
     },
     // Enable the query only when we have valid parameters
     enabled: !!periodId && !!date && !!schoolClass && !isNaN(date.getTime()),
+    // Reduce cache time to ensure fresh data
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes
   });
 
   // Ensure availableSpots is a number (can be 0) or null for type safety
