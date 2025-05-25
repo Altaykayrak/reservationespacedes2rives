@@ -29,7 +29,7 @@ export const HolidaySpotsBadge = ({
 
   const getSpotsBadgeText = (spots: number | null, isLoading: boolean = false) => {
     if (isLoading) {
-      return "Chargement...";
+      return "Calcul...";
     }
     
     if (spots === null || spots === undefined) {
@@ -40,7 +40,7 @@ export const HolidaySpotsBadge = ({
       return "Complet";
     }
     
-    return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
+    return `${spots} place${spots > 1 ? 's' : ''} libre${spots > 1 ? 's' : ''}`;
   };
 
   const badgeColor = getSpotsBadgeColor(availableSpots);

@@ -51,7 +51,12 @@ export const DateItem = ({
           </span>
           {shouldDisable && !isReserved && (
             <span className="text-xs text-red-500">
-              Journée complète
+              Journée complète ({availableSpots || 0} places disponibles)
+            </span>
+          )}
+          {!shouldDisable && availableSpots !== null && availableSpots <= 5 && (
+            <span className="text-xs text-orange-600">
+              Plus que {availableSpots} place{availableSpots > 1 ? 's' : ''}
             </span>
           )}
         </div>

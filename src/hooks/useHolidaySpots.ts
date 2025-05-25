@@ -21,7 +21,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           schoolClass
         });
 
-        // Utiliser directement la fonction Supabase qui fait le calcul correct
+        // Utiliser la fonction Supabase mise à jour qui applique les bonnes règles
         const { data: availableSpots, error: spotsError } = await supabase.rpc(
           'check_holiday_spots_available',
           {

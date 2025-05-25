@@ -711,7 +711,22 @@ export type Database = {
           reservation_date: string | null
           reserved_count: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "holiday_reservations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "available_holiday_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_reservations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_period_dates"
+            referencedColumns: ["period_id"]
+          },
+        ]
       }
       profiles_with_emails: {
         Row: {
@@ -792,7 +807,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["school_class_group"]
       }
       get_school_class_group_for_period: {
-        Args: { period_id: string; school_class: string }
+        Args: { p_period_id: string; p_school_class: string }
         Returns: Database["public"]["Enums"]["school_class_group"]
       }
       get_user_emails: {
