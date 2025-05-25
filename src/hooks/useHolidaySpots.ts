@@ -15,13 +15,13 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       try {
         const dateStr = date.toISOString().split('T')[0];
         
-        console.log("🔄 useHolidaySpots - Calcul des places pour:", {
-          periodId,
-          date: dateStr,
-          schoolClass
+        console.log("🔄 useHolidaySpots - Appel de check_holiday_spots_available avec:", {
+          p_period_id: periodId,
+          p_reservation_date: dateStr,
+          p_child_school_class: schoolClass
         });
 
-        // Utiliser la fonction Supabase mise à jour qui applique les bonnes règles
+        // Appel direct de la fonction Supabase qui retourne le nombre de places disponibles
         const { data: availableSpots, error: spotsError } = await supabase.rpc(
           'check_holiday_spots_available',
           {
@@ -32,19 +32,31 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         );
 
         if (spotsError) {
-          console.error("❌ Erreur lors du calcul des places:", spotsError);
+          console.error("❌ Erreur RPC check_holiday_spots_available:", spotsError);
           toast.error("Erreur lors du calcul des places disponibles");
           return null;
         }
 
-        console.log("✅ useHolidaySpots - Places disponibles calculées:", {
+        console.log("✅ useHolidaySpots - Résultat brut de la fonction RPC:", {
+          availableSpots,
+          type: typeof availableSpots,
           periodId,
           date: dateStr,
-          schoolClass,
-          availableSpots
+          schoolClass
         });
 
-        return availableSpots;
+        // La fonction retourne directement un nombre entier
+        const spots = typeof availableSpots === 'number' ? availableSpots : parseInt(availableSpots) || 0;
+        
+        console.log("✅ useHolidaySpots - Places disponibles finales:", {
+          spots,
+          original: availableSpots,
+          periodId,
+          date: dateStr,
+          schoolClass
+        });
+
+        return spots;
 
       } catch (error) {
         console.error("❌ useHolidaySpots - Exception:", error);
@@ -60,7 +72,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
   const availableSpots = data;
   const isFull = availableSpots !== null && availableSpots <= 0;
 
-  console.log("🎯 useHolidaySpots - Résultat final:", { 
+  console.log("🎯 useHolidaySpots - Résultat final du hook:", { 
     availableSpots, 
     isFull, 
     isLoading, 
