@@ -40,7 +40,7 @@ export const HolidaySpotsBadge = ({
       return "Complet";
     }
     
-    return `${spots} place${spots > 1 ? 's' : ''} libre${spots > 1 ? 's' : ''}`;
+    return `${spots} libre${spots > 1 ? 's' : ''}`;
   };
 
   const badgeColor = getSpotsBadgeColor(availableSpots);
