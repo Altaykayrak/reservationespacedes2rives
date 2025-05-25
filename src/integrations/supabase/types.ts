@@ -612,6 +612,23 @@ export type Database = {
       }
     }
     Views: {
+      holiday_reservations_count_by_group: {
+        Row: {
+          class_group: Database["public"]["Enums"]["school_class_group"] | null
+          period_id: string | null
+          reservation_count: number | null
+          reservation_date: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_reservations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "available_holiday_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       holiday_reservations_with_children: {
         Row: {
           child_id: string | null
@@ -642,6 +659,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      holiday_spots_available: {
+        Row: {
+          available_spots: number | null
+          class_group: Database["public"]["Enums"]["school_class_group"] | null
+          max_capacity: number | null
+          period_id: string | null
+          reservation_date: string | null
+          reserved_count: number | null
+        }
+        Relationships: []
       }
       profiles_with_emails: {
         Row: {

@@ -23,41 +23,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           p_child_school_class: schoolClass
         });
         
-        // Première vérification : compter les réservations directement pour cette date/période
-        console.log("🔍 DEBUG useHolidaySpots - Vérification directe des réservations pour debug:");
-        const { data: debugReservations, error: debugError } = await supabase
-          .from("holiday_reservations")
-          .select(`
-            id,
-            child_id,
-            reservation_date,
-            status,
-            children:child_id (
-              id,
-              school_class
-            )
-          `)
-          .eq("period_id", periodId)
-          .eq("reservation_date", dateStr)
-          .eq("status", "confirmed");
-          
-        if (debugError) {
-          console.error("❌ DEBUG useHolidaySpots - Erreur lors de la vérification directe:", debugError);
-        } else {
-          console.log("📊 DEBUG useHolidaySpots - Réservations trouvées directement:", debugReservations);
-          console.log("📊 DEBUG useHolidaySpots - Nombre total de réservations confirmées pour cette date:", debugReservations?.length || 0);
-          
-          // Filtrer par classe pour voir combien correspondent au groupe
-          const reservationsForClass = debugReservations?.filter(res => {
-            const childClass = (res.children as any)?.school_class;
-            console.log("📊 DEBUG useHolidaySpots - Enfant classe:", childClass, "recherchée:", schoolClass);
-            return childClass && childClass.toLowerCase() === schoolClass.toLowerCase();
-          }) || [];
-          
-          console.log("📊 DEBUG useHolidaySpots - Réservations pour la classe", schoolClass, ":", reservationsForClass.length);
-        }
-        
-        // Use the corrected SQL function with proper period-specific mappings
+        // Use the updated SQL function that leverages the new views
         const { data, error } = await supabase.rpc("check_holiday_spots_available", {
           p_period_id: periodId,
           p_reservation_date: dateStr,
@@ -72,9 +38,14 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
 
         console.log("✅ useHolidaySpots - Places disponibles pour", schoolClass, "le", dateStr, ":", data);
         
-        // Ensure we return a valid number or null
-        const result = data !== null && data !== undefined ? Number(data) : null;
-        if (result !== null && isNaN(result)) {
+        // The SQL function now returns a reliable integer, but we still need to handle edge cases
+        if (data === null || data === undefined) {
+          console.warn("⚠️ useHolidaySpots - Aucune donnée retournée");
+          return null;
+        }
+
+        const result = Number(data);
+        if (isNaN(result)) {
           console.error("❌ useHolidaySpots - Données invalides reçues:", data, "type:", typeof data);
           return null;
         }
