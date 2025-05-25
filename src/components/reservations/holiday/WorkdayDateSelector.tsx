@@ -4,8 +4,7 @@ import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format } from "date-fns";
 import { HolidaySpotsBadge } from "@/components/reservations/HolidaySpotsBadge";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useHolidaySpots } from "@/hooks/useHolidaySpots";
 
 interface DateOption {
   date: Date;
@@ -88,52 +87,24 @@ export const WorkdayDateSelector = ({
     })
   );
 
-  // Récupérer les informations de disponibilité pour chaque date
-  const { data: spotsInfo = {}, isLoading: isLoadingSpots } = useQuery({
-    queryKey: ["holiday_spots", periodId, childInfo?.school_class],
-    queryFn: async () => {
-      if (!periodId || !childInfo?.school_class) {
-        console.log("❌ Paramètres manquants pour la requête spots:", { periodId, schoolClass: childInfo?.school_class });
-        return {};
-      }
-      
-      console.log("🔄 Récupération des spots pour la période:", periodId, "classe:", childInfo.school_class);
-      
-      const spotsByDate: Record<string, number> = {};
-      
-      // Pour chaque date de la période, récupérer le nombre de places disponibles
-      for (const date of periodDates) {
-        const dateStr = format(date, 'yyyy-MM-dd');
-        console.log(`🔍 Vérification des spots pour le ${dateStr}`);
-        
-        const { data, error } = await supabase.rpc(
-          'check_holiday_spots_available',
-          {
-            p_period_id: periodId,
-            p_reservation_date: dateStr,
-            p_child_school_class: childInfo.school_class
-          }
-        );
-        
-        if (error) {
-          console.error(`❌ Erreur lors de la vérification des spots pour ${dateStr}:`, error);
-          spotsByDate[dateStr] = 0;
-        } else {
-          console.log(`✅ Spots disponibles pour ${dateStr}:`, data);
-          spotsByDate[dateStr] = data;
-        }
-      }
-      
-      console.log("📊 Résumé des spots par date:", spotsByDate);
-      return spotsByDate;
-    },
-    enabled: !!periodId && !!childInfo?.school_class,
-    refetchOnWindowFocus: false,
-    staleTime: 30 * 1000, // 30 secondes
-    gcTime: 2 * 60 * 1000, // 2 minutes
+  // Create a map to store spots data for each date using the useHolidaySpots hook
+  const spotsDataMap = new Map<string, { availableSpots: number | null; isFull: boolean; isLoading: boolean }>();
+  
+  // Use the useHolidaySpots hook for each date
+  periodDates.forEach(date => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    // Call useHolidaySpots hook for each date
+    const { availableSpots, isFull, isLoading } = useHolidaySpots(
+      periodId, 
+      date, 
+      childInfo?.school_class || ""
+    );
+    
+    spotsDataMap.set(dateStr, { availableSpots, isFull, isLoading });
   });
 
-  console.log("🎯 Données spots dans WorkdayDateSelector:", spotsInfo);
+  console.log("🎯 Données spots dans WorkdayDateSelector depuis useHolidaySpots:", Object.fromEntries(spotsDataMap));
 
   return (
     <ScrollArea className="h-[300px] pr-3">
@@ -145,11 +116,12 @@ export const WorkdayDateSelector = ({
           const isSelected = !!selectedDate;
           const isReserved = isDateAlreadyReserved(date);
           
-          // Vérifier si la date est complète (0 ou moins de places disponibles)
-          const availableSpots = spotsInfo[dateStr] ?? null;
+          // Get spots data from the map
+          const spotsData = spotsDataMap.get(dateStr);
+          const availableSpots = spotsData?.availableSpots ?? null;
           const isDateFull = typeof availableSpots === 'number' && availableSpots <= 0;
           
-          console.log(`📅 Date ${dateStr}: spots=${availableSpots}, isFull=${isDateFull}, isReserved=${isReserved}`);
+          console.log(`📅 Date ${dateStr}: spots=${availableSpots}, isFull=${isDateFull}, isReserved=${isReserved}, isLoading=${spotsData?.isLoading}`);
           
           return (
             <div
