@@ -71,7 +71,15 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         }
 
         console.log("✅ useHolidaySpots - Places disponibles pour", schoolClass, "le", dateStr, ":", data);
-        return data;
+        
+        // Ensure we return a valid number or null
+        const result = data !== null && data !== undefined ? Number(data) : null;
+        if (result !== null && isNaN(result)) {
+          console.error("❌ useHolidaySpots - Données invalides reçues:", data, "type:", typeof data);
+          return null;
+        }
+        
+        return result;
       } catch (error) {
         console.error("❌ useHolidaySpots - Exception:", error);
         return null;
@@ -85,7 +93,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
   });
 
   // Ensure availableSpots is a number (can be 0) or null for type safety
-  const availableSpots = data === null ? null : Number(data);
+  const availableSpots = data;
   const isFull = availableSpots !== null && availableSpots <= 0;
 
   console.log("🎯 useHolidaySpots - Résultat final:", { 
