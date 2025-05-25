@@ -237,6 +237,13 @@ export type Database = {
             referencedRelation: "available_holiday_periods"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "holiday_allowed_classes_holiday_period_id_fkey"
+            columns: ["holiday_period_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_period_dates"
+            referencedColumns: ["period_id"]
+          },
         ]
       }
       holiday_period_class_mappings: {
@@ -271,6 +278,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "available_holiday_periods"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_period_class_mappings_holiday_period_id_fkey"
+            columns: ["holiday_period_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_period_dates"
+            referencedColumns: ["period_id"]
           },
         ]
       }
@@ -325,6 +339,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "available_holiday_periods"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_reservations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_period_dates"
+            referencedColumns: ["period_id"]
           },
         ]
       }
@@ -612,6 +633,13 @@ export type Database = {
       }
     }
     Views: {
+      holiday_period_dates: {
+        Row: {
+          period_id: string | null
+          reservation_date: string | null
+        }
+        Relationships: []
+      }
       holiday_reservations_count_by_group: {
         Row: {
           class_group: Database["public"]["Enums"]["school_class_group"] | null
@@ -626,6 +654,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "available_holiday_periods"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_reservations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_period_dates"
+            referencedColumns: ["period_id"]
           },
         ]
       }
@@ -657,6 +692,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "available_holiday_periods"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_reservations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_period_dates"
+            referencedColumns: ["period_id"]
           },
         ]
       }
