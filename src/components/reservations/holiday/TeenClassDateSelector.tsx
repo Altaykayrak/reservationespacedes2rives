@@ -1,4 +1,3 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
@@ -7,7 +6,7 @@ import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import HolidaySpotsBadge from "@/components/reservations/HolidaySpotsBadge";
+import { HolidaySpotsBadge } from "@/components/reservations/HolidaySpotsBadge";
 
 interface DateOption {
   date: Date;
