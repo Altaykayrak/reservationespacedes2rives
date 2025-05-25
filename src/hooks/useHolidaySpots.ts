@@ -3,6 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Type pour la réponse de la fonction de débogage
+interface DebugHolidaySpotsResponse {
+  period_id: string;
+  reservation_date: string;
+  child_school_class: string;
+  determined_group: string;
+  capacity: number;
+  reserved_count: number;
+  available_spots: number;
+}
+
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["holidaySpots", periodId, date.toISOString(), schoolClass],
@@ -39,8 +50,9 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
 
         console.log("🔍 DEBUG - Informations détaillées du calcul:", debugInfo);
 
-        // Retourner le nombre de places disponibles calculé
-        return debugInfo?.available_spots || 0;
+        // Typer correctement la réponse et retourner le nombre de places disponibles
+        const typedDebugInfo = debugInfo as DebugHolidaySpotsResponse;
+        return typedDebugInfo?.available_spots || 0;
 
       } catch (error) {
         console.error("❌ useHolidaySpots - Exception:", error);
