@@ -51,7 +51,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         console.log("🔍 DEBUG - Informations détaillées du calcul:", debugInfo);
 
         // Typer correctement la réponse et retourner le nombre de places disponibles
-        const typedDebugInfo = debugInfo as DebugHolidaySpotsResponse;
+        const typedDebugInfo = debugInfo as unknown as DebugHolidaySpotsResponse;
         return typedDebugInfo?.available_spots || 0;
 
       } catch (error) {
