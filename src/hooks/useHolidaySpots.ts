@@ -15,16 +15,52 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       }
 
       try {
+        const dateStr = date.toISOString().split('T')[0];
+        
         console.log("🔄 useHolidaySpots - Appel check_holiday_spots_available avec:", {
           p_period_id: periodId,
-          p_reservation_date: date.toISOString().split('T')[0],
+          p_reservation_date: dateStr,
           p_child_school_class: schoolClass
         });
+        
+        // Première vérification : compter les réservations directement pour cette date/période
+        console.log("🔍 DEBUG - Vérification directe des réservations pour debug:");
+        const { data: debugReservations, error: debugError } = await supabase
+          .from("holiday_reservations")
+          .select(`
+            id,
+            child_id,
+            reservation_date,
+            status,
+            children:child_id (
+              id,
+              school_class
+            )
+          `)
+          .eq("period_id", periodId)
+          .eq("reservation_date", dateStr)
+          .eq("status", "confirmed");
+          
+        if (debugError) {
+          console.error("❌ DEBUG - Erreur lors de la vérification directe:", debugError);
+        } else {
+          console.log("📊 DEBUG - Réservations trouvées directement:", debugReservations);
+          console.log("📊 DEBUG - Nombre total de réservations confirmées pour cette date:", debugReservations?.length || 0);
+          
+          // Filtrer par classe pour voir combien correspondent au groupe
+          const reservationsForClass = debugReservations?.filter(res => {
+            const childClass = (res.children as any)?.school_class;
+            console.log("📊 DEBUG - Enfant classe:", childClass, "recherchée:", schoolClass);
+            return childClass && childClass.toLowerCase() === schoolClass.toLowerCase();
+          }) || [];
+          
+          console.log("📊 DEBUG - Réservations pour la classe", schoolClass, ":", reservationsForClass.length);
+        }
         
         // Use the corrected SQL function with proper period-specific mappings
         const { data, error } = await supabase.rpc("check_holiday_spots_available", {
           p_period_id: periodId,
-          p_reservation_date: date.toISOString().split('T')[0],
+          p_reservation_date: dateStr,
           p_child_school_class: schoolClass,
         });
 
@@ -34,7 +70,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           throw error;
         }
 
-        console.log("✅ useHolidaySpots - Places disponibles pour", schoolClass, "le", date.toISOString().split('T')[0], ":", data);
+        console.log("✅ useHolidaySpots - Places disponibles pour", schoolClass, "le", dateStr, ":", data);
         return data;
       } catch (error) {
         console.error("❌ useHolidaySpots - Exception:", error);
