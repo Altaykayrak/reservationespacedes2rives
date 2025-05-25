@@ -16,7 +16,7 @@ interface DebugHolidaySpotsResponse {
 
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ["holidaySpots", periodId, date.toISOString(), schoolClass],
+    queryKey: ["holidaySpots", periodId, date.toISOString().split('T')[0], schoolClass],
     queryFn: async () => {
       if (!periodId || !date || !schoolClass || isNaN(date.getTime())) {
         console.log("🔍 useHolidaySpots - Paramètres invalides:", { periodId, date, schoolClass });
@@ -26,15 +26,15 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       try {
         const dateStr = date.toISOString().split('T')[0];
         
-        console.log("🔄 useHolidaySpots - Appel de debug_holiday_spots_available avec:", {
+        console.log("🔄 useHolidaySpots - Appel de check_holiday_spots_available avec:", {
           p_period_id: periodId,
           p_reservation_date: dateStr,
           p_child_school_class: schoolClass
         });
 
-        // Appel de la fonction de débogage pour voir les détails
-        const { data: debugInfo, error: debugError } = await supabase.rpc(
-          'debug_holiday_spots_available',
+        // Utiliser directement la fonction check_holiday_spots_available qui retourne le nombre de places
+        const { data: availableSpots, error: spotsError } = await supabase.rpc(
+          'check_holiday_spots_available',
           {
             p_period_id: periodId,
             p_reservation_date: dateStr,
@@ -42,17 +42,14 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           }
         );
 
-        if (debugError) {
-          console.error("❌ Erreur RPC debug_holiday_spots_available:", debugError);
-          toast.error("Erreur lors du debug des places disponibles");
+        if (spotsError) {
+          console.error("❌ Erreur RPC check_holiday_spots_available:", spotsError);
+          toast.error("Erreur lors du calcul des places disponibles");
           return null;
         }
 
-        console.log("🔍 DEBUG - Informations détaillées du calcul:", debugInfo);
-
-        // Typer correctement la réponse et retourner le nombre de places disponibles
-        const typedDebugInfo = debugInfo as unknown as DebugHolidaySpotsResponse;
-        return typedDebugInfo?.available_spots || 0;
+        console.log("✅ Places disponibles calculées:", availableSpots, "pour", schoolClass, "le", dateStr);
+        return availableSpots;
 
       } catch (error) {
         console.error("❌ useHolidaySpots - Exception:", error);
@@ -61,14 +58,16 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       }
     },
     enabled: !!periodId && !!date && !!schoolClass && !isNaN(date.getTime()),
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 60 * 1000, // 1 minute de cache
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1, // Réduire les tentatives
+    refetchOnWindowFocus: false, // Éviter les appels inutiles
   });
 
   const availableSpots = data;
   const isFull = availableSpots !== null && availableSpots <= 0;
 
-  console.log("🎯 useHolidaySpots - Résultat final du hook:", { 
+  console.log("🎯 useHolidaySpots - Résultat final:", { 
     availableSpots, 
     isFull, 
     isLoading, 
