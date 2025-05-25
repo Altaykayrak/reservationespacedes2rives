@@ -15,15 +15,15 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       try {
         const dateStr = date.toISOString().split('T')[0];
         
-        console.log("🔄 useHolidaySpots - Appel de check_holiday_spots_available avec:", {
+        console.log("🔄 useHolidaySpots - Appel de debug_holiday_spots_available avec:", {
           p_period_id: periodId,
           p_reservation_date: dateStr,
           p_child_school_class: schoolClass
         });
 
-        // Appel direct de la fonction Supabase qui retourne le nombre de places disponibles
-        const { data: availableSpots, error: spotsError } = await supabase.rpc(
-          'check_holiday_spots_available',
+        // Appel de la fonction de débogage pour voir les détails
+        const { data: debugInfo, error: debugError } = await supabase.rpc(
+          'debug_holiday_spots_available',
           {
             p_period_id: periodId,
             p_reservation_date: dateStr,
@@ -31,32 +31,16 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           }
         );
 
-        if (spotsError) {
-          console.error("❌ Erreur RPC check_holiday_spots_available:", spotsError);
-          toast.error("Erreur lors du calcul des places disponibles");
+        if (debugError) {
+          console.error("❌ Erreur RPC debug_holiday_spots_available:", debugError);
+          toast.error("Erreur lors du debug des places disponibles");
           return null;
         }
 
-        console.log("✅ useHolidaySpots - Résultat brut de la fonction RPC:", {
-          availableSpots,
-          type: typeof availableSpots,
-          periodId,
-          date: dateStr,
-          schoolClass
-        });
+        console.log("🔍 DEBUG - Informations détaillées du calcul:", debugInfo);
 
-        // La fonction retourne directement un nombre entier
-        const spots = typeof availableSpots === 'number' ? availableSpots : parseInt(availableSpots) || 0;
-        
-        console.log("✅ useHolidaySpots - Places disponibles finales:", {
-          spots,
-          original: availableSpots,
-          periodId,
-          date: dateStr,
-          schoolClass
-        });
-
-        return spots;
+        // Retourner le nombre de places disponibles calculé
+        return debugInfo?.available_spots || 0;
 
       } catch (error) {
         console.error("❌ useHolidaySpots - Exception:", error);

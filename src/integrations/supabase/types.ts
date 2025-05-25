@@ -798,6 +798,14 @@ export type Database = {
         Args: { wednesday_id: string; child_school_class: string }
         Returns: number
       }
+      debug_holiday_spots_available: {
+        Args: {
+          p_period_id: string
+          p_reservation_date: string
+          p_child_school_class: string
+        }
+        Returns: Json
+      }
       get_profiles_with_reservations: {
         Args: { has_reservations: boolean }
         Returns: string[]
