@@ -1,12 +1,13 @@
 
 
+
 -- Correction de la fonction check_holiday_spots_available pour gérer les types correctement
 CREATE OR REPLACE FUNCTION public.check_holiday_spots_available(p_period_id uuid, p_reservation_date date, p_child_school_class text)
  RETURNS integer
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-  class_group_text text;
+  class_group_enum school_class_group;
   capacity INTEGER;
   reserved_count INTEGER;
 BEGIN
@@ -15,47 +16,49 @@ BEGIN
     RAISE EXCEPTION 'Classe de l''enfant non spécifiée';
   END IF;
 
-  -- 2. Déterminer le groupe en texte directement
-  class_group_text := get_school_class_group_for_period(p_period_id, p_child_school_class)::text;
+  -- 2. Déterminer le groupe : primary / kindergarten / teen (retourne un enum)
+  class_group_enum := get_school_class_group_for_period(p_period_id, p_child_school_class);
   
-  RAISE NOTICE '🧠 Groupe de classe déterminé : %', class_group_text;
+  RAISE NOTICE '🧠 Groupe de classe déterminé : % (enum: %)', class_group_enum::text, class_group_enum;
 
   -- 3. Obtenir la capacité correspondant au groupe
-  IF class_group_text = 'primary' THEN
+  IF class_group_enum = 'primary'::school_class_group THEN
     SELECT max_participants_primary INTO capacity
     FROM public.available_holiday_periods
     WHERE id = p_period_id;
-  ELSIF class_group_text = 'kindergarten' THEN
+  ELSIF class_group_enum = 'kindergarten'::school_class_group THEN
     SELECT max_participants_kindergarten INTO capacity
     FROM public.available_holiday_periods
     WHERE id = p_period_id;
-  ELSIF class_group_text = 'teen' THEN
+  ELSIF class_group_enum = 'teen'::school_class_group THEN
     SELECT max_participants_teen INTO capacity
     FROM public.available_holiday_periods
     WHERE id = p_period_id;
   ELSE
-    RAISE EXCEPTION 'Groupe de classe inconnu: %', class_group_text;
+    RAISE EXCEPTION 'Groupe de classe inconnu: %', class_group_enum;
   END IF;
 
   IF capacity IS NULL THEN
-    RAISE EXCEPTION 'Capacité non définie pour la période % et le groupe %', p_period_id, class_group_text;
+    RAISE EXCEPTION 'Capacité non définie pour la période % et le groupe %', p_period_id, class_group_enum::text;
   END IF;
 
-  RAISE NOTICE '📦 Capacité trouvée : % places pour le groupe %', capacity, class_group_text;
+  RAISE NOTICE '📦 Capacité trouvée : % places pour le groupe %', capacity, class_group_enum::text;
 
   -- 4. Compter les réservations confirmées de ce groupe à cette date
+  -- Ici nous utilisons une sous-requête pour éviter les problèmes de comparaison d'enum
   SELECT COUNT(*) INTO reserved_count
   FROM public.holiday_reservations hr
   JOIN public.children c ON c.id = hr.child_id
   WHERE hr.period_id = p_period_id
     AND hr.reservation_date = p_reservation_date
     AND hr.status = 'confirmed'
-    AND get_school_class_group_for_period(p_period_id, c.school_class)::text = class_group_text;
+    AND get_school_class_group_for_period(p_period_id, c.school_class)::text = class_group_enum::text;
 
-  RAISE NOTICE '📊 Réservations confirmées : % pour le groupe %', reserved_count, class_group_text;
+  RAISE NOTICE '📊 Réservations confirmées : % pour le groupe %', reserved_count, class_group_enum::text;
 
   -- 5. Retourner le nombre de places restantes
   RETURN GREATEST(capacity - reserved_count, 0);
 END;
 $function$;
+
 
