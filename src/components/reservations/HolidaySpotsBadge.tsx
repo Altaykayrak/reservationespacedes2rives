@@ -13,12 +13,12 @@ export const HolidaySpotsBadge = ({
   date,
   childSchoolClass,
 }: HolidaySpotsBadgeProps) => {
-  const [spots, setSpots] = useState<number | null>(null);
+  const [spotsRemaining, setSpotsRemaining] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSpots = async () => {
+    const fetchSpotsRemaining = async () => {
       // Validation simple
       if (!periodId || !date || !childSchoolClass) {
         console.error("❌ HolidaySpotsBadge - Paramètres manquants:", { periodId, date, childSchoolClass });
@@ -46,22 +46,23 @@ export const HolidaySpotsBadge = ({
         if (error) {
           console.error("❌ HolidaySpotsBadge - Erreur SQL:", error);
           setError("Erreur de récupération des places");
-          setSpots(null);
+          setSpotsRemaining(null);
         } else {
-          console.log(`✅ HolidaySpotsBadge - Places restantes pour ${date}:`, data);
-          setSpots(data);
+          console.log(`✅ HolidaySpotsBadge - Places RESTANTES pour ${date}:`, data);
+          // La fonction SQL retourne déjà les places restantes (capacité - réservations)
+          setSpotsRemaining(data);
           setError(null);
         }
       } catch (err) {
         console.error("❌ HolidaySpotsBadge - Exception:", err);
         setError("Erreur inattendue");
-        setSpots(null);
+        setSpotsRemaining(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchSpots();
+    fetchSpotsRemaining();
   }, [periodId, date, childSchoolClass]);
 
   if (error) {
@@ -82,23 +83,23 @@ export const HolidaySpotsBadge = ({
 
   // Affichage des places restantes
   const getDisplayText = () => {
-    if (spots === null || spots === undefined) {
+    if (spotsRemaining === null || spotsRemaining === undefined) {
       return "Places non disponibles";
     }
-    if (spots <= 0) {
+    if (spotsRemaining <= 0) {
       return "Complet";
     }
-    return `${spots} place${spots > 1 ? 's' : ''}`;
+    return `${spotsRemaining} place${spotsRemaining > 1 ? 's' : ''} restante${spotsRemaining > 1 ? 's' : ''}`;
   };
 
   const getBackgroundColor = () => {
-    if (spots === null || spots === undefined) {
+    if (spotsRemaining === null || spotsRemaining === undefined) {
       return "bg-gray-100 text-gray-600";
     }
-    if (spots <= 0) {
+    if (spotsRemaining <= 0) {
       return "bg-red-100 text-red-800";
     }
-    if (spots <= 5) {
+    if (spotsRemaining <= 5) {
       return "bg-orange-100 text-orange-800";
     }
     return "bg-green-100 text-green-800";
