@@ -90,6 +90,8 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
             return null;
         }
 
+        console.log("📈 Capacité maximale pour le groupe", classGroup, ":", maxCapacity);
+
         // 4. Récupérer toutes les réservations confirmées pour cette période et cette date
         const { data: reservations, error: reservationsError } = await supabase
           .from("holiday_reservations_with_children")
@@ -102,6 +104,8 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           console.error("❌ Erreur récupération réservations:", reservationsError);
           return null;
         }
+
+        console.log("📋 Total réservations trouvées:", reservations?.length || 0);
 
         // 5. Filtrer les réservations qui appartiennent au même groupe
         const reservationsInGroup = reservations?.filter(reservation => {

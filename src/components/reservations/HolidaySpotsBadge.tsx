@@ -40,11 +40,21 @@ export const HolidaySpotsBadge = ({
       return "Complet";
     }
     
-    return `${spots} place${spots > 1 ? 's' : ''}`;
+    return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
   };
 
   const badgeColor = getSpotsBadgeColor(availableSpots);
   const badgeText = getSpotsBadgeText(availableSpots, isLoading);
+
+  // Ajout d'un log pour débugger l'affichage
+  console.log("🎨 HolidaySpotsBadge - Affichage:", {
+    periodId,
+    date,
+    childSchoolClass,
+    availableSpots,
+    badgeText,
+    isLoading
+  });
 
   return (
     <Badge 
