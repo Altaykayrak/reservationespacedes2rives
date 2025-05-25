@@ -1,20 +1,20 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { toast } from "@/hooks/use-toast";
 
 export const useExistingHolidayReservations = (selectedChild: string) => {
-  // On récupère existingReservations et la fonction refetchReservations
-  const { 
-    data: existingReservations, 
+  const {
+    data: existingReservations,
     refetch: refetchReservations,
     isLoading
   } = useQuery({
     queryKey: ["existing_holiday_reservations", selectedChild],
     queryFn: async () => {
       if (!selectedChild) return [];
-      console.log("Fetching reservations for child:", selectedChild);
+
+      console.log("🔄 Fetching reservations for child:", selectedChild);
+
       const { data, error } = await supabase
         .from("holiday_reservations_with_children")
         .select("*")
@@ -22,13 +22,14 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
         .eq("status", "confirmed");
 
       if (error) {
-        console.error("Error fetching reservations:", error);
+        console.error("❌ Error fetching reservations:", error);
+        toast.error("Erreur lors de la récupération des réservations");
         throw error;
       }
-      console.log("Raw existing reservations:", data);
 
-      // Transformation pour correspondre au type HolidayReservationWithChild
-      const transformedData = data?.map(reservation => {
+      console.log("✅ Raw existing reservations:", data);
+
+      const transformedData: HolidayReservationWithChild[] = data?.map(reservation => {
         const childrenData = reservation.children as Record<string, any> || {};
 
         return {
@@ -51,21 +52,20 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
               school_city: childrenData.profile?.school_city || ''
             }
           }
-        } as HolidayReservationWithChild;
+        };
       }) || [];
 
       return transformedData;
     },
-    enabled: !!selectedChild,
-    staleTime: 0,
-    gcTime: 0
+    enabled: !!selectedChild, // ⛔ Ne lance la requête que si selectedChild est défini
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10 // 10 minutes
   });
 
   const isDateAlreadyReserved = (date: Date): boolean => {
     if (!existingReservations) return false;
-    try {
-      console.log("Checking date:", date.toISOString(), "against reservations:", existingReservations);
 
+    try {
       const result = existingReservations.some(reservation => {
         if (!reservation.reservation_date) return false;
 
@@ -74,27 +74,21 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
         dateToCheck.setHours(0, 0, 0, 0);
         reservationDate.setHours(0, 0, 0, 0);
 
-        const isSameDate = dateToCheck.getTime() === reservationDate.getTime();
-        if (isSameDate) {
-          console.log("Found matching reservation:", reservation);
-        }
-        return isSameDate;
+        return dateToCheck.getTime() === reservationDate.getTime();
       });
 
-      console.log("Is date reserved?", result, "for date:", date.toISOString());
+      console.log("📅 Checked date:", date.toISOString(), "→ reserved:", result);
       return result;
     } catch (error) {
-      console.error("Erreur lors de la vérification de la date réservée:", error);
+      console.error("⚠️ Erreur lors de la vérification de la date réservée:", error);
       return false;
     }
   };
 
-  console.log("Current existingReservations:", existingReservations);
-
   return {
     existingReservations,
-    refetchReservations,    // ← exposé pour rafraîchir depuis l'extérieur
+    refetchReservations,
     isDateAlreadyReserved,
-    isLoading               // ← Exposé l'état de chargement
+    isLoading
   };
 };
