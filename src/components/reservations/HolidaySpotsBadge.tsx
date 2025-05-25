@@ -23,12 +23,13 @@ export default function HolidaySpotsBadge({
     
     async function fetchSpots() {
       try {
-        console.log("HolidaySpotsBadge - Fetching spots for:", {
+        console.log("🔄 HolidaySpotsBadge - Récupération des places pour:", {
           periodId,
           date,
           childSchoolClass
         });
 
+        // Utiliser la fonction SQL corrigée qui prend en compte les mappings spécifiques
         const { data, error } = await supabase.rpc(
           "check_holiday_spots_available",
           {
@@ -41,16 +42,16 @@ export default function HolidaySpotsBadge({
         if (!mounted) return;
         
         if (error) {
-          console.error("Error fetching spots:", error);
+          console.error("❌ HolidaySpotsBadge - Erreur SQL:", error);
           setError(error.message);
         } else {
-          console.log("HolidaySpotsBadge - Spots received:", data, "for class:", childSchoolClass);
+          console.log("✅ HolidaySpotsBadge - Places reçues:", data, "pour la classe:", childSchoolClass, "période:", periodId);
           setSpots(data as number);
           setError(null);
         }
       } catch (err: any) {
         if (!mounted) return;
-        console.error("Exception fetching spots:", err);
+        console.error("❌ HolidaySpotsBadge - Exception:", err);
         setError(err.message);
       }
     }

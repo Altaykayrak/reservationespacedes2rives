@@ -10,12 +10,12 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
     queryFn: async () => {
       // Skip API call if any required parameter is missing or invalid
       if (!periodId || !date || !schoolClass || isNaN(date.getTime())) {
-        console.log("Skipping API call due to invalid parameters:", { periodId, date, schoolClass });
+        console.log("🔍 useHolidaySpots - Paramètres invalides:", { periodId, date, schoolClass });
         return null;
       }
 
       try {
-        console.log("Calling check_holiday_spots_available with:", {
+        console.log("🔄 useHolidaySpots - Appel check_holiday_spots_available avec:", {
           p_period_id: periodId,
           p_reservation_date: date.toISOString().split('T')[0],
           p_child_school_class: schoolClass
@@ -29,15 +29,15 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         });
 
         if (error) {
-          console.error("Error fetching holiday spots:", error);
+          console.error("❌ useHolidaySpots - Erreur SQL:", error);
           toast.error("Impossible de vérifier les places disponibles");
           throw error;
         }
 
-        console.log("Spots available response for", schoolClass, "on", date.toISOString().split('T')[0], ":", data);
+        console.log("✅ useHolidaySpots - Places disponibles pour", schoolClass, "le", date.toISOString().split('T')[0], ":", data);
         return data;
       } catch (error) {
-        console.error("Exception in holidaySpots query:", error);
+        console.error("❌ useHolidaySpots - Exception:", error);
         return null;
       }
     },
@@ -51,6 +51,15 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
   // Ensure availableSpots is a number (can be 0) or null for type safety
   const availableSpots = data === null ? null : Number(data);
   const isFull = availableSpots !== null && availableSpots <= 0;
+
+  console.log("🎯 useHolidaySpots - Résultat final:", { 
+    availableSpots, 
+    isFull, 
+    isLoading, 
+    periodId, 
+    schoolClass,
+    date: date.toISOString().split('T')[0]
+  });
 
   return { 
     availableSpots, 
