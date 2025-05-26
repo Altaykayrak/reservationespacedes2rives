@@ -41,7 +41,9 @@ export const AdminReservationsContent = ({
     setSelectedPeriod,
     filteredWednesdayReservations,
     filteredHolidayReservations,
-    holidayPeriods
+    holidayPeriods,
+    wednesdayPagination,
+    holidayPagination
   } = useFilteredReservations(wednesdayReservations, holidayReservations);
 
   const { holidayPeriods: allHolidayPeriods } = useHolidayPeriods();
@@ -161,12 +163,15 @@ export const AdminReservationsContent = ({
     }
   };
 
-  // Calculate the current reservation count based on active tab
+  // Calculate the current reservation count based on active tab and pagination
   const activeReservations = activeTab === "wednesday" 
-    ? filteredWednesdayReservations 
-    : filteredHolidayReservations;
+    ? wednesdayPagination.paginatedData 
+    : holidayPagination.paginatedData;
   
-  const reservationCount = activeReservations?.length || 0;
+  const reservationCount = activeTab === "wednesday" 
+    ? wednesdayPagination.totalItems 
+    : holidayPagination.totalItems;
+    
   const selectedCount = activeReservations 
     ? activeReservations.filter(res => selectedReservations.includes(res.id)).length 
     : 0;
@@ -235,6 +240,8 @@ export const AdminReservationsContent = ({
         selectedPeriod={selectedPeriod}
         setSelectedPeriod={setSelectedPeriod}
         availablePeriods={availablePeriods}
+        wednesdayPagination={wednesdayPagination}
+        holidayPagination={holidayPagination}
       />
 
       <DeleteReservationDialog

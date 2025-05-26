@@ -16,6 +16,8 @@ interface ReservationTabsContainerProps {
   selectedPeriod: string;
   setSelectedPeriod: (periodId: string) => void;
   availablePeriods: { id: string; name: string }[];
+  wednesdayPagination: any;
+  holidayPagination: any;
 }
 
 export const ReservationTabsContainer = ({
@@ -30,14 +32,20 @@ export const ReservationTabsContainer = ({
   selectedPeriod,
   setSelectedPeriod,
   availablePeriods,
+  wednesdayPagination,
+  holidayPagination,
 }: ReservationTabsContainerProps) => {
   return (
     <Tabs defaultValue="wednesday" className="w-full" onValueChange={(value) => {
       setActiveTab(value);
     }}>
       <TabsList className="mb-4">
-        <TabsTrigger value="wednesday">Mercredis</TabsTrigger>
-        <TabsTrigger value="holiday">Vacances</TabsTrigger>
+        <TabsTrigger value="wednesday">
+          Mercredis ({wednesdayPagination.totalItems})
+        </TabsTrigger>
+        <TabsTrigger value="holiday">
+          Vacances ({holidayPagination.totalItems})
+        </TabsTrigger>
       </TabsList>
       
       <TabsContent value="wednesday">
@@ -47,6 +55,7 @@ export const ReservationTabsContainer = ({
           onDelete={onDelete}
           selectedReservations={selectedReservations}
           onSelectionChange={onSelectionChange}
+          pagination={wednesdayPagination}
         />
       </TabsContent>
 
@@ -60,6 +69,7 @@ export const ReservationTabsContainer = ({
           selectedPeriod={selectedPeriod}
           setSelectedPeriod={setSelectedPeriod}
           availablePeriods={availablePeriods}
+          pagination={holidayPagination}
         />
       </TabsContent>
     </Tabs>

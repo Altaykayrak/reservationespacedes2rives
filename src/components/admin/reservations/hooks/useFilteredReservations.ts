@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 import { format } from "date-fns";
 import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
+import { usePagination } from "@/hooks/usePagination";
 
 type SortOrder = "date" | "name";
 
@@ -22,6 +23,18 @@ export const useFilteredReservations = (
 
   // Utiliser notre hook central pour les catégories
   const { getClassCategorySync } = useSchoolClassCategories();
+
+  // Configuration de la pagination pour les mercredis
+  const wednesdayPagination = usePagination({
+    data: filteredWednesdayReservations,
+    itemsPerPage: 50
+  });
+
+  // Configuration de la pagination pour les vacances
+  const holidayPagination = usePagination({
+    data: filteredHolidayReservations,
+    itemsPerPage: 50
+  });
 
   const sortReservations = <T extends WednesdayReservationWithChild | HolidayReservationWithChild>(
     reservations: T[] | null | undefined
@@ -257,6 +270,9 @@ export const useFilteredReservations = (
     setSortOrder,
     filteredWednesdayReservations,
     filteredHolidayReservations,
-    holidayPeriods
+    holidayPeriods,
+    // Expose pagination controls
+    wednesdayPagination,
+    holidayPagination
   };
 };
