@@ -26,7 +26,7 @@ export const useFilteredReservations = (
   // Pour déboguer le problème de filtrage
   useEffect(() => {
     if (selectedGroup !== 'all') {
-      console.log(`Filtrage par groupe: "${selectedGroup}"`);
+      console.log(`🔍 Filtrage par groupe: "${selectedGroup}"`);
     }
   }, [selectedGroup]);
 
@@ -58,6 +58,17 @@ export const useFilteredReservations = (
   // Effet pour filtrer les réservations du mercredi
   useEffect(() => {
     if (wednesdayReservations) {
+      console.log("🔍 Début filtrage mercredi, nombre total:", wednesdayReservations.length);
+      
+      // Rechercher spécifiquement Mylan Carlier
+      const mylanWednesday = wednesdayReservations.filter(r => 
+        r.children?.first_name?.toLowerCase().includes('mylan') || 
+        r.children?.last_name?.toLowerCase().includes('carlier')
+      );
+      if (mylanWednesday.length > 0) {
+        console.log("🎯 Réservations mercredi de Mylan trouvées avant filtrage:", mylanWednesday);
+      }
+
       const filtered = wednesdayReservations.filter(reservation => {
         const fullName = `${reservation.children?.first_name} ${reservation.children?.last_name}`.toLowerCase();
         const searchMatch = searchQuery 
@@ -83,18 +94,29 @@ export const useFilteredReservations = (
         let groupMatch = selectedGroup === "all" ? true : false;
         if (selectedGroup !== "all" && reservation.children?.school_class) {
           const group = getClassCategorySync(reservation.children.school_class);
-          
-          // Log pour débogage du problème de filtrage
-          if (selectedGroup === 'adolescent' && reservation.children.school_class) {
-            console.log(`Classe: ${reservation.children.school_class}, Catégorie: ${group}`);
-          }
-          
           groupMatch = group === selectedGroup;
         }
 
-        return searchMatch && dateMatch && classMatch && groupMatch;
+        const isMatching = searchMatch && dateMatch && classMatch && groupMatch;
+        
+        // Log pour Mylan Carlier
+        if (reservation.children?.first_name?.toLowerCase().includes('mylan') || 
+            reservation.children?.last_name?.toLowerCase().includes('carlier')) {
+          console.log(`🔍 Mylan Carlier - Mercredi filtrage:`, {
+            name: fullName,
+            searchMatch,
+            dateMatch,
+            classMatch,
+            groupMatch,
+            finalMatch: isMatching,
+            filters: { searchQuery, startDate, endDate, selectedClass, selectedGroup }
+          });
+        }
+
+        return isMatching;
       });
 
+      console.log("✅ Fin filtrage mercredi, nombre filtré:", filtered.length);
       setFilteredWednesdayReservations(sortReservations(filtered));
     } else {
       setFilteredWednesdayReservations(null);
@@ -104,6 +126,17 @@ export const useFilteredReservations = (
   // Effet pour filtrer les réservations de vacances
   useEffect(() => {
     if (holidayReservations) {
+      console.log("🔍 Début filtrage vacances, nombre total:", holidayReservations.length);
+      
+      // Rechercher spécifiquement Mylan Carlier
+      const mylanHoliday = holidayReservations.filter(r => 
+        r.children?.first_name?.toLowerCase().includes('mylan') || 
+        r.children?.last_name?.toLowerCase().includes('carlier')
+      );
+      if (mylanHoliday.length > 0) {
+        console.log("🎯 Réservations vacances de Mylan trouvées avant filtrage:", mylanHoliday);
+      }
+
       const filtered = holidayReservations.filter(reservation => {
         const fullName = `${reservation.children?.first_name} ${reservation.children?.last_name}`.toLowerCase();
         const searchMatch = searchQuery 
@@ -129,12 +162,6 @@ export const useFilteredReservations = (
         let groupMatch = selectedGroup === "all" ? true : false;
         if (selectedGroup !== "all" && reservation.children?.school_class) {
           const group = getClassCategorySync(reservation.children.school_class, reservation.period_id);
-          
-          // Log pour débogage du problème de filtrage
-          if (selectedGroup === 'adolescent' && reservation.children.school_class) {
-            console.log(`Holiday - Période: ${reservation.period_id}, Classe: ${reservation.children.school_class}, Catégorie: ${group}`);
-          }
-          
           groupMatch = group === selectedGroup;
         }
         
@@ -143,9 +170,27 @@ export const useFilteredReservations = (
           ? true 
           : reservation.period_id === selectedPeriod;
 
-        return searchMatch && dateMatch && classMatch && groupMatch && periodMatch;
+        const isMatching = searchMatch && dateMatch && classMatch && groupMatch && periodMatch;
+        
+        // Log pour Mylan Carlier
+        if (reservation.children?.first_name?.toLowerCase().includes('mylan') || 
+            reservation.children?.last_name?.toLowerCase().includes('carlier')) {
+          console.log(`🔍 Mylan Carlier - Vacances filtrage:`, {
+            name: fullName,
+            searchMatch,
+            dateMatch,
+            classMatch,
+            groupMatch,
+            periodMatch,
+            finalMatch: isMatching,
+            filters: { searchQuery, startDate, endDate, selectedClass, selectedGroup, selectedPeriod }
+          });
+        }
+
+        return isMatching;
       });
 
+      console.log("✅ Fin filtrage vacances, nombre filtré:", filtered.length);
       setFilteredHolidayReservations(sortReservations(filtered));
     } else {
       setFilteredHolidayReservations(null);

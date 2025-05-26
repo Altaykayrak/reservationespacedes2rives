@@ -8,22 +8,12 @@ interface AdminReservations {
   holidayReservations: HolidayReservationWithChild[] | null;
 }
 
-type BaseReservation = {
-  id: string;
-  child_id: string;
-  status: string;
-  without_meal: boolean;
-  early_dropoff: boolean;
-  created_at: string;
-  updated_at: string;
-};
-
 export const useAdminReservations = (isAdmin: boolean | undefined) => {
   return useQuery({
     queryKey: ["admin_reservations"],
     queryFn: async (): Promise<AdminReservations> => {
       try {
-        console.log("Fetching all reservations...");
+        console.log("🔍 Fetching all admin reservations...");
 
         // Récupérer les réservations du mercredi depuis la vue
         const { data: wednesdayData, error: wednesdayError } = await supabase
@@ -41,11 +31,16 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             children,
             available_wednesdays!wednesday_reservations_wednesday_id_fkey (*)
           `)
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: false });
         
         if (wednesdayError) {
-          console.error("Error fetching wednesday reservations:", wednesdayError);
+          console.error("❌ Error fetching wednesday reservations:", wednesdayError);
           throw wednesdayError;
+        }
+
+        console.log("📊 Wednesday reservations found:", wednesdayData?.length || 0);
+        if (wednesdayData && wednesdayData.length > 0) {
+          console.log("📝 Sample wednesday reservation:", wednesdayData[0]);
         }
 
         // Récupérer les réservations des vacances depuis la vue
@@ -65,15 +60,35 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             children,
             available_holiday_periods (*)
           `)
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: false });
 
         if (holidayError) {
-          console.error("Error fetching holiday reservations:", holidayError);
+          console.error("❌ Error fetching holiday reservations:", holidayError);
           throw holidayError;
         }
 
-        console.log("Fetched wednesday reservations:", wednesdayData);
-        console.log("Fetched holiday reservations:", holidayData);
+        console.log("📊 Holiday reservations found:", holidayData?.length || 0);
+        if (holidayData && holidayData.length > 0) {
+          console.log("📝 Sample holiday reservation:", holidayData[0]);
+        }
+
+        // Rechercher spécifiquement les réservations de Mylan Carlier pour debug
+        const mylanReservations = [
+          ...(wednesdayData || []).filter(r => {
+            const child = r.children as any;
+            return child && (child.first_name?.toLowerCase().includes('mylan') || child.last_name?.toLowerCase().includes('carlier'));
+          }),
+          ...(holidayData || []).filter(r => {
+            const child = r.children as any;
+            return child && (child.first_name?.toLowerCase().includes('mylan') || child.last_name?.toLowerCase().includes('carlier'));
+          })
+        ];
+        
+        if (mylanReservations.length > 0) {
+          console.log("🎯 Réservations trouvées pour Mylan Carlier:", mylanReservations);
+        } else {
+          console.log("⚠️ Aucune réservation trouvée pour Mylan Carlier dans les vues");
+        }
 
         // Transform the wednesday reservations data
         const transformedWednesdayData = wednesdayData?.map(reservation => ({
@@ -105,16 +120,23 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
           available_holiday_periods: reservation.available_holiday_periods
         })) as HolidayReservationWithChild[];
 
+        console.log("✅ Final transformed data:", {
+          wednesday: transformedWednesdayData?.length || 0,
+          holiday: transformedHolidayData?.length || 0
+        });
+
         return {
           wednesdayReservations: transformedWednesdayData,
           holidayReservations: transformedHolidayData
         };
       } catch (error) {
-        console.error("Error in query function:", error);
+        console.error("💥 Error in admin reservations query:", error);
         throw error;
       }
     },
     enabled: Boolean(isAdmin),
     refetchOnWindowFocus: false,
+    staleTime: 0, // Toujours refetch pour s'assurer d'avoir les dernières données
+    retry: 1,
   });
 };
