@@ -6,7 +6,7 @@ import { formatDate } from "./utils";
 // Définir les symboles pour les repas
 const MEAL_SYMBOLS = {
   WITH_MEAL: '🍴', // Pictogramme fourchette et couteau
-  WITHOUT_MEAL: '🚫' // Pictogramme d'interdiction
+  WITHOUT_MEAL: '🍴❌' // Pictogramme fourchette et couteau avec croix
 };
 
 export const exportToPdf = (
