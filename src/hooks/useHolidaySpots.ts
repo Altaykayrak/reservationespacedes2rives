@@ -21,7 +21,21 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           p_child_school_class: schoolClass
         });
 
-        // Utiliser directement la fonction check_holiday_spots_available qui retourne le nombre de places
+        // D'abord, vérifions manuellement les réservations pour debug
+        const { data: debugReservations } = await supabase
+          .from("holiday_reservations")
+          .select(`
+            *,
+            children!inner(school_class)
+          `)
+          .eq("period_id", periodId)
+          .eq("reservation_date", dateStr)
+          .eq("status", "confirmed");
+
+        console.log("🔍 DEBUG - Réservations trouvées pour", dateStr, ":", debugReservations?.length || 0);
+        console.log("🔍 DEBUG - Détails réservations:", debugReservations);
+
+        // Utiliser la fonction check_holiday_spots_available
         const { data: availableSpots, error: spotsError } = await supabase.rpc(
           'check_holiday_spots_available',
           {
@@ -38,6 +52,8 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
         }
 
         console.log("✅ Places disponibles calculées:", availableSpots, "pour", schoolClass, "le", dateStr);
+        console.log("📊 Réservations confirmées trouvées:", debugReservations?.length || 0);
+        
         return availableSpots;
 
       } catch (error) {
@@ -47,10 +63,10 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
       }
     },
     enabled: !!periodId && !!date && !!schoolClass && !isNaN(date.getTime()),
-    staleTime: 60 * 1000, // 1 minute de cache
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1, // Réduire les tentatives
-    refetchOnWindowFocus: false, // Éviter les appels inutiles
+    staleTime: 30 * 1000, // 30 secondes de cache pour forcer plus de rafraîchissement
+    gcTime: 2 * 60 * 1000, // 2 minutes
+    retry: 1,
+    refetchOnWindowFocus: true,
   });
 
   const availableSpots = data;

@@ -20,7 +20,15 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       console.log("🔄 Fetching reservations for child:", selectedChild);
 
       try {
-        // Utiliser directement la table holiday_reservations avec une jointure sur children
+        // D'abord, vérifions s'il y a des réservations dans la table holiday_reservations
+        const { data: allReservations, error: debugError } = await supabase
+          .from("holiday_reservations")
+          .select("*");
+
+        console.log("📊 DEBUG - Total reservations in database:", allReservations?.length || 0);
+        console.log("📊 DEBUG - All reservations:", allReservations);
+
+        // Maintenant, récupérons les réservations pour cet enfant spécifique
         const { data, error } = await supabase
           .from("holiday_reservations")
           .select(`
@@ -30,9 +38,7 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
               first_name,
               last_name,
               school_class,
-              profiles!children_profile_id_fkey (
-                id
-              )
+              profile_id
             )
           `)
           .eq("child_id", selectedChild)
@@ -40,7 +46,11 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
 
         if (error) {
           console.error("❌ Error fetching reservations:", error);
-          toast.error("Erreur lors de la récupération des réservations");
+          toast({
+            title: "Erreur",
+            description: "Erreur lors de la récupération des réservations",
+            variant: "destructive",
+          });
           throw error;
         }
 
@@ -49,6 +59,15 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
 
         if (!data || data.length === 0) {
           console.log("ℹ️ Aucune réservation trouvée pour cet enfant");
+          
+          // Vérifions si l'enfant existe dans la base
+          const { data: childCheck } = await supabase
+            .from("children")
+            .select("id, first_name, last_name")
+            .eq("id", selectedChild)
+            .single();
+          
+          console.log("👤 Child verification:", childCheck);
           return [];
         }
 
@@ -87,19 +106,24 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
         });
 
         console.log("✅ Réservations transformées:", transformedData.length);
+        console.log("📋 Dates des réservations existantes:", transformedData.map(r => r.reservation_date));
         return transformedData;
 
       } catch (error) {
         console.error("❌ Exception dans useExistingHolidayReservations:", error);
-        toast.error("Erreur lors de la récupération des réservations");
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la récupération des réservations",
+          variant: "destructive",
+        });
         return [];
       }
     },
     enabled: !!selectedChild,
-    staleTime: 1000 * 60 * 2, // 2 minutes de cache
-    gcTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 30, // 30 secondes de cache pour forcer plus de rafraîchissement
+    gcTime: 1000 * 60 * 2, // 2 minutes
     retry: 1,
-    refetchOnWindowFocus: true // Permettre la mise à jour quand on revient sur la page
+    refetchOnWindowFocus: true
   });
 
   const isDateAlreadyReserved = (date: Date): boolean => {
@@ -134,7 +158,8 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       console.log("📅 Vérification de la date:", {
         date: date.toISOString().split('T')[0],
         reserved: result,
-        totalReservations: existingReservations.length
+        totalReservations: existingReservations.length,
+        reservationDates: existingReservations.map(r => r.reservation_date)
       });
       
       return result;
