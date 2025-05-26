@@ -33,7 +33,8 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
 
         if (spotsError) {
           console.error("❌ Erreur lors du calcul des places:", spotsError);
-          toast.error("Erreur lors du calcul des places disponibles");
+          // Ne pas afficher d'erreur toast pour les utilisateurs normaux, juste logger
+          console.warn("Impossible de calculer les places disponibles, cela peut être normal pour certains utilisateurs");
           return null;
         }
 
@@ -48,7 +49,8 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
 
       } catch (error) {
         console.error("❌ useHolidaySpots - Exception:", error);
-        toast.error("Erreur lors du calcul des places disponibles");
+        // Ne pas afficher d'erreur toast, juste logger
+        console.warn("Erreur lors du calcul des places disponibles");
         return null;
       }
     },

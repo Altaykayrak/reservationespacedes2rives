@@ -22,18 +22,18 @@ const getSpotsBadgeColor = (spots: number | null, loading: boolean) => {
 
 const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", loading: boolean = false) => {
   if (loading) {
-    return "Calcul des places...";
+    return "Calcul...";
   }
   
   if (spots === null || spots === undefined) {
-    return "Places non disponibles";
+    return "N/A";
   }
   
   if (spots <= 0) {
-    return `Groupe complet - Contactez l'accueil pour être en liste d'attente`;
+    return "Complet";
   }
   
-  return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
+  return `${spots} place${spots > 1 ? 's' : ''}`;
 };
 
 export const SpotsBadge = ({ 
