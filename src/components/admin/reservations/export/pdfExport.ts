@@ -4,6 +4,12 @@ import autoTable from 'jspdf-autotable';
 import { ExportData } from "./types";
 import { formatDate } from "./utils";
 
+// Définir les symboles pour les repas
+const MEAL_SYMBOLS = {
+  WITH_MEAL: '🍽', // Pictogramme de couvert
+  WITHOUT_MEAL: '🚫🍽' // Pictogramme de couvert barré
+};
+
 export const exportToPdf = (
   exportData: ExportData,
   startDate: string,
@@ -21,12 +27,12 @@ export const exportToPdf = (
   doc.setFontSize(16);
   doc.text(title, 14, 15);
 
-  // En-têtes avec jours formatés
+  // En-têtes avec jours formatés (format court : Lu 07/07)
   const headers = [
     "Nom",
-    "Prénom",
+    "Prénom", 
     "Classe",
-    ...dates.map(date => formatDate(date, true)) // Format court pour les en-têtes
+    ...dates.map(date => formatDate(date, true))
   ];
 
   // Préparer les données par classe
@@ -65,10 +71,19 @@ export const exportToPdf = (
         child.schoolClass
       ];
 
-      // Ajouter le statut pour chaque date
+      // Ajouter le statut pour chaque date avec pictogrammes
       dates.forEach(date => {
         const status = child.reservations.get(date) || "-";
-        row.push(status);
+        let displayStatus = status;
+        
+        // Remplacer les textes par des pictogrammes
+        if (status === "Avec repas") {
+          displayStatus = MEAL_SYMBOLS.WITH_MEAL;
+        } else if (status === "Sans repas") {
+          displayStatus = MEAL_SYMBOLS.WITHOUT_MEAL;
+        }
+        
+        row.push(displayStatus);
         
         // Incrémenter le total pour cette date si l'enfant est réservé
         if (status !== "-") {
@@ -150,10 +165,10 @@ export const exportToPdf = (
         data.cell.styles.fontStyle = 'bold';
       }
       
-      // Centrer le texte "Avec repas" et "Sans repas"
+      // Centrer les pictogrammes de repas
       if (data.row.section === 'body' && 
           data.column.index >= 3 &&
-          (data.cell.raw === 'Avec repas' || data.cell.raw === 'Sans repas')) {
+          (data.cell.raw === MEAL_SYMBOLS.WITH_MEAL || data.cell.raw === MEAL_SYMBOLS.WITHOUT_MEAL)) {
         data.cell.styles.halign = 'center';
       }
     }

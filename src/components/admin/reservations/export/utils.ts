@@ -33,9 +33,10 @@ export const formatDate = (dateStr: string, shortFormat: boolean = false) => {
     const date = parse(dateStr, "yyyy-MM-dd", new Date());
     
     if (shortFormat) {
-      // Format court pour les en-têtes de colonne
-      return format(date, "EEE. dd MMM", { locale: fr }).charAt(0).toUpperCase() + 
-             format(date, "EEE. dd MMM", { locale: fr }).slice(1);
+      // Format court pour les en-têtes de colonne : Lu 07/07
+      const dayShort = format(date, "EEEEEE", { locale: fr }); // Ex: Lu, Ma, Me
+      const dayMonth = format(date, "dd/MM", { locale: fr }); // Ex: 07/07
+      return `${dayShort} ${dayMonth}`;
     } else {
       // Format complet
       return format(date, "EEEE d MMMM", { locale: fr }).charAt(0).toUpperCase() + 
