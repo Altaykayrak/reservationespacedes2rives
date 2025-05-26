@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { ExportData } from "./types";
@@ -6,8 +5,8 @@ import { formatDate } from "./utils";
 
 // Définir les symboles pour les repas
 const MEAL_SYMBOLS = {
-  WITH_MEAL: '🍽', // Pictogramme de couvert
-  WITHOUT_MEAL: '🚫🍽' // Pictogramme de couvert barré
+  WITH_MEAL: '🍴', // Pictogramme fourchette et couteau
+  WITHOUT_MEAL: '🚫' // Pictogramme d'interdiction
 };
 
 export const exportToPdf = (
