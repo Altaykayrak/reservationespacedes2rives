@@ -20,15 +20,63 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       console.log("🔄 Fetching reservations for child:", selectedChild);
 
       try {
-        // D'abord, vérifions s'il y a des réservations dans la table holiday_reservations
-        const { data: allReservations, error: debugError } = await supabase
+        // Debug complet : vérifier toutes les données relatives
+        console.log("🔍 DEBUG - Vérification complète des données...");
+
+        // 1. Vérifier que l'enfant existe
+        const { data: childData, error: childError } = await supabase
+          .from("children")
+          .select("*")
+          .eq("id", selectedChild)
+          .single();
+
+        if (childError) {
+          console.error("❌ Erreur lors de la vérification de l'enfant:", childError);
+          return [];
+        }
+
+        console.log("👤 Enfant trouvé:", childData);
+
+        // 2. Vérifier toutes les réservations dans la base (sans filtre)
+        const { data: allReservations, error: allReservationsError } = await supabase
           .from("holiday_reservations")
           .select("*");
 
         console.log("📊 DEBUG - Total reservations in database:", allReservations?.length || 0);
         console.log("📊 DEBUG - All reservations:", allReservations);
 
-        // Maintenant, récupérons les réservations pour cet enfant spécifique
+        if (allReservationsError) {
+          console.error("❌ Erreur lors de la récupération de toutes les réservations:", allReservationsError);
+        }
+
+        // 3. Vérifier les réservations pour cet enfant (tous statuts)
+        const { data: childReservationsAllStatus, error: childAllStatusError } = await supabase
+          .from("holiday_reservations")
+          .select("*")
+          .eq("child_id", selectedChild);
+
+        console.log("🔍 DEBUG - Réservations pour cet enfant (tous statuts):", childReservationsAllStatus?.length || 0);
+        console.log("🔍 DEBUG - Détails réservations enfant:", childReservationsAllStatus);
+
+        if (childAllStatusError) {
+          console.error("❌ Erreur lors de la récupération des réservations enfant:", childAllStatusError);
+        }
+
+        // 4. Vérifier les réservations confirmées pour cet enfant
+        const { data: confirmedReservations, error: confirmedError } = await supabase
+          .from("holiday_reservations")
+          .select("*")
+          .eq("child_id", selectedChild)
+          .eq("status", "confirmed");
+
+        console.log("✅ DEBUG - Réservations confirmées pour cet enfant:", confirmedReservations?.length || 0);
+        console.log("✅ DEBUG - Détails réservations confirmées:", confirmedReservations);
+
+        if (confirmedError) {
+          console.error("❌ Erreur lors de la récupération des réservations confirmées:", confirmedError);
+        }
+
+        // 5. Maintenant, récupérons les réservations avec les données enfant
         const { data, error } = await supabase
           .from("holiday_reservations")
           .select(`
@@ -45,7 +93,7 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
           .eq("status", "confirmed");
 
         if (error) {
-          console.error("❌ Error fetching reservations:", error);
+          console.error("❌ Error fetching reservations with children:", error);
           toast.error("Erreur lors de la récupération des réservations");
           throw error;
         }
@@ -54,16 +102,7 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
         console.log("📝 Réservations détaillées:", data);
 
         if (!data || data.length === 0) {
-          console.log("ℹ️ Aucune réservation trouvée pour cet enfant");
-          
-          // Vérifions si l'enfant existe dans la base
-          const { data: childCheck } = await supabase
-            .from("children")
-            .select("id, first_name, last_name")
-            .eq("id", selectedChild)
-            .single();
-          
-          console.log("👤 Child verification:", childCheck);
+          console.log("ℹ️ Aucune réservation confirmée trouvée pour cet enfant");
           return [];
         }
 
@@ -112,13 +151,16 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       }
     },
     enabled: !!selectedChild,
-    staleTime: 1000 * 30, // 30 secondes de cache pour forcer plus de rafraîchissement
-    gcTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 10, // 10 secondes seulement pour forcer le rafraîchissement
+    gcTime: 1000 * 30, // 30 secondes
     retry: 1,
     refetchOnWindowFocus: true
   });
 
   const isDateAlreadyReserved = (date: Date): boolean => {
+    console.log("🔍 isDateAlreadyReserved - Vérification pour la date:", date.toISOString().split('T')[0]);
+    console.log("🔍 isDateAlreadyReserved - Réservations disponibles:", existingReservations?.length || 0);
+    
     if (!existingReservations || existingReservations.length === 0) {
       console.log("📅 Aucune réservation existante pour vérifier la date:", date.toISOString().split('T')[0]);
       return false;
