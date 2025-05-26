@@ -15,7 +15,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
       try {
         console.log("🔍 Fetching all admin reservations...");
 
-        // Récupérer TOUTES les réservations du mercredi depuis la vue (sans limite)
+        // Récupérer TOUTES les réservations du mercredi depuis la vue
         const { data: wednesdayData, error: wednesdayError, count: wednesdayCount } = await supabase
           .from("wednesday_reservations_with_children")
           .select(`
@@ -31,7 +31,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             children,
             available_wednesdays!wednesday_reservations_wednesday_id_fkey (*)
           `, { count: 'exact' })
-          .limit(50000) // Limite très élevée pour être sûr de tout récupérer
+          .range(0, 999999) // Utiliser range au lieu de limit pour récupérer toutes les données
           .order('created_at', { ascending: false });
         
         if (wednesdayError) {
@@ -41,7 +41,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
 
         console.log("📊 Wednesday reservations found:", wednesdayData?.length || 0, "/ Total:", wednesdayCount);
 
-        // Récupérer TOUTES les réservations des vacances depuis la vue (sans limite)
+        // Récupérer TOUTES les réservations des vacances depuis la vue
         const { data: holidayData, error: holidayError, count: holidayCount } = await supabase
           .from("holiday_reservations_with_children")
           .select(`
@@ -58,7 +58,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             children,
             available_holiday_periods (*)
           `, { count: 'exact' })
-          .limit(50000) // Limite très élevée pour être sûr de tout récupérer
+          .range(0, 999999) // Utiliser range au lieu de limit pour récupérer toutes les données
           .order('created_at', { ascending: false });
 
         if (holidayError) {
