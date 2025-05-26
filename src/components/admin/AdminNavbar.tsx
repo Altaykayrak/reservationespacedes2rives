@@ -1,10 +1,10 @@
 
-import { Navbar } from "@/components/ui/navbar";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, UserCheck, Mail, CalendarDays, Plane, MessageCircle, Users2, MapPin } from "lucide-react";
+import { Users, Calendar, UserCheck, Mail, CalendarDays, Plane, MessageCircle, Users2, MapPin, Menu } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export const AdminNavbar = () => {
   const navigate = useNavigate();
@@ -80,13 +80,62 @@ export const AdminNavbar = () => {
   ];
 
   return (
-    <Navbar
-      title="Administration"
-      navItems={navItems}
-      currentPath={location.pathname}
-      onNavigate={navigate}
-      onSignOut={handleSignOut}
-      showSignOut={true}
-    />
+    <div className="border-b bg-background sticky top-0 z-50">
+      <div className="flex h-16 items-center px-4">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold">Administration</h1>
+        </div>
+        
+        <div className="ml-auto flex items-center space-x-4">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-4">
+            {navItems.map((item) => (
+              <Button
+                key={item.href}
+                variant={location.pathname === item.href ? "default" : "ghost"}
+                size="sm"
+                onClick={() => navigate(item.href)}
+                className="flex items-center gap-2"
+              >
+                <item.icon className="h-4 w-4" />
+                {item.title}
+              </Button>
+            ))}
+          </nav>
+
+          {/* Mobile Navigation */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80">
+              <div className="flex flex-col gap-4 py-4">
+                <h2 className="text-lg font-semibold">Navigation</h2>
+                {navItems.map((item) => (
+                  <Button
+                    key={item.href}
+                    variant={location.pathname === item.href ? "default" : "ghost"}
+                    onClick={() => navigate(item.href)}
+                    className="justify-start gap-2"
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <div className="text-left">
+                      <div className="font-medium">{item.title}</div>
+                      <div className="text-xs text-muted-foreground">{item.description}</div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <Button variant="destructive" size="sm" onClick={handleSignOut}>
+            Déconnexion
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };

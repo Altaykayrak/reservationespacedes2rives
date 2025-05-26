@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Calendar, CalendarHeart, ClipboardList, Users, Mail } from "lucide-react";
+import { Calendar, CalendarHeart, ClipboardList, Users, Mail, MapPin } from "lucide-react";
 
 const AdminDashboard = () => {
   return (
@@ -85,6 +85,19 @@ const AdminDashboard = () => {
           </div>
           <Button asChild className="mt-4">
             <Link to="/admin/authorized-emails">Gérer les emails</Link>
+          </Button>
+        </Card>
+
+        <Card className="p-6 flex flex-col h-full">
+          <div className="flex-grow">
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Places restantes</h2>
+            </div>
+            <p className="text-gray-600">Consulter les places disponibles par groupe et par jour</p>
+          </div>
+          <Button asChild className="mt-4">
+            <Link to="/admin/available-spots">Voir les places</Link>
           </Button>
         </Card>
       </div>
