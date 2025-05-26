@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HolidayReservationWithChild } from "@/types/reservations";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const useExistingHolidayReservations = (selectedChild: string) => {
   const {
@@ -46,11 +46,7 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
 
         if (error) {
           console.error("❌ Error fetching reservations:", error);
-          toast({
-            title: "Erreur",
-            description: "Erreur lors de la récupération des réservations",
-            variant: "destructive",
-          });
+          toast.error("Erreur lors de la récupération des réservations");
           throw error;
         }
 
@@ -111,11 +107,7 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
 
       } catch (error) {
         console.error("❌ Exception dans useExistingHolidayReservations:", error);
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de la récupération des réservations",
-          variant: "destructive",
-        });
+        toast.error("Erreur lors de la récupération des réservations");
         return [];
       }
     },
