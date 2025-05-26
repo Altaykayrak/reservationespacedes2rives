@@ -15,8 +15,8 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
       try {
         console.log("🔍 Fetching all admin reservations...");
 
-        // Récupérer les réservations du mercredi depuis la vue
-        const { data: wednesdayData, error: wednesdayError } = await supabase
+        // Récupérer TOUTES les réservations du mercredi depuis la vue
+        const { data: wednesdayData, error: wednesdayError, count: wednesdayCount } = await supabase
           .from("wednesday_reservations_with_children")
           .select(`
             id,
@@ -30,7 +30,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             reservation_number,
             children,
             available_wednesdays!wednesday_reservations_wednesday_id_fkey (*)
-          `)
+          `, { count: 'exact' })
           .order('created_at', { ascending: false });
         
         if (wednesdayError) {
@@ -38,10 +38,10 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
           throw wednesdayError;
         }
 
-        console.log("📊 Wednesday reservations found:", wednesdayData?.length || 0);
+        console.log("📊 Wednesday reservations found:", wednesdayData?.length || 0, "/ Total:", wednesdayCount);
 
-        // Récupérer les réservations des vacances depuis la vue
-        const { data: holidayData, error: holidayError } = await supabase
+        // Récupérer TOUTES les réservations des vacances depuis la vue
+        const { data: holidayData, error: holidayError, count: holidayCount } = await supabase
           .from("holiday_reservations_with_children")
           .select(`
             id,
@@ -56,7 +56,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
             updated_at,
             children,
             available_holiday_periods (*)
-          `)
+          `, { count: 'exact' })
           .order('created_at', { ascending: false });
 
         if (holidayError) {
@@ -64,7 +64,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
           throw holidayError;
         }
 
-        console.log("📊 Holiday reservations found:", holidayData?.length || 0);
+        console.log("📊 Holiday reservations found:", holidayData?.length || 0, "/ Total:", holidayCount);
 
         // Transform the wednesday reservations data
         const transformedWednesdayData = wednesdayData?.map(reservation => {
@@ -77,7 +77,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
               last_name: childrenData.last_name,
               school_class: childrenData.school_class,
               profile: {
-                school_city: '' // Valeur vide puisque non utilisée
+                school_city: ''
               }
             },
             available_wednesdays: reservation.available_wednesdays
@@ -96,7 +96,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
               last_name: childrenData.last_name,
               school_class: childrenData.school_class,
               profile: {
-                school_city: '' // Valeur vide puisque non utilisée
+                school_city: ''
               }
             },
             available_holiday_periods: reservation.available_holiday_periods
@@ -119,7 +119,7 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
     },
     enabled: Boolean(isAdmin),
     refetchOnWindowFocus: false,
-    staleTime: 0, // Toujours refetch pour s'assurer d'avoir les dernières données
+    staleTime: 0,
     retry: 1,
   });
 };
