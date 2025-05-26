@@ -206,8 +206,8 @@ const AdminAvailableSpots = () => {
 
   if (loadingWednesdays || loadingHolidays) {
     return (
-      <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Places restantes</h1>
+      <div className="container mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-6">Places restantes</h1>
         <div className="flex items-center justify-center min-h-[200px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -219,14 +219,14 @@ const AdminAvailableSpots = () => {
   }
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex items-center gap-3 mb-8">
+    <div className="container mx-auto p-6">
+      <div className="flex items-center gap-3 mb-6">
         <Users className="h-8 w-8 text-primary" />
         <h1 className="text-3xl font-bold">Places restantes</h1>
       </div>
 
       <Tabs defaultValue="wednesdays" className="w-full">
-        <TabsList className="mb-6">
+        <TabsList className="mb-4">
           <TabsTrigger value="wednesdays">
             <Calendar className="mr-2 h-4 w-4" />
             Mercredis ({wednesdaySpots?.length || 0})
@@ -238,29 +238,29 @@ const AdminAvailableSpots = () => {
         </TabsList>
 
         <TabsContent value="wednesdays">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {wednesdaySpots?.map((spot) => {
               const kindergartenAvailable = spot.max_participants_kindergarten - spot.kindergarten_reserved;
               const primaryAvailable = spot.max_participants_primary - spot.primary_reserved;
               
               return (
                 <Card key={spot.id} className="bg-blue-50 border-blue-200">
-                  <CardHeader className="pb-4">
+                  <CardHeader className="pb-3">
                     <CardTitle className="text-lg text-blue-800">
                       {format(new Date(spot.date), "EEEE dd MMMM yyyy", { locale: fr })}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white p-4 rounded-lg border">
-                        <h4 className="font-semibold text-gray-700 mb-2">Maternelle</h4>
-                        <Badge variant={getSpotsBadgeVariant(kindergartenAvailable, spot.max_participants_kindergarten)} className="text-lg px-3 py-1">
+                  <CardContent className="pt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="bg-white p-3 rounded-lg border">
+                        <h4 className="font-semibold text-gray-700 mb-2 text-sm">Maternelle</h4>
+                        <Badge variant={getSpotsBadgeVariant(kindergartenAvailable, spot.max_participants_kindergarten)} className="text-sm px-2 py-1">
                           {kindergartenAvailable}/{spot.max_participants_kindergarten} places
                         </Badge>
                       </div>
-                      <div className="bg-white p-4 rounded-lg border">
-                        <h4 className="font-semibold text-gray-700 mb-2">Primaire</h4>
-                        <Badge variant={getSpotsBadgeVariant(primaryAvailable, spot.max_participants_primary)} className="text-lg px-3 py-1">
+                      <div className="bg-white p-3 rounded-lg border">
+                        <h4 className="font-semibold text-gray-700 mb-2 text-sm">Primaire</h4>
+                        <Badge variant={getSpotsBadgeVariant(primaryAvailable, spot.max_participants_primary)} className="text-sm px-2 py-1">
                           {primaryAvailable}/{spot.max_participants_primary} places
                         </Badge>
                       </div>
@@ -273,39 +273,39 @@ const AdminAvailableSpots = () => {
         </TabsContent>
 
         <TabsContent value="holidays">
-          <div className="space-y-8">
+          <div className="space-y-6">
             {Object.entries(groupedHolidaySpots || {}).map(([periodId, periodData], index) => (
               <Card key={periodId} className={`${periodColors[index % periodColors.length]} border-2`}>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl font-bold text-gray-800">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-bold text-gray-800">
                     {periodData.period_name}
                   </CardTitle>
-                  <p className="text-gray-600">{periodData.dates.length} jours disponibles</p>
+                  <p className="text-sm text-gray-600">{periodData.dates.length} jours disponibles</p>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="pt-0">
+                  <div className="space-y-3">
                     {periodData.dates.map((spot) => (
-                      <div key={`${spot.period_id}-${spot.reservation_date}`} className="bg-white p-4 rounded-lg border shadow-sm">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div className="font-medium text-gray-800">
+                      <div key={`${spot.period_id}-${spot.reservation_date}`} className="bg-white p-3 rounded-lg border shadow-sm">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                          <div className="font-medium text-gray-800 text-sm">
                             {format(new Date(spot.reservation_date), "EEEE dd MMMM yyyy", { locale: fr })}
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                             <div className="text-center">
                               <div className="text-xs text-gray-600 mb-1">Maternelle</div>
-                              <Badge variant={getSpotsBadgeVariant(spot.kindergarten_spots, spot.kindergarten_capacity)}>
+                              <Badge variant={getSpotsBadgeVariant(spot.kindergarten_spots, spot.kindergarten_capacity)} className="text-xs">
                                 {spot.kindergarten_spots}/{spot.kindergarten_capacity}
                               </Badge>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-gray-600 mb-1">Primaire</div>
-                              <Badge variant={getSpotsBadgeVariant(spot.primary_spots, spot.primary_capacity)}>
+                              <Badge variant={getSpotsBadgeVariant(spot.primary_spots, spot.primary_capacity)} className="text-xs">
                                 {spot.primary_spots}/{spot.primary_capacity}
                               </Badge>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-gray-600 mb-1">Adolescent</div>
-                              <Badge variant={getSpotsBadgeVariant(spot.teen_spots, spot.teen_capacity)}>
+                              <Badge variant={getSpotsBadgeVariant(spot.teen_spots, spot.teen_capacity)} className="text-xs">
                                 {spot.teen_spots}/{spot.teen_capacity}
                               </Badge>
                             </div>
