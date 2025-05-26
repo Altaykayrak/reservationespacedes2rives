@@ -60,14 +60,12 @@ export const useFilteredReservations = (
     if (wednesdayReservations) {
       console.log("🔍 Début filtrage mercredi, nombre total:", wednesdayReservations.length);
       
-      // Rechercher spécifiquement l'enfant avec l'ID mentionné
-      const targetChildId = "272c2d54-e3f3-4146-b5b7-a47385a2c1ab";
-      const targetReservations = wednesdayReservations.filter(r => r.child_id === targetChildId);
-      if (targetReservations.length > 0) {
-        console.log(`🎯 Réservations mercredi trouvées pour l'enfant ${targetChildId} avant filtrage:`, targetReservations);
-        targetReservations.forEach(r => {
-          console.log(`  - Réservation ID: ${r.id}, Enfant: ${r.children?.first_name} ${r.children?.last_name}`);
-        });
+      // Rechercher spécifiquement les enfants Degryse
+      const degrysePrevious = wednesdayReservations.filter(r => 
+        r.children?.last_name.toLowerCase().includes('degryse')
+      );
+      if (degrysePrevious.length > 0) {
+        console.log(`🎯 Réservations mercredi Degryse trouvées AVANT filtrage:`, degrysePrevious.length, degrysePrevious);
       }
 
       const filtered = wednesdayReservations.filter(reservation => {
@@ -100,9 +98,9 @@ export const useFilteredReservations = (
 
         const isMatching = searchMatch && dateMatch && classMatch && groupMatch;
         
-        // Log spécial pour l'enfant ciblé
-        if (reservation.child_id === targetChildId) {
-          console.log(`🔍 Enfant ${targetChildId} - Mercredi filtrage:`, {
+        // Log spécial pour Degryse
+        if (reservation.children?.last_name.toLowerCase().includes('degryse')) {
+          console.log(`🔍 Enfant Degryse - Mercredi filtrage:`, {
             childId: reservation.child_id,
             name: fullName,
             searchQuery,
@@ -118,11 +116,14 @@ export const useFilteredReservations = (
         return isMatching;
       });
 
-      const filteredTargetReservations = filtered.filter(r => r.child_id === targetChildId);
-      if (filteredTargetReservations.length > 0) {
-        console.log(`✅ Enfant ${targetChildId} - Réservations mercredi APRÈS filtrage:`, filteredTargetReservations.length);
-      } else if (targetReservations.length > 0) {
-        console.log(`❌ Enfant ${targetChildId} - Réservations mercredi FILTRÉES (non visibles):`, targetReservations.length);
+      const degryseFinal = filtered.filter(r => 
+        r.children?.last_name.toLowerCase().includes('degryse')
+      );
+      if (degrysePrevious.length > 0) {
+        console.log(`✅ Enfants Degryse - Réservations mercredi APRÈS filtrage:`, degryseFinal.length);
+        if (degryseFinal.length === 0) {
+          console.log(`❌ Enfants Degryse - Réservations mercredi FILTRÉES (non visibles)`);
+        }
       }
 
       console.log("✅ Fin filtrage mercredi, nombre filtré:", filtered.length);
@@ -137,13 +138,14 @@ export const useFilteredReservations = (
     if (holidayReservations) {
       console.log("🔍 Début filtrage vacances, nombre total:", holidayReservations.length);
       
-      // Rechercher spécifiquement l'enfant avec l'ID mentionné
-      const targetChildId = "272c2d54-e3f3-4146-b5b7-a47385a2c1ab";
-      const targetReservations = holidayReservations.filter(r => r.child_id === targetChildId);
-      if (targetReservations.length > 0) {
-        console.log(`🎯 Réservations vacances trouvées pour l'enfant ${targetChildId} avant filtrage:`, targetReservations);
-        targetReservations.forEach(r => {
-          console.log(`  - Réservation ID: ${r.id}, Enfant: ${r.children?.first_name} ${r.children?.last_name}`);
+      // Rechercher spécifiquement les enfants Degryse
+      const degrysePrevious = holidayReservations.filter(r => 
+        r.children?.last_name.toLowerCase().includes('degryse')
+      );
+      if (degrysePrevious.length > 0) {
+        console.log(`🎯 Réservations vacances Degryse trouvées AVANT filtrage:`, degrysePrevious.length, degrysePrevious);
+        degrysePrevious.forEach(r => {
+          console.log(`  - Réservation ID: ${r.id}, Enfant: ${r.children?.first_name} ${r.children?.last_name}, Classe: ${r.children?.school_class}`);
         });
       }
 
@@ -182,9 +184,9 @@ export const useFilteredReservations = (
 
         const isMatching = searchMatch && dateMatch && classMatch && groupMatch && periodMatch;
         
-        // Log spécial pour l'enfant ciblé
-        if (reservation.child_id === targetChildId) {
-          console.log(`🔍 Enfant ${targetChildId} - Vacances filtrage:`, {
+        // Log spécial pour Degryse
+        if (reservation.children?.last_name.toLowerCase().includes('degryse')) {
+          console.log(`🔍 Enfant Degryse - Vacances filtrage:`, {
             childId: reservation.child_id,
             name: fullName,
             searchQuery,
@@ -201,11 +203,14 @@ export const useFilteredReservations = (
         return isMatching;
       });
 
-      const filteredTargetReservations = filtered.filter(r => r.child_id === targetChildId);
-      if (filteredTargetReservations.length > 0) {
-        console.log(`✅ Enfant ${targetChildId} - Réservations vacances APRÈS filtrage:`, filteredTargetReservations.length);
-      } else if (targetReservations.length > 0) {
-        console.log(`❌ Enfant ${targetChildId} - Réservations vacances FILTRÉES (non visibles):`, targetReservations.length);
+      const degryseFinal = filtered.filter(r => 
+        r.children?.last_name.toLowerCase().includes('degryse')
+      );
+      if (degrysePrevious.length > 0) {
+        console.log(`✅ Enfants Degryse - Réservations vacances APRÈS filtrage:`, degryseFinal.length);
+        if (degryseFinal.length === 0) {
+          console.log(`❌ Enfants Degryse - Réservations vacances FILTRÉES (non visibles)`);
+        }
       }
 
       console.log("✅ Fin filtrage vacances, nombre filtré:", filtered.length);
