@@ -20,7 +20,7 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       console.log("🔄 Fetching reservations for child:", selectedChild);
 
       try {
-        // Utilisation de la vue holiday_reservations_with_children au lieu de la table directe
+        // Utilisation de la vue holiday_reservations_with_children
         const { data, error } = await supabase
           .from("holiday_reservations_with_children")
           .select("*")
@@ -86,8 +86,8 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       }
     },
     enabled: !!selectedChild,
-    staleTime: 1000 * 10, // 10 secondes seulement pour forcer le rafraîchissement
-    gcTime: 1000 * 30, // 30 secondes
+    staleTime: 1000 * 5, // 5 secondes seulement pour forcer le rafraîchissement
+    gcTime: 1000 * 15, // 15 secondes
     retry: 1,
     refetchOnWindowFocus: true
   });
@@ -95,6 +95,11 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
   const isDateAlreadyReserved = (date: Date): boolean => {
     console.log("🔍 isDateAlreadyReserved - Vérification pour la date:", date.toISOString().split('T')[0]);
     console.log("🔍 isDateAlreadyReserved - Réservations disponibles:", existingReservations?.length || 0);
+    console.log("🔍 isDateAlreadyReserved - Détail des réservations:", existingReservations?.map(r => ({
+      id: r.id,
+      date: r.reservation_date,
+      child: r.children?.first_name
+    })));
     
     if (!existingReservations || existingReservations.length === 0) {
       console.log("📅 Aucune réservation existante pour vérifier la date:", date.toISOString().split('T')[0]);
@@ -102,22 +107,25 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
     }
 
     try {
-      const dateToCheck = new Date(date);
-      dateToCheck.setHours(0, 0, 0, 0);
+      const dateToCheck = date.toISOString().split('T')[0]; // Format YYYY-MM-DD
       
       const result = existingReservations.some(reservation => {
-        if (!reservation.reservation_date) return false;
+        if (!reservation.reservation_date) {
+          console.log("⚠️ Réservation sans date:", reservation.id);
+          return false;
+        }
 
-        const reservationDate = new Date(reservation.reservation_date);
-        reservationDate.setHours(0, 0, 0, 0);
+        // Normaliser la date de réservation au format YYYY-MM-DD
+        const reservationDate = new Date(reservation.reservation_date).toISOString().split('T')[0];
 
-        const isReserved = dateToCheck.getTime() === reservationDate.getTime();
+        const isReserved = dateToCheck === reservationDate;
         
         if (isReserved) {
           console.log("🚫 Date déjà réservée:", {
-            dateChecked: dateToCheck.toISOString().split('T')[0],
-            reservationDate: reservation.reservation_date,
-            reservationId: reservation.id
+            dateChecked: dateToCheck,
+            reservationDate: reservationDate,
+            reservationId: reservation.id,
+            childName: reservation.children?.first_name
           });
         }
 
@@ -125,7 +133,7 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
       });
 
       console.log("📅 Vérification de la date:", {
-        date: date.toISOString().split('T')[0],
+        date: dateToCheck,
         reserved: result,
         totalReservations: existingReservations.length,
         reservationDates: existingReservations.map(r => r.reservation_date)
