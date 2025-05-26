@@ -30,6 +30,7 @@ import AdminAuthorizedEmails from "./pages/admin/AdminAuthorizedEmails";
 import AdminNewReservation from "./pages/admin/AdminNewReservation";
 import AdminNewHolidayReservation from "./pages/admin/AdminNewHolidayReservation";
 import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
+import AdminAvailableSpots from "./pages/admin/AdminAvailableSpots";
 
 function App() {
   return (
@@ -109,6 +110,7 @@ function App() {
           <Route path="holidays" element={<AdminHolidays />} />
           <Route path="rdv" element={<AdminRdv />} />
           <Route path="authorized-emails" element={<AdminAuthorizedEmails />} />
+          <Route path="available-spots" element={<AdminAvailableSpots />} />
         </Route>
       </Routes>
     </Router>

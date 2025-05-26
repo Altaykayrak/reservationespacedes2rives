@@ -1,76 +1,92 @@
 
-import { useState, useEffect } from "react";
+import { Navbar } from "@/components/ui/navbar";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { cn } from "@/lib/utils";
-import { Logo } from "@/components/ui/nav/Logo";
+import { Users, Calendar, UserCheck, Mail, CalendarDays, Plane, MessageCircle, Users2, MapPin } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export function AdminNavbar() {
-  const { signOut } = useAuth();
-  const [isMounted, setIsMounted] = useState(false);
-  const location = useLocation();
+export const AdminNavbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const menuItems = [
-    { label: "Dashboard", href: "/admin" },
-    { label: "Réservations", href: "/admin/reservations" },
-    { label: "Rendez-vous", href: "/admin/rdv" },
-    { label: "Utilisateurs", href: "/admin/profiles" },
-    { label: "Enfants", href: "/admin/children" },
-    { label: "Emails autorisés", href: "/admin/authorized-emails" },
-    { label: "Périodes vacances", href: "/admin/holidays" },
-  ];
-
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     try {
-      await signOut();
-      toast.success("Déconnexion réussie");
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       navigate("/admin-login");
+      toast.success("Déconnexion réussie");
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
-      toast.error("Une erreur est survenue lors de la déconnexion");
+      toast.error("Erreur lors de la déconnexion");
     }
   };
 
-  if (!isMounted) {
-    return null;
-  }
+  const navItems = [
+    {
+      title: "Dashboard",
+      href: "/admin",
+      icon: Users,
+      description: "Vue d'ensemble"
+    },
+    {
+      title: "Profils",
+      href: "/admin/profiles",
+      icon: UserCheck,
+      description: "Gestion des profils utilisateurs"
+    },
+    {
+      title: "Enfants",
+      href: "/admin/children",
+      icon: Users2,
+      description: "Gestion des enfants"
+    },
+    {
+      title: "Réservations",
+      href: "/admin/reservations",
+      icon: Calendar,
+      description: "Gestion des réservations"
+    },
+    {
+      title: "Mercredis",
+      href: "/admin/wednesdays",
+      icon: CalendarDays,
+      description: "Gestion des mercredis"
+    },
+    {
+      title: "Vacances",
+      href: "/admin/holidays",
+      icon: Plane,
+      description: "Gestion des périodes de vacances"
+    },
+    {
+      title: "Rendez-vous",
+      href: "/admin/rdv",
+      icon: MessageCircle,
+      description: "Gestion des rendez-vous"
+    },
+    {
+      title: "Emails autorisés",
+      href: "/admin/authorized-emails",
+      icon: Mail,
+      description: "Gestion des emails autorisés"
+    },
+    {
+      title: "Places restantes",
+      href: "/admin/available-spots",
+      icon: MapPin,
+      description: "Consultation des places disponibles"
+    }
+  ];
 
   return (
-    <div className="border-b bg-background sticky top-0 z-50">
-      <div className="flex h-16 items-center px-4">
-        <Logo />
-        
-        <nav className="flex-1 ml-8">
-          <ul className="flex space-x-4 overflow-x-auto">
-            {menuItems.map((item) => (
-              <li key={item.label}>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    location.pathname === item.href
-                      ? "bg-indigo-600 text-white"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        
-        <Button variant="destructive" onClick={handleLogout} className="ml-4">
-          Se déconnecter
-        </Button>
-      </div>
-    </div>
+    <Navbar
+      title="Administration"
+      navItems={navItems}
+      currentPath={location.pathname}
+      onNavigate={navigate}
+      onSignOut={handleSignOut}
+      showSignOut={true}
+    />
   );
-}
+};
