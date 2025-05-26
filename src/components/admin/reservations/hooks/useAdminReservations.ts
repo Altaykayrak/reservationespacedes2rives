@@ -72,22 +72,20 @@ export const useAdminReservations = (isAdmin: boolean | undefined) => {
           console.log("📝 Sample holiday reservation:", holidayData[0]);
         }
 
-        // Rechercher spécifiquement les réservations de Mylan Carlier pour debug
-        const mylanReservations = [
-          ...(wednesdayData || []).filter(r => {
-            const child = r.children as any;
-            return child && (child.first_name?.toLowerCase().includes('mylan') || child.last_name?.toLowerCase().includes('carlier'));
-          }),
-          ...(holidayData || []).filter(r => {
-            const child = r.children as any;
-            return child && (child.first_name?.toLowerCase().includes('mylan') || child.last_name?.toLowerCase().includes('carlier'));
-          })
-        ];
+        // Rechercher spécifiquement l'enfant avec l'ID mentionné
+        const targetChildId = "272c2d54-e3f3-4146-b5b7-a47385a2c1ab";
+        const targetWednesdayReservations = wednesdayData?.filter(r => r.child_id === targetChildId) || [];
+        const targetHolidayReservations = holidayData?.filter(r => r.child_id === targetChildId) || [];
         
-        if (mylanReservations.length > 0) {
-          console.log("🎯 Réservations trouvées pour Mylan Carlier:", mylanReservations);
-        } else {
-          console.log("⚠️ Aucune réservation trouvée pour Mylan Carlier dans les vues");
+        console.log(`🎯 Réservations trouvées pour l'enfant ${targetChildId}:`);
+        console.log(`  - Mercredis: ${targetWednesdayReservations.length}`, targetWednesdayReservations);
+        console.log(`  - Vacances: ${targetHolidayReservations.length}`, targetHolidayReservations);
+
+        if (targetWednesdayReservations.length > 0) {
+          console.log("🔍 Détails enfant mercredi:", targetWednesdayReservations[0].children);
+        }
+        if (targetHolidayReservations.length > 0) {
+          console.log("🔍 Détails enfant vacances:", targetHolidayReservations[0].children);
         }
 
         // Transform the wednesday reservations data

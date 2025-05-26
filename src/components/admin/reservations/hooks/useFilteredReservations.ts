@@ -60,13 +60,14 @@ export const useFilteredReservations = (
     if (wednesdayReservations) {
       console.log("🔍 Début filtrage mercredi, nombre total:", wednesdayReservations.length);
       
-      // Rechercher spécifiquement Mylan Carlier
-      const mylanWednesday = wednesdayReservations.filter(r => 
-        r.children?.first_name?.toLowerCase().includes('mylan') || 
-        r.children?.last_name?.toLowerCase().includes('carlier')
-      );
-      if (mylanWednesday.length > 0) {
-        console.log("🎯 Réservations mercredi de Mylan trouvées avant filtrage:", mylanWednesday);
+      // Rechercher spécifiquement l'enfant avec l'ID mentionné
+      const targetChildId = "272c2d54-e3f3-4146-b5b7-a47385a2c1ab";
+      const targetReservations = wednesdayReservations.filter(r => r.child_id === targetChildId);
+      if (targetReservations.length > 0) {
+        console.log(`🎯 Réservations mercredi trouvées pour l'enfant ${targetChildId} avant filtrage:`, targetReservations);
+        targetReservations.forEach(r => {
+          console.log(`  - Réservation ID: ${r.id}, Enfant: ${r.children?.first_name} ${r.children?.last_name}`);
+        });
       }
 
       const filtered = wednesdayReservations.filter(reservation => {
@@ -99,11 +100,12 @@ export const useFilteredReservations = (
 
         const isMatching = searchMatch && dateMatch && classMatch && groupMatch;
         
-        // Log pour Mylan Carlier
-        if (reservation.children?.first_name?.toLowerCase().includes('mylan') || 
-            reservation.children?.last_name?.toLowerCase().includes('carlier')) {
-          console.log(`🔍 Mylan Carlier - Mercredi filtrage:`, {
+        // Log spécial pour l'enfant ciblé
+        if (reservation.child_id === targetChildId) {
+          console.log(`🔍 Enfant ${targetChildId} - Mercredi filtrage:`, {
+            childId: reservation.child_id,
             name: fullName,
+            searchQuery,
             searchMatch,
             dateMatch,
             classMatch,
@@ -115,6 +117,13 @@ export const useFilteredReservations = (
 
         return isMatching;
       });
+
+      const filteredTargetReservations = filtered.filter(r => r.child_id === targetChildId);
+      if (filteredTargetReservations.length > 0) {
+        console.log(`✅ Enfant ${targetChildId} - Réservations mercredi APRÈS filtrage:`, filteredTargetReservations.length);
+      } else if (targetReservations.length > 0) {
+        console.log(`❌ Enfant ${targetChildId} - Réservations mercredi FILTRÉES (non visibles):`, targetReservations.length);
+      }
 
       console.log("✅ Fin filtrage mercredi, nombre filtré:", filtered.length);
       setFilteredWednesdayReservations(sortReservations(filtered));
@@ -128,13 +137,14 @@ export const useFilteredReservations = (
     if (holidayReservations) {
       console.log("🔍 Début filtrage vacances, nombre total:", holidayReservations.length);
       
-      // Rechercher spécifiquement Mylan Carlier
-      const mylanHoliday = holidayReservations.filter(r => 
-        r.children?.first_name?.toLowerCase().includes('mylan') || 
-        r.children?.last_name?.toLowerCase().includes('carlier')
-      );
-      if (mylanHoliday.length > 0) {
-        console.log("🎯 Réservations vacances de Mylan trouvées avant filtrage:", mylanHoliday);
+      // Rechercher spécifiquement l'enfant avec l'ID mentionné
+      const targetChildId = "272c2d54-e3f3-4146-b5b7-a47385a2c1ab";
+      const targetReservations = holidayReservations.filter(r => r.child_id === targetChildId);
+      if (targetReservations.length > 0) {
+        console.log(`🎯 Réservations vacances trouvées pour l'enfant ${targetChildId} avant filtrage:`, targetReservations);
+        targetReservations.forEach(r => {
+          console.log(`  - Réservation ID: ${r.id}, Enfant: ${r.children?.first_name} ${r.children?.last_name}`);
+        });
       }
 
       const filtered = holidayReservations.filter(reservation => {
@@ -172,11 +182,12 @@ export const useFilteredReservations = (
 
         const isMatching = searchMatch && dateMatch && classMatch && groupMatch && periodMatch;
         
-        // Log pour Mylan Carlier
-        if (reservation.children?.first_name?.toLowerCase().includes('mylan') || 
-            reservation.children?.last_name?.toLowerCase().includes('carlier')) {
-          console.log(`🔍 Mylan Carlier - Vacances filtrage:`, {
+        // Log spécial pour l'enfant ciblé
+        if (reservation.child_id === targetChildId) {
+          console.log(`🔍 Enfant ${targetChildId} - Vacances filtrage:`, {
+            childId: reservation.child_id,
             name: fullName,
+            searchQuery,
             searchMatch,
             dateMatch,
             classMatch,
@@ -189,6 +200,13 @@ export const useFilteredReservations = (
 
         return isMatching;
       });
+
+      const filteredTargetReservations = filtered.filter(r => r.child_id === targetChildId);
+      if (filteredTargetReservations.length > 0) {
+        console.log(`✅ Enfant ${targetChildId} - Réservations vacances APRÈS filtrage:`, filteredTargetReservations.length);
+      } else if (targetReservations.length > 0) {
+        console.log(`❌ Enfant ${targetChildId} - Réservations vacances FILTRÉES (non visibles):`, targetReservations.length);
+      }
 
       console.log("✅ Fin filtrage vacances, nombre filtré:", filtered.length);
       setFilteredHolidayReservations(sortReservations(filtered));
