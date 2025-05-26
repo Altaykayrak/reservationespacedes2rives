@@ -9,15 +9,16 @@ interface SpotsBadgeProps {
   isLoading?: boolean;
 }
 
-const getSpotsBadgeColor = (spots: number | null) => {
+const getSpotsBadgeColor = (spots: number | null, loading: boolean) => {
+  if (loading) return "bg-blue-100 text-blue-800";
   if (spots === null || spots === undefined) return "bg-gray-100 text-gray-600";
   if (spots <= 0) return "bg-red-100 text-red-800";
   if (spots <= 5) return "bg-orange-100 text-orange-800";
   return "bg-green-100 text-green-800";
 };
 
-const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", isLoading: boolean = false) => {
-  if (isLoading) {
+const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", loading: boolean = false) => {
+  if (loading) {
     return "Calcul des places...";
   }
   
@@ -32,7 +33,7 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", isLoa
   }
   
   // Sinon, afficher le nombre de places restantes (qui est > 0)
-  return `${spots} place${spots > 1 ? 's' : ''} disponible${spots > 1 ? 's' : ''}`;
+  return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
 };
 
 export const SpotsBadge = ({ availableSpots, isFull, schoolClass = "", isLoading = false }: SpotsBadgeProps) => {
@@ -49,14 +50,13 @@ export const SpotsBadge = ({ availableSpots, isFull, schoolClass = "", isLoading
     });
     
     setDisplayText(getSpotsBadgeText(availableSpots, schoolClass, isLoading));
-    setBadgeColor(getSpotsBadgeColor(availableSpots));
+    setBadgeColor(getSpotsBadgeColor(availableSpots, isLoading));
   }, [availableSpots, isFull, schoolClass, isLoading]);
 
-  // Toujours afficher le badge, même pendant le chargement ou si pas de classe
   return (
     <Badge 
       variant="secondary" 
-      className={`${badgeColor} border-none text-[10px] md:text-xs`}
+      className={`${badgeColor} border-none text-[10px] md:text-xs font-medium`}
     >
       {displayText}
     </Badge>

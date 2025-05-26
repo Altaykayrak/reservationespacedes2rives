@@ -3,17 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Type pour la réponse de la fonction de débogage
-interface DebugHolidaySpotsResponse {
-  period_id: string;
-  reservation_date: string;
-  child_school_class: string;
-  determined_group: string;
-  capacity: number;
-  reserved_count: number;
-  available_spots: number;
-}
-
 export const useHolidaySpots = (periodId: string, date: Date, schoolClass: string) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["holidaySpots", periodId, date.toISOString().split('T')[0], schoolClass],

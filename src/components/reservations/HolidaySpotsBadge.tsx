@@ -20,15 +20,16 @@ export const HolidaySpotsBadge = ({
     childSchoolClass
   );
 
-  const getSpotsBadgeColor = (spots: number | null) => {
+  const getSpotsBadgeColor = (spots: number | null, loading: boolean) => {
+    if (loading) return "bg-blue-100 text-blue-800";
     if (spots === null || spots === undefined) return "bg-gray-100 text-gray-600";
     if (spots <= 0) return "bg-red-100 text-red-800";
     if (spots <= 5) return "bg-orange-100 text-orange-800";
     return "bg-green-100 text-green-800";
   };
 
-  const getSpotsBadgeText = (spots: number | null, isLoading: boolean = false) => {
-    if (isLoading) {
+  const getSpotsBadgeText = (spots: number | null, loading: boolean) => {
+    if (loading) {
       return "Calcul...";
     }
     
@@ -40,26 +41,27 @@ export const HolidaySpotsBadge = ({
       return "Complet";
     }
     
-    return `${spots} libre${spots > 1 ? 's' : ''}`;
+    return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
   };
 
-  const badgeColor = getSpotsBadgeColor(availableSpots);
+  const badgeColor = getSpotsBadgeColor(availableSpots, isLoading);
   const badgeText = getSpotsBadgeText(availableSpots, isLoading);
 
   // Log pour débugger l'affichage
-  console.log("🎨 HolidaySpotsBadge - Affichage:", {
+  console.log("🎨 HolidaySpotsBadge - Affichage final:", {
     periodId,
     date,
     childSchoolClass,
     availableSpots,
     badgeText,
-    isLoading
+    isLoading,
+    isFull
   });
 
   return (
     <Badge 
       variant="secondary" 
-      className={`${badgeColor} border-none text-[10px] md:text-xs`}
+      className={`${badgeColor} border-none text-[10px] md:text-xs font-medium`}
     >
       {badgeText}
     </Badge>
