@@ -21,49 +21,7 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           schoolClass
         });
 
-        // 1. Récupérer les informations de la période et déterminer le groupe
-        const { data: periodData, error: periodError } = await supabase
-          .from("available_holiday_periods")
-          .select("max_participants_kindergarten, max_participants_primary, max_participants_teen")
-          .eq("id", periodId)
-          .single();
-
-        if (periodError) {
-          console.error("❌ Erreur lors de la récupération de la période:", periodError);
-          toast.error("Erreur lors de la récupération de la période");
-          return null;
-        }
-
-        // 2. Déterminer le groupe de la classe
-        const { data: classGroup, error: groupError } = await supabase.rpc(
-          'get_school_class_group_for_period',
-          {
-            p_period_id: periodId,
-            p_school_class: schoolClass
-          }
-        );
-
-        if (groupError) {
-          console.error("❌ Erreur lors de la détermination du groupe:", groupError);
-          toast.error("Erreur lors de la détermination du groupe");
-          return null;
-        }
-
-        console.log("✅ Groupe déterminé:", classGroup);
-
-        // 3. Récupérer la capacité selon le groupe
-        let capacity = 0;
-        if (classGroup === 'kindergarten') {
-          capacity = periodData.max_participants_kindergarten;
-        } else if (classGroup === 'primary') {
-          capacity = periodData.max_participants_primary;
-        } else if (classGroup === 'teen') {
-          capacity = periodData.max_participants_teen;
-        }
-
-        console.log("📦 Capacité pour le groupe", classGroup, ":", capacity);
-
-        // 4. Utiliser la fonction RPC pour compter les réservations du même groupe
+        // Utiliser directement la fonction RPC qui gère correctement le typage et la logique
         const { data: availableSpots, error: spotsError } = await supabase.rpc(
           'check_holiday_spots_available',
           {
@@ -79,12 +37,11 @@ export const useHolidaySpots = (periodId: string, date: Date, schoolClass: strin
           return null;
         }
 
-        console.log("🎯 Calcul final via RPC:", {
-          groupe: classGroup,
-          capacite: capacity,
+        console.log("🎯 Places restantes calculées via RPC:", {
+          classeEnfant: schoolClass,
           placesRestantes: availableSpots,
           date: dateStr,
-          classeEnfant: schoolClass
+          periodId
         });
 
         return availableSpots;

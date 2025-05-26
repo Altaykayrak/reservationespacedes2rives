@@ -3,7 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format } from "date-fns";
-import { HolidaySpotsBadge } from "@/components/reservations/HolidaySpotsBadge";
+import { SpotsBadge } from "./SpotsBadge";
 import { useMemo } from "react";
 
 interface DateOption {
@@ -115,12 +115,15 @@ export const WorkdayDateSelector = ({
                 isTeenClass={false}
                 periodId={periodId}
                 childSchoolClass={childInfo?.school_class || ""}
-                isDisabled={false} // We'll handle this in HolidaySpotsBadge
+                isDisabled={false}
               />
-              <HolidaySpotsBadge
+              <SpotsBadge
+                availableSpots={null}
+                isFull={false}
+                schoolClass={childInfo?.school_class || ""}
+                isLoading={false}
                 periodId={periodId}
-                date={dateStr}
-                childSchoolClass={childInfo?.school_class || ""}
+                date={date}
               />
             </div>
           );

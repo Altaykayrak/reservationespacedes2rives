@@ -2,12 +2,9 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DateItem } from "./DateItem";
 import { useHolidayPeriodContext } from "./HolidayPeriodContext";
-import { format, isSameDay, isWeekend } from "date-fns";
-import { fr } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { format, isWeekend } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { HolidaySpotsBadge } from "@/components/reservations/HolidaySpotsBadge";
+import { SpotsBadge } from "./SpotsBadge";
 
 interface DateOption {
   date: Date;
@@ -30,7 +27,7 @@ export const TeenClassDateSelector = ({
   isDateAlreadyReserved,
   periodId
 }: TeenClassDateSelectorProps) => {
-  const { holidayPeriod, childInfo, isTeenClass } = useHolidayPeriodContext();
+  const { holidayPeriod, childInfo } = useHolidayPeriodContext();
 
   // Générer toutes les dates de la période
   const generateDatesForPeriod = () => {
@@ -90,53 +87,6 @@ export const TeenClassDateSelector = ({
     })
   );
 
-  // Récupérer les informations de disponibilité pour chaque date
-  const { data: spotsInfo = {}, isLoading: isLoadingSpots } = useQuery({
-    queryKey: ["teen_holiday_spots", periodId, childInfo?.school_class],
-    queryFn: async () => {
-      if (!periodId || !childInfo?.school_class) {
-        console.log("❌ Paramètres manquants pour la requête teen spots:", { periodId, schoolClass: childInfo?.school_class });
-        return {};
-      }
-      
-      console.log("🔄 Récupération des teen spots pour la période:", periodId, "classe:", childInfo.school_class);
-      
-      const spotsByDate: Record<string, number> = {};
-      
-      // Pour chaque date de la période, récupérer le nombre de places disponibles
-      for (const date of periodDates) {
-        const dateStr = format(date, 'yyyy-MM-dd');
-        console.log(`🔍 Vérification des teen spots pour le ${dateStr}`);
-        
-        const { data, error } = await supabase.rpc(
-          'check_holiday_spots_available',
-          {
-            p_period_id: periodId,
-            p_reservation_date: dateStr,
-            p_child_school_class: childInfo.school_class
-          }
-        );
-        
-        if (error) {
-          console.error(`❌ Erreur lors de la vérification des teen spots pour ${dateStr}:`, error);
-          spotsByDate[dateStr] = 0;
-        } else {
-          console.log(`✅ Teen spots disponibles pour ${dateStr}:`, data);
-          spotsByDate[dateStr] = data;
-        }
-      }
-      
-      console.log("📊 Résumé des teen spots par date:", spotsByDate);
-      return spotsByDate;
-    },
-    enabled: !!periodId && !!childInfo?.school_class,
-    refetchOnWindowFocus: false,
-    staleTime: 30 * 1000, // 30 secondes
-    gcTime: 2 * 60 * 1000, // 2 minutes
-  });
-
-  console.log("🎯 Données teen spots dans TeenClassDateSelector:", spotsInfo);
-
   return (
     <ScrollArea className="h-[300px] pr-3">
       <div className="space-y-1">
@@ -146,12 +96,6 @@ export const TeenClassDateSelector = ({
           const isSelected = !!selectedDate;
           const isReserved = isDateAlreadyReserved(date);
           const isWeekendDay = isWeekend(date);
-          
-          // Vérifier si la date est complète (0 ou moins de places disponibles)
-          const availableSpots = spotsInfo[dateStr] ?? null;
-          const isDateFull = typeof availableSpots === 'number' && availableSpots <= 0;
-          
-          console.log(`📅 Teen date ${dateStr}: spots=${availableSpots}, isFull=${isDateFull}, isReserved=${isReserved}`);
           
           return (
             <div
@@ -174,7 +118,7 @@ export const TeenClassDateSelector = ({
                   isTeenClass={true}
                   periodId={periodId}
                   childSchoolClass={childInfo?.school_class || ""}
-                  isDisabled={isDateFull && !isReserved} // Désactiver la date si elle est complète et pas déjà réservée
+                  isDisabled={false}
                 />
                 
                 {isWeekendDay && (
@@ -184,10 +128,13 @@ export const TeenClassDateSelector = ({
                 )}
               </div>
               
-              <HolidaySpotsBadge
+              <SpotsBadge
+                availableSpots={null}
+                isFull={false}
+                schoolClass={childInfo?.school_class || ""}
+                isLoading={false}
                 periodId={periodId}
-                date={dateStr}
-                childSchoolClass={childInfo?.school_class || ""}
+                date={date}
               />
             </div>
           );

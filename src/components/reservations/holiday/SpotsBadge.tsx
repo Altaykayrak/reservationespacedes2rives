@@ -1,5 +1,6 @@
 
 import { Badge } from "@/components/ui/badge";
+import { useHolidaySpots } from "@/hooks/useHolidaySpots";
 import { useEffect, useState } from "react";
 
 interface SpotsBadgeProps {
@@ -7,6 +8,8 @@ interface SpotsBadgeProps {
   isFull: boolean;
   schoolClass?: string;
   isLoading?: boolean;
+  periodId?: string;
+  date?: Date;
 }
 
 const getSpotsBadgeColor = (spots: number | null, loading: boolean) => {
@@ -22,36 +25,53 @@ const getSpotsBadgeText = (spots: number | null, schoolClass: string = "", loadi
     return "Calcul des places...";
   }
   
-  // Si la valeur est explicitement null ou undefined (pas d'informations)
   if (spots === null || spots === undefined) {
     return "Places non disponibles";
   }
   
-  // Si spots est 0 ou négatif, le groupe est complet
   if (spots <= 0) {
     return `Groupe complet - Contactez l'accueil pour être en liste d'attente`;
   }
   
-  // Sinon, afficher le nombre de places restantes (qui est > 0)
   return `${spots} place${spots > 1 ? 's' : ''} restante${spots > 1 ? 's' : ''}`;
 };
 
-export const SpotsBadge = ({ availableSpots, isFull, schoolClass = "", isLoading = false }: SpotsBadgeProps) => {
+export const SpotsBadge = ({ 
+  availableSpots: propAvailableSpots, 
+  isFull: propIsFull, 
+  schoolClass = "", 
+  isLoading: propIsLoading = false,
+  periodId,
+  date
+}: SpotsBadgeProps) => {
   const [displayText, setDisplayText] = useState<string>("");
   const [badgeColor, setBadgeColor] = useState<string>("");
+  
+  // Si periodId et date sont fournis, utiliser le hook pour obtenir les données actualisées
+  const { availableSpots: hookAvailableSpots, isLoading: hookIsLoading } = useHolidaySpots(
+    periodId || "", 
+    date || new Date(), 
+    schoolClass
+  );
+  
+  // Utiliser les données du hook si disponibles, sinon utiliser les props
+  const availableSpots = periodId && date ? hookAvailableSpots : propAvailableSpots;
+  const isLoading = periodId && date ? hookIsLoading : propIsLoading;
   
   useEffect(() => {
     console.log("SpotsBadge rendering with:", { 
       availableSpots, 
-      isFull, 
+      isFull: propIsFull, 
       schoolClass, 
       isLoading,
+      periodId,
+      date: date?.toISOString().split('T')[0],
       valueType: availableSpots === null ? 'null' : typeof availableSpots 
     });
     
     setDisplayText(getSpotsBadgeText(availableSpots, schoolClass, isLoading));
     setBadgeColor(getSpotsBadgeColor(availableSpots, isLoading));
-  }, [availableSpots, isFull, schoolClass, isLoading]);
+  }, [availableSpots, propIsFull, schoolClass, isLoading, periodId, date]);
 
   return (
     <Badge 
