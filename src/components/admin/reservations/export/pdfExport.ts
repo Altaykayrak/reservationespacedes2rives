@@ -16,14 +16,20 @@ export const exportToPdf = (
   endDate: string
 ) => {
   const { dates, childrenByClass } = exportData;
+  
+  // Détecter automatiquement le format selon le nombre de dates
+  const useA3Format = dates.length > 10;
+  const format = useA3Format ? 'a3' : 'a4';
+  
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
-    format: 'a4'
+    format: format
   });
 
-  // Titre avec période
-  const title = `Réservations du ${startDate || "début"} au ${endDate || "fin"}`;
+  // Titre avec période et format
+  const formatText = useA3Format ? " (Format A3)" : "";
+  const title = `Réservations du ${startDate || "début"} au ${endDate || "fin"}${formatText}`;
   doc.setFontSize(16);
   doc.text(title, 14, 15);
 
@@ -125,13 +131,16 @@ export const exportToPdf = (
   // Ligne de total
   allTableData.push(globalTotals);
 
+  // Ajuster la taille de police selon le format
+  const fontSize = useA3Format ? 8 : 9;
+
   // Générer le tableau
   autoTable(doc, {
     head: [headers],
     body: allTableData,
     startY: 25,
     styles: {
-      fontSize: 9,
+      fontSize: fontSize,
       cellPadding: 2
     },
     headStyles: {
