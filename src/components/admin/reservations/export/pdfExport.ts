@@ -1,12 +1,13 @@
+
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { ExportData } from "./types";
 import { formatDate } from "./utils";
 
-// Définir les pictogrammes pour les repas
-const MEAL_PICTOGRAMS = {
-  WITH_MEAL: '🍴', // Couteau et fourchette
-  WITHOUT_MEAL: '🍴❌' // Couteau et fourchette avec croix
+// Définir les abréviations pour les repas
+const MEAL_ABBREVIATIONS = {
+  WITH_MEAL: 'AVR', // Avec Repas
+  WITHOUT_MEAL: 'SSR' // Sans Repas
 };
 
 export const exportToPdf = (
@@ -76,16 +77,16 @@ export const exportToPdf = (
         child.schoolClass
       ];
 
-      // Ajouter le statut pour chaque date avec pictogrammes
+      // Ajouter le statut pour chaque date avec abréviations
       dates.forEach(date => {
         const status = child.reservations.get(date) || "-";
         let displayStatus = status;
         
-        // Remplacer les textes par des pictogrammes
+        // Remplacer les textes par des abréviations
         if (status === "Avec repas") {
-          displayStatus = MEAL_PICTOGRAMS.WITH_MEAL;
+          displayStatus = MEAL_ABBREVIATIONS.WITH_MEAL;
         } else if (status === "Sans repas") {
-          displayStatus = MEAL_PICTOGRAMS.WITHOUT_MEAL;
+          displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
         }
         
         row.push(displayStatus);
@@ -173,10 +174,10 @@ export const exportToPdf = (
         data.cell.styles.fontStyle = 'bold';
       }
       
-      // Centrer les pictogrammes de repas
+      // Centrer les abréviations de repas
       if (data.row.section === 'body' && 
           data.column.index >= 3 &&
-          (data.cell.raw === MEAL_PICTOGRAMS.WITH_MEAL || data.cell.raw === MEAL_PICTOGRAMS.WITHOUT_MEAL)) {
+          (data.cell.raw === MEAL_ABBREVIATIONS.WITH_MEAL || data.cell.raw === MEAL_ABBREVIATIONS.WITHOUT_MEAL)) {
         data.cell.styles.halign = 'center';
       }
     }
@@ -186,8 +187,8 @@ export const exportToPdf = (
   const finalY = (doc as any).lastAutoTable.finalY || 150;
   doc.setFontSize(8);
   doc.text("Légende :", 14, finalY + 10);
-  doc.text("🍴 = Avec Repas", 14, finalY + 15);
-  doc.text("🍴❌ = Sans Repas", 14, finalY + 20);
+  doc.text("AVR = Avec Repas", 14, finalY + 15);
+  doc.text("SSR = Sans Repas", 14, finalY + 20);
 
   doc.save("reservations.pdf");
 };
