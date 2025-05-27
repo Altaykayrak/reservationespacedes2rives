@@ -1,4 +1,5 @@
 
+
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { ExportData } from "./types";
@@ -141,13 +142,17 @@ export const exportToPdf = (
     startY: 25,
     styles: {
       fontSize: fontSize,
-      cellPadding: 2
+      cellPadding: 2,
+      lineColor: [0, 0, 0], // Couleur des bordures (noir)
+      lineWidth: 0.1 // Épaisseur des bordures
     },
     headStyles: {
       fillColor: [41, 128, 185],
       textColor: 255,
       fontStyle: 'bold',
-      halign: 'center'
+      halign: 'center',
+      lineColor: [0, 0, 0], // Bordures pour les en-têtes
+      lineWidth: 0.1
     },
     columnStyles: {
       0: { fontStyle: 'bold' },
@@ -156,8 +161,14 @@ export const exportToPdf = (
     alternateRowStyles: {
       fillColor: [245, 245, 245]
     },
+    tableLineColor: [0, 0, 0], // Couleur des bordures du tableau
+    tableLineWidth: 0.1, // Épaisseur des bordures du tableau
     // Personnalisation des lignes
     didParseCell: function(data) {
+      // Ajouter des bordures à toutes les cellules
+      data.cell.styles.lineColor = [0, 0, 0];
+      data.cell.styles.lineWidth = 0.1;
+      
       // Mettre en évidence les lignes de sous-totaux
       if (data.row.raw && 
           data.row.raw[0] && 
@@ -192,3 +203,4 @@ export const exportToPdf = (
 
   doc.save("reservations.pdf");
 };
+
