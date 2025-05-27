@@ -1,5 +1,3 @@
-
-
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { ExportData } from "./types";
@@ -176,6 +174,10 @@ export const exportToPdf = (
           data.row.raw[0].includes('Sous-total')) {
         data.cell.styles.fillColor = [240, 240, 240];
         data.cell.styles.fontStyle = 'bold';
+        // Centrer les nombres dans les cellules de sous-totaux (colonnes 3 et plus)
+        if (data.column.index >= 3) {
+          data.cell.styles.halign = 'center';
+        }
       }
       
       // Mettre en évidence les lignes de totaux
@@ -183,6 +185,10 @@ export const exportToPdf = (
           data.row.raw[0] === 'TOTAL') {
         data.cell.styles.fillColor = [220, 220, 220];
         data.cell.styles.fontStyle = 'bold';
+        // Centrer les nombres dans les cellules de totaux (colonnes 3 et plus)
+        if (data.column.index >= 3) {
+          data.cell.styles.halign = 'center';
+        }
       }
       
       // Centrer les abréviations de repas
@@ -203,4 +209,3 @@ export const exportToPdf = (
 
   doc.save("reservations.pdf");
 };
-
