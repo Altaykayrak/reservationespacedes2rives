@@ -1,4 +1,3 @@
-
 import { ExportData } from "./types";
 import { MEAL_ABBREVIATIONS } from "./constants";
 
@@ -95,7 +94,7 @@ export const prepareTableData = (exportData: ExportData) => {
         child.schoolClass
       ];
 
-      // Ajouter le statut pour chaque date avec abréviations
+      // Ajouter le statut pour chaque date avec abréviations et pictogrammes
       dates.forEach(date => {
         const reservationData = child.reservations.get(date);
         let displayStatus = "-";
@@ -110,6 +109,11 @@ export const prepareTableData = (exportData: ExportData) => {
             displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
           } else {
             displayStatus = status;
+          }
+          
+          // Ajouter le pictogramme d'horloge si arrivée avant 8h30
+          if (early_dropoff) {
+            displayStatus = `⏰ ${displayStatus}`;
           }
           
           // Incrémenter les totaux pour cette date
