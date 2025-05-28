@@ -4,7 +4,7 @@ import { UserOptions } from 'jspdf-autotable';
 export const createTableStyles = (fontSize: number): UserOptions => ({
   styles: {
     fontSize: fontSize,
-    cellPadding: 2,
+    cellPadding: 1, // Réduit de 2 à 1
     lineColor: [0, 0, 0], // Couleur des bordures (noir)
     lineWidth: 0.1 // Épaisseur des bordures
   },
