@@ -48,8 +48,13 @@ export const prepareTableData = (exportData: ExportData) => {
   
   // Map pour calculer les totaux par date
   const totals = new Map<string, number>();
+  const totalsEarlyAccess = new Map<string, number>();
+  const totalsWithoutMeal = new Map<string, number>();
+  
   dates.forEach(date => {
     totals.set(date, 0);
+    totalsEarlyAccess.set(date, 0);
+    totalsWithoutMeal.set(date, 0);
   });
 
   // Trier les classes par ordre chronologique
@@ -104,9 +109,17 @@ export const prepareTableData = (exportData: ExportData) => {
         
         row.push(displayStatus);
         
-        // Incrémenter le total pour cette date si l'enfant est réservé
+        // Incrémenter les totaux pour cette date si l'enfant est réservé
         if (status !== "-") {
           totals.set(date, totals.get(date)! + 1);
+          
+          // TODO: Ajouter la logique pour détecter "Accueil avant 8h30" quand cette donnée sera disponible
+          // Pour l'instant, on compte 0 pour l'accueil matinal
+          
+          // Compter les "Sans repas"
+          if (status === "Sans repas") {
+            totalsWithoutMeal.set(date, totalsWithoutMeal.get(date)! + 1);
+          }
         }
       });
 
@@ -115,16 +128,33 @@ export const prepareTableData = (exportData: ExportData) => {
 
     // Ajouter le sous-total pour la classe
     const classTotals = [`Sous-total`, "", className];
+    const classEarlyAccess = [`Accueil avant 8h30`, "", className];
+    const classWithoutMeal = [`Sans Repas`, "", className];
+    
     dates.forEach(date => {
       let total = 0;
+      let earlyAccess = 0;
+      let withoutMeal = 0;
+      
       classData.children.forEach(child => {
-        if (child.reservations.get(date)) {
+        const status = child.reservations.get(date);
+        if (status) {
           total++;
+          // TODO: Ajouter la logique pour détecter "Accueil avant 8h30" quand cette donnée sera disponible
+          if (status === "Sans repas") {
+            withoutMeal++;
+          }
         }
       });
+      
       classTotals.push(total.toString());
+      classEarlyAccess.push(earlyAccess.toString());
+      classWithoutMeal.push(withoutMeal.toString());
     });
+    
     allTableData.push(classTotals);
+    allTableData.push(classEarlyAccess);
+    allTableData.push(classWithoutMeal);
     
     // Ligne vide entre classes
     allTableData.push([{ content: "", colSpan: dates.length + 3 }]);
@@ -132,17 +162,24 @@ export const prepareTableData = (exportData: ExportData) => {
 
   // Ajouter les totaux globaux
   const globalTotals = ["TOTAL", "", ""];
+  const globalEarlyAccess = ["Accueil avant 8h30", "", ""];
+  const globalWithoutMeal = ["Sans Repas", "", ""];
+  
   dates.forEach(date => {
     globalTotals.push(totals.get(date)!.toString());
+    globalEarlyAccess.push(totalsEarlyAccess.get(date)!.toString());
+    globalWithoutMeal.push(totalsWithoutMeal.get(date)!.toString());
   });
   
-  // Ligne de séparation avant le total
+  // Ligne de séparation avant les totaux
   allTableData.push([
     { content: "", colSpan: dates.length + 3, styles: { fillColor: [200, 200, 200] } }
   ]);
   
-  // Ligne de total
+  // Lignes de totaux
   allTableData.push(globalTotals);
+  allTableData.push(globalEarlyAccess);
+  allTableData.push(globalWithoutMeal);
 
   return allTableData;
 };

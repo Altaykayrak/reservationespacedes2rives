@@ -10,7 +10,9 @@ export const customizeCell = (data: any) => {
   if (data.row.raw && 
       data.row.raw[0] && 
       typeof data.row.raw[0] === 'string' && 
-      data.row.raw[0].includes('Sous-total')) {
+      (data.row.raw[0].includes('Sous-total') || 
+       data.row.raw[0] === 'Accueil avant 8h30' || 
+       data.row.raw[0] === 'Sans Repas')) {
     data.cell.styles.fillColor = [240, 240, 240];
     data.cell.styles.fontStyle = 'bold';
     // Centrer les nombres dans les cellules de sous-totaux (colonnes 3 et plus)
