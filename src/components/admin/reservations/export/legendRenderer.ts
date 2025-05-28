@@ -8,4 +8,5 @@ export const addLegend = (doc: jsPDF) => {
   doc.text("Légende :", 14, finalY + 10);
   doc.text("AVR = Avec Repas", 14, finalY + 15);
   doc.text("SSR = Sans Repas", 14, finalY + 20);
+  doc.text("AV8 = Arrivée avant 8h30", 14, finalY + 25);
 };

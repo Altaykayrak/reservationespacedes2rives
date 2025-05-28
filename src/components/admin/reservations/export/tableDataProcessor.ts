@@ -94,7 +94,7 @@ export const prepareTableData = (exportData: ExportData) => {
         child.schoolClass
       ];
 
-      // Ajouter le statut pour chaque date avec abréviations et pictogrammes
+      // Ajouter le statut pour chaque date avec abréviations et AV8
       dates.forEach(date => {
         const reservationData = child.reservations.get(date);
         let displayStatus = "-";
@@ -111,9 +111,9 @@ export const prepareTableData = (exportData: ExportData) => {
             displayStatus = status;
           }
           
-          // Ajouter le pictogramme d'horloge si arrivée avant 8h30
+          // Ajouter l'abréviation AV8 si arrivée avant 8h30
           if (early_dropoff) {
-            displayStatus = `⏰ ${displayStatus}`;
+            displayStatus = `AV8 ${displayStatus}`;
           }
           
           // Incrémenter les totaux pour cette date
