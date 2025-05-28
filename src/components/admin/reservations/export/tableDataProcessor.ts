@@ -97,30 +97,36 @@ export const prepareTableData = (exportData: ExportData) => {
 
       // Ajouter le statut pour chaque date avec abréviations
       dates.forEach(date => {
-        const status = child.reservations.get(date) || "-";
-        let displayStatus = status;
+        const reservationData = child.reservations.get(date);
+        let displayStatus = "-";
         
-        // Remplacer les textes par des abréviations
-        if (status === "Avec repas") {
-          displayStatus = MEAL_ABBREVIATIONS.WITH_MEAL;
-        } else if (status === "Sans repas") {
-          displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
-        }
-        
-        row.push(displayStatus);
-        
-        // Incrémenter les totaux pour cette date si l'enfant est réservé
-        if (status !== "-") {
+        if (reservationData) {
+          const { status, early_dropoff, without_meal } = reservationData;
+          
+          // Remplacer les textes par des abréviations
+          if (status === "Avec repas") {
+            displayStatus = MEAL_ABBREVIATIONS.WITH_MEAL;
+          } else if (status === "Sans repas") {
+            displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
+          } else {
+            displayStatus = status;
+          }
+          
+          // Incrémenter les totaux pour cette date
           totals.set(date, totals.get(date)! + 1);
           
-          // TODO: Ajouter la logique pour détecter "Accueil avant 8h30" quand cette donnée sera disponible
-          // Pour l'instant, on compte 0 pour l'accueil matinal
+          // Compter l'accueil matinal si early_dropoff est true
+          if (early_dropoff) {
+            totalsEarlyAccess.set(date, totalsEarlyAccess.get(date)! + 1);
+          }
           
-          // Compter les "Sans repas"
-          if (status === "Sans repas") {
+          // Compter les "Sans repas" si without_meal est true
+          if (without_meal) {
             totalsWithoutMeal.set(date, totalsWithoutMeal.get(date)! + 1);
           }
         }
+        
+        row.push(displayStatus);
       });
 
       allTableData.push(row);
@@ -137,11 +143,15 @@ export const prepareTableData = (exportData: ExportData) => {
       let withoutMeal = 0;
       
       classData.children.forEach(child => {
-        const status = child.reservations.get(date);
-        if (status) {
+        const reservationData = child.reservations.get(date);
+        if (reservationData) {
           total++;
-          // TODO: Ajouter la logique pour détecter "Accueil avant 8h30" quand cette donnée sera disponible
-          if (status === "Sans repas") {
+          // Compter l'accueil matinal si early_dropoff est true
+          if (reservationData.early_dropoff) {
+            earlyAccess++;
+          }
+          // Compter les "Sans repas" si without_meal est true
+          if (reservationData.without_meal) {
             withoutMeal++;
           }
         }
