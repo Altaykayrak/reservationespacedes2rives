@@ -1,6 +1,12 @@
 
 import { WednesdayReservationWithChild, HolidayReservationWithChild } from "@/types/reservations";
 
+export interface ReservationData {
+  status: string;
+  early_dropoff: boolean;
+  without_meal: boolean;
+}
+
 export interface ExportData {
   dates: string[];
   childrenByClass: Map<string, {
@@ -8,7 +14,7 @@ export interface ExportData {
       firstName: string;
       lastName: string;
       schoolClass: string;
-      reservations: Map<string, string>;
+      reservations: Map<string, ReservationData>;
     }[];
   }>;
 }

@@ -2,13 +2,14 @@
 import { format, parse } from "date-fns";
 import { fr } from "date-fns/locale";
 import { HolidayReservationWithChild, WednesdayReservationWithChild } from "@/types/reservations";
+import { ReservationData } from "./types";
 
 export interface ClassData {
   children: {
     firstName: string;
     lastName: string;
     schoolClass: string;
-    reservations: Map<string, string>;
+    reservations: Map<string, ReservationData>;
   }[];
 }
 
@@ -104,7 +105,7 @@ export const prepareExportData = (
   };
   
   // Fonction pour marquer la réservation d'un enfant
-  const addReservation = (child: ChildData, date: string, withoutMeal: boolean) => {
+  const addReservation = (child: ChildData, date: string, reservationData: ReservationData) => {
     const schoolClass = child.school_class;
     
     // Trouver l'enfant dans sa classe
@@ -113,9 +114,8 @@ export const prepareExportData = (
     );
     
     if (childIndex !== -1) {
-      // Mettre à jour le statut de réservation
-      const reservationType = withoutMeal ? "Sans repas" : "Avec repas";
-      childrenByClass.get(schoolClass)!.children[childIndex].reservations.set(date, reservationType);
+      // Mettre à jour les données de réservation
+      childrenByClass.get(schoolClass)!.children[childIndex].reservations.set(date, reservationData);
     }
   };
   
@@ -124,10 +124,17 @@ export const prepareExportData = (
     wednesdayReservations.forEach(reservation => {
       if (reservation.children && reservation.available_wednesdays?.date) {
         addChild(reservation.children);
+        
+        const reservationData: ReservationData = {
+          status: reservation.without_meal ? "Sans repas" : "Avec repas",
+          early_dropoff: !!reservation.early_dropoff,
+          without_meal: !!reservation.without_meal
+        };
+        
         addReservation(
           reservation.children,
           reservation.available_wednesdays.date,
-          !!reservation.without_meal
+          reservationData
         );
       }
     });
@@ -138,10 +145,17 @@ export const prepareExportData = (
     holidayReservations.forEach(reservation => {
       if (reservation.children && reservation.reservation_date) {
         addChild(reservation.children);
+        
+        const reservationData: ReservationData = {
+          status: reservation.without_meal ? "Sans repas" : "Avec repas",
+          early_dropoff: !!reservation.early_dropoff,
+          without_meal: !!reservation.without_meal
+        };
+        
         addReservation(
           reservation.children,
           reservation.reservation_date,
-          !!reservation.without_meal
+          reservationData
         );
       }
     });
