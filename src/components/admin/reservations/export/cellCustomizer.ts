@@ -32,10 +32,14 @@ export const customizeCell = (data: any) => {
     }
   }
   
-  // Centrer les abréviations de repas
-  if (data.row.section === 'body' && 
-      data.column.index >= 3 &&
-      (data.cell.raw === MEAL_ABBREVIATIONS.WITH_MEAL || data.cell.raw === MEAL_ABBREVIATIONS.WITHOUT_MEAL)) {
-    data.cell.styles.halign = 'center';
+  // Centrer toutes les abréviations (AR, SR) et les combinaisons avec AM
+  if (data.row.section === 'body' && data.column.index >= 3) {
+    const cellValue = data.cell.raw;
+    if (cellValue === MEAL_ABBREVIATIONS.WITH_MEAL || 
+        cellValue === MEAL_ABBREVIATIONS.WITHOUT_MEAL ||
+        (typeof cellValue === 'string' && 
+         (cellValue.includes('AM ') || cellValue === 'AM'))) {
+      data.cell.styles.halign = 'center';
+    }
   }
 };
