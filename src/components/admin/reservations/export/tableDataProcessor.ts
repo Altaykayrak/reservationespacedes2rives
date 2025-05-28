@@ -104,11 +104,12 @@ export const prepareTableData = (exportData: ExportData) => {
         if (reservationData) {
           const { status, early_dropoff, without_meal } = reservationData;
           
-          // Vérifier si c'est un adolescent
+          // Vérifier si c'est un adolescent ou CM2
           const isTeenClass = schoolClassToFrontendCategory(child.schoolClass) === 'adolescent';
+          const isCM2Class = child.schoolClass.trim().toUpperCase() === 'CM2';
           
-          // Pour les adolescents, c'est systématiquement SR
-          if (isTeenClass) {
+          // Pour les adolescents et CM2, c'est systématiquement SR
+          if (isTeenClass || isCM2Class) {
             displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
           } else {
             // Pour les autres classes, utiliser la logique normale
@@ -134,8 +135,8 @@ export const prepareTableData = (exportData: ExportData) => {
             totalsEarlyAccess.set(date, totalsEarlyAccess.get(date)! + 1);
           }
           
-          // Compter les "Sans repas" si without_meal est true OU si c'est un adolescent
-          if (without_meal || isTeenClass) {
+          // Compter les "Sans repas" si without_meal est true OU si c'est un adolescent OU si c'est CM2
+          if (without_meal || isTeenClass || isCM2Class) {
             totalsWithoutMeal.set(date, totalsWithoutMeal.get(date)! + 1);
           }
         }
@@ -164,9 +165,10 @@ export const prepareTableData = (exportData: ExportData) => {
           if (reservationData.early_dropoff) {
             earlyAccess++;
           }
-          // Compter les "Sans repas" si without_meal est true OU si c'est un adolescent
+          // Compter les "Sans repas" si without_meal est true OU si c'est un adolescent OU si c'est CM2
           const isTeenClass = schoolClassToFrontendCategory(child.schoolClass) === 'adolescent';
-          if (reservationData.without_meal || isTeenClass) {
+          const isCM2Class = child.schoolClass.trim().toUpperCase() === 'CM2';
+          if (reservationData.without_meal || isTeenClass || isCM2Class) {
             withoutMeal++;
           }
         }
