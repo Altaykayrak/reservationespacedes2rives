@@ -1,8 +1,8 @@
 
 // Définir les abréviations pour les repas
 export const MEAL_ABBREVIATIONS = {
-  WITH_MEAL: 'AVR', // Avec Repas
-  WITHOUT_MEAL: 'SSR' // Sans Repas
+  WITH_MEAL: 'AR', // Avec Repas
+  WITHOUT_MEAL: 'SR' // Sans Repas
 } as const;
 
 // Configuration des formats PDF

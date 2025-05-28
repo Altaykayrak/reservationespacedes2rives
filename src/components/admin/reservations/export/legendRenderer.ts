@@ -6,7 +6,7 @@ export const addLegend = (doc: jsPDF) => {
   const finalY = (doc as any).lastAutoTable.finalY || 150;
   doc.setFontSize(8);
   doc.text("Légende :", 14, finalY + 10);
-  doc.text("AVR = Avec Repas", 14, finalY + 15);
-  doc.text("SSR = Sans Repas", 14, finalY + 20);
-  doc.text("AV8 = Arrivée avant 8h30", 14, finalY + 25);
+  doc.text("AR = Avec Repas", 14, finalY + 15);
+  doc.text("SR = Sans Repas", 14, finalY + 20);
+  doc.text("AM = Arrivée Matinale", 14, finalY + 25);
 };
