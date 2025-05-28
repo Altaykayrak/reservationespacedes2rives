@@ -1,5 +1,7 @@
+
 import { ExportData } from "./types";
 import { MEAL_ABBREVIATIONS } from "./constants";
+import { schoolClassToFrontendCategory } from "@/utils/categoryTranslationUtils";
 
 // Fonction pour définir l'ordre chronologique des classes
 const getClassOrder = (className: string): number => {
@@ -102,13 +104,21 @@ export const prepareTableData = (exportData: ExportData) => {
         if (reservationData) {
           const { status, early_dropoff, without_meal } = reservationData;
           
-          // Remplacer les textes par des abréviations
-          if (status === "Avec repas") {
-            displayStatus = MEAL_ABBREVIATIONS.WITH_MEAL;
-          } else if (status === "Sans repas") {
+          // Vérifier si c'est un adolescent
+          const isTeenClass = schoolClassToFrontendCategory(child.schoolClass) === 'adolescent';
+          
+          // Pour les adolescents, c'est systématiquement SR
+          if (isTeenClass) {
             displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
           } else {
-            displayStatus = status;
+            // Pour les autres classes, utiliser la logique normale
+            if (status === "Avec repas") {
+              displayStatus = MEAL_ABBREVIATIONS.WITH_MEAL;
+            } else if (status === "Sans repas") {
+              displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
+            } else {
+              displayStatus = status;
+            }
           }
           
           // Ajouter l'abréviation AM si arrivée avant 8h30
@@ -124,8 +134,8 @@ export const prepareTableData = (exportData: ExportData) => {
             totalsEarlyAccess.set(date, totalsEarlyAccess.get(date)! + 1);
           }
           
-          // Compter les "Sans repas" si without_meal est true
-          if (without_meal) {
+          // Compter les "Sans repas" si without_meal est true OU si c'est un adolescent
+          if (without_meal || isTeenClass) {
             totalsWithoutMeal.set(date, totalsWithoutMeal.get(date)! + 1);
           }
         }
@@ -154,8 +164,9 @@ export const prepareTableData = (exportData: ExportData) => {
           if (reservationData.early_dropoff) {
             earlyAccess++;
           }
-          // Compter les "Sans repas" si without_meal est true
-          if (reservationData.without_meal) {
+          // Compter les "Sans repas" si without_meal est true OU si c'est un adolescent
+          const isTeenClass = schoolClassToFrontendCategory(child.schoolClass) === 'adolescent';
+          if (reservationData.without_meal || isTeenClass) {
             withoutMeal++;
           }
         }
