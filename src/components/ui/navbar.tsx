@@ -1,4 +1,3 @@
-
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -7,7 +6,6 @@ import { LogOut, Home, User, Baby, Calendar, Palmtree, Users, FileText, Euro, Ca
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
-import { Logo } from "./nav/Logo";
 import { MobileNav } from "./nav/MobileNav";
 import { DesktopNav } from "./nav/DesktopNav";
 
@@ -77,7 +75,6 @@ const Navbar = () => {
   
   return <div className="border-b bg-background sticky top-0 z-50">
       <div className="flex h-16 items-center px-4">
-        <Logo />
         <div className="ml-auto flex items-center space-x-4">
           <DesktopNav {...navProps} />
           <MobileNav {...navProps} />
