@@ -87,6 +87,15 @@ export const ChildSelector = ({
     }) : children;
   }, [children, isHolidayReservation, isCM2TeenPeriod, periodInfo?.name, getClassCategorySync, periodId]);
 
+  // Trier les enfants par ordre alphabétique du nom de famille
+  const sortedChildren = useMemo(() => {
+    if (!filteredChildren) return [];
+    
+    return [...filteredChildren].sort((a, b) => {
+      return a.last_name.localeCompare(b.last_name, 'fr', { sensitivity: 'base' });
+    });
+  }, [filteredChildren]);
+
   // Réinitialiser les dates lorsqu'un nouvel enfant est sélectionné
   useEffect(() => {
     if (selectedChild && setSelectedDates) {
@@ -118,16 +127,16 @@ export const ChildSelector = ({
 
   // Si l'enfant sélectionné n'est plus dans la liste filtrée, le désélectionner
   useEffect(() => {
-    if (selectedChild && filteredChildren) {
-      const isChildInFilteredList = filteredChildren.some(child => child.id === selectedChild);
+    if (selectedChild && sortedChildren) {
+      const isChildInFilteredList = sortedChildren.some(child => child.id === selectedChild);
       if (!isChildInFilteredList) {
         console.log(`L'enfant sélectionné n'est plus dans la liste filtrée - désélection`);
         setSelectedChild("");
       }
     }
-  }, [filteredChildren, selectedChild, setSelectedChild]);
+  }, [sortedChildren, selectedChild, setSelectedChild]);
 
-  if (!filteredChildren || filteredChildren.length === 0) {
+  if (!sortedChildren || sortedChildren.length === 0) {
     return (
       <Alert>
         <Info className="h-4 w-4" />
@@ -158,7 +167,7 @@ export const ChildSelector = ({
             <SelectValue placeholder="Sélectionner un enfant" />
           </SelectTrigger>
           <SelectContent>
-            {filteredChildren.map((child) => (
+            {sortedChildren.map((child) => (
               <SelectItem key={child.id} value={child.id}>
                 {child.first_name} {child.last_name} - {child.school_class}
               </SelectItem>
