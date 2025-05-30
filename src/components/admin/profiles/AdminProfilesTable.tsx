@@ -35,7 +35,6 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
             <TableHead>Fermé</TableHead>
             <TableHead>Accès RDV masqué</TableHead>
             <TableHead>Accès Mercredis masqué</TableHead>
-            <TableHead>CGU acceptées</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,11 +72,6 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
                   checked={profile.hide_wednesday_access || false}
                   onCheckedChange={() => handleWednesdayAccessChange(profile.id, profile.hide_wednesday_access || false)}
                 />
-              </TableCell>
-              <TableCell>
-                <Badge variant={profile.accepted_cgu ? "default" : "destructive"}>
-                  {profile.accepted_cgu ? "Oui" : "Non"}
-                </Badge>
               </TableCell>
             </TableRow>
           ))}
