@@ -5,6 +5,7 @@ import { exportToPdf } from "./export/pdfExport";
 import { exportToExcel } from "./export/excelExport";
 import { prepareExportData } from "./export/utils";
 import { ExportButtonsProps } from "./export/types";
+import { ExcelFilterDialog } from "./export/ExcelFilterDialog";
 
 export const ExportButtons = ({
   wednesdayReservations,
@@ -12,13 +13,13 @@ export const ExportButtons = ({
   startDate,
   endDate
 }: ExportButtonsProps) => {
+  const exportData = prepareExportData(wednesdayReservations, holidayReservations);
+
   const handlePdfExport = () => {
-    const exportData = prepareExportData(wednesdayReservations, holidayReservations);
     exportToPdf(exportData, startDate, endDate);
   };
 
   const handleExcelExport = () => {
-    const exportData = prepareExportData(wednesdayReservations, holidayReservations);
     exportToExcel(exportData);
   };
 
@@ -40,6 +41,7 @@ export const ExportButtons = ({
         <FileSpreadsheet className="h-4 w-4" />
         Export Excel
       </Button>
+      <ExcelFilterDialog exportData={exportData} />
     </div>
   );
 };
