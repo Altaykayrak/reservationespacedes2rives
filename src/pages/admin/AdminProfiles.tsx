@@ -34,7 +34,7 @@ const AdminProfiles = () => {
 
   return (
     <div className="container mx-auto py-10">
-      {/* Always show GlobalMenuSettings, but it adapts based on selectedProfile */}
+      {/* Paramètres de visibilité - s'affiche une seule fois */}
       <GlobalMenuSettings profile={selectedProfile} />
       
       <AdminProfilesActions
