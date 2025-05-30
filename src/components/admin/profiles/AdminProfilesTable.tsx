@@ -1,18 +1,15 @@
 
-import React from "react";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { ProfileData } from "@/types/profile";
 
 interface AdminProfilesTableProps {
   profiles: ProfileData[];
-  handleAutomaticPaymentChange: (id: string, automatic_payment: boolean) => Promise<void>;
-  handleWaitingChange: (id: string, is_waiting: boolean) => Promise<void>;
-  handleClosedChange: (id: string, is_closed: boolean) => Promise<void>;
-  onSelectProfile: (profile: ProfileData | null) => void;
-  selectedProfile: ProfileData | null;
+  handleAutomaticPaymentChange: (id: string, current: boolean) => void;
+  handleWaitingChange: (id: string, current: boolean) => void;
+  handleClosedChange: (id: string, current: boolean) => void;
 }
 
 export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
@@ -20,66 +17,54 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
   handleAutomaticPaymentChange,
   handleWaitingChange,
   handleClosedChange,
-  onSelectProfile,
-  selectedProfile,
 }) => {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nom</TableHead>
-          <TableHead>Prénom</TableHead>
-          <TableHead>Prélèvement automatique</TableHead>
-          <TableHead>En attente</TableHead>
-          <TableHead>Fermé</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {profiles.map((profile) => (
-          <TableRow 
-            key={profile.id}
-            className={selectedProfile?.id === profile.id ? "bg-muted" : ""}
-          >
-            <TableCell>{profile.last_name}</TableCell>
-            <TableCell>{profile.first_name}</TableCell>
-            <TableCell>
-              <Switch
-                checked={profile.automatic_payment}
-                onCheckedChange={() => handleAutomaticPaymentChange(profile.id, profile.automatic_payment)}
-              />
-            </TableCell>
-            <TableCell>
-              <Switch
-                checked={profile.is_waiting}
-                onCheckedChange={() => handleWaitingChange(profile.id, profile.is_waiting)}
-              />
-            </TableCell>
-            <TableCell>
-              <Switch
-                checked={profile.is_closed}
-                onCheckedChange={() => handleClosedChange(profile.id, profile.is_closed)}
-              />
-            </TableCell>
-            <TableCell>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => {
-                  if (selectedProfile?.id === profile.id) {
-                    onSelectProfile(null);
-                  } else {
-                    onSelectProfile(profile);
-                  }
-                }}
-                className={selectedProfile?.id === profile.id ? "bg-primary text-primary-foreground" : ""}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </TableCell>
+    <div className="mt-6">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nom</TableHead>
+            <TableHead>Prénom</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Paiement automatique</TableHead>
+            <TableHead>En attente</TableHead>
+            <TableHead>Fermé</TableHead>
+            <TableHead>CGU acceptées</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {profiles.map((profile) => (
+            <TableRow key={profile.id}>
+              <TableCell className="font-medium">{profile.last_name}</TableCell>
+              <TableCell>{profile.first_name}</TableCell>
+              <TableCell>{profile.email}</TableCell>
+              <TableCell>
+                <Switch
+                  checked={profile.automatic_payment}
+                  onCheckedChange={() => handleAutomaticPaymentChange(profile.id, profile.automatic_payment)}
+                />
+              </TableCell>
+              <TableCell>
+                <Switch
+                  checked={profile.is_waiting || false}
+                  onCheckedChange={() => handleWaitingChange(profile.id, profile.is_waiting || false)}
+                />
+              </TableCell>
+              <TableCell>
+                <Switch
+                  checked={profile.is_closed || false}
+                  onCheckedChange={() => handleClosedChange(profile.id, profile.is_closed || false)}
+                />
+              </TableCell>
+              <TableCell>
+                <Badge variant={profile.accepted_cgu ? "default" : "destructive"}>
+                  {profile.accepted_cgu ? "Oui" : "Non"}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };

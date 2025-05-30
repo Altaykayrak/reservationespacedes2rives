@@ -1,16 +1,15 @@
+
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
 import { Logo } from "./nav/Logo";
 import { MobileNav } from "./nav/MobileNav";
 import { DesktopNav } from "./nav/DesktopNav";
-import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 
 const Navbar = () => {
   const {
@@ -18,11 +17,6 @@ const Navbar = () => {
     signOut
   } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [profileData, setProfileData] = useState<{
-    first_name: string | null;
-    last_name: string | null;
-  } | null>(null);
-  const { settings, loading: settingsLoading } = useGlobalSettings();
 
   useEffect(() => {
     setIsAuthenticated(!!user);
@@ -32,8 +26,8 @@ const Navbar = () => {
     await signOut();
   };
 
-  // Base menu items
-  let baseMenuItems: NavItem[] = [{
+  // Menu items without filtering
+  const menuItems: NavItem[] = [{
     label: "Accueil",
     href: "/"
   }, {
@@ -42,18 +36,10 @@ const Navbar = () => {
   }, {
     label: "Mes enfants",
     href: "/children"
-  }];
-  
-  // Add Wednesday reservations if not hidden for this user
-  if (!settingsLoading && !settings.hide_wednesday_reservations) {
-    baseMenuItems.push({
-      label: "Mercredis",
-      href: "/wednesday-reservations"
-    });
-  }
-  
-  // Add other regular items
-  const additionalMenuItems: NavItem[] = [{
+  }, {
+    label: "Mercredis",
+    href: "/wednesday-reservations"
+  }, {
     label: "Vacances",
     href: "/holiday-reservations"
   }, {
@@ -62,28 +48,16 @@ const Navbar = () => {
   }, {
     label: "Programme vacances",
     href: "/holiday-program"
-  }];
-  
-  baseMenuItems = [...baseMenuItems, ...additionalMenuItems];
-  
-  // Add RDV if not hidden for this user
-  if (!settingsLoading && !settings.hide_rdv_page) {
-    baseMenuItems.push({
-      label: "Inscription 2025-2026",
-      href: "/rdv"
-    });
-  }
-  
-  // Add remaining items
-  const finalMenuItems: NavItem[] = [...baseMenuItems, {
+  }, {
+    label: "Inscription 2025-2026",
+    href: "/rdv"
+  }, {
     label: "Règlement",
     href: "/terms-of-operation"
   }, {
     label: "Tarifs",
     href: "/prices"
   }];
-  
-  const menuItems = finalMenuItems;
   
   const navProps: NavProps = {
     menuItems: menuItems,

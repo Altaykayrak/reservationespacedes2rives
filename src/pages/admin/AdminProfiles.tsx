@@ -6,10 +6,8 @@ import { AdminProfilesFilters } from "@/components/admin/profiles/AdminProfilesF
 import { AdminProfilesActions } from "@/components/admin/profiles/AdminProfilesActions";
 import { AdminProfilesTable } from "@/components/admin/profiles/AdminProfilesTable";
 import { AdminProfilesStatus } from "@/components/admin/profiles/AdminProfilesStatus";
-import { GlobalMenuSettings } from "@/components/admin/profiles/GlobalMenuSettings";
 
 const AdminProfiles = () => {
-  const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const {
     profiles,
     loading,
@@ -34,8 +32,6 @@ const AdminProfiles = () => {
 
   return (
     <div className="container mx-auto py-10 space-y-6">
-      <GlobalMenuSettings profile={selectedProfile} />
-      
       <AdminProfilesActions
         profiles={profiles}
         bulkActionLoading={bulkActionLoading}
@@ -69,8 +65,6 @@ const AdminProfiles = () => {
               handleAutomaticPaymentChange={handleAutomaticPaymentChange}
               handleWaitingChange={handleWaitingChange}
               handleClosedChange={handleClosedChange}
-              onSelectProfile={setSelectedProfile}
-              selectedProfile={selectedProfile}
             />
           )}
         </CardContent>
