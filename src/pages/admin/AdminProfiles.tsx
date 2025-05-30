@@ -34,9 +34,8 @@ const AdminProfiles = () => {
 
   return (
     <div className="container mx-auto py-10">
-      {selectedProfile && (
-        <GlobalMenuSettings profile={selectedProfile} />
-      )}
+      {/* Always show GlobalMenuSettings, but it adapts based on selectedProfile */}
+      <GlobalMenuSettings profile={selectedProfile} />
       
       <AdminProfilesActions
         profiles={profiles}

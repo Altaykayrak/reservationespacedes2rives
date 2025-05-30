@@ -117,10 +117,12 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="text-lg">Paramètres de visibilité des menus</CardTitle>
+        <CardTitle className="text-lg">
+          {profile ? `Paramètres de visibilité pour ${profile.first_name} ${profile.last_name}` : "Paramètres globaux de visibilité"}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Paramètres globaux */}
+        {/* Paramètres globaux - toujours affichés */}
         <div>
           <h3 className="text-base font-medium mb-4">Paramètres globaux (valeurs par défaut)</h3>
           <div className="space-y-4">
@@ -157,7 +159,7 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-medium">
-                  Paramètres pour {profile.first_name} {profile.last_name}
+                  Paramètres individuels
                 </h3>
                 <Button variant="outline" size="sm" onClick={resetUserSettings}>
                   Réinitialiser
