@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -25,6 +24,9 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
     hide_rdv_page: false
   });
   const [loading, setLoading] = useState(true);
+
+  // Ajouter un console.log pour débugger
+  console.log("[GlobalMenuSettings] Rendu du composant avec profile:", profile?.id || "aucun");
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -122,6 +124,11 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* DEBUG: Afficher un indicateur unique */}
+        <div className="text-xs text-gray-500 border p-2 rounded">
+          DEBUG: Composant GlobalMenuSettings #{Math.random().toString(36).substr(2, 9)}
+        </div>
+
         {/* Paramètres globaux - toujours affichés */}
         <div>
           <h3 className="text-base font-medium mb-4">Paramètres globaux (valeurs par défaut)</h3>
