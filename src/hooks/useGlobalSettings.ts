@@ -55,11 +55,12 @@ export const useGlobalSettings = () => {
             setError(userError);
             toast.error("Erreur lors du chargement des paramètres utilisateur");
           } else if (userSettings) {
-            // Combiner les paramètres globaux et utilisateur
-            // Si l'un des deux est true, le paramètre est activé (la page est masquée)
+            // NOUVELLE LOGIQUE : Les paramètres utilisateur priment sur les paramètres globaux
+            // Si l'utilisateur a explicitement défini un paramètre, on l'utilise
+            // Sinon, on utilise le paramètre global
             finalSettings = {
-              hide_wednesday_reservations: globalSettings?.hide_wednesday_reservations || userSettings.hide_wednesday_reservations,
-              hide_rdv_page: globalSettings?.hide_rdv_page || userSettings.hide_rdv_page
+              hide_wednesday_reservations: userSettings.hide_wednesday_reservations,
+              hide_rdv_page: userSettings.hide_rdv_page
             };
           }
           // Si pas de userSettings trouvé, utiliser uniquement les paramètres globaux

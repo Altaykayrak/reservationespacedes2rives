@@ -122,12 +122,12 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
       <CardContent className="space-y-6">
         {/* Paramètres globaux */}
         <div>
-          <h3 className="text-base font-medium mb-4">Paramètres globaux (tous les utilisateurs)</h3>
+          <h3 className="text-base font-medium mb-4">Paramètres globaux (valeurs par défaut)</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="global-wednesday" className="flex flex-col space-y-1">
                 <span>Masquer les réservations du mercredi</span>
-                <span className="text-sm text-muted-foreground">Cache la page pour tous les utilisateurs</span>
+                <span className="text-sm text-muted-foreground">Valeur par défaut pour tous les utilisateurs</span>
               </Label>
               <Switch 
                 id="global-wednesday"
@@ -138,7 +138,7 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
             <div className="flex items-center justify-between">
               <Label htmlFor="global-rdv" className="flex flex-col space-y-1">
                 <span>Masquer la page RDV</span>
-                <span className="text-sm text-muted-foreground">Cache la page pour tous les utilisateurs</span>
+                <span className="text-sm text-muted-foreground">Valeur par défaut pour tous les utilisateurs</span>
               </Label>
               <Switch 
                 id="global-rdv"
@@ -168,7 +168,7 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
                 <div className="flex items-center justify-between">
                   <Label htmlFor="user-wednesday" className="flex flex-col space-y-1">
                     <span>Masquer les réservations du mercredi</span>
-                    <span className="text-sm text-muted-foreground">Cache la page pour cet utilisateur uniquement</span>
+                    <span className="text-sm text-muted-foreground">Surcharge le paramètre global pour cet utilisateur</span>
                   </Label>
                   <Switch 
                     id="user-wednesday"
@@ -179,7 +179,7 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
                 <div className="flex items-center justify-between">
                   <Label htmlFor="user-rdv" className="flex flex-col space-y-1">
                     <span>Masquer la page RDV</span>
-                    <span className="text-sm text-muted-foreground">Cache la page pour cet utilisateur uniquement</span>
+                    <span className="text-sm text-muted-foreground">Surcharge le paramètre global pour cet utilisateur</span>
                   </Label>
                   <Switch 
                     id="user-rdv"
@@ -190,7 +190,9 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
               </div>
               
               <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                <strong>Note :</strong> Si un paramètre global est activé, il s'applique même si le paramètre utilisateur est désactivé.
+                <strong>Nouvelle logique :</strong> Les paramètres individuels priment sur les paramètres globaux. 
+                Un utilisateur peut donc accéder à une page même si elle est masquée globalement, 
+                si son paramètre individuel l'autorise.
               </div>
             </div>
           </>
