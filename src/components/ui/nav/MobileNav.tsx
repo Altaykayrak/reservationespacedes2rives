@@ -40,7 +40,7 @@ export function MobileNav({
                 key={item.href} 
                 to={item.href} 
                 className={cn(
-                  "text-base font-medium px-4 py-2 rounded-lg transition-all",
+                  "text-base font-medium px-4 py-2 rounded-lg transition-all flex items-center gap-3",
                   "bg-white shadow hover:shadow-md transform hover:-translate-y-0.5",
                   "border border-gray-100 hover:border-gray-200",
                   location.pathname === item.href
@@ -48,6 +48,7 @@ export function MobileNav({
                     : "text-gray-700 hover:text-indigo-600"
                 )}
               >
+                {item.icon && <item.icon className="h-4 w-4" />}
                 {item.label}
               </Link>
             ))}

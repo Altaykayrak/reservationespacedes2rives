@@ -22,13 +22,14 @@ export function DesktopNav({ menuItems, isAuthenticated, onLogout }: DesktopNavP
           key={item.href}
           to={item.href}
           className={cn(
-            "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+            "px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2",
             "hover:shadow transform hover:-translate-y-0.5",
             location.pathname === item.href
               ? "bg-indigo-600 text-white shadow-md"
               : "text-gray-700 hover:text-indigo-600 hover:bg-white hover:bg-opacity-90"
           )}
         >
+          {item.icon && <item.icon className="h-4 w-4" />}
           {item.label}
         </Link>
       ))}

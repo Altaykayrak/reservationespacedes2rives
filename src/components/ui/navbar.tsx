@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut } from "lucide-react";
+import { LogOut, Home, User, Baby, Calendar, Palmtree, Users, FileText, Euro, CalendarDays } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { NavItem, NavProps } from "./nav/types";
@@ -26,37 +26,47 @@ const Navbar = () => {
     await signOut();
   };
 
-  // Menu items without filtering
+  // Menu items with icons
   const menuItems: NavItem[] = [{
     label: "Accueil",
-    href: "/"
+    href: "/",
+    icon: Home
   }, {
     label: "Profil",
-    href: "/profile"
+    href: "/profile",
+    icon: User
   }, {
     label: "Mes enfants",
-    href: "/children"
+    href: "/children",
+    icon: Baby
   }, {
     label: "Mercredis",
-    href: "/wednesday-reservations"
+    href: "/wednesday-reservations",
+    icon: Calendar
   }, {
     label: "Vacances",
-    href: "/holiday-reservations"
+    href: "/holiday-reservations",
+    icon: Palmtree
   }, {
     label: "Club Ado",
-    href: "/teenholiday-reservations"
+    href: "/teenholiday-reservations",
+    icon: Users
   }, {
     label: "Programme vacances",
-    href: "/holiday-program"
+    href: "/holiday-program",
+    icon: FileText
   }, {
     label: "Inscription 2025-2026",
-    href: "/rdv"
+    href: "/rdv",
+    icon: CalendarDays
   }, {
     label: "Règlement",
-    href: "/terms-of-operation"
+    href: "/terms-of-operation",
+    icon: FileText
   }, {
     label: "Tarifs",
-    href: "/prices"
+    href: "/prices",
+    icon: Euro
   }];
   
   const navProps: NavProps = {
@@ -153,9 +163,12 @@ const ProfileDropdown = ({
           </div>
           
           <div className="grid gap-2">
-            {menuItems.map(item => <Link key={item.label} to={item.href} className="text-sm font-medium transition-colors hover:text-primary">
+            {menuItems.map(item => (
+              <Link key={item.label} to={item.href} className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary">
+                {item.icon && <item.icon className="h-4 w-4" />}
                 {item.label}
-              </Link>)}
+              </Link>
+            ))}
           </div>
           
           <Link to="/profile">
