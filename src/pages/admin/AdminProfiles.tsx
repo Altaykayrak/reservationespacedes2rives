@@ -33,8 +33,7 @@ const AdminProfiles = () => {
   } = useAdminProfiles();
 
   return (
-    <div className="container mx-auto py-10">
-      {/* Paramètres de visibilité - s'affiche une seule fois */}
+    <div className="container mx-auto py-10 space-y-6">
       <GlobalMenuSettings profile={selectedProfile} />
       
       <AdminProfilesActions
@@ -65,16 +64,14 @@ const AdminProfiles = () => {
           <AdminProfilesStatus loading={loading} error={error} />
 
           {!loading && !error && (
-            <>
-              <AdminProfilesTable
-                profiles={profiles}
-                handleAutomaticPaymentChange={handleAutomaticPaymentChange}
-                handleWaitingChange={handleWaitingChange}
-                handleClosedChange={handleClosedChange}
-                onSelectProfile={setSelectedProfile}
-                selectedProfile={selectedProfile}
-              />
-            </>
+            <AdminProfilesTable
+              profiles={profiles}
+              handleAutomaticPaymentChange={handleAutomaticPaymentChange}
+              handleWaitingChange={handleWaitingChange}
+              handleClosedChange={handleClosedChange}
+              onSelectProfile={setSelectedProfile}
+              selectedProfile={selectedProfile}
+            />
           )}
         </CardContent>
       </Card>
