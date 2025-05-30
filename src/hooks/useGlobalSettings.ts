@@ -20,13 +20,14 @@ export const useGlobalSettings = () => {
     const fetchSettings = async () => {
       try {
         setLoading(true);
+        
         // Récupérer d'abord les paramètres globaux
         const { data: globalSettings, error: globalError } = await supabase
           .from("global_settings")
           .select("hide_wednesday_reservations, hide_rdv_page")
           .single();
           
-        if (globalError && globalError.code !== "PGRST116") { // PGRST116 est "no rows returned"
+        if (globalError && globalError.code !== "PGRST116") {
           console.error("Erreur lors du chargement des paramètres globaux:", globalError);
           setError(globalError);
           toast.error("Erreur lors du chargement des paramètres globaux");
@@ -49,7 +50,7 @@ export const useGlobalSettings = () => {
             .eq("user_id", session.user.id)
             .single();
 
-          if (userError && userError.code !== "PGRST116") { // PGRST116 est "no rows returned"
+          if (userError && userError.code !== "PGRST116") {
             console.error("Erreur lors du chargement des paramètres utilisateur:", userError);
             setError(userError);
             toast.error("Erreur lors du chargement des paramètres utilisateur");
@@ -61,6 +62,8 @@ export const useGlobalSettings = () => {
               hide_rdv_page: globalSettings?.hide_rdv_page || userSettings.hide_rdv_page
             };
           }
+          // Si pas de userSettings trouvé, utiliser uniquement les paramètres globaux
+          // (ce qui ne devrait plus arriver grâce au trigger, mais on garde la sécurité)
         }
         
         setSettings(finalSettings);
@@ -80,13 +83,17 @@ export const useGlobalSettings = () => {
 
   const updateSettings = async (userId: string, newSettings: Partial<GlobalSettings>) => {
     try {
-      const { error } = await supabase
+      // S'assurer qu'une entrée user_settings existe pour cet utilisateur
+      const { error: upsertError } = await supabase
         .from("user_settings")
-        .update(newSettings)
-        .eq("user_id", userId);
+        .upsert({
+          user_id: userId,
+          hide_wednesday_reservations: newSettings.hide_wednesday_reservations ?? false,
+          hide_rdv_page: newSettings.hide_rdv_page ?? false
+        });
 
-      if (error) {
-        console.error("Error updating user settings:", error);
+      if (upsertError) {
+        console.error("Error upserting user settings:", upsertError);
         toast.error("Erreur lors de la mise à jour des paramètres utilisateur");
         return false;
       }
@@ -104,9 +111,14 @@ export const useGlobalSettings = () => {
 
   const updateGlobalSettings = async (newSettings: Partial<GlobalSettings>) => {
     try {
+      // S'assurer qu'une entrée global_settings existe
       const { error } = await supabase
         .from("global_settings")
-        .update(newSettings);
+        .upsert({
+          id: "default", // Utiliser un ID fixe pour les paramètres globaux
+          hide_wednesday_reservations: newSettings.hide_wednesday_reservations ?? false,
+          hide_rdv_page: newSettings.hide_rdv_page ?? false
+        });
 
       if (error) {
         console.error("Error updating global settings:", error);
@@ -115,6 +127,13 @@ export const useGlobalSettings = () => {
       }
 
       toast.success("Paramètres globaux mis à jour avec succès");
+      
+      // Recharger les paramètres après mise à jour
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        window.location.reload(); // Recharger pour appliquer les nouveaux paramètres
+      }
+      
       return true;
     } catch (err) {
       console.error("Exception in updateGlobalSettings:", err);
