@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, UserCheck, Mail, CalendarDays, Plane, MessageCircle, Users2, MapPin, Menu } from "lucide-react";
+import { Users, Calendar, UserCheck, Mail, CalendarDays, Plane, MessageCircle, Users2, Calculator, Menu } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -74,7 +74,7 @@ export const AdminNavbar = () => {
     {
       title: "Places restantes",
       href: "/admin/available-spots",
-      icon: MapPin,
+      icon: Calculator,
       description: "Consultation des places disponibles"
     }
   ];
