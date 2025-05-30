@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, UserCheck, Mail, CalendarDays, Palmtree, MessageCircle, Users2, Calculator, Menu } from "lucide-react";
+import { Users, Calendar, UserCheck, Mail, CalendarDays, Palmtree, MessageCircle, Baby, Calculator, Menu } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -37,7 +37,7 @@ export const AdminNavbar = () => {
     {
       title: "Enfants",
       href: "/admin/children",
-      icon: Users2,
+      icon: Baby,
       description: "Gestion des enfants"
     },
     {
