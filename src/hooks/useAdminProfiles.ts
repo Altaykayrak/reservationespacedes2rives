@@ -31,8 +31,12 @@ export const useAdminProfiles = () => {
     handleAutomaticPaymentChange,
     handleWaitingChange,
     handleClosedChange,
+    handleRdvAccessChange,
+    handleWednesdayAccessChange,
     handleBulkWaitingChange,
     handleBulkClosedChange,
+    handleBulkRdvAccessChange,
+    handleBulkWednesdayAccessChange,
   } = useProfilesActions(fetchProfiles);
 
   useEffect(() => {
@@ -57,7 +61,11 @@ export const useAdminProfiles = () => {
     handleAutomaticPaymentChange,
     handleWaitingChange,
     handleClosedChange,
+    handleRdvAccessChange,
+    handleWednesdayAccessChange,
     handleBulkWaitingChange,
     handleBulkClosedChange,
+    handleBulkRdvAccessChange,
+    handleBulkWednesdayAccessChange,
   };
 };

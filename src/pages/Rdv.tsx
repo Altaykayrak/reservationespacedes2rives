@@ -7,8 +7,10 @@ import { AvailableSlots } from "@/components/rdv/AvailableSlots";
 import { ConfirmRdvDialog } from "@/components/rdv/ConfirmRdvDialog";
 import { ReservationCompleteDialog } from "@/components/rdv/ReservationCompleteDialog";
 import { useRdv } from "@/hooks/useRdv";
+import { useAccessControl } from "@/hooks/useAccessControl";
 
 export default function RdvPage() {
+  const { rdvAccess, loading: accessLoading } = useAccessControl();
   const {
     loading,
     userRdv,
@@ -29,8 +31,24 @@ export default function RdvPage() {
     handleCompleteDialogClose
   } = useRdv();
 
-  if (loading) {
+  if (accessLoading || loading) {
     return <LoadingState />;
+  }
+
+  if (!rdvAccess) {
+    return (
+      <>
+        <Navbar />
+        <div className="container mx-auto py-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-4">Accès non disponible</h1>
+            <p className="text-gray-600">
+              La prise de rendez-vous n'est pas disponible pour votre compte.
+            </p>
+          </div>
+        </div>
+      </>
+    );
   }
 
   if (userRdv) {

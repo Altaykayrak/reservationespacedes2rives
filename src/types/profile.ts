@@ -8,6 +8,8 @@ export interface ProfileData {
   accepted_cgu: boolean;
   is_waiting: boolean;
   is_closed: boolean;
+  hide_rdv_access: boolean;
+  hide_wednesday_access: boolean;
   created_at: string;
   updated_at: string;
 }

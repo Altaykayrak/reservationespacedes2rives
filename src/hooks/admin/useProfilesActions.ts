@@ -48,6 +48,34 @@ export const useProfilesActions = (refetchProfiles: () => void) => {
     }
   }, [refetchProfiles]);
 
+  const handleRdvAccessChange = useCallback(async (id: string, hide_rdv_access: boolean) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ hide_rdv_access: !hide_rdv_access })
+      .eq("id", id);
+
+    if (error) {
+      toast.error(`Erreur lors de la mise à jour du profil: ${error.message}`);
+    } else {
+      refetchProfiles();
+      toast.success("Accès RDV mis à jour avec succès!");
+    }
+  }, [refetchProfiles]);
+
+  const handleWednesdayAccessChange = useCallback(async (id: string, hide_wednesday_access: boolean) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ hide_wednesday_access: !hide_wednesday_access })
+      .eq("id", id);
+
+    if (error) {
+      toast.error(`Erreur lors de la mise à jour du profil: ${error.message}`);
+    } else {
+      refetchProfiles();
+      toast.success("Accès Mercredis mis à jour avec succès!");
+    }
+  }, [refetchProfiles]);
+
   const handleBulkWaitingChange = useCallback(async (value: boolean) => {
     setBulkActionLoading(true);
     try {
@@ -94,12 +122,62 @@ export const useProfilesActions = (refetchProfiles: () => void) => {
     }
   }, [refetchProfiles]);
 
+  const handleBulkRdvAccessChange = useCallback(async (value: boolean) => {
+    setBulkActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ hide_rdv_access: value })
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all profiles
+
+      if (error) {
+        toast.error(`Erreur lors de la mise à jour des profils: ${error.message}`);
+      } else {
+        refetchProfiles();
+        toast.success(`L'accès RDV a été ${value ? 'masqué' : 'affiché'} pour tous les profils avec succès!`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(`Erreur: ${error.message}`);
+      }
+    } finally {
+      setBulkActionLoading(false);
+    }
+  }, [refetchProfiles]);
+
+  const handleBulkWednesdayAccessChange = useCallback(async (value: boolean) => {
+    setBulkActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ hide_wednesday_access: value })
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all profiles
+
+      if (error) {
+        toast.error(`Erreur lors de la mise à jour des profils: ${error.message}`);
+      } else {
+        refetchProfiles();
+        toast.success(`L'accès Mercredis a été ${value ? 'masqué' : 'affiché'} pour tous les profils avec succès!`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(`Erreur: ${error.message}`);
+      }
+    } finally {
+      setBulkActionLoading(false);
+    }
+  }, [refetchProfiles]);
+
   return {
     bulkActionLoading,
     handleAutomaticPaymentChange,
     handleWaitingChange,
     handleClosedChange,
+    handleRdvAccessChange,
+    handleWednesdayAccessChange,
     handleBulkWaitingChange,
     handleBulkClosedChange,
+    handleBulkRdvAccessChange,
+    handleBulkWednesdayAccessChange,
   };
 };

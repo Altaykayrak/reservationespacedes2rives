@@ -10,6 +10,8 @@ interface AdminProfilesTableProps {
   handleAutomaticPaymentChange: (id: string, current: boolean) => void;
   handleWaitingChange: (id: string, current: boolean) => void;
   handleClosedChange: (id: string, current: boolean) => void;
+  handleRdvAccessChange: (id: string, current: boolean) => void;
+  handleWednesdayAccessChange: (id: string, current: boolean) => void;
 }
 
 export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
@@ -17,6 +19,8 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
   handleAutomaticPaymentChange,
   handleWaitingChange,
   handleClosedChange,
+  handleRdvAccessChange,
+  handleWednesdayAccessChange,
 }) => {
   return (
     <div className="mt-6">
@@ -29,6 +33,8 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
             <TableHead>Paiement automatique</TableHead>
             <TableHead>En attente</TableHead>
             <TableHead>Fermé</TableHead>
+            <TableHead>Accès RDV masqué</TableHead>
+            <TableHead>Accès Mercredis masqué</TableHead>
             <TableHead>CGU acceptées</TableHead>
           </TableRow>
         </TableHeader>
@@ -54,6 +60,18 @@ export const AdminProfilesTable: React.FC<AdminProfilesTableProps> = ({
                 <Switch
                   checked={profile.is_closed || false}
                   onCheckedChange={() => handleClosedChange(profile.id, profile.is_closed || false)}
+                />
+              </TableCell>
+              <TableCell>
+                <Switch
+                  checked={profile.hide_rdv_access || false}
+                  onCheckedChange={() => handleRdvAccessChange(profile.id, profile.hide_rdv_access || false)}
+                />
+              </TableCell>
+              <TableCell>
+                <Switch
+                  checked={profile.hide_wednesday_access || false}
+                  onCheckedChange={() => handleWednesdayAccessChange(profile.id, profile.hide_wednesday_access || false)}
                 />
               </TableCell>
               <TableCell>

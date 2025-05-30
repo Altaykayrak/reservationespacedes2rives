@@ -26,8 +26,12 @@ const AdminProfiles = () => {
     handleAutomaticPaymentChange,
     handleWaitingChange,
     handleClosedChange,
+    handleRdvAccessChange,
+    handleWednesdayAccessChange,
     handleBulkWaitingChange,
     handleBulkClosedChange,
+    handleBulkRdvAccessChange,
+    handleBulkWednesdayAccessChange,
   } = useAdminProfiles();
 
   return (
@@ -37,6 +41,8 @@ const AdminProfiles = () => {
         bulkActionLoading={bulkActionLoading}
         handleBulkWaitingChange={handleBulkWaitingChange}
         handleBulkClosedChange={handleBulkClosedChange}
+        handleBulkRdvAccessChange={handleBulkRdvAccessChange}
+        handleBulkWednesdayAccessChange={handleBulkWednesdayAccessChange}
       />
       
       <Card>
@@ -65,6 +71,8 @@ const AdminProfiles = () => {
               handleAutomaticPaymentChange={handleAutomaticPaymentChange}
               handleWaitingChange={handleWaitingChange}
               handleClosedChange={handleClosedChange}
+              handleRdvAccessChange={handleRdvAccessChange}
+              handleWednesdayAccessChange={handleWednesdayAccessChange}
             />
           )}
         </CardContent>
