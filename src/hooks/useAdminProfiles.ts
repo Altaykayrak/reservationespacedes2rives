@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileData } from "@/types/profile";
 import { toast } from "sonner";
@@ -20,11 +20,7 @@ export const useAdminProfiles = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
-  useEffect(() => {
-    fetchProfiles();
-  }, [automaticPaymentFilter, waitingFilter, closedFilter, hasReservationsFilter, searchQuery]);
-
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -181,9 +177,22 @@ export const useAdminProfiles = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [automaticPaymentFilter, waitingFilter, closedFilter, hasReservationsFilter, searchQuery]);
 
-  const handleAutomaticPaymentChange = async (id: string, automatic_payment: boolean) => {
+  // Mémoriser les filtres pour éviter les re-renders inutiles
+  const filters = useMemo(() => ({
+    automaticPaymentFilter,
+    waitingFilter,
+    closedFilter,
+    hasReservationsFilter,
+    searchQuery
+  }), [automaticPaymentFilter, waitingFilter, closedFilter, hasReservationsFilter, searchQuery]);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
+
+  const handleAutomaticPaymentChange = useCallback(async (id: string, automatic_payment: boolean) => {
     const { error } = await supabase
       .from("profiles")
       .update({ automatic_payment: !automatic_payment })
@@ -195,9 +204,9 @@ export const useAdminProfiles = () => {
       fetchProfiles();
       toast.success("Profil mis à jour avec succès!");
     }
-  };
+  }, [fetchProfiles]);
 
-  const handleWaitingChange = async (id: string, is_waiting: boolean) => {
+  const handleWaitingChange = useCallback(async (id: string, is_waiting: boolean) => {
     const { error } = await supabase
       .from("profiles")
       .update({ is_waiting: !is_waiting })
@@ -209,9 +218,9 @@ export const useAdminProfiles = () => {
       fetchProfiles();
       toast.success("Profil mis à jour avec succès!");
     }
-  };
+  }, [fetchProfiles]);
 
-  const handleClosedChange = async (id: string, is_closed: boolean) => {
+  const handleClosedChange = useCallback(async (id: string, is_closed: boolean) => {
     const { error } = await supabase
       .from("profiles")
       .update({ is_closed: !is_closed })
@@ -223,9 +232,9 @@ export const useAdminProfiles = () => {
       fetchProfiles();
       toast.success("Profil mis à jour avec succès!");
     }
-  };
+  }, [fetchProfiles]);
 
-  const handleBulkWaitingChange = async (value: boolean) => {
+  const handleBulkWaitingChange = useCallback(async (value: boolean) => {
     setBulkActionLoading(true);
     try {
       const { error } = await supabase
@@ -246,9 +255,9 @@ export const useAdminProfiles = () => {
     } finally {
       setBulkActionLoading(false);
     }
-  };
+  }, [fetchProfiles]);
 
-  const handleBulkClosedChange = async (value: boolean) => {
+  const handleBulkClosedChange = useCallback(async (value: boolean) => {
     setBulkActionLoading(true);
     try {
       const { error } = await supabase
@@ -269,7 +278,7 @@ export const useAdminProfiles = () => {
     } finally {
       setBulkActionLoading(false);
     }
-  };
+  }, [fetchProfiles]);
 
   return {
     profiles,

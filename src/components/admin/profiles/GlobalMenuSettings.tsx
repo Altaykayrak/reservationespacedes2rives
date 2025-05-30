@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -13,7 +14,7 @@ interface GlobalMenuSettingsProps {
   profile?: ProfileData;
 }
 
-export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile }) => {
+export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = React.memo(({ profile }) => {
   const { updateSettings, updateGlobalSettings } = useGlobalSettings();
   const [userSettings, setUserSettings] = useState({
     hide_wednesday_reservations: false,
@@ -25,60 +26,64 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
   });
   const [loading, setLoading] = useState(true);
 
-  // Ajouter un console.log pour débugger
-  console.log("[GlobalMenuSettings] Rendu du composant avec profile:", profile?.id || "aucun");
+  // Stabiliser la référence du profile pour éviter les re-renders
+  const profileId = useMemo(() => profile?.id, [profile?.id]);
+  const profileName = useMemo(() => 
+    profile ? `${profile.first_name} ${profile.last_name}` : null, 
+    [profile?.first_name, profile?.last_name]
+  );
 
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        setLoading(true);
+  const loadSettings = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Charger les paramètres globaux
+      const { data: global, error: globalError } = await supabase
+        .from("global_settings")
+        .select("hide_wednesday_reservations, hide_rdv_page")
+        .single();
         
-        // Charger les paramètres globaux
-        const { data: global, error: globalError } = await supabase
-          .from("global_settings")
+      if (global) {
+        setGlobalSettings(global);
+      }
+
+      // Charger les paramètres utilisateur si un profil est sélectionné
+      if (profileId) {
+        const { data: user, error: userError } = await supabase
+          .from("user_settings")
           .select("hide_wednesday_reservations, hide_rdv_page")
+          .eq("user_id", profileId)
           .single();
           
-        if (global) {
-          setGlobalSettings(global);
+        if (user) {
+          setUserSettings(user);
         }
-
-        // Charger les paramètres utilisateur si un profil est sélectionné
-        if (profile) {
-          const { data: user, error: userError } = await supabase
-            .from("user_settings")
-            .select("hide_wednesday_reservations, hide_rdv_page")
-            .eq("user_id", profile.id)
-            .single();
-            
-          if (user) {
-            setUserSettings(user);
-          }
-        }
-      } catch (err) {
-        console.error("Erreur lors du chargement des paramètres:", err);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("Erreur lors du chargement des paramètres:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [profileId]);
 
+  useEffect(() => {
     loadSettings();
-  }, [profile]);
+  }, [loadSettings]);
 
-  const handleUserSettingChange = async (setting: keyof typeof userSettings, value: boolean) => {
-    if (!profile) return;
+  const handleUserSettingChange = useCallback(async (setting: keyof typeof userSettings, value: boolean) => {
+    if (!profileId) return;
     
     const newSettings = { ...userSettings, [setting]: value };
     setUserSettings(newSettings);
     
-    const success = await updateSettings(profile.id, { [setting]: value });
+    const success = await updateSettings(profileId, { [setting]: value });
     if (!success) {
       // Revenir à l'état précédent en cas d'erreur
       setUserSettings(userSettings);
     }
-  };
+  }, [profileId, userSettings, updateSettings]);
 
-  const handleGlobalSettingChange = async (setting: keyof typeof globalSettings, value: boolean) => {
+  const handleGlobalSettingChange = useCallback(async (setting: keyof typeof globalSettings, value: boolean) => {
     const newSettings = { ...globalSettings, [setting]: value };
     setGlobalSettings(newSettings);
     
@@ -87,12 +92,12 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
       // Revenir à l'état précédent en cas d'erreur
       setGlobalSettings(globalSettings);
     }
-  };
+  }, [globalSettings, updateGlobalSettings]);
 
-  const resetUserSettings = async () => {
-    if (!profile) return;
+  const resetUserSettings = useCallback(async () => {
+    if (!profileId) return;
     
-    const success = await updateSettings(profile.id, {
+    const success = await updateSettings(profileId, {
       hide_wednesday_reservations: false,
       hide_rdv_page: false
     });
@@ -104,7 +109,7 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
       });
       toast.success("Paramètres utilisateur réinitialisés");
     }
-  };
+  }, [profileId, updateSettings]);
 
   if (loading) {
     return (
@@ -120,15 +125,10 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="text-lg">
-          {profile ? `Paramètres de visibilité pour ${profile.first_name} ${profile.last_name}` : "Paramètres globaux de visibilité"}
+          {profileName ? `Paramètres de visibilité pour ${profileName}` : "Paramètres globaux de visibilité"}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* DEBUG: Afficher un indicateur unique */}
-        <div className="text-xs text-gray-500 border p-2 rounded">
-          DEBUG: Composant GlobalMenuSettings #{Math.random().toString(36).substr(2, 9)}
-        </div>
-
         {/* Paramètres globaux - toujours affichés */}
         <div>
           <h3 className="text-base font-medium mb-4">Paramètres globaux (valeurs par défaut)</h3>
@@ -209,4 +209,6 @@ export const GlobalMenuSettings: React.FC<GlobalMenuSettingsProps> = ({ profile 
       </CardContent>
     </Card>
   );
-};
+});
+
+GlobalMenuSettings.displayName = "GlobalMenuSettings";
