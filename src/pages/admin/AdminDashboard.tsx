@@ -1,8 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Calendar, Palm, ClipboardList, Users, Mail, Calculator } from "lucide-react";
+import { Calendar, Palmtree, ClipboardList, Users, Mail, Calculator } from "lucide-react";
 
 const AdminDashboard = () => {
   return (
@@ -26,7 +25,7 @@ const AdminDashboard = () => {
         <Card className="p-6 flex flex-col h-full">
           <div className="flex-grow">
             <div className="flex items-center gap-2 mb-4">
-              <Palm className="h-5 w-5 text-primary" />
+              <Palmtree className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold">Paramétrage Vacances</h2>
             </div>
             <p className="text-gray-600">Gérer les périodes de vacances et les classes autorisées</p>
