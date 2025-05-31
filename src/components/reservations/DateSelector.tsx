@@ -1,4 +1,5 @@
-import { format, addDays, addHours } from "date-fns";
+
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -25,8 +26,32 @@ export const DateSelector = ({
   handleOptionChange,
   isDateAlreadyReserved,
 }: DateSelectorProps) => {
-  const today = new Date();
-  const minDate = addHours(today, 72); // Minimum date is 72 hours (3 days) from now
+  // Calculer la date limite : mardi précédent à 23h59
+  const getMinDate = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Trouver le prochain mercredi ou le mercredi actuel
+    const dayOfWeek = today.getDay(); // 0 = dimanche, 3 = mercredi
+    
+    // Si on est mardi ou avant, on peut encore réserver pour le mercredi de cette semaine
+    // Si on est mercredi ou après, on ne peut plus réserver pour ce mercredi
+    let nextWednesday = new Date(today);
+    
+    if (dayOfWeek <= 2) { // Dimanche (0), Lundi (1), Mardi (2)
+      // On peut encore réserver pour le mercredi de cette semaine
+      const daysUntilWednesday = 3 - dayOfWeek;
+      nextWednesday.setDate(today.getDate() + daysUntilWednesday);
+    } else {
+      // On est mercredi ou après, le prochain mercredi disponible est la semaine suivante
+      const daysUntilNextWednesday = 10 - dayOfWeek; // 7 jours + (3 - dayOfWeek)
+      nextWednesday.setDate(today.getDate() + daysUntilNextWednesday);
+    }
+    
+    return nextWednesday;
+  };
+
+  const minDate = getMinDate();
 
   const { data: availableWednesdays } = useQuery({
     queryKey: ["available_wednesdays"],
@@ -34,12 +59,11 @@ export const DateSelector = ({
       const { data, error } = await supabase
         .from("available_wednesdays")
         .select("*")
-        .gte('date', today.toISOString().split('T')[0])
         .order('date', { ascending: true });
       
       if (error) throw error;
 
-      // Filtrer les dates qui sont dans moins de 72 heures
+      // Filtrer les dates selon la nouvelle règle
       return data?.filter(wednesday => {
         const wednesdayDate = new Date(wednesday.date);
         return wednesdayDate >= minDate;

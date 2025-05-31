@@ -1,7 +1,6 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { addHours } from "date-fns";
 import { useEffect } from "react";
 
 export interface WednesdayWithCounts {
@@ -16,9 +15,31 @@ export interface WednesdayWithCounts {
 
 export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boolean) => {
   const queryClient = useQueryClient();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const minDate = addHours(today, 72);
+
+  // Calculer la date limite : mardi précédent à 23h59
+  const getMinDate = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Trouver le prochain mercredi ou le mercredi actuel
+    const dayOfWeek = today.getDay(); // 0 = dimanche, 3 = mercredi
+    
+    // Si on est mardi ou avant, on peut encore réserver pour le mercredi de cette semaine
+    // Si on est mercredi ou après, on ne peut plus réserver pour ce mercredi
+    let nextWednesday = new Date(today);
+    
+    if (dayOfWeek <= 2) { // Dimanche (0), Lundi (1), Mardi (2)
+      // On peut encore réserver pour le mercredi de cette semaine
+      const daysUntilWednesday = 3 - dayOfWeek;
+      nextWednesday.setDate(today.getDate() + daysUntilWednesday);
+    } else {
+      // On est mercredi ou après, le prochain mercredi disponible est la semaine suivante
+      const daysUntilNextWednesday = 10 - dayOfWeek; // 7 jours + (3 - dayOfWeek)
+      nextWednesday.setDate(today.getDate() + daysUntilNextWednesday);
+    }
+    
+    return nextWednesday;
+  };
 
   const fetchWednesdays = async () => {
     console.log('Démarrage de la requête pour les mercredis disponibles');
@@ -67,6 +88,9 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
           isFull: (isKindergarten && kindergartenSpots <= 0) || (isPrimary && primarySpots <= 0)
         };
       }));
+
+      const minDate = getMinDate();
+      console.log('Date limite pour les réservations:', minDate);
 
       // Filtrer les mercredis nuls et les dates passées
       return processedWednesdays
