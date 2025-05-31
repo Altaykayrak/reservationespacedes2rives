@@ -62,9 +62,9 @@ const WednesdayReservations = () => {
         <Navbar />
         <div className="container mx-auto py-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold mb-4">Accès non disponible</h1>
+            <h1 className="text-3xl font-bold mb-4">Réservations mercredis</h1>
             <p className="text-gray-600">
-              Les réservations mercredis ne sont pas disponibles pour votre compte.
+              La réservation en ligne des mercredis n'est pas disponible pour le moment. Nous vous informerons dès qu'elle sera accessible.
             </p>
           </div>
         </div>
