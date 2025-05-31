@@ -26,29 +26,16 @@ export const DateSelector = ({
   handleOptionChange,
   isDateAlreadyReserved,
 }: DateSelectorProps) => {
-  // Calculer la date limite : mardi précédent à 23h59
+  // Calculer la date limite : 7 jours avant le mercredi (J-7)
   const getMinDate = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Trouver le prochain mercredi ou le mercredi actuel
-    const dayOfWeek = today.getDay(); // 0 = dimanche, 3 = mercredi
+    // Ajouter 7 jours à aujourd'hui pour obtenir la date minimum des mercredis visibles
+    const minWednesdayDate = new Date(today);
+    minWednesdayDate.setDate(today.getDate() + 7);
     
-    // Si on est mardi ou avant, on peut encore réserver pour le mercredi de cette semaine
-    // Si on est mercredi ou après, on ne peut plus réserver pour ce mercredi
-    let nextWednesday = new Date(today);
-    
-    if (dayOfWeek <= 2) { // Dimanche (0), Lundi (1), Mardi (2)
-      // On peut encore réserver pour le mercredi de cette semaine
-      const daysUntilWednesday = 3 - dayOfWeek;
-      nextWednesday.setDate(today.getDate() + daysUntilWednesday);
-    } else {
-      // On est mercredi ou après, le prochain mercredi disponible est la semaine suivante
-      const daysUntilNextWednesday = 10 - dayOfWeek; // 7 jours + (3 - dayOfWeek)
-      nextWednesday.setDate(today.getDate() + daysUntilNextWednesday);
-    }
-    
-    return nextWednesday;
+    return minWednesdayDate;
   };
 
   const minDate = getMinDate();
@@ -63,7 +50,7 @@ export const DateSelector = ({
       
       if (error) throw error;
 
-      // Filtrer les dates selon la nouvelle règle
+      // Filtrer les dates qui sont à moins de 7 jours
       return data?.filter(wednesday => {
         const wednesdayDate = new Date(wednesday.date);
         return wednesdayDate >= minDate;
