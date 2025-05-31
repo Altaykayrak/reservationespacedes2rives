@@ -1,4 +1,3 @@
-
 import { WednesdayReservationContent } from "@/components/reservations/WednesdayReservationContent";
 import { WednesdayReservationsList } from "@/components/reservations/WednesdayReservationsList";
 import { CalendarDays } from "lucide-react";
