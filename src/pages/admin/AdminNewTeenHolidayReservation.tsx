@@ -2,47 +2,36 @@
 import { useAdminAuth } from "@/components/admin/reservations/hooks/useAdminAuth";
 import { HolidayReservationContent } from "@/components/reservations/HolidayReservationContent";
 import { CalendarDays } from "lucide-react";
-import { useChildrenData } from "@/hooks/useChildrenData";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
-import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
+import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
 
 const AdminNewTeenHolidayReservation = () => {
   const { data: isAdmin } = useAdminAuth();
-  const { data: schoolClassCategories } = useQuery({
-    queryKey: ["schoolClassCategories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("school_class_categories")
-        .select("*")
-        .eq("category", "adolescent");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { allChildren, isLoading } = useAdminChildrenData();
 
-  // Récupérer tous les enfants
-  const { children } = useChildrenData();
-
-  // Filtrer les adolescents ET les CM2
-  const teenChildren = children?.filter(child => 
+  // Filtrer les adolescents ET les CM2 en utilisant les enfants avec les informations des parents
+  const teenChildren = allChildren?.filter(child => 
     // Inclure tous les CM2
     child.school_class === 'CM2' ||
-    // Ou les enfants des classes d'adolescents
-    schoolClassCategories?.some(
-      category => category.name.toUpperCase() === child.school_class.toUpperCase()
-    )
+    // Ou les enfants des classes d'adolescents (6ème à Terminale)
+    ['6EME', '6ÈME', '5EME', '5ÈME', '4EME', '4ÈME', '3EME', '3ÈME', 
+     'SECONDE', 'PREMIERE', 'PREMIÈRE', 'TERMINALE'].includes(child.school_class.toUpperCase())
   );
 
-  console.log("Teen children with CM2:", teenChildren);
+  console.log("Teen children with CM2 and parent info:", teenChildren);
 
   if (!isAdmin) {
     return (
       <div className="container mx-auto p-8">
         <h1 className="text-3xl font-bold mb-8">Accès non autorisé</h1>
         <div>Vous devez être administrateur pour accéder à cette page.</div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-8">
+        <div>Chargement des enfants...</div>
       </div>
     );
   }

@@ -6,32 +6,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
+import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
 
 const AdminNewHolidayReservation = () => {
   const { data: isAdmin } = useAdminAuth();
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
 
-  // Requête pour récupérer tous les enfants (administrateur)
-  const { data: children, isLoading } = useQuery<Tables<"children">[]>({
-    queryKey: ["admin_all_children"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("children")
-        .select("*")
-        .order('last_name', { ascending: true })
-        .order('first_name', { ascending: true });
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!isAdmin,
-  });
+  // Utiliser le hook admin qui récupère déjà les informations des parents
+  const { allChildren, isLoading } = useAdminChildrenData();
 
   // Filtrage initial des enfants selon le groupe sélectionné
-  const filteredChildren = children?.filter(child => {
+  const filteredChildren = allChildren?.filter(child => {
     if (selectedGroup === "all") return true;
     if (selectedGroup === "maternelle") {
       return ["PS", "MS", "GS"].some(cls => 
@@ -99,11 +84,9 @@ const AdminNewHolidayReservation = () => {
             <p className="text-center">Chargement des enfants...</p>
           </Card>
         ) : (
-          // Passer directement les enfants filtrés à HolidayReservationContent
-          // sans filtrage supplémentaire par profil utilisateur
-          // Ajouter disableMinimumDaysRule pour ignorer la règle des 3 jours minimum
+          // Passer les enfants filtrés avec les informations des parents à HolidayReservationContent
           <HolidayReservationContent 
-            filteredChildren={filteredChildren as Tables<"children">[] | null} 
+            filteredChildren={filteredChildren} 
             filterTeenPeriods={false} 
             disableMinimumDaysRule={true}
           />

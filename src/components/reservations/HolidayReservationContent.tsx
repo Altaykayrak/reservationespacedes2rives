@@ -16,13 +16,14 @@ import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
 import { Tables } from "@/integrations/supabase/types";
 import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
 import { useReservationSubmission } from "@/hooks/useReservationSubmission";
+import { AdminChildSelector } from "@/components/admin/reservations/AdminChildSelector";
 
 export interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
   filterTeenPeriods?: boolean;
   invertSelectors?: boolean;
   enforceCM2Summer?: boolean;
-  disableMinimumDaysRule?: boolean; // New prop to disable minimum days rule
+  disableMinimumDaysRule?: boolean;
 }
 
 export const HolidayReservationContent: React.FC<HolidayReservationContentProps> = ({
@@ -30,7 +31,7 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
   filterTeenPeriods = false,
   invertSelectors = false,
   enforceCM2Summer = false,
-  disableMinimumDaysRule = false, // Default to false to maintain current behavior
+  disableMinimumDaysRule = false,
 }) => {
   const {
     selectedDates,
@@ -52,15 +53,17 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     setMinimumDaysDialog,
   } = useHolidayReservation();
 
-  // Use the new hook for form submission
   const { isDateAlreadyReserved } = useExistingHolidayReservations(selectedChild || '');
   const [storedChild, setStoredChild] = useState<string | null>(null);
   const { children: allChildren } = useChildrenData();
   const location = useLocation();
 
+  // Vérifier si on est en mode admin (enfants avec informations des parents)
+  const isAdminMode = filteredChildren && filteredChildren.some(child => 'profile' in child);
+
   // N'utiliser le filtrage par catégorie que si aucun enfant filtré externe n'est fourni
   const { filteredChildren: categorizedChildren } = useCategoryFiltering(
-    filteredChildren ? null : allChildren,  // Ne pas appliquer le filtrage si on a déjà des enfants filtrés
+    filteredChildren ? null : allChildren,
     selectedPeriod,
     filterTeenPeriods ? 'adolescent' : undefined
   );
@@ -71,15 +74,13 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
   const earlySummerCodes = ['ETE-01', 'ETE-02', 'ETE-03', 'ETE-04'];
   const isEarlySummer = earlySummerCodes.includes(periodCode);
   
-  // Si on a des enfants filtrés en props et qu'on est sur une page Club Ado, conserver tous les CM2
   const baseChildren = filteredChildren || categorizedChildren || [];
   
   // Ne pas filtrer les CM2 en été si enforceCM2Summer est activé
   const childrenToDisplay = baseChildren.filter(child => {
     if (enforceCM2Summer && child.school_class === 'CM2') {
-      return true; // Toujours inclure les CM2 si enforceCM2Summer est activé
+      return true;
     }
-    // Filtrer uniquement dans le cas non-Club Ado
     return !(isEarlySummer && !filterTeenPeriods && child.school_class === 'CM2');
   });
 
@@ -120,7 +121,6 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     e.preventDefault();
     e.stopPropagation();
     
-    // Si disableMinimumDaysRule est true, on ignore la vérification des 3 jours minimum
     if (!disableMinimumDaysRule && validDatesCount < 3) {
       setMinimumDaysDialog({ isOpen: true });
       return;
@@ -129,12 +129,33 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     if (!isSubmitting) originalHandleSubmit();
   };
 
-  // Détermination si le bouton doit être désactivé, selon la règle des jours minimum
   const isButtonDisabled = !selectedChild || 
                           !selectedPeriod || 
-                          validDatesCount < 1 || // Au moins 1 date requise même en mode admin
-                          (!disableMinimumDaysRule && validDatesCount < 3) || // 3 jours minimum sauf si désactivé
+                          validDatesCount < 1 ||
+                          (!disableMinimumDaysRule && validDatesCount < 3) ||
                           isSubmitting;
+
+  const renderChildSelector = () => {
+    if (isAdminMode) {
+      return (
+        <AdminChildSelector
+          selectedChild={selectedChild}
+          setSelectedChild={setSelectedChild}
+          children={childrenToDisplay as any}
+          setSelectedDates={setSelectedDates}
+        />
+      );
+    }
+    
+    return (
+      <ChildSelector
+        selectedChild={selectedChild}
+        setSelectedChild={setSelectedChild}
+        children={childrenToDisplay}
+        setSelectedDates={setSelectedDates}
+      />
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -146,21 +167,11 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
             holidayPeriods={holidayPeriods}
             filterTeenOnly={filterTeenPeriods}
           />
-          <ChildSelector
-            selectedChild={selectedChild}
-            setSelectedChild={setSelectedChild}
-            children={childrenToDisplay}
-            setSelectedDates={setSelectedDates}
-          />
+          {renderChildSelector()}
         </>
       ) : (
         <>
-          <ChildSelector
-            selectedChild={selectedChild}
-            setSelectedChild={setSelectedChild}
-            children={childrenToDisplay}
-            setSelectedDates={setSelectedDates}
-          />
+          {renderChildSelector()}
           <PeriodSelector
             selectedPeriod={selectedPeriod}
             setSelectedPeriod={setSelectedPeriod}
