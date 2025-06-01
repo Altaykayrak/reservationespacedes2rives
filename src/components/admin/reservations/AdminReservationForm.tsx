@@ -1,11 +1,11 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CalendarDays } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useChildrenData } from "@/hooks/useChildrenData";
 import { WednesdayDateSelector } from "@/components/reservations/WednesdayDateSelector";
-import { ChildSelector } from "@/components/reservations/ChildSelector";
+import { AdminChildSelector } from "./AdminChildSelector";
 import { useWednesdayReservationSubmission } from "@/hooks/useWednesdayReservationSubmission";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
 
 interface DateOption {
   date: Date;
@@ -51,7 +52,7 @@ export const AdminReservationForm = ({
   const [reservedDate, setReservedDate] = useState<Date | null>(null);
   const queryClient = useQueryClient();
 
-  const { children, isLoading, nonTeenChildren } = useChildrenData();
+  const { wednesdayEligibleChildren, isLoading } = useAdminChildrenData();
 
   // Requête pour récupérer les réservations existantes
   const { data: existingReservations } = useQuery({
@@ -113,12 +114,8 @@ export const AdminReservationForm = ({
   );
 
   // Filtrer les enfants basés sur le groupe sélectionné et exclure les PS et les ados
-  const filteredChildren = nonTeenChildren?.filter(child => {
+  const filteredChildren = wednesdayEligibleChildren?.filter(child => {
     const schoolClass = child.school_class.toUpperCase();
-    const isPS = schoolClass === "PS";
-    
-    // Toujours exclure les PS
-    if (isPS) return false;
     
     if (selectedGroup === "all") return true;
     if (selectedGroup === "maternelle") {
@@ -139,7 +136,7 @@ export const AdminReservationForm = ({
       <Alert>
         <CalendarDays className="h-4 w-4" />
         <AlertDescription>
-          Vous pouvez sélectionner plusieurs mercredis à la fois pour créer des réservations.
+          Mode administrateur : Vous pouvez sélectionner n'importe quel enfant et créer des réservations à la place des parents.
         </AlertDescription>
       </Alert>
 
@@ -166,7 +163,7 @@ export const AdminReservationForm = ({
           </div>
 
           <div className="mt-4">
-            <ChildSelector
+            <AdminChildSelector
               selectedChild={selectedChild}
               setSelectedChild={setSelectedChild}
               children={filteredChildren}
