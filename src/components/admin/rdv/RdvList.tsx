@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Search } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { format } from "date-fns";
@@ -25,6 +25,7 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
   const [endDate, setEndDate] = useState<string>("");
   const [status, setStatus] = useState<string>("all");
   const [selectedMotifs, setSelectedMotifs] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Handle motif selection
   const handleMotifChange = (motif: string) => {
@@ -54,7 +55,14 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
       (rdv.motifs && 
         selectedMotifs.some(motif => rdv.motifs?.includes(motif)));
     
-    return dateMatches && statusMatches && motifsMatch;
+    // Filter by search query (user name)
+    const searchMatches = 
+      !searchQuery ||
+      (rdv.profiles?.first_name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (rdv.profiles?.last_name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (rdv.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return dateMatches && statusMatches && motifsMatch && searchMatches;
   });
 
   const handleExportPdf = () => {
@@ -76,6 +84,11 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
     // Add selected motifs if any
     if (selectedMotifs.length > 0) {
       doc.text(`Motifs: ${selectedMotifs.join(', ')}`, 14, 36);
+    }
+
+    // Add search query if any
+    if (searchQuery) {
+      doc.text(`Recherche: ${searchQuery}`, 14, selectedMotifs.length > 0 ? 43 : 36);
     }
 
     const headers = [
@@ -103,7 +116,7 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
     autoTable(doc, {
       head: [headers],
       body: data,
-      startY: selectedMotifs.length > 0 ? 43 : 36,  // Adjust startY based on whether motifs filter is displayed
+      startY: searchQuery ? (selectedMotifs.length > 0 ? 50 : 43) : (selectedMotifs.length > 0 ? 43 : 36),
       styles: {
         fontSize: 8,
         cellPadding: 1
@@ -136,6 +149,22 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4 mb-6">
+          {/* Search bar */}
+          <div className="space-y-2">
+            <Label htmlFor="search">Rechercher par nom ou email</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                id="search"
+                type="text"
+                placeholder="Rechercher un utilisateur..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate">Date de début</Label>
