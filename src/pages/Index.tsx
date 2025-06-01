@@ -8,7 +8,7 @@ const Index = () => {
       
       {/* Hero Section */}
       <div className="relative bg-cover text-white py-24" style={{
-      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Betterfront.jpg')`,
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Newfront.jpg')`,
       backgroundPosition: "0% 20%"
     }}>
         <div className="container mx-auto px-4 text-center">
@@ -29,7 +29,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Welcome Text */}
       <div className="py-8 bg-white">
         <div className="container mx-auto px-4 text-center">
           <p className="max-w-4xl mx-auto text-base text-center text-gray-600">
