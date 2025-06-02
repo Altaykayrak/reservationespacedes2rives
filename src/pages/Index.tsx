@@ -10,7 +10,7 @@ const Index = () => {
       
       {/* Hero Section */}
       <div className="relative bg-cover text-white py-24" style={{
-      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Newfront.jpg')`,
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
       backgroundPosition: "0% 20%"
     }}>
         <div className="container mx-auto px-4 text-center">
@@ -20,7 +20,7 @@ const Index = () => {
           <h1 className="text-5xl font-bold mb-6"></h1>
           <p className="text-xl mb-12 max-w-3xl mx-auto text-red-300">
           </p>
-          <div className="mt-48 flex flex-col sm:flex-row justify-center items-center gap-4">
+          <div className="mt-64 flex flex-col sm:flex-row justify-center items-center gap-4">
             <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto">
               <Link to="/login">Connexion</Link>
             </Button>
