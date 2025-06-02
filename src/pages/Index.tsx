@@ -1,19 +1,19 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
 import { Calendar, Users, Image } from "lucide-react";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       <Navbar />
       
       {/* Hero Section */}
       <div className="relative bg-cover text-white py-24" style={{
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
-        backgroundPosition: "20% center",
-        backgroundAttachment: "fixed"
-      }}>
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
+      backgroundPosition: "center center",
+      backgroundAttachment: "fixed"
+    }}>
         <div className="container mx-auto px-4 text-center">
           <div className="mt-0">
             <img src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png" alt="L'espace des deux rives" className="h-24 mx-auto" />
@@ -76,8 +76,6 @@ const Index = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
