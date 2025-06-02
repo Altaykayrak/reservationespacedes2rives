@@ -7,9 +7,10 @@ interface EditChildDialogProps {
   child: Child | null;
   onOpenChange: (child: Child | null) => void;
   onSuccess: () => void;
+  isAdminMode?: boolean;
 }
 
-export function EditChildDialog({ child, onOpenChange, onSuccess }: EditChildDialogProps) {
+export function EditChildDialog({ child, onOpenChange, onSuccess, isAdminMode = false }: EditChildDialogProps) {
   return (
     <Dialog open={!!child} onOpenChange={(open) => !open && onOpenChange(null)}>
       <DialogContent>
@@ -23,6 +24,7 @@ export function EditChildDialog({ child, onOpenChange, onSuccess }: EditChildDia
           <AddChildForm
             initialData={child}
             onSuccess={onSuccess}
+            isAdminMode={isAdminMode}
           />
         )}
       </DialogContent>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ChildrenFilters } from "@/components/admin/children/ChildrenFilters";
 import { ChildrenTable } from "@/components/admin/children/ChildrenTable";
@@ -12,6 +11,7 @@ import { DeleteChildDialog } from "@/components/profile/dialogs/DeleteChildDialo
 import { Button } from "@/components/ui/button";
 import { FileText, Plus } from "lucide-react";
 import { exportChildrenToPdf } from "@/components/admin/children/export/childrenPdfExport";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AdminChildren = () => {
   const { children, isLoading } = useChildrenData();
@@ -30,6 +30,8 @@ const AdminChildren = () => {
     handleSuccessfulEdit
   } = useChildActions();
 
+  const queryClient = useQueryClient();
+
   const filteredChildren = children?.filter((child) => {
     const matchesSearch = 
       child.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -45,7 +47,8 @@ const AdminChildren = () => {
 
   const handleSuccessfulAdd = () => {
     setShowAddDialog(false);
-    // This is handled in the form via React Query
+    // Refresh the data explicitly
+    queryClient.invalidateQueries({ queryKey: ["admin_all_children"] });
   };
 
   const handleExportPdf = () => {
@@ -115,6 +118,7 @@ const AdminChildren = () => {
             </DialogHeader>
             <AddChildForm
               onSuccess={handleSuccessfulAdd}
+              isAdminMode={true}
             />
           </DialogContent>
         </Dialog>
@@ -123,6 +127,7 @@ const AdminChildren = () => {
           child={editingChild}
           onOpenChange={setEditingChild}
           onSuccess={handleSuccessfulEdit}
+          isAdminMode={true}
         />
 
         <DeleteChildDialog

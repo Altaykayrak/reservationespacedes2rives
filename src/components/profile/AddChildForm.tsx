@@ -13,11 +13,13 @@ import { useState } from "react";
 interface AddChildFormProps {
   onSuccess: () => void;
   initialData?: Child;
+  isAdminMode?: boolean;
 }
 
 export function AddChildForm({
   onSuccess,
-  initialData
+  initialData,
+  isAdminMode = false
 }: AddChildFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedClass, setSelectedClass] = useState<string>(initialData?.school_class || "");
@@ -75,6 +77,7 @@ export function AddChildForm({
       
       console.log("Form submission values:", values);
       console.log("Selected class:", selectedClass);
+      console.log("Is admin mode:", isAdminMode);
 
       if (initialData) {
         console.log("Updating existing child:", initialData.id);
@@ -95,24 +98,40 @@ export function AddChildForm({
         
         console.log("Child updated successfully");
         
-        // Force refresh of data
+        // Force refresh of data - invalidate both queries to be safe
         await queryClient.invalidateQueries({
           queryKey: ['children']
         });
         
+        if (isAdminMode) {
+          await queryClient.invalidateQueries({
+            queryKey: ['admin_all_children']
+          });
+        }
+        
         toast.success("Enfant modifié avec succès");
       } else {
         // Create new child
-        const { data: { user } } = await supabase.auth.getUser();
+        let userId;
         
-        if (!user) throw new Error("No user found");
+        if (isAdminMode) {
+          // In admin mode, we should specify which user we're adding the child to
+          // For now, we'll use the current admin user, but this might need adjustment
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error("No admin user found");
+          userId = user.id;
+        } else {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error("No user found");
+          userId = user.id;
+        }
         
-        console.log("Creating new child for user:", user.id);
+        console.log("Creating new child for user:", userId);
         
         const { error } = await supabase
           .from('children')
           .insert([{
-            profile_id: user.id,
+            profile_id: userId,
             first_name: values.first_name.trim(),
             last_name: values.last_name.trim(),
             school_class: selectedClass
@@ -132,6 +151,12 @@ export function AddChildForm({
       await queryClient.invalidateQueries({
         queryKey: ['children']
       });
+      
+      if (isAdminMode) {
+        await queryClient.invalidateQueries({
+          queryKey: ['admin_all_children']
+        });
+      }
       
       // Call onSuccess callback after a brief timeout to ensure state updates are processed
       setTimeout(() => {

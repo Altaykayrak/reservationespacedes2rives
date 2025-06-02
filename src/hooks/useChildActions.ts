@@ -13,12 +13,19 @@ export const useChildActions = () => {
 
   const deleteChildMutation = useMutation({
     mutationFn: async (childId: string) => {
+      console.log("Attempting to delete child with ID:", childId);
+      
       const { error } = await supabase
         .from("children")
         .delete()
         .eq("id", childId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Delete error:", error);
+        throw error;
+      }
+      
+      console.log("Child deleted successfully");
     },
     onSuccess: () => {
       toast.success("Enfant supprimé avec succès");
@@ -37,13 +44,16 @@ export const useChildActions = () => {
   const handleDelete = async () => {
     if (!deletingChild || isDeleting) return;
     
+    console.log("Starting delete process for child:", deletingChild);
     setIsDeleting(true);
     deleteChildMutation.mutate(deletingChild.id);
   };
 
   const handleSuccessfulEdit = () => {
+    console.log("Edit successful, refreshing data");
     setEditingChild(null);
     queryClient.invalidateQueries({ queryKey: ["admin_all_children"] });
+    toast.success("Enfant modifié avec succès");
   };
 
   return {
