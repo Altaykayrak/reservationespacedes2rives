@@ -8,11 +8,14 @@ const Index = () => {
       <Navbar />
       
       {/* Hero Section */}
-<div className="relative bg-no-repeat bg-cover text-white overflow-hidden" style={{
-  backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
-  backgroundPosition: "top center",
-  height: "620px" // Ajuste précisément selon l'image souhaitée
-}}>
+<div 
+  className="relative bg-no-repeat bg-cover text-white overflow-hidden"
+  style={{
+    backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
+    backgroundPosition: "top center",
+    height: "620px"
+  }}
+>
   <div className="container mx-auto px-4 text-center">
     <div className="mt-0">
       <img 
@@ -32,6 +35,7 @@ const Index = () => {
     </div>
   </div>
 </div>
+
         <div className="container mx-auto px-4 text-center">
           <div className="mt-0">
             <img src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png" alt="L'espace des deux rives" className="h-24 mx-auto" />
