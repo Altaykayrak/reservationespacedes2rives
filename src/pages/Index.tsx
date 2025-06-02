@@ -8,14 +8,30 @@ const Index = () => {
       <Navbar />
       
       {/* Hero Section */}
-<div className="relative bg-cover bg-no-repeat text-white py-24" style={{
-  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
-  backgroundPosition: "bottom",
-  backgroundSize: "cover",
-  backgroundRepeat: "no-repeat",
-  maxHeight: "90vh",
-  overflow: "hidden"
+<div className="relative bg-no-repeat bg-cover text-white overflow-hidden" style={{
+  backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
+  backgroundPosition: "top center",
+  height: "620px" // Ajuste précisément selon l'image souhaitée
 }}>
+  <div className="container mx-auto px-4 text-center">
+    <div className="mt-0">
+      <img 
+        src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png"
+        alt="L'espace des deux rives"
+        className="h-24 mx-auto"
+      />
+    </div>
+
+    <div className="mt-[370px] flex flex-col sm:flex-row justify-center items-center gap-4">
+      <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto">
+        <Link to="/login">Connexion</Link>
+      </Button>
+      <Button asChild size="lg" variant="outline" className="bg-white text-indigo-600 hover:bg-gray-100 w-full sm:w-auto">
+        <Link to="/register">Inscription</Link>
+      </Button>
+    </div>
+  </div>
+</div>
         <div className="container mx-auto px-4 text-center">
           <div className="mt-0">
             <img src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png" alt="L'espace des deux rives" className="h-24 mx-auto" />
