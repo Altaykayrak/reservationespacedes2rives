@@ -12,7 +12,7 @@ const Index = () => {
  <div className="relative bg-cover text-white py-12 overflow-hidden" style={{
   backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
   backgroundPosition: "center top",
-  height: "520px"  // hauteur à ajuster précisément
+  height: "540px"  // hauteur à ajuster précisément
 }}>
 
         <div className="container mx-auto px-4 text-center">
