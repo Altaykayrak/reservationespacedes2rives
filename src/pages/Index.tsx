@@ -9,10 +9,12 @@ const Index = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <div className="relative bg-cover text-white py-24" style={{
-      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
-      backgroundPosition: "0% 60%"
-    }}>
+ <div className="relative bg-cover text-white py-12 overflow-hidden" style={{
+  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
+  backgroundPosition: "center top",
+  height: "520px"  // hauteur à ajuster précisément
+}}>
+
         <div className="container mx-auto px-4 text-center">
           <div className="mt-0">
             <img src="https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images/Logolong.png" alt="L'espace des deux rives" className="h-24 mx-auto" />
@@ -20,7 +22,7 @@ const Index = () => {
           <h1 className="text-5xl font-bold mb-6"></h1>
           <p className="text-xl mb-12 max-w-3xl mx-auto text-red-300">
           </p>
-          <div className="mt-96 flex flex-col sm:flex-row justify-center items-center gap-4">
+          <div className="mt-[320px] flex flex-col sm:flex-row justify-center items-center gap-4">
             <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto">
               <Link to="/login">Connexion</Link>
             </Button>
