@@ -15,7 +15,7 @@ const Index = () => {
         style={{
           backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
           backgroundPosition: "top center",
-          height: "620px"
+          height: "520px"
         }}
       >
         <div className="container mx-auto px-4 text-center">
