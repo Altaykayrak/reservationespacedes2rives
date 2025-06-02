@@ -1,4 +1,3 @@
-
 import { Navbar } from "@/components/ui/navbar";
 import { LoadingState } from "@/components/rdv/LoadingState";
 import { UserRdv } from "@/components/rdv/UserRdv";
@@ -8,9 +7,11 @@ import { ConfirmRdvDialog } from "@/components/rdv/ConfirmRdvDialog";
 import { ReservationCompleteDialog } from "@/components/rdv/ReservationCompleteDialog";
 import { useRdv } from "@/hooks/useRdv";
 import { useAccessControl } from "@/hooks/useAccessControl";
-
 export default function RdvPage() {
-  const { rdvAccess, loading: accessLoading } = useAccessControl();
+  const {
+    rdvAccess,
+    loading: accessLoading
+  } = useAccessControl();
   const {
     loading,
     userRdv,
@@ -30,33 +31,26 @@ export default function RdvPage() {
     handleSelectSlot,
     handleCompleteDialogClose
   } = useRdv();
-
   if (accessLoading || loading) {
     return <LoadingState />;
   }
-
   if (!rdvAccess) {
-    return (
-      <>
+    return <>
         <Navbar />
         <div className="container mx-auto py-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold mb-4">RDV Inscription</h1>
+            <h1 className="text-3xl font-bold mb-4">Rendez-vous d'inscription</h1>
             <p className="text-gray-600">
               La prise de rendez-vous pour les inscriptions de l'année 2024-2025 n'est pas encore ouverte. Vous serez informé dès que le service sera accessible.
             </p>
           </div>
         </div>
-      </>
-    );
+      </>;
   }
-
   if (userRdv) {
     return <UserRdv userRdv={userRdv} />;
   }
-
-  return (
-    <>
+  return <>
       <Navbar />
       <div className="container mx-auto py-8">
         <div className="mb-6">
@@ -67,38 +61,14 @@ export default function RdvPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <RdvCalendar 
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            rdvList={rdvList}
-            summerRange={summerRange}
-          />
+          <RdvCalendar selectedDate={selectedDate} setSelectedDate={setSelectedDate} rdvList={rdvList} summerRange={summerRange} />
 
-          <AvailableSlots 
-            selectedDate={selectedDate}
-            availableSlots={availableSlots}
-            onSelectSlot={handleSelectSlot}
-          />
+          <AvailableSlots selectedDate={selectedDate} availableSlots={availableSlots} onSelectSlot={handleSelectSlot} />
         </div>
 
-        <ConfirmRdvDialog 
-          open={showConfirmDialog}
-          onOpenChange={setShowConfirmDialog}
-          selectedRdv={selectedRdv}
-          selectedMotifs={selectedMotifs}
-          handleMotifChange={handleMotifChange}
-          handleReservation={handleReservation}
-          isLoading={loading}
-        />
+        <ConfirmRdvDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog} selectedRdv={selectedRdv} selectedMotifs={selectedMotifs} handleMotifChange={handleMotifChange} handleReservation={handleReservation} isLoading={loading} />
 
-        <ReservationCompleteDialog 
-          open={reservationComplete}
-          onOpenChange={setReservationComplete}
-          selectedRdv={selectedRdv}
-          selectedMotifs={selectedMotifs}
-          onClose={handleCompleteDialogClose}
-        />
+        <ReservationCompleteDialog open={reservationComplete} onOpenChange={setReservationComplete} selectedRdv={selectedRdv} selectedMotifs={selectedMotifs} onClose={handleCompleteDialogClose} />
       </div>
-    </>
-  );
+    </>;
 }
