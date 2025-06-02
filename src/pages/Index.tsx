@@ -11,7 +11,7 @@ const Index = () => {
       {/* Hero Section */}
  <div className="relative bg-cover text-white py-12 overflow-hidden" style={{
   backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
-  backgroundPosition: "center top",
+  backgroundPosition:  "30% top",
   height: "580px"  // hauteur à ajuster précisément
 }}>
 
