@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
 import { Calendar, Users, Image } from "lucide-react";
+
 const Index = () => {
   return <div className="min-h-screen bg-white">
       <Navbar />
@@ -18,11 +20,11 @@ const Index = () => {
           <h1 className="text-5xl font-bold mb-6"></h1>
           <p className="text-xl mb-12 max-w-3xl mx-auto text-red-300">
           </p>
-          <div className="mt-48 space-x-4">
-            <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700">
+          <div className="mt-48 flex flex-col sm:flex-row justify-center items-center gap-4">
+            <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto">
               <Link to="/login">Connexion</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="bg-white text-indigo-600 hover:bg-gray-100">
+            <Button asChild size="lg" variant="outline" className="bg-white text-indigo-600 hover:bg-gray-100 w-full sm:w-auto">
               <Link to="/register">Inscription</Link>
             </Button>
           </div>
