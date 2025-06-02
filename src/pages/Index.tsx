@@ -1,19 +1,17 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
 import { Calendar, Users, Image } from "lucide-react";
-
 const Index = () => {
   return <div className="min-h-screen bg-white">
       <Navbar />
       
       {/* Hero Section */}
  <div className="relative bg-cover text-white py-12 overflow-hidden" style={{
-  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
-  backgroundPosition:  "15% top",
-  height: "580px"  // hauteur à ajuster précisément
-}}>
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
+      backgroundPosition: "15% top",
+      height: "580px" // hauteur à ajuster précisément
+    }}>
 
         <div className="container mx-auto px-4 text-center">
           <div className="mt-0">
@@ -42,7 +40,7 @@ const Index = () => {
       </div>
 
       {/* Features Section */}
-      <div className="py-24 bg-white">
+      <div className="bg-white py-0">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {/* Activités variées */}
