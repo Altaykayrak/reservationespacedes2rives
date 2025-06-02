@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
@@ -11,8 +10,7 @@ const Index = () => {
       {/* Hero Section */}
       <div className="relative bg-cover text-white py-24" style={{
       backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
-      backgroundPosition: "center center",
-      backgroundAttachment: "fixed"
+      backgroundPosition: "20% center"
     }}>
         <div className="container mx-auto px-4 text-center">
           <div className="mt-0">
