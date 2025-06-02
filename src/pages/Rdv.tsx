@@ -54,10 +54,8 @@ export default function RdvPage() {
       <Navbar />
       <div className="container mx-auto py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">RDV Inscription</h1>
-          <p className="text-gray-600">
-            Sélectionnez une date pour voir les créneaux disponibles
-          </p>
+          <h1 className="text-3xl font-bold mb-2">Rendez-vous d'inscription année scolaire 2025-2026</h1>
+          <p className="text-gray-600">Une inscription avant chaque début d'année scolaire est obligatoire, merci de sélectionner une date pour voir les créneaux disponibles</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
