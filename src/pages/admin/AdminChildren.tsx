@@ -20,7 +20,9 @@ const AdminChildren = () => {
   const filteredChildren = children?.filter((child) => {
     const matchesSearch = 
       child.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      child.last_name.toLowerCase().includes(searchQuery.toLowerCase());
+      child.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (child.profile?.first_name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (child.profile?.last_name?.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesClass = selectedClass === "all" || child.school_class === selectedClass;
     const matchesGroup = selectedGroup === "all" || getGroupName(child.school_class) === selectedGroup;

@@ -1,25 +1,21 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSchoolClassUtils } from "./useSchoolClassUtils";
-import { useSchoolClassCategories } from "./useSchoolClassCategories";
 
 export const useChildrenData = () => {
   const { data: children, isLoading } = useQuery({
-    queryKey: ["children"],
+    queryKey: ["admin_all_children"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // S'assurer que l'utilisateur est connecté et récupérer ses enfants
-      if (!session?.user?.id) {
-        console.log("Pas de session utilisateur trouvée");
-        return [];
-      }
-      
+      // Récupérer tous les enfants de tous les utilisateurs avec les informations du parent
       const { data, error } = await supabase
         .from("children")
-        .select("*")
-        .eq('profile_id', session.user.id)
+        .select(`
+          *,
+          profile:profiles!children_profile_id_fkey (
+            first_name,
+            last_name
+          )
+        `)
         .order('last_name', { ascending: true })
         .order('first_name', { ascending: true });
       
@@ -28,42 +24,10 @@ export const useChildrenData = () => {
         throw error;
       }
       
-      console.log("Enfants récupérés:", data);
+      console.log("Tous les enfants récupérés:", data);
       return data;
     },
   });
 
-  const { isTeenClassSync } = useSchoolClassUtils();
-  const { getClassCategorySync } = useSchoolClassCategories();
-
-  // Filtre pour les adolescents
-  const teenChildren = children?.filter(child => isTeenClassSync(child.school_class)) || [];
-  
-  // Filtre pour les non-adolescents
-  const nonTeenChildren = children?.filter(child => !isTeenClassSync(child.school_class)) || [];
-  
-  // Filtre pour les enfants éligibles aux mercredis (exclure PS et adolescents)
-  // Utiliser directement les catégories pour déterminer si c'est un adolescent
-  const wednesdayEligibleChildren = children?.filter(child => {
-    // Exclure les PS directement
-    const isPS = child.school_class.toUpperCase() === "PS";
-    
-    // Vérifier si c'est un adolescent en utilisant les catégories
-    const isTeen = getClassCategorySync(child.school_class) === "adolescent";
-    
-    console.log(`Enfant ${child.first_name} ${child.last_name}, classe: ${child.school_class}, est PS: ${isPS}, est adolescent: ${isTeen}`);
-    
-    // Inclure uniquement si ce n'est ni PS ni adolescent
-    return !isPS && !isTeen;
-  }) || [];
-
-  console.log("Enfants éligibles pour le mercredi:", wednesdayEligibleChildren);
-
-  return { 
-    children,
-    isLoading,
-    teenChildren,
-    nonTeenChildren,
-    wednesdayEligibleChildren
-  };
+  return { children, isLoading };
 };
