@@ -11,7 +11,8 @@ const Index = () => {
       {/* Hero Section */}
       <div className="relative bg-cover text-white py-24" style={{
       backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('https://dddtybmradplydzymrly.supabase.co/storage/v1/object/public/images//Newfront.jpg')`,
-      backgroundPosition: "0% 20%"
+      backgroundPosition: "center center",
+      backgroundAttachment: "fixed"
     }}>
         <div className="container mx-auto px-4 text-center">
           <div className="mt-0">
