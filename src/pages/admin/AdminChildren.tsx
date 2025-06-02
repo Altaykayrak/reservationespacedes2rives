@@ -3,9 +3,12 @@ import { useState } from "react";
 import { ChildrenFilters } from "@/components/admin/children/ChildrenFilters";
 import { ChildrenTable } from "@/components/admin/children/ChildrenTable";
 import { useChildrenData } from "@/hooks/useChildrenData";
+import { useChildActions } from "@/hooks/useChildActions";
 import { getGroupName } from "@/utils/schoolClassUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddChildForm } from "@/components/profile/AddChildForm";
+import { EditChildDialog } from "@/components/profile/dialogs/EditChildDialog";
+import { DeleteChildDialog } from "@/components/profile/dialogs/DeleteChildDialog";
 import { Button } from "@/components/ui/button";
 import { FileText, Plus } from "lucide-react";
 import { exportChildrenToPdf } from "@/components/admin/children/export/childrenPdfExport";
@@ -16,6 +19,16 @@ const AdminChildren = () => {
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  
+  const {
+    editingChild,
+    setEditingChild,
+    deletingChild,
+    setDeletingChild,
+    isDeleting,
+    handleDelete,
+    handleSuccessfulEdit
+  } = useChildActions();
 
   const filteredChildren = children?.filter((child) => {
     const matchesSearch = 
@@ -91,6 +104,8 @@ const AdminChildren = () => {
         <ChildrenTable
           children={filteredChildren || []}
           isLoading={isLoading}
+          onEdit={setEditingChild}
+          onDelete={setDeletingChild}
         />
 
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -103,6 +118,19 @@ const AdminChildren = () => {
             />
           </DialogContent>
         </Dialog>
+
+        <EditChildDialog
+          child={editingChild}
+          onOpenChange={setEditingChild}
+          onSuccess={handleSuccessfulEdit}
+        />
+
+        <DeleteChildDialog
+          child={deletingChild}
+          onOpenChange={setDeletingChild}
+          onDelete={handleDelete}
+          isDeleting={isDeleting}
+        />
       </div>
     </div>
   );
