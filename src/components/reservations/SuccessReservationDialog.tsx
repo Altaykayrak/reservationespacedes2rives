@@ -22,6 +22,9 @@ export const SuccessReservationDialog = ({
   onOpenChange,
   excludedFullDates = [],
 }: SuccessReservationDialogProps) => {
+  console.log("SuccessReservationDialog - excludedFullDates reçues:", excludedFullDates);
+  console.log("SuccessReservationDialog - excludedFullDates formatées:", excludedFullDates.map(d => format(d, "dd/MM/yyyy")));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
