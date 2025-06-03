@@ -122,16 +122,22 @@ export const useWednesdayReservationSubmission = (
 
         console.log(`Places restantes pour le mercredi ${format(dateOption.date, "dd/MM/yyyy")}:`, spotsRemaining);
 
+        // Important: changement de la condition pour détecter les dates complètes
         if (spotsRemaining <= 0) {
           fullDates.push(dateOption.date);
-          console.log(`Mercredi complet ajouté à fullDates: ${format(dateOption.date, "dd/MM/yyyy")}`);
+          console.log(`Mercredi complet ajouté à fullDates: ${format(dateOption.date, "dd/MM/yyyy")} (places restantes: ${spotsRemaining})`);
         } else {
           availableDates.push(dateOption);
+          console.log(`Mercredi disponible: ${format(dateOption.date, "dd/MM/yyyy")} (places restantes: ${spotsRemaining})`);
         }
       }
 
       console.log("Dates complètes détectées:", fullDates.map(d => format(d, "dd/MM/yyyy")));
       console.log("Dates disponibles:", availableDates.map(d => format(d.date, "dd/MM/yyyy")));
+
+      // Mettre à jour immédiatement excludedFullDates ici
+      console.log("Mise à jour IMMÉDIATE de excludedFullDates avec:", fullDates.map(d => format(d, "dd/MM/yyyy")));
+      setExcludedFullDates(fullDates);
 
       // Si toutes les dates sont complètes, afficher un message d'erreur
       if (availableDates.length === 0) {
@@ -144,8 +150,6 @@ export const useWednesdayReservationSubmission = (
           .join(', ');
 
         console.log("Toutes les dates sont complètes, affichage du message d'erreur");
-        // Mettre à jour excludedFullDates même en cas d'erreur
-        setExcludedFullDates(fullDates);
 
         toast({
           title: "Aucune réservation possible",
@@ -220,18 +224,14 @@ export const useWednesdayReservationSubmission = (
         refetchReservations()
       ]);
 
-      // Mettre à jour excludedFullDates avec les dates complètes détectées
-      console.log("Mise à jour de excludedFullDates avec:", fullDates.map(d => format(d, "dd/MM/yyyy")));
-      setExcludedFullDates(fullDates);
+      console.log("Avant réinitialisation du formulaire - excludedFullDates:", fullDates.map(d => format(d, "dd/MM/yyyy")));
       
-      // Réinitialiser le formulaire AVANT d'afficher le dialogue
+      // Réinitialiser le formulaire
       resetForm();
       
-      // Attendre un petit délai pour s'assurer que l'état est mis à jour
-      setTimeout(() => {
-        console.log("Affichage du dialogue de succès avec excludedFullDates:", fullDates.map(d => format(d, "dd/MM/yyyy")));
-        setShowSuccessDialog(true);
-      }, 100);
+      // Afficher immédiatement le dialogue de succès
+      console.log("Affichage IMMÉDIAT du dialogue de succès avec excludedFullDates:", fullDates.map(d => format(d, "dd/MM/yyyy")));
+      setShowSuccessDialog(true);
 
     } catch (error: any) {
       console.error("Erreur lors de la création des réservations:", error);
