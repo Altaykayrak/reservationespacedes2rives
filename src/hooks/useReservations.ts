@@ -5,9 +5,11 @@ import { useWednesdayReservationSubmission } from "./useWednesdayReservationSubm
 import { useChildrenData } from "./useChildrenData";
 import { useAvailableWednesdays } from "./useAvailableWednesdays";
 import { useExistingReservations } from "./useExistingReservations";
+import { useToast } from "@/hooks/use-toast";
 
 export const useReservations = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const isQueryMutating = useIsMutating() > 0;
   const [selectedChild, setSelectedChild] = useState("");
   const [selectedDates, setSelectedDates] = useState<Array<{
@@ -48,7 +50,7 @@ export const useReservations = () => {
     }));
   };
 
-  // Fonction pour obtenir les dates disponibles
+  // Fonction pour obtenir les dates disponibles (non réservées et non complètes)
   const getAvailableDates = () => {
     if (!selectedChild || availableWednesdays.length === 0) return [];
     
@@ -62,18 +64,33 @@ export const useReservations = () => {
       }));
   };
 
+  // Fonction pour obtenir les dates complètes
+  const getFullDates = () => {
+    if (!selectedChild || availableWednesdays.length === 0) return [];
+    
+    return availableWednesdays
+      .filter(wednesday => {
+        const date = new Date(wednesday.date);
+        return !isDateAlreadyReserved(date) && wednesday.isFull;
+      })
+      .map(wednesday => new Date(wednesday.date));
+  };
+
   // Fonction pour sélectionner tous les mercredis disponibles
   const selectAllDates = () => {
     if (!selectedChild || availableWednesdays.length === 0) return;
     
     console.log("Tentative de sélectionner tous les mercredis disponibles");
 
+    const availableDates = getAvailableDates();
+    const fullDates = getFullDates();
+
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
       selectedDates.map(d => [d.date.getTime(), { withoutMeal: d.withoutMeal, earlyDropoff: d.earlyDropoff }])
     );
 
-    const allAvailableDates = getAvailableDates().map(({ date }) => {
+    const allAvailableDates = availableDates.map(({ date }) => {
       const existing = existingOptions.get(date.getTime());
       return {
         date,
@@ -84,6 +101,23 @@ export const useReservations = () => {
 
     console.log("Dates disponibles sélectionnées:", allAvailableDates);
     setSelectedDates(allAvailableDates);
+
+    // Afficher un message si certains mercredis sont complets
+    if (fullDates.length > 0) {
+      const fullDatesText = fullDates
+        .map(date => date.toLocaleDateString('fr-FR', { 
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long' 
+        }))
+        .join(', ');
+
+      toast({
+        title: "Mercredis complets",
+        description: `Les mercredis suivants sont complets et n'ont pas été sélectionnés : ${fullDatesText}. Vous pouvez contacter l'accueil pour être mis en liste d'attente.`,
+        variant: "default",
+      });
+    }
   };
 
   // Fonction pour sélectionner tous les mercredis disponibles sans repas
@@ -94,6 +128,7 @@ export const useReservations = () => {
 
     // Récupérer d'abord toutes les dates disponibles
     const availableDates = getAvailableDates();
+    const fullDates = getFullDates();
     
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
@@ -112,6 +147,23 @@ export const useReservations = () => {
 
     console.log("Dates disponibles sélectionnées sans repas:", allAvailableDates);
     setSelectedDates(allAvailableDates);
+
+    // Afficher un message si certains mercredis sont complets
+    if (fullDates.length > 0) {
+      const fullDatesText = fullDates
+        .map(date => date.toLocaleDateString('fr-FR', { 
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long' 
+        }))
+        .join(', ');
+
+      toast({
+        title: "Mercredis complets",
+        description: `Les mercredis suivants sont complets et n'ont pas été sélectionnés : ${fullDatesText}. Vous pouvez contacter l'accueil pour être mis en liste d'attente.`,
+        variant: "default",
+      });
+    }
   };
 
   // Fonction pour sélectionner tous les mercredis disponibles avec accueil avant 8h30
@@ -122,6 +174,7 @@ export const useReservations = () => {
 
     // Récupérer d'abord toutes les dates disponibles
     const availableDates = getAvailableDates();
+    const fullDates = getFullDates();
     
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
@@ -140,6 +193,23 @@ export const useReservations = () => {
 
     console.log("Dates disponibles sélectionnées avec accueil avant 8h30:", allAvailableDates);
     setSelectedDates(allAvailableDates);
+
+    // Afficher un message si certains mercredis sont complets
+    if (fullDates.length > 0) {
+      const fullDatesText = fullDates
+        .map(date => date.toLocaleDateString('fr-FR', { 
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long' 
+        }))
+        .join(', ');
+
+      toast({
+        title: "Mercredis complets",
+        description: `Les mercredis suivants sont complets et n'ont pas été sélectionnés : ${fullDatesText}. Vous pouvez contacter l'accueil pour être mis en liste d'attente.`,
+        variant: "default",
+      });
+    }
   };
 
   const isDateReservedForChild = (childId: string, date: Date) => {
