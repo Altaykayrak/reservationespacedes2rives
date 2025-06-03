@@ -39,7 +39,7 @@ export const useReservations = () => {
   };
 
   const { 
-    handleSubmit, 
+    handleSubmit: handleWednesdaySubmit, 
     showSuccessDialog, 
     setShowSuccessDialog, 
     isSubmitting,
@@ -56,6 +56,8 @@ export const useReservations = () => {
     resetForm
   );
 
+  console.log("useReservations - handleSubmit va appeler handleWednesdaySubmit");
+
   return {
     selectedDates,
     setSelectedDates,
@@ -65,7 +67,7 @@ export const useReservations = () => {
     wednesdayReservations,
     handleDateToggle,
     handleOptionChange,
-    handleSubmit,
+    handleSubmit: handleWednesdaySubmit, // Utiliser directement la fonction du hook de soumission
     isDateReservedForChild,
     resetForm,
     refetchReservations,
