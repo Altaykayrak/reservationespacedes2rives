@@ -63,15 +63,80 @@ export const useWednesdayReservationSubmission = (
     setIsSubmitting(true);
 
     try {
-      // Récupérer les informations de l'enfant
+      // Récupérer les informations de l'enfant pour vérifier sa classe
       const { data: childData, error: childError } = await supabase
         .from("children")
-        .select("first_name, last_name")
+        .select("first_name, last_name, school_class")
         .eq("id", selectedChild)
         .single();
 
       if (childError) throw childError;
 
+      const isKindergarten = ["PS", "MS", "GS"].includes(childData.school_class);
+      const isPrimary = ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childData.school_class);
+
+      // Vérifier les places disponibles pour chaque date
+      const fullDates: Date[] = [];
+      
+      for (const dateOption of selectedDates) {
+        const { data: wednesday, error: wednesdayError } = await supabase
+          .from("available_wednesdays")
+          .select("id")
+          .eq("date", format(dateOption.date, "yyyy-MM-dd"))
+          .maybeSingle();
+
+        if (wednesdayError) throw wednesdayError;
+        if (!wednesday) throw new Error(`Mercredi non trouvé pour la date ${format(dateOption.date, "dd/MM/yyyy")}`);
+
+        // Vérifier les places restantes selon la classe de l'enfant
+        let spotsRemaining = 0;
+        if (isKindergarten) {
+          const { data: kindergartenSpots, error: spotsError } = await supabase
+            .rpc('check_wednesday_spots_remaining', {
+              wednesday_id: wednesday.id,
+              child_school_class: 'MS'
+            });
+          
+          if (spotsError) throw spotsError;
+          spotsRemaining = kindergartenSpots || 0;
+        } else if (isPrimary) {
+          const { data: primarySpots, error: spotsError } = await supabase
+            .rpc('check_wednesday_spots_remaining', {
+              wednesday_id: wednesday.id,
+              child_school_class: 'CP'
+            });
+          
+          if (spotsError) throw spotsError;
+          spotsRemaining = primarySpots || 0;
+        }
+
+        console.log(`Places restantes pour le mercredi ${format(dateOption.date, "dd/MM/yyyy")}:`, spotsRemaining);
+
+        if (spotsRemaining <= 0) {
+          fullDates.push(dateOption.date);
+        }
+      }
+
+      // Si certaines dates sont complètes, afficher un message d'erreur
+      if (fullDates.length > 0) {
+        const fullDatesText = fullDates
+          .map(date => date.toLocaleDateString('fr-FR', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long' 
+          }))
+          .join(', ');
+
+        toast({
+          title: "Mercredis complets",
+          description: `Les mercredis suivants sont complets et ne peuvent pas être réservés : ${fullDatesText}. Vous pouvez contacter l'accueil pour être mis en liste d'attente.`,
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Si toutes les dates sont disponibles, procéder aux réservations
       for (const dateOption of selectedDates) {
         const { data: wednesday, error: wednesdayError } = await supabase
           .from("available_wednesdays")
