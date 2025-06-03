@@ -24,6 +24,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
 import { useToast } from "@/hooks/use-toast";
+import { useAvailableWednesdays } from "@/hooks/useAvailableWednesdays";
 
 interface DateOption {
   date: Date;
@@ -55,6 +56,33 @@ export const AdminReservationForm = ({
   const { toast } = useToast();
 
   const { wednesdayEligibleChildren, isLoading } = useAdminChildrenData();
+
+  // Récupérer les informations de l'enfant sélectionné pour déterminer sa classe
+  const { data: childInfo } = useQuery({
+    queryKey: ["selectedChild", selectedChild],
+    queryFn: async () => {
+      if (!selectedChild) return null;
+      
+      const { data, error } = await supabase
+        .from("children")
+        .select("school_class")
+        .eq("id", selectedChild)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedChild,
+  });
+
+  const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
+  const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
+
+  // Utiliser le même hook que WednesdayDateSelector pour avoir les mêmes dates disponibles
+  const { data: availableWednesdays = [] } = useAvailableWednesdays(
+    Boolean(isKindergarten),
+    Boolean(isPrimary)
+  );
 
   // Requête pour récupérer les réservations existantes
   const { data: existingReservations } = useQuery({
@@ -94,62 +122,30 @@ export const AdminReservationForm = ({
     );
   };
 
-  // Fonction pour vérifier si un mercredi est complet pour l'enfant sélectionné
-  const checkIfWednesdayIsFull = async (wednesdayId: string, childSchoolClass: string) => {
-    const isKindergarten = ["PS", "MS", "GS"].includes(childSchoolClass);
-    const isPrimary = ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childSchoolClass);
-
-    if (!isKindergarten && !isPrimary) return false;
-
-    const { data: spotsRemaining, error } = await supabase
-      .rpc('check_wednesday_spots_remaining', {
-        wednesday_id: wednesdayId,
-        child_school_class: isKindergarten ? 'MS' : 'CP'
-      });
-
-    if (error) {
-      console.error('Erreur lors de la vérification des places:', error);
-      return false;
-    }
-
-    return spotsRemaining <= 0;
-  };
-
   // Créer des fonctions qui modifient directement l'état local
   const selectAllDates = async () => {
-    if (!selectedChild) return;
+    if (!selectedChild || !availableWednesdays.length) return;
 
     try {
-      // Récupérer les mercredis disponibles
-      const { data: availableWednesdays } = await supabase
-        .from("available_wednesdays")
-        .select("*")
-        .order("date", { ascending: true });
-
-      if (!availableWednesdays) return;
-
-      // Récupérer les informations de l'enfant
-      const { data: childData } = await supabase
-        .from("children")
-        .select("school_class")
-        .eq("id", selectedChild)
-        .single();
-
-      if (!childData) return;
-
       const availableDates = [];
       const fullDates = [];
 
-      // Vérifier chaque mercredi disponible
+      // Utiliser les mercredis filtrés par useAvailableWednesdays
       for (const wednesday of availableWednesdays) {
         const date = new Date(wednesday.date);
         const isReserved = isDateReservedForChild(date);
         
         if (isReserved) continue;
 
-        const isFull = await checkIfWednesdayIsFull(wednesday.id, childData.school_class);
-        
-        if (isFull) {
+        // Vérifier si le mercredi est complet
+        let spotsLeft = 0;
+        if (isKindergarten) {
+          spotsLeft = wednesday.max_participants_kindergarten - wednesday.kindergartenReservations;
+        } else if (isPrimary) {
+          spotsLeft = wednesday.max_participants_primary - wednesday.primaryReservations;
+        }
+
+        if (spotsLeft <= 0) {
           fullDates.push(date);
         } else {
           availableDates.push({
