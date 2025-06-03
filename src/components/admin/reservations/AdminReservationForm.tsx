@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -93,12 +92,71 @@ export const AdminReservationForm = ({
     );
   };
 
-  // Utiliser le hook useWednesdaySelection pour les fonctions de sélection automatique
+  // Utiliser le hook useWednesdaySelection mais adapter ses fonctions à notre état local
   const {
-    selectAllDates,
-    selectAllDatesWithoutMeal,
-    selectAllDatesWithEarlyDropoff
+    selectAllDates: hookSelectAllDates,
+    selectAllDatesWithoutMeal: hookSelectAllDatesWithoutMeal,
+    selectAllDatesWithEarlyDropoff: hookSelectAllDatesWithEarlyDropoff
   } = useWednesdaySelection(selectedChild, isDateReservedForChild);
+
+  // Créer des fonctions wrapper qui mettent à jour l'état local
+  const selectAllDates = async () => {
+    // Récupérer les dates sélectionnées du hook
+    const { selectedDates: hookSelectedDates } = useWednesdaySelection(selectedChild, isDateReservedForChild);
+    
+    // Simuler le processus de sélection en appelant handleDateToggle pour chaque date
+    if (!selectedChild) return;
+
+    try {
+      // Récupérer les mercredis disponibles
+      const { data: availableWednesdays } = await supabase
+        .from("available_wednesdays")
+        .select("*")
+        .order("date", { ascending: true });
+
+      if (!availableWednesdays) return;
+
+      // Récupérer les informations de l'enfant
+      const { data: childData } = await supabase
+        .from("children")
+        .select("school_class")
+        .eq("id", selectedChild)
+        .single();
+
+      if (!childData) return;
+
+      // Vider d'abord toutes les sélections
+      selectedDates.forEach(dateOption => {
+        handleDateToggle(dateOption.date);
+      });
+
+      // Sélectionner toutes les dates disponibles
+      for (const wednesday of availableWednesdays) {
+        const date = new Date(wednesday.date);
+        if (!isDateReservedForChild(date)) {
+          handleDateToggle(date);
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la sélection automatique:", error);
+    }
+  };
+
+  const selectAllDatesWithoutMeal = async () => {
+    await selectAllDates();
+    // Modifier toutes les dates pour être sans repas
+    selectedDates.forEach(dateOption => {
+      handleOptionChange(dateOption.date, 'withoutMeal', true);
+    });
+  };
+
+  const selectAllDatesWithEarlyDropoff = async () => {
+    await selectAllDates();
+    // Modifier toutes les dates pour avoir un accueil matinal
+    selectedDates.forEach(dateOption => {
+      handleOptionChange(dateOption.date, 'earlyDropoff', true);
+    });
+  };
 
   const handleDateSelection = (date: Date) => {
     if (selectedChild && isDateReservedForChild(date)) {
