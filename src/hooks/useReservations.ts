@@ -50,61 +50,47 @@ export const useReservations = () => {
     }));
   };
 
-  // Fonction pour obtenir les dates disponibles (non réservées et non complètes)
-  const getAvailableDates = () => {
-    if (!selectedChild || availableWednesdays.length === 0) return [];
-    
-    return availableWednesdays
-      .filter(wednesday => {
-        const date = new Date(wednesday.date);
-        return !isDateAlreadyReserved(date) && !wednesday.isFull;
-      })
-      .map(wednesday => ({
-        date: new Date(wednesday.date)
-      }));
-  };
-
-  // Fonction pour obtenir les dates complètes
-  const getFullDates = () => {
-    if (!selectedChild || availableWednesdays.length === 0) return [];
-    
-    return availableWednesdays
-      .filter(wednesday => {
-        const date = new Date(wednesday.date);
-        return !isDateAlreadyReserved(date) && wednesday.isFull;
-      })
-      .map(wednesday => new Date(wednesday.date));
-  };
-
   // Fonction pour sélectionner tous les mercredis disponibles
   const selectAllDates = () => {
     if (!selectedChild || availableWednesdays.length === 0) return;
     
     console.log("Tentative de sélectionner tous les mercredis disponibles");
-
-    const availableDates = getAvailableDates();
-    const fullDates = getFullDates();
-
-    console.log("Dates disponibles (non complètes):", availableDates);
-    console.log("Dates complètes (exclues):", fullDates);
+    console.log("Mercredis disponibles bruts:", availableWednesdays);
 
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
       selectedDates.map(d => [d.date.getTime(), { withoutMeal: d.withoutMeal, earlyDropoff: d.earlyDropoff }])
     );
 
-    // Sélectionner UNIQUEMENT les dates disponibles (non complètes)
-    const allAvailableDates = availableDates.map(({ date }) => {
-      const existing = existingOptions.get(date.getTime());
-      return {
-        date,
-        withoutMeal: existing?.withoutMeal || false,
-        earlyDropoff: existing?.earlyDropoff || false
-      };
-    });
+    // Filtrer les mercredis : exclure ceux déjà réservés ET ceux qui sont complets
+    const availableDates = availableWednesdays
+      .filter(wednesday => {
+        const date = new Date(wednesday.date);
+        const isReserved = isDateAlreadyReserved(date);
+        const isFull = wednesday.isFull;
+        
+        console.log(`Mercredi ${wednesday.date}: réservé=${isReserved}, complet=${isFull}`);
+        
+        return !isReserved && !isFull;
+      })
+      .map(wednesday => ({
+        date: new Date(wednesday.date),
+        withoutMeal: existingOptions.get(new Date(wednesday.date).getTime())?.withoutMeal || false,
+        earlyDropoff: existingOptions.get(new Date(wednesday.date).getTime())?.earlyDropoff || false
+      }));
 
-    console.log("Dates sélectionnées (excluant les complètes):", allAvailableDates);
-    setSelectedDates(allAvailableDates);
+    // Identifier les mercredis complets pour le message
+    const fullDates = availableWednesdays
+      .filter(wednesday => {
+        const date = new Date(wednesday.date);
+        return !isDateAlreadyReserved(date) && wednesday.isFull;
+      })
+      .map(wednesday => new Date(wednesday.date));
+
+    console.log("Dates disponibles (non complètes et non réservées):", availableDates);
+    console.log("Dates complètes (exclues):", fullDates);
+
+    setSelectedDates(availableDates);
 
     // Afficher un message si certains mercredis sont complets
     if (fullDates.length > 0) {
@@ -130,27 +116,35 @@ export const useReservations = () => {
     
     console.log("Tentative de sélectionner tous les mercredis disponibles sans repas");
 
-    // Récupérer d'abord toutes les dates disponibles
-    const availableDates = getAvailableDates();
-    const fullDates = getFullDates();
-    
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
       selectedDates.map(d => [d.date.getTime(), { withoutMeal: d.withoutMeal, earlyDropoff: d.earlyDropoff }])
     );
 
-    // Définir tous les mercredis disponibles comme "sans repas" tout en conservant l'option "accueil avant 8h30"
-    const allAvailableDates = availableDates.map(({ date }) => {
-      const existing = existingOptions.get(date.getTime());
-      return {
-        date,
+    // Filtrer les mercredis : exclure ceux déjà réservés ET ceux qui sont complets
+    const availableDates = availableWednesdays
+      .filter(wednesday => {
+        const date = new Date(wednesday.date);
+        const isReserved = isDateAlreadyReserved(date);
+        const isFull = wednesday.isFull;
+        return !isReserved && !isFull;
+      })
+      .map(wednesday => ({
+        date: new Date(wednesday.date),
         withoutMeal: true, // Toujours mettre à true
-        earlyDropoff: existing?.earlyDropoff || false // Conserver l'option existante
-      };
-    });
+        earlyDropoff: existingOptions.get(new Date(wednesday.date).getTime())?.earlyDropoff || false
+      }));
 
-    console.log("Dates disponibles sélectionnées sans repas:", allAvailableDates);
-    setSelectedDates(allAvailableDates);
+    // Identifier les mercredis complets pour le message
+    const fullDates = availableWednesdays
+      .filter(wednesday => {
+        const date = new Date(wednesday.date);
+        return !isDateAlreadyReserved(date) && wednesday.isFull;
+      })
+      .map(wednesday => new Date(wednesday.date));
+
+    console.log("Dates disponibles sélectionnées sans repas:", availableDates);
+    setSelectedDates(availableDates);
 
     // Afficher un message si certains mercredis sont complets
     if (fullDates.length > 0) {
@@ -176,27 +170,35 @@ export const useReservations = () => {
     
     console.log("Tentative de sélectionner tous les mercredis disponibles avec accueil avant 8h30");
 
-    // Récupérer d'abord toutes les dates disponibles
-    const availableDates = getAvailableDates();
-    const fullDates = getFullDates();
-    
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
       selectedDates.map(d => [d.date.getTime(), { withoutMeal: d.withoutMeal, earlyDropoff: d.earlyDropoff }])
     );
 
-    // Définir tous les mercredis disponibles avec "accueil avant 8h30" tout en conservant l'option "sans repas"
-    const allAvailableDates = availableDates.map(({ date }) => {
-      const existing = existingOptions.get(date.getTime());
-      return {
-        date,
-        withoutMeal: existing?.withoutMeal || false, // Conserver l'option existante
+    // Filtrer les mercredis : exclure ceux déjà réservés ET ceux qui sont complets
+    const availableDates = availableWednesdays
+      .filter(wednesday => {
+        const date = new Date(wednesday.date);
+        const isReserved = isDateAlreadyReserved(date);
+        const isFull = wednesday.isFull;
+        return !isReserved && !isFull;
+      })
+      .map(wednesday => ({
+        date: new Date(wednesday.date),
+        withoutMeal: existingOptions.get(new Date(wednesday.date).getTime())?.withoutMeal || false,
         earlyDropoff: true // Toujours mettre à true
-      };
-    });
+      }));
 
-    console.log("Dates disponibles sélectionnées avec accueil avant 8h30:", allAvailableDates);
-    setSelectedDates(allAvailableDates);
+    // Identifier les mercredis complets pour le message
+    const fullDates = availableWednesdays
+      .filter(wednesday => {
+        const date = new Date(wednesday.date);
+        return !isDateAlreadyReserved(date) && wednesday.isFull;
+      })
+      .map(wednesday => new Date(wednesday.date));
+
+    console.log("Dates disponibles sélectionnées avec accueil avant 8h30:", availableDates);
+    setSelectedDates(availableDates);
 
     // Afficher un message si certains mercredis sont complets
     if (fullDates.length > 0) {
