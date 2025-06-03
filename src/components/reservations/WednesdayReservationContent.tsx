@@ -1,10 +1,11 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useReservations } from "@/hooks/useReservations";
 import { ChildSelector } from "./ChildSelector";
 import { WednesdayDateSelector } from "./WednesdayDateSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CalendarDays, CheckSquare, Clock, Loader, Utensils } from "lucide-react";
+import { CalendarDays, Loader } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SuccessReservationDialog } from "./SuccessReservationDialog";
 import { useChildrenData } from "@/hooks/useChildrenData";
@@ -23,9 +24,6 @@ export const WednesdayReservationContent = () => {
     isDateReservedForChild,
     showSuccessDialog,
     setShowSuccessDialog,
-    selectAllDates,
-    selectAllDatesWithoutMeal,
-    selectAllDatesWithEarlyDropoff,
     isSubmitting,
     excludedFullDates
   } = useReservations();
@@ -64,23 +62,6 @@ export const WednesdayReservationContent = () => {
       <Card className="p-6">
         <div className="space-y-4">
           <ChildSelector selectedChild={selectedChild} setSelectedChild={setSelectedChild} children={wednesdayEligibleChildren} setSelectedDates={setSelectedDates} />
-
-          {selectedChild && <>
-              <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2" onClick={selectAllDates}>
-                <CheckSquare className="h-4 w-4" />
-                Sélectionner tous les mercredis
-              </Button>
-              
-              <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2" onClick={selectAllDatesWithoutMeal}>
-                <Utensils className="h-4 w-4" />
-                Tous sans repas
-              </Button>
-
-              <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2" onClick={selectAllDatesWithEarlyDropoff}>
-                <Clock className="h-4 w-4" />
-                Tous avec un accueil avant 8h30
-              </Button>
-            </>}
 
           <ScrollArea className="h-[400px]">
             <WednesdayDateSelector selectedDates={selectedDates} handleDateToggle={handleDateToggle} handleOptionChange={handleOptionChange} isDateAlreadyReserved={date => isDateReservedForChild(selectedChild, date)} selectedChild={selectedChild} />
