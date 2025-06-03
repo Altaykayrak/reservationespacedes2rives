@@ -24,48 +24,63 @@ const Navbar = () => {
     await signOut();
   };
 
-  // Menu items with icons
-  const menuItems: NavItem[] = [{
+  // All menu items with authentication requirements
+  const allMenuItems: NavItem[] = [{
     label: "Accueil",
     href: "/",
-    icon: Home
+    icon: Home,
+    requiresAuth: false
   }, {
     label: "Profil",
     href: "/profile",
-    icon: User
+    icon: User,
+    requiresAuth: true
   }, {
     label: "Mes enfants",
     href: "/children",
-    icon: Baby
+    icon: Baby,
+    requiresAuth: true
   }, {
     label: "Mercredis",
     href: "/wednesday-reservations",
-    icon: Calendar
+    icon: Calendar,
+    requiresAuth: true
   }, {
     label: "Vacances",
     href: "/holiday-reservations",
-    icon: Palmtree
+    icon: Palmtree,
+    requiresAuth: true
   }, {
     label: "Club Ado",
     href: "/teenholiday-reservations",
-    icon: Users
+    icon: Users,
+    requiresAuth: true
   }, {
     label: "Programme vacances",
     href: "/holiday-program",
-    icon: FileText
+    icon: FileText,
+    requiresAuth: false
   }, {
     label: "Inscription 2025-2026",
     href: "/rdv",
-    icon: CalendarDays
+    icon: CalendarDays,
+    requiresAuth: true
   }, {
     label: "Règlement",
     href: "/terms-of-operation",
-    icon: FileText
+    icon: FileText,
+    requiresAuth: false
   }, {
     label: "Tarifs",
     href: "/prices",
-    icon: Euro
+    icon: Euro,
+    requiresAuth: false
   }];
+
+  // Filter menu items based on authentication status
+  const menuItems = allMenuItems.filter(item => 
+    !item.requiresAuth || isAuthenticated
+  );
   
   const navProps: NavProps = {
     menuItems: menuItems,
