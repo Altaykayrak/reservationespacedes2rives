@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -22,7 +23,7 @@ import { fr } from "date-fns/locale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
-import { useWednesdaySelection } from "@/hooks/useWednesdaySelection";
+import { useToast } from "@/hooks/use-toast";
 
 interface DateOption {
   date: Date;
@@ -51,6 +52,7 @@ export const AdminReservationForm = ({
   const [showReservationDialog, setShowReservationDialog] = useState(false);
   const [reservedDate, setReservedDate] = useState<Date | null>(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { wednesdayEligibleChildren, isLoading } = useAdminChildrenData();
 
@@ -92,19 +94,29 @@ export const AdminReservationForm = ({
     );
   };
 
-  // Utiliser le hook useWednesdaySelection mais adapter ses fonctions à notre état local
-  const {
-    selectAllDates: hookSelectAllDates,
-    selectAllDatesWithoutMeal: hookSelectAllDatesWithoutMeal,
-    selectAllDatesWithEarlyDropoff: hookSelectAllDatesWithEarlyDropoff
-  } = useWednesdaySelection(selectedChild, isDateReservedForChild);
+  // Fonction pour vérifier si un mercredi est complet pour l'enfant sélectionné
+  const checkIfWednesdayIsFull = async (wednesdayId: string, childSchoolClass: string) => {
+    const isKindergarten = ["PS", "MS", "GS"].includes(childSchoolClass);
+    const isPrimary = ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childSchoolClass);
 
-  // Créer des fonctions wrapper qui mettent à jour l'état local
+    if (!isKindergarten && !isPrimary) return false;
+
+    const { data: spotsRemaining, error } = await supabase
+      .rpc('check_wednesday_spots_remaining', {
+        wednesday_id: wednesdayId,
+        child_school_class: isKindergarten ? 'MS' : 'CP'
+      });
+
+    if (error) {
+      console.error('Erreur lors de la vérification des places:', error);
+      return false;
+    }
+
+    return spotsRemaining <= 0;
+  };
+
+  // Créer des fonctions qui modifient directement l'état local
   const selectAllDates = async () => {
-    // Récupérer les dates sélectionnées du hook
-    const { selectedDates: hookSelectedDates } = useWednesdaySelection(selectedChild, isDateReservedForChild);
-    
-    // Simuler le processus de sélection en appelant handleDateToggle pour chaque date
     if (!selectedChild) return;
 
     try {
@@ -125,17 +137,54 @@ export const AdminReservationForm = ({
 
       if (!childData) return;
 
+      const availableDates = [];
+      const fullDates = [];
+
+      // Vérifier chaque mercredi disponible
+      for (const wednesday of availableWednesdays) {
+        const date = new Date(wednesday.date);
+        const isReserved = isDateReservedForChild(date);
+        
+        if (isReserved) continue;
+
+        const isFull = await checkIfWednesdayIsFull(wednesday.id, childData.school_class);
+        
+        if (isFull) {
+          fullDates.push(date);
+        } else {
+          availableDates.push({
+            date,
+            withoutMeal: false,
+            earlyDropoff: false
+          });
+        }
+      }
+
       // Vider d'abord toutes les sélections
       selectedDates.forEach(dateOption => {
         handleDateToggle(dateOption.date);
       });
 
       // Sélectionner toutes les dates disponibles
-      for (const wednesday of availableWednesdays) {
-        const date = new Date(wednesday.date);
-        if (!isDateReservedForChild(date)) {
-          handleDateToggle(date);
-        }
+      availableDates.forEach(dateOption => {
+        handleDateToggle(dateOption.date);
+      });
+
+      // Afficher un message si certains mercredis sont complets
+      if (fullDates.length > 0) {
+        const fullDatesText = fullDates
+          .map(date => date.toLocaleDateString('fr-FR', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long' 
+          }))
+          .join(', ');
+
+        toast({
+          title: "Mercredis complets",
+          description: `Les mercredis suivants sont complets et n'ont pas été sélectionnés : ${fullDatesText}. Vous pouvez contacter l'accueil pour être mis en liste d'attente.`,
+          variant: "default",
+        });
       }
     } catch (error) {
       console.error("Erreur lors de la sélection automatique:", error);
@@ -144,18 +193,22 @@ export const AdminReservationForm = ({
 
   const selectAllDatesWithoutMeal = async () => {
     await selectAllDates();
-    // Modifier toutes les dates pour être sans repas
-    selectedDates.forEach(dateOption => {
-      handleOptionChange(dateOption.date, 'withoutMeal', true);
-    });
+    // Attendre que React mette à jour l'état, puis modifier les options
+    setTimeout(() => {
+      selectedDates.forEach(dateOption => {
+        handleOptionChange(dateOption.date, 'withoutMeal', true);
+      });
+    }, 100);
   };
 
   const selectAllDatesWithEarlyDropoff = async () => {
     await selectAllDates();
-    // Modifier toutes les dates pour avoir un accueil matinal
-    selectedDates.forEach(dateOption => {
-      handleOptionChange(dateOption.date, 'earlyDropoff', true);
-    });
+    // Attendre que React mette à jour l'état, puis modifier les options
+    setTimeout(() => {
+      selectedDates.forEach(dateOption => {
+        handleOptionChange(dateOption.date, 'earlyDropoff', true);
+      });
+    }, 100);
   };
 
   const handleDateSelection = (date: Date) => {
