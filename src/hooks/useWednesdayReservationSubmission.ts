@@ -125,10 +125,6 @@ export const useWednesdayReservationSubmission = (
       console.log("Dates complètes détectées:", fullDates.map(d => format(d, "dd/MM/yyyy")));
       console.log("Dates disponibles:", availableDates.map(d => format(d.date, "dd/MM/yyyy")));
 
-      // Stocker les dates complètes AVANT de vérifier s'il y a des dates disponibles
-      setExcludedFullDates(fullDates);
-      console.log("excludedFullDates mis à jour avec:", fullDates.map(d => format(d, "dd/MM/yyyy")));
-
       // Si toutes les dates sont complètes, afficher un message d'erreur
       if (availableDates.length === 0) {
         const fullDatesText = fullDates
@@ -210,8 +206,16 @@ export const useWednesdayReservationSubmission = (
         refetchReservations()
       ]);
 
-      console.log("Avant d'afficher le dialogue de succès - excludedFullDates:", excludedFullDates.map(d => format(d, "dd/MM/yyyy")));
-      setShowSuccessDialog(true);
+      // Stocker les dates complètes AVANT d'afficher le dialogue
+      console.log("Mise à jour de excludedFullDates avec:", fullDates.map(d => format(d, "dd/MM/yyyy")));
+      setExcludedFullDates(fullDates);
+      
+      // Attendre un petit délai pour s'assurer que l'état est mis à jour
+      setTimeout(() => {
+        console.log("Affichage du dialogue de succès avec excludedFullDates:", fullDates.map(d => format(d, "dd/MM/yyyy")));
+        setShowSuccessDialog(true);
+      }, 100);
+      
       resetForm();
 
     } catch (error: any) {
