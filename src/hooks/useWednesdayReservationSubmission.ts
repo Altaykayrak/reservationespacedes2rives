@@ -23,6 +23,7 @@ export const useWednesdayReservationSubmission = (
   const queryClient = useQueryClient();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [excludedFullDates, setExcludedFullDates] = useState<Date[]>([]);
 
   const handleSubmit = async () => {
     if (!selectedChild) {
@@ -75,7 +76,8 @@ export const useWednesdayReservationSubmission = (
       const isKindergarten = ["PS", "MS", "GS"].includes(childData.school_class);
       const isPrimary = ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childData.school_class);
 
-      // Vérifier les places disponibles pour chaque date
+      // Vérifier les places disponibles pour chaque date et séparer les dates disponibles des complètes
+      const availableDates: DateOption[] = [];
       const fullDates: Date[] = [];
       
       for (const dateOption of selectedDates) {
@@ -114,11 +116,13 @@ export const useWednesdayReservationSubmission = (
 
         if (spotsRemaining <= 0) {
           fullDates.push(dateOption.date);
+        } else {
+          availableDates.push(dateOption);
         }
       }
 
-      // Si certaines dates sont complètes, afficher un message d'erreur
-      if (fullDates.length > 0) {
+      // Si toutes les dates sont complètes, afficher un message d'erreur
+      if (availableDates.length === 0) {
         const fullDatesText = fullDates
           .map(date => date.toLocaleDateString('fr-FR', { 
             weekday: 'long', 
@@ -128,16 +132,19 @@ export const useWednesdayReservationSubmission = (
           .join(', ');
 
         toast({
-          title: "Mercredis complets",
-          description: `Les mercredis suivants sont complets et ne peuvent pas être réservés : ${fullDatesText}. Vous pouvez contacter l'accueil pour être mis en liste d'attente.`,
+          title: "Aucune réservation possible",
+          description: `Tous les mercredis sélectionnés sont complets : ${fullDatesText}. Vous pouvez contacter l'accueil pour être mis en liste d'attente.`,
           variant: "destructive",
         });
         setIsSubmitting(false);
         return;
       }
 
-      // Si toutes les dates sont disponibles, procéder aux réservations
-      for (const dateOption of selectedDates) {
+      // Stocker les dates complètes pour les afficher dans le dialog de succès
+      setExcludedFullDates(fullDates);
+
+      // Procéder aux réservations pour les dates disponibles uniquement
+      for (const dateOption of availableDates) {
         const { data: wednesday, error: wednesdayError } = await supabase
           .from("available_wednesdays")
           .select("id")
@@ -173,9 +180,9 @@ export const useWednesdayReservationSubmission = (
         if (reservationError) throw reservationError;
       }
 
-      // Envoyer l'email de confirmation
+      // Envoyer l'email de confirmation seulement pour les dates effectivement réservées
       const childFullName = `${childData.first_name} ${childData.last_name}`;
-      const formattedDates = selectedDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
+      const formattedDates = availableDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
       
       // Add a unique requestId to prevent duplicate emails
       const requestId = `wednesday-${childFullName}-${Date.now()}`;
@@ -185,8 +192,8 @@ export const useWednesdayReservationSubmission = (
           childName: childFullName,
           dates: formattedDates,
           reservationType: 'wednesday',
-          withoutMeal: selectedDates.map(d => d.withoutMeal),
-          earlyDropoff: selectedDates.map(d => d.earlyDropoff),
+          withoutMeal: availableDates.map(d => d.withoutMeal),
+          earlyDropoff: availableDates.map(d => d.earlyDropoff),
           requestId
         }
       });
@@ -217,6 +224,7 @@ export const useWednesdayReservationSubmission = (
     handleSubmit, 
     showSuccessDialog, 
     setShowSuccessDialog,
-    isSubmitting
+    isSubmitting,
+    excludedFullDates
   };
 };

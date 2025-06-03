@@ -38,7 +38,13 @@ export const useReservations = () => {
     setSelectedDates([]);
   };
 
-  const { handleSubmit, showSuccessDialog, setShowSuccessDialog, isSubmitting } = useWednesdayReservationSubmission(
+  const { 
+    handleSubmit, 
+    showSuccessDialog, 
+    setShowSuccessDialog, 
+    isSubmitting,
+    excludedFullDates 
+  } = useWednesdayReservationSubmission(
     selectedChild,
     selectedDates,
     (date) => isDateReservedForChild(selectedChild, date),
@@ -68,6 +74,7 @@ export const useReservations = () => {
     setShowSuccessDialog,
     selectAllDates,
     selectAllDatesWithoutMeal,
-    selectAllDatesWithEarlyDropoff
+    selectAllDatesWithEarlyDropoff,
+    excludedFullDates
   };
 };
