@@ -26,6 +26,8 @@ export const useWednesdayReservationSubmission = (
   const [excludedFullDates, setExcludedFullDates] = useState<Date[]>([]);
 
   const handleSubmit = async () => {
+    console.log("=== DÉBUT DE LA SOUMISSION ===");
+    
     if (!selectedChild) {
       toast({
         title: "Erreur",
@@ -73,6 +75,8 @@ export const useWednesdayReservationSubmission = (
 
       if (childError) throw childError;
 
+      console.log("Enfant sélectionné:", childData.first_name, childData.last_name, "Classe:", childData.school_class);
+
       const isKindergarten = ["PS", "MS", "GS"].includes(childData.school_class);
       const isPrimary = ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childData.school_class);
 
@@ -80,7 +84,11 @@ export const useWednesdayReservationSubmission = (
       const availableDates: DateOption[] = [];
       const fullDates: Date[] = [];
       
+      console.log("Vérification des places pour", selectedDates.length, "dates sélectionnées");
+
       for (const dateOption of selectedDates) {
+        console.log("Vérification de la date:", format(dateOption.date, "dd/MM/yyyy"));
+        
         const { data: wednesday, error: wednesdayError } = await supabase
           .from("available_wednesdays")
           .select("id")
@@ -135,6 +143,10 @@ export const useWednesdayReservationSubmission = (
           }))
           .join(', ');
 
+        console.log("Toutes les dates sont complètes, affichage du message d'erreur");
+        // Mettre à jour excludedFullDates même en cas d'erreur
+        setExcludedFullDates(fullDates);
+
         toast({
           title: "Aucune réservation possible",
           description: `Tous les mercredis sélectionnés sont complets : ${fullDatesText}. Vous pouvez contacter l'accueil pour être mis en liste d'attente.`,
@@ -145,6 +157,8 @@ export const useWednesdayReservationSubmission = (
       }
 
       // Procéder aux réservations pour les dates disponibles uniquement
+      console.log("Début des réservations pour", availableDates.length, "dates disponibles");
+      
       for (const dateOption of availableDates) {
         const { data: wednesday, error: wednesdayError } = await supabase
           .from("available_wednesdays")
@@ -206,17 +220,18 @@ export const useWednesdayReservationSubmission = (
         refetchReservations()
       ]);
 
-      // Stocker les dates complètes AVANT d'afficher le dialogue
+      // Mettre à jour excludedFullDates avec les dates complètes détectées
       console.log("Mise à jour de excludedFullDates avec:", fullDates.map(d => format(d, "dd/MM/yyyy")));
       setExcludedFullDates(fullDates);
+      
+      // Réinitialiser le formulaire AVANT d'afficher le dialogue
+      resetForm();
       
       // Attendre un petit délai pour s'assurer que l'état est mis à jour
       setTimeout(() => {
         console.log("Affichage du dialogue de succès avec excludedFullDates:", fullDates.map(d => format(d, "dd/MM/yyyy")));
         setShowSuccessDialog(true);
       }, 100);
-      
-      resetForm();
 
     } catch (error: any) {
       console.error("Erreur lors de la création des réservations:", error);
