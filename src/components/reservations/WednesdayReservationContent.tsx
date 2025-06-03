@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useReservations } from "@/hooks/useReservations";
@@ -27,7 +26,8 @@ export const WednesdayReservationContent = () => {
     selectAllDates,
     selectAllDatesWithoutMeal,
     selectAllDatesWithEarlyDropoff,
-    isSubmitting
+    isSubmitting,
+    excludedFullDates
   } = useReservations();
   const {
     wednesdayEligibleChildren,
@@ -54,6 +54,7 @@ export const WednesdayReservationContent = () => {
 
   // Logs pour déboguer
   console.log("wednesdayEligibleChildren dans WednesdayReservationContent:", wednesdayEligibleChildren);
+
   return <div className="space-y-6">
       <Alert className={isBlinking ? "animate-blink border-2 border-red-500 bg-red-50 text-red-800" : ""}>
         <CalendarDays className="h-4 w-4" />
@@ -104,7 +105,10 @@ export const WednesdayReservationContent = () => {
         </div>
       </Card>
 
-      <SuccessReservationDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
+      <SuccessReservationDialog 
+        open={showSuccessDialog} 
+        onOpenChange={setShowSuccessDialog} 
+        excludedFullDates={excludedFullDates}
+      />
     </div>;
 };
-
