@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQueryClient, useIsMutating } from "@tanstack/react-query";
 import { useWednesdayReservationSubmission } from "./useWednesdayReservationSubmission";
@@ -85,11 +84,15 @@ export const useReservations = () => {
     const availableDates = getAvailableDates();
     const fullDates = getFullDates();
 
+    console.log("Dates disponibles (non complètes):", availableDates);
+    console.log("Dates complètes (exclues):", fullDates);
+
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
       selectedDates.map(d => [d.date.getTime(), { withoutMeal: d.withoutMeal, earlyDropoff: d.earlyDropoff }])
     );
 
+    // Sélectionner UNIQUEMENT les dates disponibles (non complètes)
     const allAvailableDates = availableDates.map(({ date }) => {
       const existing = existingOptions.get(date.getTime());
       return {
@@ -99,7 +102,7 @@ export const useReservations = () => {
       };
     });
 
-    console.log("Dates disponibles sélectionnées:", allAvailableDates);
+    console.log("Dates sélectionnées (excluant les complètes):", allAvailableDates);
     setSelectedDates(allAvailableDates);
 
     // Afficher un message si certains mercredis sont complets
