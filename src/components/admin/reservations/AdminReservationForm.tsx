@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, CheckSquare, Clock, Utensils } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WednesdayDateSelector } from "@/components/reservations/WednesdayDateSelector";
 import { AdminChildSelector } from "./AdminChildSelector";
@@ -23,6 +23,7 @@ import { fr } from "date-fns/locale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
+import { useWednesdaySelection } from "@/hooks/useWednesdaySelection";
 
 interface DateOption {
   date: Date;
@@ -91,6 +92,13 @@ export const AdminReservationForm = ({
       reservation => reservation.available_wednesdays?.date === dateStr
     );
   };
+
+  // Utiliser le hook useWednesdaySelection pour les fonctions de sélection automatique
+  const {
+    selectAllDates,
+    selectAllDatesWithoutMeal,
+    selectAllDatesWithEarlyDropoff
+  } = useWednesdaySelection(selectedChild, isDateReservedForChild);
 
   const handleDateSelection = (date: Date) => {
     if (selectedChild && isDateReservedForChild(date)) {
@@ -170,6 +178,40 @@ export const AdminReservationForm = ({
               setSelectedDates={() => {}}
             />
           </div>
+
+          {selectedChild && (
+            <div className="space-y-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full flex items-center justify-center gap-2" 
+                onClick={selectAllDates}
+              >
+                <CheckSquare className="h-4 w-4" />
+                Sélectionner tous les mercredis
+              </Button>
+              
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full flex items-center justify-center gap-2" 
+                onClick={selectAllDatesWithoutMeal}
+              >
+                <Utensils className="h-4 w-4" />
+                Tous sans repas
+              </Button>
+
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full flex items-center justify-center gap-2" 
+                onClick={selectAllDatesWithEarlyDropoff}
+              >
+                <Clock className="h-4 w-4" />
+                Tous avec un accueil avant 8h30
+              </Button>
+            </div>
+          )}
 
           <ScrollArea className="h-[400px]">
             <WednesdayDateSelector
