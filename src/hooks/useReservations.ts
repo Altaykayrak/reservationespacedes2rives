@@ -6,6 +6,7 @@ import { useChildrenData } from "./useChildrenData";
 import { useAvailableWednesdays } from "./useAvailableWednesdays";
 import { useExistingReservations } from "./useExistingReservations";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useReservations = () => {
   const queryClient = useQueryClient();
@@ -50,42 +51,72 @@ export const useReservations = () => {
     }));
   };
 
+  // Fonction pour vérifier si un mercredi est complet pour l'enfant sélectionné
+  const checkIfWednesdayIsFull = async (wednesdayId: string, childSchoolClass: string) => {
+    const isKindergarten = ["PS", "MS", "GS"].includes(childSchoolClass);
+    const isPrimary = ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childSchoolClass);
+
+    if (!isKindergarten && !isPrimary) return false;
+
+    const { data: spotsRemaining, error } = await supabase
+      .rpc('check_wednesday_spots_remaining', {
+        wednesday_id: wednesdayId,
+        child_school_class: isKindergarten ? 'MS' : 'CP'
+      });
+
+    if (error) {
+      console.error('Erreur lors de la vérification des places:', error);
+      return false;
+    }
+
+    return spotsRemaining <= 0;
+  };
+
   // Fonction pour sélectionner tous les mercredis disponibles
-  const selectAllDates = () => {
+  const selectAllDates = async () => {
     if (!selectedChild || availableWednesdays.length === 0) return;
     
     console.log("Tentative de sélectionner tous les mercredis disponibles");
-    console.log("Mercredis disponibles bruts:", availableWednesdays);
+
+    // Récupérer les informations de l'enfant sélectionné
+    const { data: childData, error: childError } = await supabase
+      .from("children")
+      .select("school_class")
+      .eq("id", selectedChild)
+      .single();
+
+    if (childError) {
+      console.error("Erreur lors de la récupération des données de l'enfant:", childError);
+      return;
+    }
 
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
       selectedDates.map(d => [d.date.getTime(), { withoutMeal: d.withoutMeal, earlyDropoff: d.earlyDropoff }])
     );
 
-    // Filtrer les mercredis : exclure ceux déjà réservés ET ceux qui sont complets
-    const availableDates = availableWednesdays
-      .filter(wednesday => {
-        const date = new Date(wednesday.date);
-        const isReserved = isDateAlreadyReserved(date);
-        const isFull = wednesday.isFull;
-        
-        console.log(`Mercredi ${wednesday.date}: réservé=${isReserved}, complet=${isFull}`);
-        
-        return !isReserved && !isFull;
-      })
-      .map(wednesday => ({
-        date: new Date(wednesday.date),
-        withoutMeal: existingOptions.get(new Date(wednesday.date).getTime())?.withoutMeal || false,
-        earlyDropoff: existingOptions.get(new Date(wednesday.date).getTime())?.earlyDropoff || false
-      }));
+    const availableDates = [];
+    const fullDates = [];
 
-    // Identifier les mercredis complets pour le message
-    const fullDates = availableWednesdays
-      .filter(wednesday => {
-        const date = new Date(wednesday.date);
-        return !isDateAlreadyReserved(date) && wednesday.isFull;
-      })
-      .map(wednesday => new Date(wednesday.date));
+    // Vérifier chaque mercredi disponible
+    for (const wednesday of availableWednesdays) {
+      const date = new Date(wednesday.date);
+      const isReserved = isDateAlreadyReserved(date);
+      
+      if (isReserved) continue;
+
+      const isFull = await checkIfWednesdayIsFull(wednesday.id, childData.school_class);
+      
+      if (isFull) {
+        fullDates.push(date);
+      } else {
+        availableDates.push({
+          date,
+          withoutMeal: existingOptions.get(date.getTime())?.withoutMeal || false,
+          earlyDropoff: existingOptions.get(date.getTime())?.earlyDropoff || false
+        });
+      }
+    }
 
     console.log("Dates disponibles (non complètes et non réservées):", availableDates);
     console.log("Dates complètes (exclues):", fullDates);
@@ -111,37 +142,50 @@ export const useReservations = () => {
   };
 
   // Fonction pour sélectionner tous les mercredis disponibles sans repas
-  const selectAllDatesWithoutMeal = () => {
+  const selectAllDatesWithoutMeal = async () => {
     if (!selectedChild || availableWednesdays.length === 0) return;
     
     console.log("Tentative de sélectionner tous les mercredis disponibles sans repas");
+
+    // Récupérer les informations de l'enfant sélectionné
+    const { data: childData, error: childError } = await supabase
+      .from("children")
+      .select("school_class")
+      .eq("id", selectedChild)
+      .single();
+
+    if (childError) {
+      console.error("Erreur lors de la récupération des données de l'enfant:", childError);
+      return;
+    }
 
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
       selectedDates.map(d => [d.date.getTime(), { withoutMeal: d.withoutMeal, earlyDropoff: d.earlyDropoff }])
     );
 
-    // Filtrer les mercredis : exclure ceux déjà réservés ET ceux qui sont complets
-    const availableDates = availableWednesdays
-      .filter(wednesday => {
-        const date = new Date(wednesday.date);
-        const isReserved = isDateAlreadyReserved(date);
-        const isFull = wednesday.isFull;
-        return !isReserved && !isFull;
-      })
-      .map(wednesday => ({
-        date: new Date(wednesday.date),
-        withoutMeal: true, // Toujours mettre à true
-        earlyDropoff: existingOptions.get(new Date(wednesday.date).getTime())?.earlyDropoff || false
-      }));
+    const availableDates = [];
+    const fullDates = [];
 
-    // Identifier les mercredis complets pour le message
-    const fullDates = availableWednesdays
-      .filter(wednesday => {
-        const date = new Date(wednesday.date);
-        return !isDateAlreadyReserved(date) && wednesday.isFull;
-      })
-      .map(wednesday => new Date(wednesday.date));
+    // Vérifier chaque mercredi disponible
+    for (const wednesday of availableWednesdays) {
+      const date = new Date(wednesday.date);
+      const isReserved = isDateAlreadyReserved(date);
+      
+      if (isReserved) continue;
+
+      const isFull = await checkIfWednesdayIsFull(wednesday.id, childData.school_class);
+      
+      if (isFull) {
+        fullDates.push(date);
+      } else {
+        availableDates.push({
+          date,
+          withoutMeal: true, // Toujours mettre à true
+          earlyDropoff: existingOptions.get(date.getTime())?.earlyDropoff || false
+        });
+      }
+    }
 
     console.log("Dates disponibles sélectionnées sans repas:", availableDates);
     setSelectedDates(availableDates);
@@ -165,37 +209,50 @@ export const useReservations = () => {
   };
 
   // Fonction pour sélectionner tous les mercredis disponibles avec accueil avant 8h30
-  const selectAllDatesWithEarlyDropoff = () => {
+  const selectAllDatesWithEarlyDropoff = async () => {
     if (!selectedChild || availableWednesdays.length === 0) return;
     
     console.log("Tentative de sélectionner tous les mercredis disponibles avec accueil avant 8h30");
+
+    // Récupérer les informations de l'enfant sélectionné
+    const { data: childData, error: childError } = await supabase
+      .from("children")
+      .select("school_class")
+      .eq("id", selectedChild)
+      .single();
+
+    if (childError) {
+      console.error("Erreur lors de la récupération des données de l'enfant:", childError);
+      return;
+    }
 
     // Récupérer les dates déjà sélectionnées pour conserver leurs options
     const existingOptions = new Map(
       selectedDates.map(d => [d.date.getTime(), { withoutMeal: d.withoutMeal, earlyDropoff: d.earlyDropoff }])
     );
 
-    // Filtrer les mercredis : exclure ceux déjà réservés ET ceux qui sont complets
-    const availableDates = availableWednesdays
-      .filter(wednesday => {
-        const date = new Date(wednesday.date);
-        const isReserved = isDateAlreadyReserved(date);
-        const isFull = wednesday.isFull;
-        return !isReserved && !isFull;
-      })
-      .map(wednesday => ({
-        date: new Date(wednesday.date),
-        withoutMeal: existingOptions.get(new Date(wednesday.date).getTime())?.withoutMeal || false,
-        earlyDropoff: true // Toujours mettre à true
-      }));
+    const availableDates = [];
+    const fullDates = [];
 
-    // Identifier les mercredis complets pour le message
-    const fullDates = availableWednesdays
-      .filter(wednesday => {
-        const date = new Date(wednesday.date);
-        return !isDateAlreadyReserved(date) && wednesday.isFull;
-      })
-      .map(wednesday => new Date(wednesday.date));
+    // Vérifier chaque mercredi disponible
+    for (const wednesday of availableWednesdays) {
+      const date = new Date(wednesday.date);
+      const isReserved = isDateAlreadyReserved(date);
+      
+      if (isReserved) continue;
+
+      const isFull = await checkIfWednesdayIsFull(wednesday.id, childData.school_class);
+      
+      if (isFull) {
+        fullDates.push(date);
+      } else {
+        availableDates.push({
+          date,
+          withoutMeal: existingOptions.get(date.getTime())?.withoutMeal || false,
+          earlyDropoff: true // Toujours mettre à true
+        });
+      }
+    }
 
     console.log("Dates disponibles sélectionnées avec accueil avant 8h30:", availableDates);
     setSelectedDates(availableDates);
