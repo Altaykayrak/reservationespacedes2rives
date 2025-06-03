@@ -185,7 +185,9 @@ export const useAuth = () => {
       console.log("[useAuth] Déconnexion réussie");
       toast.success("Déconnexion réussie");
       
-      // Suppression de la redirection automatique après déconnexion
+      // Redirection vers la page d'accueil après déconnexion
+      window.location.href = '/';
+      
     } catch (error) {
       console.error("[useAuth] Erreur inattendue lors de la déconnexion:", error);
       safeSetState(setStatus, session ? 'authenticated' : 'unauthenticated');
