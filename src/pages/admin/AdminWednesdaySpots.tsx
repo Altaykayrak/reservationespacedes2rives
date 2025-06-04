@@ -1,11 +1,12 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Users, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { exportWednesdaySpotsToPdf } from "@/components/admin/spots/export/wednesdaySpotsPdfExport";
 
 interface WednesdaySpots {
   id: string;
@@ -79,6 +80,12 @@ const AdminWednesdaySpots = () => {
     return "default";
   };
 
+  const handlePdfExport = () => {
+    if (wednesdaySpots) {
+      exportWednesdaySpotsToPdf(wednesdaySpots);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-4">
@@ -95,12 +102,23 @@ const AdminWednesdaySpots = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Calendar className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold">Places restantes - Mercredis</h1>
-        <Badge variant="secondary" className="ml-auto text-xs">
-          {wednesdaySpots?.length || 0} mercredis
-        </Badge>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold">Places restantes - Mercredis</h1>
+          <Badge variant="secondary" className="ml-auto text-xs">
+            {wednesdaySpots?.length || 0} mercredis
+          </Badge>
+        </div>
+        <Button
+          variant="outline"
+          onClick={handlePdfExport}
+          className="flex items-center gap-2"
+          disabled={!wednesdaySpots || wednesdaySpots.length === 0}
+        >
+          <FileText className="h-4 w-4" />
+          Export PDF
+        </Button>
       </div>
 
       <div className="space-y-2">

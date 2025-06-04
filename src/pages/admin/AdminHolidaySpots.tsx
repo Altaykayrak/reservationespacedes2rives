@@ -1,11 +1,12 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Palmtree, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Palmtree, Users, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { exportHolidaySpotsToPdf } from "@/components/admin/spots/export/holidaySpotsPdfExport";
 
 interface HolidaySpots {
   period_id: string;
@@ -128,6 +129,12 @@ const AdminHolidaySpots = () => {
     return acc;
   }, {} as Record<string, { period_name: string; dates: HolidaySpots[] }>);
 
+  const handlePdfExport = () => {
+    if (groupedHolidaySpots) {
+      exportHolidaySpotsToPdf(groupedHolidaySpots);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-4">
@@ -144,12 +151,23 @@ const AdminHolidaySpots = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Palmtree className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold">Places restantes - Vacances</h1>
-        <Badge variant="secondary" className="ml-auto text-xs">
-          {Object.keys(groupedHolidaySpots || {}).length} périodes
-        </Badge>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-2">
+          <Palmtree className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold">Places restantes - Vacances</h1>
+          <Badge variant="secondary" className="ml-auto text-xs">
+            {Object.keys(groupedHolidaySpots || {}).length} périodes
+          </Badge>
+        </div>
+        <Button
+          variant="outline"
+          onClick={handlePdfExport}
+          className="flex items-center gap-2"
+          disabled={!groupedHolidaySpots || Object.keys(groupedHolidaySpots).length === 0}
+        >
+          <FileText className="h-4 w-4" />
+          Export PDF
+        </Button>
       </div>
 
       <div className="space-y-3">
