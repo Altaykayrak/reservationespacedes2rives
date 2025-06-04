@@ -81,8 +81,8 @@ const AdminWednesdaySpots = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Places restantes - Mercredis</h1>
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-4">Places restantes - Mercredis</h1>
         <div className="flex items-center justify-center min-h-[200px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -94,38 +94,38 @@ const AdminWednesdaySpots = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Calendar className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold">Places restantes - Mercredis</h1>
-        <Badge variant="secondary" className="ml-auto">
+    <div className="container mx-auto p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Calendar className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold">Places restantes - Mercredis</h1>
+        <Badge variant="secondary" className="ml-auto text-xs">
           {wednesdaySpots?.length || 0} mercredis
         </Badge>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {wednesdaySpots?.map((spot) => {
           const kindergartenAvailable = spot.max_participants_kindergarten - spot.kindergarten_reserved;
           const primaryAvailable = spot.max_participants_primary - spot.primary_reserved;
           
           return (
             <Card key={spot.id} className="bg-blue-50 border-blue-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-blue-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-blue-800">
                   {format(new Date(spot.date), "EEEE dd MMMM yyyy", { locale: fr })}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="bg-white p-3 rounded-lg border">
-                    <h4 className="font-semibold text-gray-700 mb-2 text-sm">Maternelle</h4>
-                    <Badge variant={getSpotsBadgeVariant(kindergartenAvailable, spot.max_participants_kindergarten)} className="text-sm px-2 py-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="bg-white p-2 rounded border">
+                    <h4 className="font-medium text-gray-700 mb-1 text-xs">Maternelle</h4>
+                    <Badge variant={getSpotsBadgeVariant(kindergartenAvailable, spot.max_participants_kindergarten)} className="text-xs px-2 py-0.5">
                       {kindergartenAvailable}/{spot.max_participants_kindergarten} places
                     </Badge>
                   </div>
-                  <div className="bg-white p-3 rounded-lg border">
-                    <h4 className="font-semibold text-gray-700 mb-2 text-sm">Primaire</h4>
-                    <Badge variant={getSpotsBadgeVariant(primaryAvailable, spot.max_participants_primary)} className="text-sm px-2 py-1">
+                  <div className="bg-white p-2 rounded border">
+                    <h4 className="font-medium text-gray-700 mb-1 text-xs">Primaire</h4>
+                    <Badge variant={getSpotsBadgeVariant(primaryAvailable, spot.max_participants_primary)} className="text-xs px-2 py-0.5">
                       {primaryAvailable}/{spot.max_participants_primary} places
                     </Badge>
                   </div>
