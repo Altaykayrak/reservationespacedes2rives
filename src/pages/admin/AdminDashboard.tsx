@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -91,12 +92,25 @@ const AdminDashboard = () => {
           <div className="flex-grow">
             <div className="flex items-center gap-2 mb-4">
               <Calculator className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Places restantes</h2>
+              <h2 className="text-xl font-semibold">Places Mercredis</h2>
             </div>
-            <p className="text-gray-600">Consulter les places disponibles par groupe et par jour</p>
+            <p className="text-gray-600">Consulter les places disponibles pour les mercredis</p>
           </div>
           <Button asChild className="mt-4">
-            <Link to="/admin/available-spots">Voir les places</Link>
+            <Link to="/admin/wednesday-spots">Voir les places</Link>
+          </Button>
+        </Card>
+
+        <Card className="p-6 flex flex-col h-full">
+          <div className="flex-grow">
+            <div className="flex items-center gap-2 mb-4">
+              <Calculator className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Places Vacances</h2>
+            </div>
+            <p className="text-gray-600">Consulter les places disponibles pour les vacances</p>
+          </div>
+          <Button asChild className="mt-4">
+            <Link to="/admin/holiday-spots">Voir les places</Link>
           </Button>
         </Card>
       </div>

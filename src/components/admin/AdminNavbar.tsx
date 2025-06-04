@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Users, Calendar, UserCheck, Mail, CalendarDays, Palmtree, MessageCircle, Baby, Calculator, Menu } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -71,10 +72,16 @@ export const AdminNavbar = () => {
       description: "Gestion des emails autorisés"
     },
     {
-      title: "Places restantes",
-      href: "/admin/available-spots",
+      title: "Places mercredis",
+      href: "/admin/wednesday-spots",
       icon: Calculator,
-      description: "Consultation des places disponibles"
+      description: "Places disponibles mercredis"
+    },
+    {
+      title: "Places vacances",
+      href: "/admin/holiday-spots",
+      icon: Calculator,
+      description: "Places disponibles vacances"
     }
   ];
 
