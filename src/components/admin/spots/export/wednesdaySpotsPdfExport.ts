@@ -71,7 +71,23 @@ export const exportWednesdaySpotsToPdf = (spots: WednesdaySpots[]) => {
     alternateRowStyles: {
       fillColor: [245, 245, 245]
     },
-    margin: { left: 14, right: 14 }
+    margin: { left: 14, right: 14 },
+    didParseCell: (data) => {
+      // Mettre en gras les lignes où il ne reste plus de place dans aucune catégorie
+      if (data.section === 'body') {
+        const rowIndex = data.row.index;
+        const spot = spots[rowIndex];
+        
+        if (spot) {
+          const kindergartenAvailable = spot.max_participants_kindergarten - spot.kindergarten_reserved;
+          const primaryAvailable = spot.max_participants_primary - spot.primary_reserved;
+          
+          if (kindergartenAvailable === 0 && primaryAvailable === 0) {
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      }
+    }
   });
 
   doc.save(`places_mercredis_${format(new Date(), "dd-MM-yyyy")}.pdf`);

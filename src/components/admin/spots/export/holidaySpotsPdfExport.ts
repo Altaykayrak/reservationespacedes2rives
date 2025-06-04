@@ -84,7 +84,18 @@ export const exportHolidaySpotsToPdf = (
       alternateRowStyles: {
         fillColor: [245, 245, 245]
       },
-      margin: { left: 14, right: 14 }
+      margin: { left: 14, right: 14 },
+      didParseCell: (data) => {
+        // Mettre en gras les lignes où il ne reste plus de place dans aucune catégorie
+        if (data.section === 'body') {
+          const rowIndex = data.row.index;
+          const spot = periodData.dates[rowIndex];
+          
+          if (spot && spot.kindergarten_spots === 0 && spot.primary_spots === 0 && spot.teen_spots === 0) {
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      }
     });
 
     // Mettre à jour startY pour la prochaine période (espacement réduit)
