@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
@@ -12,17 +13,18 @@ export interface WednesdayWithCounts {
   isFull: boolean;
 }
 
-export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boolean) => {
+export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boolean, isAdminMode: boolean = false) => {
   const queryClient = useQueryClient();
 
-  // Calculer la date limite : 7 jours avant le mercredi (J-7)
+  // Calculer la date limite : 1 jour pour admin, 8 jours pour utilisateurs normaux
   const getMinDate = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Ajouter 7 jours à aujourd'hui pour obtenir la date minimum des mercredis visibles
+    // Ajouter 1 jour pour admin ou 8 jours pour utilisateurs normaux
     const minWednesdayDate = new Date(today);
-    minWednesdayDate.setDate(today.getDate() + 7);
+    const daysToAdd = isAdminMode ? 1 : 8;
+    minWednesdayDate.setDate(today.getDate() + daysToAdd);
     
     return minWednesdayDate;
   };
@@ -76,9 +78,10 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
       }));
 
       const minDate = getMinDate();
-      console.log('Date limite pour les réservations (J-7):', minDate);
+      const daysLabel = isAdminMode ? '(J-1)' : '(J-8)';
+      console.log(`Date limite pour les réservations ${daysLabel}:`, minDate);
 
-      // Filtrer les mercredis nuls et les dates qui sont à moins de 7 jours
+      // Filtrer les mercredis nuls et les dates qui sont à moins de X jours
       return processedWednesdays
         .filter(wednesday => wednesday !== null)
         .filter(wednesday => {
@@ -93,7 +96,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
   };
 
   const query = useQuery({
-    queryKey: ["available_wednesdays", isKindergarten, isPrimary],
+    queryKey: ["available_wednesdays", isKindergarten, isPrimary, isAdminMode],
     queryFn: fetchWednesdays,
     staleTime: 0,
     refetchOnMount: true,

@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -78,10 +77,11 @@ export const AdminReservationForm = ({
   const isKindergarten = childInfo?.school_class && ["PS", "MS", "GS"].includes(childInfo.school_class);
   const isPrimary = childInfo?.school_class && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childInfo.school_class);
 
-  // Utiliser le même hook que WednesdayDateSelector pour avoir les mêmes dates disponibles
+  // Utiliser le hook avec isAdminMode=true pour avoir accès aux mercredis dès le lendemain
   const { data: availableWednesdays = [] } = useAvailableWednesdays(
     Boolean(isKindergarten),
-    Boolean(isPrimary)
+    Boolean(isPrimary),
+    true // isAdminMode = true
   );
 
   // Requête pour récupérer les réservations existantes
