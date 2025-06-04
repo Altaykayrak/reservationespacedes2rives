@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { supabaseClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -20,7 +20,7 @@ import Prices from "./pages/Prices";
 import Rdv from "./pages/Rdv";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import AdminPage from "./pages/admin/AdminPage";
+import { AdminPage } from "./pages/admin/AdminPage";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProfiles from "./pages/admin/AdminProfiles";
@@ -36,7 +36,7 @@ import AdminHolidaySpots from "./pages/admin/AdminHolidaySpots";
 import AdminNewReservation from "./pages/admin/AdminNewReservation";
 import AdminNewHolidayReservation from "./pages/admin/AdminNewHolidayReservation";
 import AdminNewTeenHolidayReservation from "./pages/admin/AdminNewTeenHolidayReservation";
-import Layout from "./components/Layout";
+import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import "./App.css";
 
@@ -45,7 +45,7 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionContextProvider supabaseClient={supabaseClient}>
+      <SessionContextProvider supabaseClient={supabase}>
         <TooltipProvider>
           <Toaster />
           <BrowserRouter>
