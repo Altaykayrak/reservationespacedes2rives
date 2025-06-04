@@ -15,17 +15,17 @@ interface WednesdaySpots {
 
 export const exportWednesdaySpotsToPdf = (spots: WednesdaySpots[]) => {
   const doc = new jsPDF({
-    orientation: 'landscape',
+    orientation: 'portrait',
     unit: 'mm',
     format: 'a4'
   });
 
   // Titre avec date d'export
   const currentDate = format(new Date(), "PPP", { locale: fr });
-  doc.setFontSize(16);
+  doc.setFontSize(14);
   doc.text("Places disponibles - Mercredis", 14, 15);
   
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.text(`Exporté le ${currentDate}`, 14, 22);
 
   // En-têtes du tableau
@@ -41,7 +41,7 @@ export const exportWednesdaySpotsToPdf = (spots: WednesdaySpots[]) => {
     const primaryAvailable = spot.max_participants_primary - spot.primary_reserved;
     
     return [
-      format(new Date(spot.date), "EEE dd/MM/yyyy", { locale: fr }),
+      format(new Date(spot.date), "dd/MM", { locale: fr }),
       `${kindergartenAvailable}/${spot.max_participants_kindergarten}`,
       `${primaryAvailable}/${spot.max_participants_primary}`
     ];
@@ -53,23 +53,25 @@ export const exportWednesdaySpotsToPdf = (spots: WednesdaySpots[]) => {
     body: tableData,
     startY: 30,
     styles: {
-      fontSize: 8,
-      cellPadding: 1.5
+      fontSize: 7,
+      cellPadding: 1
     },
     headStyles: {
       fillColor: [41, 128, 185],
       textColor: 255,
       fontStyle: 'bold',
-      halign: 'center'
+      halign: 'center',
+      fontSize: 8
     },
     columnStyles: {
-      0: { cellWidth: 40 },
+      0: { cellWidth: 25 },
       1: { halign: 'center', cellWidth: 25 },
       2: { halign: 'center', cellWidth: 25 }
     },
     alternateRowStyles: {
-      fillColor: [240, 240, 240]
-    }
+      fillColor: [245, 245, 245]
+    },
+    margin: { left: 14, right: 14 }
   });
 
   doc.save(`places_mercredis_${format(new Date(), "dd-MM-yyyy")}.pdf`);
