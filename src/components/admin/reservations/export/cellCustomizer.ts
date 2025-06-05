@@ -18,7 +18,7 @@ const CLASS_COLORS = {
   'SECONDE': [245, 235, 255], // Lavande pastel
   'PREMIERE': [255, 250, 235], // Crème pastel
   'TERMINALE': [235, 255, 250] // Menthe pastel
-} as const;
+};
 
 export const customizeCell = (data: CellHookData) => {
   const { cell, section, row } = data;
@@ -32,7 +32,7 @@ export const customizeCell = (data: CellHookData) => {
       const classColor = CLASS_COLORS[className as keyof typeof CLASS_COLORS];
       
       if (classColor) {
-        cell.styles.fillColor = classColor;
+        cell.styles.fillColor = [...classColor] as [number, number, number];
       } else {
         // Couleur par défaut pour les classes non définies
         cell.styles.fillColor = [240, 240, 240];
