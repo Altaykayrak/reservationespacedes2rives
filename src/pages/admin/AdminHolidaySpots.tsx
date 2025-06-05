@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,9 +27,26 @@ const AdminHolidaySpots = () => {
       console.log("Récupération des places disponibles pour les vacances...");
       
       try {
+        // Utiliser la vue optimisée holiday_spots_available qui calcule correctement les places
+        const { data: spotsData, error: spotsError } = await supabase
+          .from("holiday_spots_available")
+          .select("*")
+          .order("period_id");
+
+        if (spotsError) {
+          console.error("Erreur lors de la récupération des places:", spotsError);
+          throw spotsError;
+        }
+
+        if (!spotsData || spotsData.length === 0) {
+          console.log("Aucune donnée de places disponibles trouvée");
+          return [];
+        }
+
+        // Récupérer les informations sur les périodes
         const { data: periods, error: periodsError } = await supabase
           .from("available_holiday_periods")
-          .select("*")
+          .select("id, name")
           .order("start_date", { ascending: true });
 
         if (periodsError) {
@@ -38,108 +54,55 @@ const AdminHolidaySpots = () => {
           throw periodsError;
         }
 
-        if (!periods) {
-          console.log("Aucune période trouvée");
-          return [];
-        }
-
-        const spotsData: HolidaySpots[] = [];
-
-        for (const period of periods) {
-          console.log("Traitement de la période:", period.name);
+        // Transformer les données pour correspondre à l'interface HolidaySpots
+        const transformedData: HolidaySpots[] = spotsData.map(spot => {
+          const period = periods?.find(p => p.id === spot.period_id);
           
-          try {
-            const startDate = new Date(period.start_date);
-            const endDate = new Date(period.end_date);
-            const dates: Date[] = [];
-            
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-              const dayOfWeek = d.getDay();
-              if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                dates.push(new Date(d));
-              }
-            }
+          return {
+            period_id: spot.period_id || '',
+            period_name: period?.name || 'Période inconnue',
+            reservation_date: spot.reservation_date || '',
+            kindergarten_spots: spot.class_group === 'kindergarten' ? (spot.available_spots || 0) : 0,
+            primary_spots: spot.class_group === 'primary' ? (spot.available_spots || 0) : 0,
+            teen_spots: spot.class_group === 'teen' ? (spot.available_spots || 0) : 0,
+            kindergarten_capacity: spot.class_group === 'kindergarten' ? (spot.max_capacity || 0) : 0,
+            primary_capacity: spot.class_group === 'primary' ? (spot.max_capacity || 0) : 0,
+            teen_capacity: spot.class_group === 'teen' ? (spot.max_capacity || 0) : 0,
+          };
+        });
 
-            for (const date of dates) {
-              const dateStr = format(date, "yyyy-MM-dd");
-              
-              try {
-                // Utiliser une requête plus simple pour compter les réservations
-                const { data: kindergartenReservations } = await supabase
-                  .from("holiday_reservations")
-                  .select(`
-                    id,
-                    children!inner(school_class)
-                  `)
-                  .eq("period_id", period.id)
-                  .eq("reservation_date", dateStr)
-                  .eq("status", "confirmed")
-                  .in("children.school_class", ["PS", "MS", "GS"]);
-
-                const { data: primaryReservations } = await supabase
-                  .from("holiday_reservations")
-                  .select(`
-                    id,
-                    children!inner(school_class)
-                  `)
-                  .eq("period_id", period.id)
-                  .eq("reservation_date", dateStr)
-                  .eq("status", "confirmed")
-                  .in("children.school_class", ["CP", "CE1", "CE2", "CM1", "CM2"]);
-
-                const { data: teenReservations } = await supabase
-                  .from("holiday_reservations")
-                  .select(`
-                    id,
-                    children!inner(school_class)
-                  `)
-                  .eq("period_id", period.id)
-                  .eq("reservation_date", dateStr)
-                  .eq("status", "confirmed")
-                  .in("children.school_class", ["6ème", "5ème", "4ème", "3ème", "2nde", "1ère", "Terminale"]);
-
-                const kindergartenCount = kindergartenReservations?.length || 0;
-                const primaryCount = primaryReservations?.length || 0;
-                const teenCount = teenReservations?.length || 0;
-
-                const kindergartenAvailable = Math.max(0, period.max_participants_kindergarten - kindergartenCount);
-                const primaryAvailable = Math.max(0, period.max_participants_primary - primaryCount);
-                const teenAvailable = Math.max(0, period.max_participants_teen - teenCount);
-
-                spotsData.push({
-                  period_id: period.id,
-                  period_name: period.name,
-                  reservation_date: dateStr,
-                  kindergarten_spots: kindergartenAvailable,
-                  primary_spots: primaryAvailable,
-                  teen_spots: teenAvailable,
-                  kindergarten_capacity: period.max_participants_kindergarten,
-                  primary_capacity: period.max_participants_primary,
-                  teen_capacity: period.max_participants_teen,
-                });
-              } catch (dateError) {
-                console.error(`Erreur pour la date ${dateStr}:`, dateError);
-                // Continuer avec des valeurs par défaut
-                spotsData.push({
-                  period_id: period.id,
-                  period_name: period.name,
-                  reservation_date: dateStr,
-                  kindergarten_spots: period.max_participants_kindergarten,
-                  primary_spots: period.max_participants_primary,
-                  teen_spots: period.max_participants_teen,
-                  kindergarten_capacity: period.max_participants_kindergarten,
-                  primary_capacity: period.max_participants_primary,
-                  teen_capacity: period.max_participants_teen,
-                });
-              }
-            }
-          } catch (periodError) {
-            console.error(`Erreur lors du traitement de la période ${period.name}:`, periodError);
+        // Regrouper les données par période et date pour obtenir toutes les catégories sur une même ligne
+        const groupedByPeriodAndDate = transformedData.reduce((acc, spot) => {
+          const key = `${spot.period_id}-${spot.reservation_date}`;
+          
+          if (!acc[key]) {
+            acc[key] = {
+              period_id: spot.period_id,
+              period_name: spot.period_name,
+              reservation_date: spot.reservation_date,
+              kindergarten_spots: 0,
+              primary_spots: 0,
+              teen_spots: 0,
+              kindergarten_capacity: 0,
+              primary_capacity: 0,
+              teen_capacity: 0,
+            };
           }
-        }
 
-        console.log("Places vacances calculées:", spotsData);
-        return spotsData;
+          // Fusionner les données des différentes catégories
+          acc[key].kindergarten_spots += spot.kindergarten_spots;
+          acc[key].primary_spots += spot.primary_spots;
+          acc[key].teen_spots += spot.teen_spots;
+          acc[key].kindergarten_capacity += spot.kindergarten_capacity;
+          acc[key].primary_capacity += spot.primary_capacity;
+          acc[key].teen_capacity += spot.teen_capacity;
+
+          return acc;
+        }, {} as Record<string, HolidaySpots>);
+
+        const finalData = Object.values(groupedByPeriodAndDate);
+        console.log("Places vacances calculées:", finalData);
+        return finalData;
       } catch (error) {
         console.error("Erreur générale:", error);
         throw error;
