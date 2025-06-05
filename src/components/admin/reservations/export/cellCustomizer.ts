@@ -18,7 +18,7 @@ const CLASS_COLORS = {
   'SECONDE': [245, 235, 255], // Lavande pastel
   'PREMIERE': [255, 250, 235], // Crème pastel
   'TERMINALE': [235, 255, 250] // Menthe pastel
-};
+} as const;
 
 export const customizeCell = (data: CellHookData) => {
   const { cell, section, row } = data;
@@ -55,8 +55,12 @@ export const customizeCell = (data: CellHookData) => {
       
       if (classColor && data.column.index < 3) { // Seulement pour les 3 premières colonnes (nom, prénom, classe)
         // Appliquer une version très claire de la couleur de classe
-        const lightColor = classColor.map(c => Math.min(255, c + 20));
-        cell.styles.fillColor = lightColor as [number, number, number];
+        const lightColor: [number, number, number] = [
+          Math.min(255, classColor[0] + 20),
+          Math.min(255, classColor[1] + 20),
+          Math.min(255, classColor[2] + 20)
+        ];
+        cell.styles.fillColor = lightColor;
       }
     }
     
