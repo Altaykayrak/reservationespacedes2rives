@@ -64,21 +64,37 @@ export const customizeCell = (data: CellHookData) => {
       }
     }
     
-    // Identifier les totaux généraux (TOTAL, Accueil avant 8h30, Sans Repas au niveau global)
-    if (cellText === 'TOTAL' || 
-        (cellText === 'Accueil avant 8h30' && !rowData[2]) || 
-        (cellText === 'Sans Repas' && !rowData[2])) {
+    // Identifier uniquement le total général TOTAL en rouge et gras
+    if (cellText === 'TOTAL') {
       cell.styles.textColor = [255, 0, 0]; // Rouge
+      cell.styles.fontStyle = 'bold';
+      cell.styles.halign = 'center'; // Centrer
+    }
+    
+    // Pour les valeurs numériques du total général TOTAL
+    if (row.raw && Array.isArray(row.raw) && 
+        row.raw[0] === 'TOTAL' &&
+        data.column.index > 2) {
+      cell.styles.textColor = [255, 0, 0]; // Rouge
+      cell.styles.fontStyle = 'bold';
+      cell.styles.halign = 'center'; // Centrer
+    }
+    
+    // Centrer tous les autres totaux (sous-totaux, accueil, sans repas)
+    if (cellText?.startsWith('Sous-total') || 
+        cellText?.startsWith('Accueil') || 
+        cellText?.startsWith('Sans Repas')) {
+      cell.styles.halign = 'center';
       cell.styles.fontStyle = 'bold';
     }
     
-    // Pour les valeurs numériques des totaux généraux
+    // Centrer les valeurs numériques des autres totaux
     if (row.raw && Array.isArray(row.raw) && 
-        (row.raw[0] === 'TOTAL' || 
-         (row.raw[0] === 'Accueil avant 8h30' && !row.raw[2]) || 
-         (row.raw[0] === 'Sans Repas' && !row.raw[2])) &&
+        (row.raw[0]?.startsWith('Sous-total') || 
+         row.raw[0]?.startsWith('Accueil') || 
+         row.raw[0]?.startsWith('Sans Repas')) &&
         data.column.index > 2) {
-      cell.styles.textColor = [255, 0, 0]; // Rouge
+      cell.styles.halign = 'center';
       cell.styles.fontStyle = 'bold';
     }
   }
