@@ -18,7 +18,7 @@ const CLASS_COLORS = {
   'SECONDE': [245, 235, 255], // Lavande pastel
   'PREMIERE': [255, 250, 235], // Crème pastel
   'TERMINALE': [235, 255, 250] // Menthe pastel
-};
+} as const;
 
 export const customizeCell = (data: CellHookData) => {
   const { cell, section, row } = data;
@@ -32,7 +32,7 @@ export const customizeCell = (data: CellHookData) => {
       const classColor = CLASS_COLORS[className as keyof typeof CLASS_COLORS];
       
       if (classColor) {
-        cell.styles.fillColor = [...classColor];
+        cell.styles.fillColor = [classColor[0], classColor[1], classColor[2]];
       } else {
         // Couleur par défaut pour les classes non définies
         cell.styles.fillColor = [240, 240, 240];
@@ -81,9 +81,10 @@ export const customizeCell = (data: CellHookData) => {
     }
     
     // Centrer tous les autres totaux (sous-totaux, accueil, sans repas)
-    if (cellText?.startsWith('Sous-total') || 
-        cellText?.startsWith('Accueil') || 
-        cellText?.startsWith('Sans Repas')) {
+    if (typeof cellText === 'string' && (
+        cellText.startsWith('Sous-total') || 
+        cellText.startsWith('Accueil') || 
+        cellText.startsWith('Sans Repas'))) {
       cell.styles.halign = 'center';
       cell.styles.fontStyle = 'bold';
     }
