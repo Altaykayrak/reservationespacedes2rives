@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -195,6 +196,7 @@ export const AdminReservationForm = ({
               handleOptionChange={handleOptionChange}
               isDateAlreadyReserved={isDateReservedForChild}
               selectedChild={selectedChild}
+              isAdminMode={true}
             />
           </ScrollArea>
 

@@ -23,6 +23,7 @@ interface WednesdayDateSelectorProps {
   handleOptionChange: (date: Date, option: 'withoutMeal' | 'earlyDropoff', value: boolean) => void;
   isDateAlreadyReserved: (date: Date) => boolean;
   selectedChild: string;
+  isAdminMode?: boolean;
 }
 
 export const WednesdayDateSelector = ({
@@ -31,6 +32,7 @@ export const WednesdayDateSelector = ({
   handleOptionChange,
   isDateAlreadyReserved,
   selectedChild,
+  isAdminMode = false,
 }: WednesdayDateSelectorProps) => {
   const { data: childInfo } = useQuery({
     queryKey: ["selectedChild", selectedChild],
@@ -54,7 +56,8 @@ export const WednesdayDateSelector = ({
 
   const { data: availableWednesdays = [], isLoading, error } = useAvailableWednesdays(
     Boolean(isKindergarten),
-    Boolean(isPrimary)
+    Boolean(isPrimary),
+    isAdminMode
   );
 
   const getSpotsBadgeColor = (spots: number) => {
