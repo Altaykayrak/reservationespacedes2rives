@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,6 +132,36 @@ const AdminHolidaySpots = () => {
     "bg-teal-50 border-teal-200"
   ];
 
+  // Fonction pour trier les périodes chronologiquement
+  const sortPeriods = (periods: Record<string, { period_name: string; dates: HolidaySpots[] }>) => {
+    return Object.entries(periods).sort(([, a], [, b]) => {
+      // Extraire les numéros des périodes ETE-XX
+      const aMatch = a.period_name.match(/^ETE-(\d+)$/);
+      const bMatch = b.period_name.match(/^ETE-(\d+)$/);
+      
+      // Si les deux sont des périodes ETE, trier par numéro
+      if (aMatch && bMatch) {
+        return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+      }
+      
+      // Si seulement a est une période ETE, la mettre en premier
+      if (aMatch) return -1;
+      
+      // Si seulement b est une période ETE, la mettre en premier
+      if (bMatch) return 1;
+      
+      // Pour les autres périodes, tri alphabétique
+      return a.period_name.localeCompare(b.period_name);
+    });
+  };
+
+  // Fonction pour trier les dates chronologiquement
+  const sortDates = (dates: HolidaySpots[]) => {
+    return [...dates].sort((a, b) => {
+      return new Date(a.reservation_date).getTime() - new Date(b.reservation_date).getTime();
+    });
+  };
+
   const groupedHolidaySpots = holidaySpots?.reduce((acc, spot) => {
     if (!acc[spot.period_id]) {
       acc[spot.period_id] = {
@@ -199,7 +230,7 @@ const AdminHolidaySpots = () => {
 
       <div className="space-y-3">
         {groupedHolidaySpots && Object.keys(groupedHolidaySpots).length > 0 ? (
-          Object.entries(groupedHolidaySpots).map(([periodId, periodData], index) => (
+          sortPeriods(groupedHolidaySpots).map(([periodId, periodData], index) => (
             <Card key={periodId} className={`${periodColors[index % periodColors.length]} border`}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-bold text-gray-800">
@@ -209,7 +240,7 @@ const AdminHolidaySpots = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-2">
-                  {periodData.dates.map((spot) => (
+                  {sortDates(periodData.dates).map((spot) => (
                     <div key={`${spot.period_id}-${spot.reservation_date}`} className="bg-white p-2 rounded border shadow-sm">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                         <div className="font-medium text-gray-800 text-xs">
