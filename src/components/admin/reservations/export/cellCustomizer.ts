@@ -32,7 +32,7 @@ export const customizeCell = (data: CellHookData) => {
       const classColor = CLASS_COLORS[className as keyof typeof CLASS_COLORS];
       
       if (classColor) {
-        cell.styles.fillColor = [...classColor] as [number, number, number];
+        cell.styles.fillColor = [...classColor];
       } else {
         // Couleur par défaut pour les classes non définies
         cell.styles.fillColor = [240, 240, 240];
@@ -90,9 +90,11 @@ export const customizeCell = (data: CellHookData) => {
     
     // Centrer les valeurs numériques des autres totaux
     if (row.raw && Array.isArray(row.raw) && 
-        (row.raw[0]?.startsWith('Sous-total') || 
-         row.raw[0]?.startsWith('Accueil') || 
-         row.raw[0]?.startsWith('Sans Repas')) &&
+        (typeof row.raw[0] === 'string' && (
+          row.raw[0].startsWith('Sous-total') || 
+          row.raw[0].startsWith('Accueil') || 
+          row.raw[0].startsWith('Sans Repas')
+        )) &&
         data.column.index > 2) {
       cell.styles.halign = 'center';
       cell.styles.fontStyle = 'bold';
