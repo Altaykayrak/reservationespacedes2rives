@@ -2,6 +2,7 @@
 import { useState, useMemo } from "react";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { usePagination } from "./usePagination";
+import { useSchoolClassCategories } from "@/hooks/useSchoolClassCategories";
 
 export const useFilteredHolidayReservations = (
   holidayReservations: HolidayReservationWithChild[] | null
@@ -12,6 +13,8 @@ export const useFilteredHolidayReservations = (
   const [selectedClass, setSelectedClass] = useState<string>("all");
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+
+  const { getClassCategorySync } = useSchoolClassCategories();
 
   const holidayPeriods = useMemo(() => {
     if (!holidayReservations) return [];
@@ -46,16 +49,18 @@ export const useFilteredHolidayReservations = (
       const childClass = reservation.children.school_class;
       const matchesClass = selectedClass === "all" || childClass === selectedClass;
 
-      const matchesGroup = selectedGroup === "all" || 
-        (selectedGroup === "maternelle" && ["PS", "MS", "GS"].includes(childClass)) ||
-        (selectedGroup === "primaire" && ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childClass)) ||
-        (selectedGroup === "adolescent" && ["6EME", "5EME", "4EME", "3EME", "SECONDE", "PREMIERE", "TERMINALE"].includes(childClass));
+      // Utiliser la logique de classification correcte pour les groupes selon la période
+      let matchesGroup = selectedGroup === "all";
+      if (selectedGroup !== "all" && reservation.children?.school_class) {
+        const group = getClassCategorySync(reservation.children.school_class, reservation.period_id);
+        matchesGroup = group === selectedGroup;
+      }
 
       const matchesPeriod = selectedPeriod === "all" || reservation.period_id === selectedPeriod;
 
       return matchesSearch && matchesStartDate && matchesEndDate && matchesClass && matchesGroup && matchesPeriod;
     });
-  }, [holidayReservations, searchQuery, startDate, endDate, selectedClass, selectedGroup, selectedPeriod]);
+  }, [holidayReservations, searchQuery, startDate, endDate, selectedClass, selectedGroup, selectedPeriod, getClassCategorySync]);
 
   const holidayPagination = usePagination(filteredHolidayReservations || []);
 
