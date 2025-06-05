@@ -117,28 +117,23 @@ export const useAdminQuickActions = ({
 
         if (spotsLeft <= 0) {
           fullDates.push(date);
-        } else {
-          availableDates.push({
-            date,
-            withoutMeal: true,
-            earlyDropoff: false
-          });
+          continue;
         }
-      }
 
-      // Vider d'abord toutes les sélections
-      selectedDates.forEach(dateOption => {
-        handleDateToggle(dateOption.date);
-      });
+        // Vérifier si la date est déjà sélectionnée
+        const isAlreadySelected = selectedDates.some(d => d.date.getTime() === date.getTime());
+        if (!isAlreadySelected) {
+          // Ajouter la date si elle n'est pas déjà sélectionnée
+          handleDateToggle(date);
+        }
 
-      // Sélectionner toutes les dates disponibles avec l'option "sans repas"
-      availableDates.forEach(dateOption => {
-        handleDateToggle(dateOption.date);
-        // Utiliser setTimeout pour s'assurer que la date est sélectionnée avant de modifier l'option
+        // Activer l'option "sans repas" pour cette date
         setTimeout(() => {
-          handleOptionChange(dateOption.date, 'withoutMeal', true);
+          handleOptionChange(date, 'withoutMeal', true);
         }, 50);
-      });
+
+        availableDates.push(date);
+      }
 
       if (fullDates.length > 0) {
         const fullDatesText = fullDates
@@ -182,28 +177,23 @@ export const useAdminQuickActions = ({
 
         if (spotsLeft <= 0) {
           fullDates.push(date);
-        } else {
-          availableDates.push({
-            date,
-            withoutMeal: false,
-            earlyDropoff: true
-          });
+          continue;
         }
-      }
 
-      // Vider d'abord toutes les sélections
-      selectedDates.forEach(dateOption => {
-        handleDateToggle(dateOption.date);
-      });
+        // Vérifier si la date est déjà sélectionnée
+        const isAlreadySelected = selectedDates.some(d => d.date.getTime() === date.getTime());
+        if (!isAlreadySelected) {
+          // Ajouter la date si elle n'est pas déjà sélectionnée
+          handleDateToggle(date);
+        }
 
-      // Sélectionner toutes les dates disponibles avec l'option "accueil avant 8h30"
-      availableDates.forEach(dateOption => {
-        handleDateToggle(dateOption.date);
-        // Utiliser setTimeout pour s'assurer que la date est sélectionnée avant de modifier l'option
+        // Activer l'option "accueil avant 8h30" pour cette date
         setTimeout(() => {
-          handleOptionChange(dateOption.date, 'earlyDropoff', true);
+          handleOptionChange(date, 'earlyDropoff', true);
         }, 50);
-      });
+
+        availableDates.push(date);
+      }
 
       if (fullDates.length > 0) {
         const fullDatesText = fullDates
