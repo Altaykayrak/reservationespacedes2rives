@@ -24,6 +24,8 @@ export const useWednesdayReservationSubmission = (
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [excludedFullDates, setExcludedFullDates] = useState<Date[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState("");
 
   const handleSubmit = async () => {
     console.log("=== DÉBUT DE LA SOUMISSION ===");
@@ -64,9 +66,14 @@ export const useWednesdayReservationSubmission = (
     }
 
     setIsSubmitting(true);
+    setProgress(0);
+    setProgressMessage("Initialisation...");
 
     try {
-      // Récupérer les informations de l'enfant pour vérifier sa classe
+      // Étape 1: Récupérer les informations de l'enfant
+      setProgress(20);
+      setProgressMessage("Récupération des informations de l'enfant...");
+      
       const { data: childData, error: childError } = await supabase
         .from("children")
         .select("first_name, last_name, school_class")
@@ -80,7 +87,10 @@ export const useWednesdayReservationSubmission = (
       const isKindergarten = ["PS", "MS", "GS"].includes(childData.school_class);
       const isPrimary = ["CP", "CE1", "CE2", "CM1", "CM2"].includes(childData.school_class);
 
-      // Vérifier les places disponibles pour chaque date et séparer les dates disponibles des complètes
+      // Étape 2: Vérifier les places disponibles
+      setProgress(40);
+      setProgressMessage("Vérification des places disponibles...");
+      
       const availableDates: DateOption[] = [];
       const fullDates: Date[] = [];
       
@@ -122,7 +132,6 @@ export const useWednesdayReservationSubmission = (
 
         console.log(`Places restantes pour le mercredi ${format(dateOption.date, "dd/MM/yyyy")}:`, spotsRemaining);
 
-        // Important: changement de la condition pour détecter les dates complètes
         if (spotsRemaining <= 0) {
           fullDates.push(dateOption.date);
           console.log(`Mercredi complet ajouté à fullDates: ${format(dateOption.date, "dd/MM/yyyy")} (places restantes: ${spotsRemaining})`);
@@ -135,11 +144,8 @@ export const useWednesdayReservationSubmission = (
       console.log("Dates complètes détectées:", fullDates.map(d => format(d, "dd/MM/yyyy")));
       console.log("Dates disponibles:", availableDates.map(d => format(d.date, "dd/MM/yyyy")));
 
-      // Mettre à jour immédiatement excludedFullDates ici
-      console.log("Mise à jour IMMÉDIATE de excludedFullDates avec:", fullDates.map(d => format(d, "dd/MM/yyyy")));
       setExcludedFullDates(fullDates);
 
-      // Si toutes les dates sont complètes, afficher un message d'erreur
       if (availableDates.length === 0) {
         const fullDatesText = fullDates
           .map(date => date.toLocaleDateString('fr-FR', { 
@@ -157,13 +163,23 @@ export const useWednesdayReservationSubmission = (
           variant: "destructive",
         });
         setIsSubmitting(false);
+        setProgress(0);
+        setProgressMessage("");
         return;
       }
 
-      // Procéder aux réservations pour les dates disponibles uniquement
+      // Étape 3: Créer les réservations
+      setProgress(60);
+      setProgressMessage("Création des réservations...");
+      
       console.log("Début des réservations pour", availableDates.length, "dates disponibles");
       
-      for (const dateOption of availableDates) {
+      for (let i = 0; i < availableDates.length; i++) {
+        const dateOption = availableDates[i];
+        const progressStep = 60 + (i / availableDates.length) * 20;
+        setProgress(progressStep);
+        setProgressMessage(`Création de la réservation ${i + 1}/${availableDates.length}...`);
+
         const { data: wednesday, error: wednesdayError } = await supabase
           .from("available_wednesdays")
           .select("id")
@@ -199,11 +215,13 @@ export const useWednesdayReservationSubmission = (
         if (reservationError) throw reservationError;
       }
 
-      // Envoyer l'email de confirmation seulement pour les dates effectivement réservées
+      // Étape 4: Envoyer l'email de confirmation
+      setProgress(80);
+      setProgressMessage("Envoi de l'email de confirmation...");
+      
       const childFullName = `${childData.first_name} ${childData.last_name}`;
       const formattedDates = availableDates.map(d => format(d.date, "EEEE d MMMM yyyy", { locale: fr }));
       
-      // Add a unique requestId to prevent duplicate emails
       const requestId = `wednesday-${childFullName}-${Date.now()}`;
       
       await supabase.functions.invoke('send-reservation-email', {
@@ -217,21 +235,29 @@ export const useWednesdayReservationSubmission = (
         }
       });
 
-      // Forcer la mise à jour des données après les réservations
+      // Étape 5: Actualiser les données
+      setProgress(90);
+      setProgressMessage("Actualisation des données...");
+      
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["available_wednesdays"] }),
         queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] }),
         refetchReservations()
       ]);
 
+      setProgress(100);
+      setProgressMessage("Réservation terminée avec succès !");
+
       console.log("Avant réinitialisation du formulaire - excludedFullDates:", fullDates.map(d => format(d, "dd/MM/yyyy")));
       
-      // Réinitialiser le formulaire
       resetForm();
       
-      // Afficher immédiatement le dialogue de succès
-      console.log("Affichage IMMÉDIAT du dialogue de succès avec excludedFullDates:", fullDates.map(d => format(d, "dd/MM/yyyy")));
-      setShowSuccessDialog(true);
+      // Afficher le dialogue de succès après un petit délai
+      setTimeout(() => {
+        setShowSuccessDialog(true);
+        setProgress(0);
+        setProgressMessage("");
+      }, 500);
 
     } catch (error: any) {
       console.error("Erreur lors de la création des réservations:", error);
@@ -240,6 +266,8 @@ export const useWednesdayReservationSubmission = (
         description: error.message || "Une erreur est survenue lors de la création des réservations.",
         variant: "destructive",
       });
+      setProgress(0);
+      setProgressMessage("");
     } finally {
       setIsSubmitting(false);
     }
@@ -250,6 +278,8 @@ export const useWednesdayReservationSubmission = (
     showSuccessDialog, 
     setShowSuccessDialog,
     isSubmitting,
-    excludedFullDates
+    excludedFullDates,
+    progress,
+    progressMessage
   };
 };
