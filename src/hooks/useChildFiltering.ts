@@ -12,7 +12,7 @@ export const useChildFiltering = (
 ) => {
   const location = useLocation();
   const isHolidayReservation = location.pathname === "/holiday-reservations";
-  const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
+  const isTeenHolidayReservation = location.pathname === "/teen-holiday-reservations";
   const isAdminTeenHolidayReservation = location.pathname === "/admin/reservations/new-teen-holiday";
   const pathRef = useRef(location.pathname);
   const processingRef = useRef(false);

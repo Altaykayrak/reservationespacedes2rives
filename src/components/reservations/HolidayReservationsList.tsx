@@ -1,3 +1,4 @@
+
 import { EmptyReservations } from "./EmptyReservations";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +18,7 @@ type GroupedReservations = Record<string, {
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isTeenPage = window.location.pathname === "/teenholiday-reservations";
+  const isTeenPage = window.location.pathname === "/teen-holiday-reservations";
   const { reservations, isError, error, refetch } = useHolidayReservations();
   const { isTeenClassSync } = useSchoolClassUtils();
 
