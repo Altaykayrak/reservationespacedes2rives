@@ -96,11 +96,7 @@ const Navbar = () => {
           {isAuthenticated && <div className="hidden md:block">
             <ProfileDropdown user={user} menuItems={menuItems} onLogout={handleLogout} />
           </div>}
-          {!isAuthenticated && <Link to="/login">
-              <Button variant="default" size="sm">
-                Se connecter
-              </Button>
-            </Link>}
+          {/* Suppression du bouton "Se connecter" sur desktop */}
         </div>
       </div>
     </div>;
