@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -132,7 +131,15 @@ export const AdminReservationForm = ({
     await queryClient.invalidateQueries({ queryKey: ["wednesday_reservations"] });
   };
 
-  const { handleSubmit } = useWednesdayReservationSubmission(
+  const { 
+    handleSubmit, 
+    showSuccessDialog, 
+    setShowSuccessDialog,
+    isSubmitting,
+    excludedFullDates,
+    progress,
+    progressMessage
+  } = useWednesdayReservationSubmission(
     selectedChild,
     selectedDates,
     isDateReservedForChild,
@@ -202,12 +209,22 @@ export const AdminReservationForm = ({
             />
           </ScrollArea>
 
+          {/* Barre de progression */}
+          {isSubmitting && (
+            <div className="space-y-2">
+              <Progress value={progress} className="w-full" />
+              {progressMessage && (
+                <p className="text-sm text-gray-600 text-center">{progressMessage}</p>
+              )}
+            </div>
+          )}
+
           <Button
             onClick={handleSubmit}
             className="w-full"
-            disabled={!selectedChild || selectedDates.length === 0}
+            disabled={!selectedChild || selectedDates.length === 0 || isSubmitting}
           >
-            Confirmer {selectedDates.length > 1 ? 'les réservations' : 'la réservation'}
+            {isSubmitting ? 'Création en cours...' : `Confirmer ${selectedDates.length > 1 ? 'les réservations' : 'la réservation'}`}
           </Button>
         </div>
       </Card>
@@ -216,6 +233,12 @@ export const AdminReservationForm = ({
         open={showReservationDialog}
         onOpenChange={setShowReservationDialog}
         reservedDate={reservedDate}
+      />
+
+      <SuccessReservationDialog
+        open={showSuccessDialog}
+        onOpenChange={setShowSuccessDialog}
+        excludedFullDates={excludedFullDates}
       />
     </div>
   );
