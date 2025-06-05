@@ -86,12 +86,12 @@ export const exportHolidaySpotsToPdf = (
       },
       margin: { left: 14, right: 14 },
       didParseCell: (data) => {
-        // Mettre en gras les lignes où il ne reste plus de place dans aucune catégorie
+        // Mettre en gras les lignes où il reste 0 places dans au moins une catégorie
         if (data.section === 'body') {
           const rowIndex = data.row.index;
           const spot = periodData.dates[rowIndex];
           
-          if (spot && spot.kindergarten_spots === 0 && spot.primary_spots === 0 && spot.teen_spots === 0) {
+          if (spot && (spot.kindergarten_spots === 0 || spot.primary_spots === 0 || spot.teen_spots === 0)) {
             data.cell.styles.fontStyle = 'bold';
           }
         }
