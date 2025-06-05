@@ -114,6 +114,42 @@ const AdminWednesdaySpots = () => {
     return "default";
   };
 
+  const monthColors = [
+    "bg-green-50 border-green-200",
+    "bg-purple-50 border-purple-200",
+    "bg-orange-50 border-orange-200",
+    "bg-pink-50 border-pink-200",
+    "bg-yellow-50 border-yellow-200",
+    "bg-indigo-50 border-indigo-200",
+    "bg-red-50 border-red-200",
+    "bg-teal-50 border-teal-200"
+  ];
+
+  // Fonction pour regrouper les mercredis par mois
+  const groupWednesdaysByMonth = (wednesdays: WednesdaySpots[]) => {
+    return wednesdays.reduce((acc, wednesday) => {
+      const date = new Date(wednesday.date);
+      const monthKey = format(date, "yyyy-MM", { locale: fr });
+      const monthName = format(date, "MMMM yyyy", { locale: fr });
+      
+      if (!acc[monthKey]) {
+        acc[monthKey] = {
+          monthName,
+          wednesdays: []
+        };
+      }
+      acc[monthKey].wednesdays.push(wednesday);
+      return acc;
+    }, {} as Record<string, { monthName: string; wednesdays: WednesdaySpots[] }>);
+  };
+
+  // Fonction pour trier les mois chronologiquement
+  const sortMonths = (months: Record<string, { monthName: string; wednesdays: WednesdaySpots[] }>) => {
+    return Object.entries(months).sort(([a], [b]) => a.localeCompare(b));
+  };
+
+  const groupedWednesdays = wednesdaySpots ? groupWednesdaysByMonth(wednesdaySpots) : {};
+
   const handlePdfExport = () => {
     if (wednesdaySpots) {
       exportWednesdaySpotsToPdf(wednesdaySpots);
@@ -155,7 +191,7 @@ const AdminWednesdaySpots = () => {
           <Calendar className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">Places restantes - Mercredis</h1>
           <Badge variant="secondary" className="ml-auto text-xs">
-            {wednesdaySpots?.length || 0} mercredis
+            {Object.keys(groupedWednesdays).length} mois
           </Badge>
         </div>
         <Button
@@ -169,38 +205,50 @@ const AdminWednesdaySpots = () => {
         </Button>
       </div>
 
-      <div className="space-y-2">
-        {wednesdaySpots && wednesdaySpots.length > 0 ? (
-          wednesdaySpots.map((spot) => {
-            const kindergartenAvailable = Math.max(0, spot.max_participants_kindergarten - spot.kindergarten_reserved);
-            const primaryAvailable = Math.max(0, spot.max_participants_primary - spot.primary_reserved);
-            
-            return (
-              <Card key={spot.id} className="bg-blue-50 border-blue-200">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-blue-800">
-                    {format(new Date(spot.date), "EEEE dd MMMM yyyy", { locale: fr })}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="bg-white p-2 rounded border">
-                      <h4 className="font-medium text-gray-700 mb-1 text-xs">Maternelle</h4>
-                      <Badge variant={getSpotsBadgeVariant(kindergartenAvailable, spot.max_participants_kindergarten)} className="text-xs px-2 py-0.5">
-                        {kindergartenAvailable}/{spot.max_participants_kindergarten} places
-                      </Badge>
-                    </div>
-                    <div className="bg-white p-2 rounded border">
-                      <h4 className="font-medium text-gray-700 mb-1 text-xs">Primaire</h4>
-                      <Badge variant={getSpotsBadgeVariant(primaryAvailable, spot.max_participants_primary)} className="text-xs px-2 py-0.5">
-                        {primaryAvailable}/{spot.max_participants_primary} places
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
+      <div className="space-y-3">
+        {Object.keys(groupedWednesdays).length > 0 ? (
+          sortMonths(groupedWednesdays).map(([monthKey, monthData], index) => (
+            <Card key={monthKey} className={`${monthColors[index % monthColors.length]} border`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-bold text-gray-800 capitalize">
+                  {monthData.monthName}
+                </CardTitle>
+                <p className="text-xs text-gray-600">{monthData.wednesdays.length} mercredis disponibles</p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {monthData.wednesdays.map((spot) => {
+                    const kindergartenAvailable = Math.max(0, spot.max_participants_kindergarten - spot.kindergarten_reserved);
+                    const primaryAvailable = Math.max(0, spot.max_participants_primary - spot.primary_reserved);
+                    
+                    return (
+                      <div key={spot.id} className="bg-white p-2 rounded border shadow-sm">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                          <div className="font-medium text-gray-800 text-xs">
+                            {format(new Date(spot.date), "EEEE dd MMMM yyyy", { locale: fr })}
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                            <div className="text-center">
+                              <div className="text-xs text-gray-600 mb-0.5">Maternelle</div>
+                              <Badge variant={getSpotsBadgeVariant(kindergartenAvailable, spot.max_participants_kindergarten)} className="text-xs px-1 py-0.5">
+                                {kindergartenAvailable}/{spot.max_participants_kindergarten}
+                              </Badge>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-xs text-gray-600 mb-0.5">Primaire</div>
+                              <Badge variant={getSpotsBadgeVariant(primaryAvailable, spot.max_participants_primary)} className="text-xs px-1 py-0.5">
+                                {primaryAvailable}/{spot.max_participants_primary}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          ))
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-600">Aucun mercredi disponible</p>
