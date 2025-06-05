@@ -39,6 +39,8 @@ import AdminAvailableSpots from "./pages/admin/AdminAvailableSpots";
 import AdminWednesdaySpots from "./pages/admin/AdminWednesdaySpots";
 import AdminHolidaySpots from "./pages/admin/AdminHolidaySpots";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
+import AdminWednesdayReservations from "./pages/admin/AdminWednesdayReservations";
+import AdminHolidayReservations from "./pages/admin/AdminHolidayReservations";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -129,6 +131,8 @@ const App = () => (
             >
               <Route index element={<AdminDashboard />} />
               <Route path="reservations" element={<AdminReservations />} />
+              <Route path="wednesdayreservations" element={<AdminWednesdayReservations />} />
+              <Route path="holidayreservations" element={<AdminHolidayReservations />} />
               <Route path="reservations/new" element={<AdminNewReservation />} />
               <Route path="reservations/new-holiday" element={<AdminNewHolidayReservation />} />
               <Route path="reservations/new-teen-holiday" element={<AdminNewTeenHolidayReservation />} />
