@@ -1,152 +1,14 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, FileText } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { Calendar, FileText } from "lucide-react";
 import { exportWednesdaySpotsToPdf } from "@/components/admin/spots/export/wednesdaySpotsPdfExport";
-
-interface WednesdaySpots {
-  id: string;
-  date: string;
-  max_participants_kindergarten: number;
-  max_participants_primary: number;
-  kindergarten_reserved: number;
-  primary_reserved: number;
-}
+import { useWednesdaySpots } from "@/hooks/useWednesdaySpots";
+import { WednesdaySpotsList } from "@/components/admin/spots/WednesdaySpotsList";
+import { groupWednesdaysByMonth } from "@/utils/wednesdayUtils";
 
 const AdminWednesdaySpots = () => {
-  const { data: wednesdaySpots, isLoading, error } = useQuery({
-    queryKey: ["wednesday_spots"],
-    queryFn: async () => {
-      console.log("Récupération des places disponibles pour les mercredis...");
-      
-      try {
-        const { data: wednesdays, error: wednesdaysError } = await supabase
-          .from("available_wednesdays")
-          .select("*")
-          .order("date", { ascending: true });
-
-        if (wednesdaysError) {
-          console.error("Erreur lors de la récupération des mercredis:", wednesdaysError);
-          throw wednesdaysError;
-        }
-
-        if (!wednesdays) {
-          console.log("Aucun mercredi trouvé");
-          return [];
-        }
-
-        const spotsData: WednesdaySpots[] = [];
-        
-        for (const wednesday of wednesdays) {
-          console.log("Traitement du mercredi:", wednesday.date);
-          
-          try {
-            const { data: kindergartenReservations, error: kError } = await supabase
-              .from("wednesday_reservations")
-              .select(`
-                id,
-                children!inner(school_class)
-              `)
-              .eq("wednesday_id", wednesday.id)
-              .eq("status", "confirmed")
-              .in("children.school_class", ["PS", "MS", "GS"]);
-
-            const { data: primaryReservations, error: pError } = await supabase
-              .from("wednesday_reservations")
-              .select(`
-                id,
-                children!inner(school_class)
-              `)
-              .eq("wednesday_id", wednesday.id)
-              .eq("status", "confirmed")
-              .in("children.school_class", ["CP", "CE1", "CE2", "CM1", "CM2"]);
-
-            if (kError) {
-              console.error("Erreur kindergarten:", kError);
-            }
-            if (pError) {
-              console.error("Erreur primary:", pError);
-            }
-
-            spotsData.push({
-              id: wednesday.id,
-              date: wednesday.date,
-              max_participants_kindergarten: wednesday.max_participants_kindergarten || 0,
-              max_participants_primary: wednesday.max_participants_primary || 0,
-              kindergarten_reserved: kindergartenReservations?.length || 0,
-              primary_reserved: primaryReservations?.length || 0,
-            });
-          } catch (reservationError) {
-            console.error("Erreur lors du traitement des réservations pour", wednesday.date, ":", reservationError);
-            // Continuer avec des valeurs par défaut
-            spotsData.push({
-              id: wednesday.id,
-              date: wednesday.date,
-              max_participants_kindergarten: wednesday.max_participants_kindergarten || 0,
-              max_participants_primary: wednesday.max_participants_primary || 0,
-              kindergarten_reserved: 0,
-              primary_reserved: 0,
-            });
-          }
-        }
-
-        console.log("Places calculées:", spotsData);
-        return spotsData;
-      } catch (error) {
-        console.error("Erreur générale:", error);
-        throw error;
-      }
-    },
-    retry: 1,
-  });
-
-  const getSpotsBadgeVariant = (available: number, total: number) => {
-    if (total === 0) return "outline";
-    const percentage = (available / total) * 100;
-    if (percentage === 0) return "destructive";
-    if (percentage <= 25) return "secondary";
-    if (percentage <= 50) return "outline";
-    return "default";
-  };
-
-  const monthColors = [
-    "bg-green-50 border-green-200",
-    "bg-purple-50 border-purple-200",
-    "bg-orange-50 border-orange-200",
-    "bg-pink-50 border-pink-200",
-    "bg-yellow-50 border-yellow-200",
-    "bg-indigo-50 border-indigo-200",
-    "bg-red-50 border-red-200",
-    "bg-teal-50 border-teal-200"
-  ];
-
-  // Fonction pour regrouper les mercredis par mois
-  const groupWednesdaysByMonth = (wednesdays: WednesdaySpots[]) => {
-    return wednesdays.reduce((acc, wednesday) => {
-      const date = new Date(wednesday.date);
-      const monthKey = format(date, "yyyy-MM", { locale: fr });
-      const monthName = format(date, "MMMM yyyy", { locale: fr });
-      
-      if (!acc[monthKey]) {
-        acc[monthKey] = {
-          monthName,
-          wednesdays: []
-        };
-      }
-      acc[monthKey].wednesdays.push(wednesday);
-      return acc;
-    }, {} as Record<string, { monthName: string; wednesdays: WednesdaySpots[] }>);
-  };
-
-  // Fonction pour trier les mois chronologiquement
-  const sortMonths = (months: Record<string, { monthName: string; wednesdays: WednesdaySpots[] }>) => {
-    return Object.entries(months).sort(([a], [b]) => a.localeCompare(b));
-  };
+  const { data: wednesdaySpots, isLoading, error } = useWednesdaySpots();
 
   const groupedWednesdays = wednesdaySpots ? groupWednesdaysByMonth(wednesdaySpots) : {};
 
@@ -205,56 +67,7 @@ const AdminWednesdaySpots = () => {
         </Button>
       </div>
 
-      <div className="space-y-3">
-        {Object.keys(groupedWednesdays).length > 0 ? (
-          sortMonths(groupedWednesdays).map(([monthKey, monthData], index) => (
-            <Card key={monthKey} className={`${monthColors[index % monthColors.length]} border`}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-bold text-gray-800 capitalize">
-                  {monthData.monthName}
-                </CardTitle>
-                <p className="text-xs text-gray-600">{monthData.wednesdays.length} mercredis disponibles</p>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-2">
-                  {monthData.wednesdays.map((spot) => {
-                    const kindergartenAvailable = Math.max(0, spot.max_participants_kindergarten - spot.kindergarten_reserved);
-                    const primaryAvailable = Math.max(0, spot.max_participants_primary - spot.primary_reserved);
-                    
-                    return (
-                      <div key={spot.id} className="bg-white p-2 rounded border shadow-sm">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                          <div className="font-medium text-gray-800 text-xs">
-                            {format(new Date(spot.date), "EEEE dd MMMM yyyy", { locale: fr })}
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
-                            <div className="text-center">
-                              <div className="text-xs text-gray-600 mb-0.5">Maternelle</div>
-                              <Badge variant={getSpotsBadgeVariant(kindergartenAvailable, spot.max_participants_kindergarten)} className="text-xs px-1 py-0.5">
-                                {kindergartenAvailable}/{spot.max_participants_kindergarten}
-                              </Badge>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-gray-600 mb-0.5">Primaire</div>
-                              <Badge variant={getSpotsBadgeVariant(primaryAvailable, spot.max_participants_primary)} className="text-xs px-1 py-0.5">
-                                {primaryAvailable}/{spot.max_participants_primary}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-600">Aucun mercredi disponible</p>
-          </div>
-        )}
-      </div>
+      <WednesdaySpotsList wednesdaySpots={wednesdaySpots || []} />
     </div>
   );
 };
