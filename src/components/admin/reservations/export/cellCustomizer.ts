@@ -64,6 +64,16 @@ export const customizeCell = (data: CellHookData) => {
       }
     }
     
+    // Centrer les sigles AR, SR, AM et le tiret
+    if (typeof cellText === 'string' && (
+        cellText === 'AR' || 
+        cellText === 'SR' || 
+        cellText === 'AM' ||
+        cellText.startsWith('AM ') ||
+        cellText === '-')) {
+      cell.styles.halign = 'center';
+    }
+    
     // Identifier uniquement le total général TOTAL en rouge et gras
     if (cellText === 'TOTAL') {
       cell.styles.textColor = [255, 0, 0]; // Rouge
