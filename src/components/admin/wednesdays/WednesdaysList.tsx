@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { WednesdayCard } from "./WednesdayCard";
+import { groupWednesdaysByMonth, sortMonths, monthColors } from "@/utils/wednesdayUtils";
 
 interface Wednesday {
   id: string;
@@ -87,18 +88,49 @@ export const WednesdaysList = ({ wednesdays, onDelete, onEdit }: WednesdaysListP
     );
   }
 
+  // Grouper les mercredis par mois
+  const groupedWednesdays = groupWednesdaysByMonth(sortedWednesdays.map(w => ({
+    id: w.id,
+    date: w.date,
+    max_participants_kindergarten: w.max_participants_kindergarten,
+    max_participants_primary: w.max_participants_primary,
+    kindergarten_reserved: 0,
+    primary_reserved: 0
+  })));
+
   return (
     <Card className="p-6">
       <h2 className="text-xl font-semibold mb-4">Mercredis disponibles</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sortedWednesdays.map((wednesday) => (
-          <WednesdayCard
-            key={wednesday.id}
-            wednesday={wednesday}
-            onDelete={handleDeleteWednesday}
-            onEdit={onEdit}
-          />
+      <div className="space-y-3">
+        {sortMonths(groupedWednesdays).map(([monthKey, monthData], index) => (
+          <div key={monthKey} className={`${monthColors[index % monthColors.length]} border rounded-lg`}>
+            <div className="p-4">
+              <div className="pb-2">
+                <h3 className="text-base font-bold text-gray-800 capitalize mb-1">
+                  {monthData.monthName}
+                </h3>
+                <p className="text-xs text-gray-600">{monthData.wednesdays.length} mercredis disponibles</p>
+              </div>
+              <div className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {monthData.wednesdays.map((wednesday) => (
+                    <WednesdayCard
+                      key={wednesday.id}
+                      wednesday={{
+                        id: wednesday.id,
+                        date: wednesday.date,
+                        max_participants_kindergarten: wednesday.max_participants_kindergarten,
+                        max_participants_primary: wednesday.max_participants_primary
+                      }}
+                      onDelete={handleDeleteWednesday}
+                      onEdit={onEdit}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     </Card>
