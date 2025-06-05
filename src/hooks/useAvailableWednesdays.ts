@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
@@ -16,15 +15,15 @@ export interface WednesdayWithCounts {
 export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boolean, isAdminMode: boolean = false) => {
   const queryClient = useQueryClient();
 
-  // Calculer la date limite : 1 jour pour admin, 8 jours pour utilisateurs normaux
+  // Calculer la date limite : J-1 pour admin, J-8 pour utilisateurs normaux
   const getMinDate = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Ajouter 1 jour pour admin ou 8 jours pour utilisateurs normaux
+    // Soustraire 1 jour pour admin ou 8 jours pour utilisateurs normaux
     const minWednesdayDate = new Date(today);
-    const daysToAdd = isAdminMode ? 1 : 8;
-    minWednesdayDate.setDate(today.getDate() + daysToAdd);
+    const daysToSubtract = isAdminMode ? 1 : 8;
+    minWednesdayDate.setDate(today.getDate() - daysToSubtract);
     
     return minWednesdayDate;
   };
@@ -81,7 +80,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
       const daysLabel = isAdminMode ? '(J-1)' : '(J-8)';
       console.log(`Date limite pour les réservations ${daysLabel}:`, minDate);
 
-      // Filtrer les mercredis nuls et les dates qui sont à moins de X jours
+      // Filtrer les mercredis nuls et les dates qui sont antérieures à la date limite
       return processedWednesdays
         .filter(wednesday => wednesday !== null)
         .filter(wednesday => {
