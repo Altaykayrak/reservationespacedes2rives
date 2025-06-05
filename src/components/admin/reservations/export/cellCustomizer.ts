@@ -1,23 +1,22 @@
-
 import { CellHookData } from 'jspdf-autotable';
 
-// Couleurs pastels pour les classes
+// Couleurs vives pour les classes
 const CLASS_COLORS = {
-  'PS': [255, 230, 230], // Rose pastel
-  'MS': [230, 255, 230], // Vert pastel
-  'GS': [230, 230, 255], // Bleu pastel
-  'CP': [255, 255, 230], // Jaune pastel
-  'CE1': [255, 230, 255], // Violet pastel
-  'CE2': [230, 255, 255], // Cyan pastel
-  'CM1': [255, 240, 230], // Orange pastel
-  'CM2': [240, 255, 230], // Vert clair pastel
-  '6EME': [255, 235, 245], // Rose clair pastel
-  '5EME': [235, 245, 255], // Bleu clair pastel
-  '4EME': [245, 255, 235], // Vert très clair pastel
-  '3EME': [255, 245, 235], // Pêche pastel
-  'SECONDE': [245, 235, 255], // Lavande pastel
-  'PREMIERE': [255, 250, 235], // Crème pastel
-  'TERMINALE': [235, 255, 250] // Menthe pastel
+  'PS': [255, 102, 102], // Rouge vif
+  'MS': [102, 255, 102], // Vert vif
+  'GS': [102, 102, 255], // Bleu vif
+  'CP': [255, 255, 0], // Jaune vif
+  'CE1': [255, 0, 255], // Magenta vif
+  'CE2': [0, 255, 255], // Cyan vif
+  'CM1': [255, 140, 0], // Orange vif
+  'CM2': [0, 255, 0], // Vert lime vif
+  '6EME': [255, 20, 147], // Rose vif
+  '5EME': [30, 144, 255], // Bleu dodger vif
+  '4EME': [50, 205, 50], // Vert lime vif
+  '3EME': [255, 69, 0], // Rouge orange vif
+  'SECONDE': [138, 43, 226], // Violet vif
+  'PREMIERE': [255, 215, 0], // Or vif
+  'TERMINALE': [0, 250, 154] // Vert menthe vif
 } as const;
 
 export const customizeCell = (data: CellHookData) => {
@@ -32,10 +31,10 @@ export const customizeCell = (data: CellHookData) => {
       const classColor = CLASS_COLORS[className as keyof typeof CLASS_COLORS];
       
       if (classColor) {
-        cell.styles.fillColor = [classColor[0], classColor[1], classColor[2]];
+        cell.styles.fillColor = [classColor[0], classColor[1], classColor[2]] as [number, number, number];
       } else {
         // Couleur par défaut pour les classes non définies
-        cell.styles.fillColor = [240, 240, 240];
+        cell.styles.fillColor = [200, 200, 200];
       }
       cell.styles.fontStyle = 'bold';
     }
@@ -54,11 +53,11 @@ export const customizeCell = (data: CellHookData) => {
       const classColor = CLASS_COLORS[className as keyof typeof CLASS_COLORS];
       
       if (classColor && data.column.index < 3) { // Seulement pour les 3 premières colonnes (nom, prénom, classe)
-        // Appliquer une version très claire de la couleur de classe
+        // Appliquer une version légèrement atténuée de la couleur de classe
         const lightColor: [number, number, number] = [
-          Math.min(255, classColor[0] + 20),
-          Math.min(255, classColor[1] + 20),
-          Math.min(255, classColor[2] + 20)
+          Math.min(255, classColor[0] + 50),
+          Math.min(255, classColor[1] + 50),
+          Math.min(255, classColor[2] + 50)
         ];
         cell.styles.fillColor = lightColor;
       }
