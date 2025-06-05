@@ -36,24 +36,24 @@ const HolidayPeriodItem = ({
   };
 
   return (
-    <div className="p-4 border rounded-lg bg-white shadow-sm">
+    <div className="p-4 bg-white rounded border shadow-sm">
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="font-medium">{holiday.name}</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="font-bold text-gray-800 text-base capitalize mb-1">{holiday.name}</h3>
+          <p className="text-xs text-gray-600 mb-2">
             Du {format(startDate, "d MMMM yyyy", { locale: fr })} au{" "}
             {format(endDate, "d MMMM yyyy", { locale: fr })}
           </p>
-          <div className="flex gap-2 mt-1">
-            <Badge variant="outline">Maternelle: {holiday.max_participants_kindergarten}</Badge>
-            <Badge variant="outline">Primaire: {holiday.max_participants_primary}</Badge>
-            <Badge variant="outline">Adolescents: {holiday.max_participants_teen}</Badge>
+          <div className="flex gap-2 mb-2">
+            <Badge variant="outline" className="text-xs">Maternelle: {holiday.max_participants_kindergarten}</Badge>
+            <Badge variant="outline" className="text-xs">Primaire: {holiday.max_participants_primary}</Badge>
+            <Badge variant="outline" className="text-xs">Adolescents: {holiday.max_participants_teen}</Badge>
           </div>
-          <div className="mt-1">
+          <div>
             {hasReservations ? (
-              <Badge variant="secondary">{reservationCount} réservation{reservationCount > 1 ? 's' : ''}</Badge>
+              <Badge variant="secondary" className="text-xs">{reservationCount} réservation{reservationCount > 1 ? 's' : ''}</Badge>
             ) : (
-              <span className="text-gray-500">Aucune réservation</span>
+              <span className="text-gray-500 text-xs">Aucune réservation</span>
             )}
           </div>
         </div>

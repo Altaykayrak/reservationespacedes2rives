@@ -13,6 +13,40 @@ interface HolidayPeriodsListProps {
   onDelete: () => void;
 }
 
+const periodColors = [
+  "bg-green-50 border-green-200",
+  "bg-purple-50 border-purple-200",
+  "bg-orange-50 border-orange-200",
+  "bg-pink-50 border-pink-200",
+  "bg-yellow-50 border-yellow-200",
+  "bg-indigo-50 border-indigo-200",
+  "bg-red-50 border-red-200",
+  "bg-teal-50 border-teal-200"
+];
+
+// Fonction pour trier les périodes chronologiquement
+const sortPeriods = (holidays: HolidayPeriod[]) => {
+  return [...holidays].sort((a, b) => {
+    // Extraire les numéros des périodes ETE-XX
+    const aMatch = a.name?.match(/^ETE-(\d+)$/);
+    const bMatch = b.name?.match(/^ETE-(\d+)$/);
+    
+    // Si les deux sont des périodes ETE, trier par numéro
+    if (aMatch && bMatch) {
+      return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+    }
+    
+    // Si seulement a est une période ETE, la mettre en premier
+    if (aMatch) return -1;
+    
+    // Si seulement b est une période ETE, la mettre en premier
+    if (bMatch) return 1;
+    
+    // Pour les autres périodes, tri par date de début
+    return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+  });
+};
+
 export const HolidayPeriodsList = ({ holidays, onDelete }: HolidayPeriodsListProps) => {
   const { data: reservationCounts, isLoading, refetch } = useQuery({
     queryKey: ["holiday_reservation_counts"],
@@ -121,6 +155,8 @@ export const HolidayPeriodsList = ({ holidays, onDelete }: HolidayPeriodsListPro
     );
   }
 
+  const sortedHolidays = sortPeriods(holidays);
+
   return (
     <div className="p-6 bg-white rounded-lg shadow">
       <h2 className="text-lg font-semibold mb-4">Périodes de vacances</h2>
@@ -129,16 +165,17 @@ export const HolidayPeriodsList = ({ holidays, onDelete }: HolidayPeriodsListPro
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {holidays.map((holiday) => (
-            <HolidayPeriodItem
-              key={holiday.id}
-              holiday={holiday}
-              reservationCount={getReservationCountForPeriod(holiday.id)}
-              onEdit={() => {}} // Implémentation à venir si nécessaire
-              onDelete={() => handleDelete(holiday.id)}
-              onMappingChange={handleMappingChange}
-            />
+        <div className="space-y-3">
+          {sortedHolidays.map((holiday, index) => (
+            <div key={holiday.id} className={`${periodColors[index % periodColors.length]} border rounded-lg`}>
+              <HolidayPeriodItem
+                holiday={holiday}
+                reservationCount={getReservationCountForPeriod(holiday.id)}
+                onEdit={() => {}} // Implémentation à venir si nécessaire
+                onDelete={() => handleDelete(holiday.id)}
+                onMappingChange={handleMappingChange}
+              />
+            </div>
           ))}
         </div>
       )}
