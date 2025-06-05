@@ -1,45 +1,81 @@
 
-import { MEAL_ABBREVIATIONS } from "./constants";
+import { CellHookData } from 'jspdf-autotable';
 
-export const customizeCell = (data: any) => {
-  // Ajouter des bordures à toutes les cellules
-  data.cell.styles.lineColor = [0, 0, 0];
-  data.cell.styles.lineWidth = 0.1;
+// Couleurs pastels pour les classes
+const CLASS_COLORS = {
+  'PS': [255, 230, 230], // Rose pastel
+  'MS': [230, 255, 230], // Vert pastel
+  'GS': [230, 230, 255], // Bleu pastel
+  'CP': [255, 255, 230], // Jaune pastel
+  'CE1': [255, 230, 255], // Violet pastel
+  'CE2': [230, 255, 255], // Cyan pastel
+  'CM1': [255, 240, 230], // Orange pastel
+  'CM2': [240, 255, 230], // Vert clair pastel
+  '6EME': [255, 235, 245], // Rose clair pastel
+  '5EME': [235, 245, 255], // Bleu clair pastel
+  '4EME': [245, 255, 235], // Vert très clair pastel
+  '3EME': [255, 245, 235], // Pêche pastel
+  'SECONDE': [245, 235, 255], // Lavande pastel
+  'PREMIERE': [255, 250, 235], // Crème pastel
+  'TERMINALE': [235, 255, 250] // Menthe pastel
+};
+
+export const customizeCell = (data: CellHookData) => {
+  const { cell, section, row } = data;
   
-  // Mettre en évidence les lignes de sous-totaux
-  if (data.row.raw && 
-      data.row.raw[0] && 
-      typeof data.row.raw[0] === 'string' && 
-      (data.row.raw[0].includes('Sous-total') || 
-       data.row.raw[0] === 'Accueil avant 8h30' || 
-       data.row.raw[0] === 'Sans Repas')) {
-    data.cell.styles.fillColor = [240, 240, 240];
-    data.cell.styles.fontStyle = 'bold';
-    // Centrer les nombres dans les cellules de sous-totaux (colonnes 3 et plus)
-    if (data.column.index >= 3) {
-      data.cell.styles.halign = 'center';
+  if (section === 'body') {
+    const cellText = cell.text[0];
+    
+    // Identifier les en-têtes de classe
+    if (cellText && cellText.startsWith('Classe:')) {
+      const className = cellText.replace('Classe: ', '').trim();
+      const classColor = CLASS_COLORS[className as keyof typeof CLASS_COLORS];
+      
+      if (classColor) {
+        cell.styles.fillColor = classColor;
+      } else {
+        // Couleur par défaut pour les classes non définies
+        cell.styles.fillColor = [240, 240, 240];
+      }
+      cell.styles.fontStyle = 'bold';
     }
-  }
-  
-  // Mettre en évidence les lignes de totaux
-  if (data.row.raw && 
-      data.row.raw[0] === 'TOTAL') {
-    data.cell.styles.fillColor = [220, 220, 220];
-    data.cell.styles.fontStyle = 'bold';
-    // Centrer les nombres dans les cellules de totaux (colonnes 3 et plus)
-    if (data.column.index >= 3) {
-      data.cell.styles.halign = 'center';
+    
+    // Identifier les lignes d'enfants (appartenant à une classe)
+    const rowData = row.raw;
+    if (Array.isArray(rowData) && rowData.length >= 3 && 
+        typeof rowData[2] === 'string' && 
+        !cellText?.startsWith('Sous-total') && 
+        !cellText?.startsWith('Accueil') && 
+        !cellText?.startsWith('Sans Repas') &&
+        !cellText?.startsWith('TOTAL') &&
+        cellText !== '') {
+      
+      const className = rowData[2]; // La classe est dans la 3ème colonne
+      const classColor = CLASS_COLORS[className as keyof typeof CLASS_COLORS];
+      
+      if (classColor && data.column.index < 3) { // Seulement pour les 3 premières colonnes (nom, prénom, classe)
+        // Appliquer une version très claire de la couleur de classe
+        const lightColor = classColor.map(c => Math.min(255, c + 20));
+        cell.styles.fillColor = lightColor as [number, number, number];
+      }
     }
-  }
-  
-  // Centrer toutes les abréviations (AR, SR) et les combinaisons avec AM
-  if (data.row.section === 'body' && data.column.index >= 3) {
-    const cellValue = data.cell.raw;
-    if (cellValue === MEAL_ABBREVIATIONS.WITH_MEAL || 
-        cellValue === MEAL_ABBREVIATIONS.WITHOUT_MEAL ||
-        (typeof cellValue === 'string' && 
-         (cellValue.includes('AM ') || cellValue === 'AM'))) {
-      data.cell.styles.halign = 'center';
+    
+    // Identifier les totaux généraux (TOTAL, Accueil avant 8h30, Sans Repas au niveau global)
+    if (cellText === 'TOTAL' || 
+        (cellText === 'Accueil avant 8h30' && !rowData[2]) || 
+        (cellText === 'Sans Repas' && !rowData[2])) {
+      cell.styles.textColor = [255, 0, 0]; // Rouge
+      cell.styles.fontStyle = 'bold';
+    }
+    
+    // Pour les valeurs numériques des totaux généraux
+    if (row.raw && Array.isArray(row.raw) && 
+        (row.raw[0] === 'TOTAL' || 
+         (row.raw[0] === 'Accueil avant 8h30' && !row.raw[2]) || 
+         (row.raw[0] === 'Sans Repas' && !row.raw[2])) &&
+        data.column.index > 2) {
+      cell.styles.textColor = [255, 0, 0]; // Rouge
+      cell.styles.fontStyle = 'bold';
     }
   }
 };
