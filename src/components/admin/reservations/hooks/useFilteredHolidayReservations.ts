@@ -2,14 +2,13 @@
 import { useState, useMemo } from "react";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { usePagination } from "./usePagination";
-import { format } from "date-fns";
 
 export const useFilteredHolidayReservations = (
   holidayReservations: HolidayReservationWithChild[] | null
 ) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [selectedClass, setSelectedClass] = useState<string>("all");
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
@@ -41,8 +40,8 @@ export const useFilteredHolidayReservations = (
       const matchesSearch = searchQuery === "" || childFullName.includes(searchQuery.toLowerCase());
 
       const reservationDate = new Date(reservation.reservation_date);
-      const matchesStartDate = !startDate || reservationDate >= startDate;
-      const matchesEndDate = !endDate || reservationDate <= endDate;
+      const matchesStartDate = !startDate || reservationDate >= new Date(startDate);
+      const matchesEndDate = !endDate || reservationDate <= new Date(endDate);
 
       const childClass = reservation.children.school_class;
       const matchesClass = selectedClass === "all" || childClass === selectedClass;
