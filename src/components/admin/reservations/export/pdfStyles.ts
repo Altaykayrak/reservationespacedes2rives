@@ -4,16 +4,16 @@ import { UserOptions } from 'jspdf-autotable';
 export const createTableStyles = (fontSize: number): UserOptions => ({
   styles: {
     fontSize: fontSize,
-    cellPadding: 1, // Réduit de 2 à 1
-    lineColor: [0, 0, 0], // Couleur des bordures (noir)
-    lineWidth: 0.1 // Épaisseur des bordures
+    cellPadding: 1,
+    lineColor: [0, 0, 0],
+    lineWidth: 0.1
   },
   headStyles: {
-    fillColor: [41, 128, 185],
+    fillColor: [59, 130, 246], // Bleu comme holiday spots
     textColor: 255,
     fontStyle: 'bold',
     halign: 'center',
-    lineColor: [0, 0, 0], // Bordures pour les en-têtes
+    lineColor: [0, 0, 0],
     lineWidth: 0.1
   },
   columnStyles: {
@@ -21,8 +21,8 @@ export const createTableStyles = (fontSize: number): UserOptions => ({
     2: { halign: 'center' }
   },
   alternateRowStyles: {
-    fillColor: [245, 245, 245]
+    fillColor: [248, 250, 252] // Gris très clair comme holiday spots
   },
-  tableLineColor: [0, 0, 0], // Couleur des bordures du tableau
-  tableLineWidth: 0.1, // Épaisseur des bordures du tableau
+  tableLineColor: [0, 0, 0],
+  tableLineWidth: 0.1,
 });
