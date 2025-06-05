@@ -18,7 +18,7 @@ type GroupedReservations = Record<string, {
 export const HolidayReservationsList = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isTeenPage = window.location.pathname === "/teen-holiday-reservations";
+  const isTeenPage = window.location.pathname === "/teenholiday-reservations";
   const { reservations, isError, error, refetch } = useHolidayReservations();
   const { isTeenClassSync } = useSchoolClassUtils();
 
