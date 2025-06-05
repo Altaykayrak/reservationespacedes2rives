@@ -97,7 +97,7 @@ const AdminDashboard = () => {
             <p className="text-gray-600">Consulter les places disponibles pour les mercredis</p>
           </div>
           <Button asChild className="mt-4">
-            <Link to="/admin/wednesday-spots">Voir les places</Link>
+            <Link to="/admin/spots/wednesday">Voir les places</Link>
           </Button>
         </Card>
 
@@ -110,7 +110,7 @@ const AdminDashboard = () => {
             <p className="text-gray-600">Consulter les places disponibles pour les vacances</p>
           </div>
           <Button asChild className="mt-4">
-            <Link to="/admin/holiday-spots">Voir les places</Link>
+            <Link to="/admin/spots/holiday">Voir les places</Link>
           </Button>
         </Card>
       </div>

@@ -73,13 +73,13 @@ export const AdminNavbar = () => {
     },
     {
       title: "Places mercredis",
-      href: "/admin/wednesday-spots",
+      href: "/admin/spots/wednesday",
       icon: Calculator,
       description: "Places disponibles mercredis"
     },
     {
       title: "Places vacances",
-      href: "/admin/holiday-spots",
+      href: "/admin/spots/holiday",
       icon: Calculator,
       description: "Places disponibles vacances"
     }
