@@ -42,19 +42,25 @@ export const AdminNavbar = () => {
       description: "Gestion des enfants"
     },
     {
-      title: "Réservations",
-      href: "/admin/reservations",
+      title: "Mercredis",
+      href: "/admin/wednesdayreservations",
       icon: Calendar,
-      description: "Gestion des réservations"
+      description: "Réservations mercredis"
     },
     {
-      title: "Mercredis",
+      title: "Vacances",
+      href: "/admin/holidayreservations",
+      icon: CalendarDays,
+      description: "Réservations vacances"
+    },
+    {
+      title: "Config Mercredis",
       href: "/admin/wednesdays",
       icon: CalendarDays,
       description: "Gestion des mercredis"
     },
     {
-      title: "Vacances",
+      title: "Config Vacances",
       href: "/admin/holidays",
       icon: Palmtree,
       description: "Gestion des périodes de vacances"
