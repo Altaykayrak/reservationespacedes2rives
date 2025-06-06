@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/ui/navbar";
@@ -21,10 +22,10 @@ const Index = () => {
           <p className="text-xl mb-12 max-w-3xl mx-auto text-red-300">
           </p>
           <div className="mt-[320px] flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto">
+            <Button asChild size="lg" className="bg-purple-300 hover:bg-purple-400 text-purple-900 w-full sm:w-auto">
               <Link to="/login">Connexion</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="bg-white text-indigo-600 hover:bg-gray-100 w-full sm:w-auto">
+            <Button asChild size="lg" variant="outline" className="bg-white text-purple-400 border-purple-300 hover:bg-purple-50 w-full sm:w-auto">
               <Link to="/register">Inscription</Link>
             </Button>
           </div>
@@ -45,7 +46,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {/* Activités variées */}
             <div className="text-center">
-              <Calendar className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
+              <Calendar className="w-12 h-12 mx-auto mb-6 text-purple-300" />
               <h2 className="text-2xl font-bold mb-4">Activités variées</h2>
               <p className="text-gray-600">
                 Un programme riche en activités éducatives, sportives et créatives pour
@@ -55,7 +56,7 @@ const Index = () => {
 
             {/* Équipe qualifiée */}
             <div className="text-center">
-              <Users className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
+              <Users className="w-12 h-12 mx-auto mb-6 text-purple-300" />
               <h2 className="text-2xl font-bold mb-4">Équipe qualifiée</h2>
               <p className="text-gray-600">
                 Une équipe d'animateurs professionnels et passionnés pour
@@ -65,7 +66,7 @@ const Index = () => {
 
             {/* Cadre exceptionnel */}
             <div className="text-center">
-              <Image className="w-12 h-12 mx-auto mb-6 text-indigo-600" />
+              <Image className="w-12 h-12 mx-auto mb-6 text-purple-300" />
               <h2 className="text-2xl font-bold mb-4">Cadre exceptionnel</h2>
               <p className="text-gray-600">
                 Un environnement sécurisé et adapté, avec des espaces intérieurs et
