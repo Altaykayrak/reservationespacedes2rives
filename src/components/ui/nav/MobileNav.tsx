@@ -44,8 +44,8 @@ export function MobileNav({
                   "bg-white shadow hover:shadow-md transform hover:-translate-y-0.5",
                   "border border-gray-100 hover:border-gray-200",
                   location.pathname === item.href
-                    ? "bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600"
-                    : "text-gray-700 hover:text-indigo-600"
+                    ? "bg-purple-300 text-purple-900 hover:bg-purple-400 border-purple-300"
+                    : "text-gray-700 hover:text-purple-600"
                 )}
               >
                 {item.icon && <item.icon className="h-4 w-4" />}
@@ -66,7 +66,7 @@ export function MobileNav({
               <Button 
                 asChild 
                 variant="default"
-                className="bg-indigo-600 hover:bg-indigo-700 transform hover:-translate-y-0.5 transition-all shadow-md hover:shadow-lg py-2 h-auto"
+                className="bg-purple-300 hover:bg-purple-400 text-purple-900 transform hover:-translate-y-0.5 transition-all shadow-md hover:shadow-lg py-2 h-auto"
               >
                 <Link to="/login">Connexion</Link>
               </Button>
