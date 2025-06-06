@@ -39,7 +39,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
                 size="sm"
                 onClick={() => handleBulkWaitingChange(true)}
                 disabled={bulkActionLoading}
-                className="w-full"
+                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
               >
                 <UserCheck className="h-4 w-4 mr-2" />
                 Tous en attente
@@ -49,7 +49,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
                 size="sm"
                 onClick={() => handleBulkWaitingChange(false)}
                 disabled={bulkActionLoading}
-                className="w-full"
+                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
               >
                 <UserX className="h-4 w-4 mr-2" />
                 Tous actifs
@@ -65,7 +65,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
                 size="sm"
                 onClick={() => handleBulkClosedChange(true)}
                 disabled={bulkActionLoading}
-                className="w-full"
+                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
               >
                 <UserX className="h-4 w-4 mr-2" />
                 Tous fermés
@@ -75,7 +75,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
                 size="sm"
                 onClick={() => handleBulkClosedChange(false)}
                 disabled={bulkActionLoading}
-                className="w-full"
+                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
               >
                 <UserCheck className="h-4 w-4 mr-2" />
                 Tous ouverts
@@ -91,7 +91,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
                 size="sm"
                 onClick={() => handleBulkRdvAccessChange(true)}
                 disabled={bulkActionLoading}
-                className="w-full"
+                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
               >
                 <CalendarX className="h-4 w-4 mr-2" />
                 Masquer RDV
@@ -101,7 +101,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
                 size="sm"
                 onClick={() => handleBulkRdvAccessChange(false)}
                 disabled={bulkActionLoading}
-                className="w-full"
+                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
               >
                 <Calendar className="h-4 w-4 mr-2" />
                 Afficher RDV
@@ -117,7 +117,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
                 size="sm"
                 onClick={() => handleBulkWednesdayAccessChange(true)}
                 disabled={bulkActionLoading}
-                className="w-full"
+                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
               >
                 <CalendarX className="h-4 w-4 mr-2" />
                 Masquer Mercredis
@@ -127,7 +127,7 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
                 size="sm"
                 onClick={() => handleBulkWednesdayAccessChange(false)}
                 disabled={bulkActionLoading}
-                className="w-full"
+                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
               >
                 <Calendar className="h-4 w-4 mr-2" />
                 Afficher Mercredis

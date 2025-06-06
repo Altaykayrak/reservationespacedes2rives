@@ -107,7 +107,10 @@ export const AdminNavbar = () => {
                 variant={location.pathname === item.href ? "default" : "ghost"}
                 size="sm"
                 onClick={() => navigate(item.href)}
-                className="flex items-center gap-2"
+                className={location.pathname === item.href 
+                  ? "flex items-center gap-2 bg-purple-200 hover:bg-purple-300 text-purple-800"
+                  : "flex items-center gap-2 hover:bg-purple-100 hover:text-purple-700"
+                }
               >
                 <item.icon className="h-4 w-4" />
                 {item.title}
@@ -118,7 +121,7 @@ export const AdminNavbar = () => {
           {/* Mobile Navigation */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="md:hidden">
+              <Button variant="ghost" size="sm" className="md:hidden hover:bg-purple-100">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -130,7 +133,10 @@ export const AdminNavbar = () => {
                     key={item.href}
                     variant={location.pathname === item.href ? "default" : "ghost"}
                     onClick={() => navigate(item.href)}
-                    className="justify-start gap-2"
+                    className={location.pathname === item.href 
+                      ? "justify-start gap-2 bg-purple-200 hover:bg-purple-300 text-purple-800"
+                      : "justify-start gap-2 hover:bg-purple-100 hover:text-purple-700"
+                    }
                   >
                     <item.icon className="h-4 w-4" />
                     <div className="text-left">
@@ -143,7 +149,12 @@ export const AdminNavbar = () => {
             </SheetContent>
           </Sheet>
 
-          <Button variant="destructive" size="sm" onClick={handleSignOut}>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleSignOut}
+            className="bg-red-200 hover:bg-red-300 text-red-800 border-red-300"
+          >
             Déconnexion
           </Button>
         </div>
