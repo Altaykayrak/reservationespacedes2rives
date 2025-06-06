@@ -1,11 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
-
 interface LoginFormProps {
   email: string;
   setEmail: (email: string) => void;
@@ -15,7 +13,6 @@ interface LoginFormProps {
   error: string | null;
   onSubmit: (e: React.FormEvent) => void;
 }
-
 export const LoginForm = ({
   email,
   setEmail,
@@ -39,7 +36,7 @@ export const LoginForm = ({
           <Label htmlFor="password">Mot de passe</Label>
           <PasswordInput id="password" value={password} onChange={e => setPassword(e.target.value)} required />
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading} className="w-full bg-fuchsia-300 hover:bg-fuchsia-200 text-violet-800 font-semibold text-xs">
           {isLoading ? "Connexion..." : "Se connecter"}
         </Button>
         <div className="text-center text-sm">
