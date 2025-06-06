@@ -29,7 +29,7 @@ export function MobileNav({
             size="icon" 
             className="h-10 w-10 rounded-full shadow-md hover:shadow-lg transition-all border-2 bg-gradient-to-tr from-white to-gray-50"
           >
-            <Menu className="h-5 w-5 text-indigo-600" />
+            <Menu className="h-5 w-5 text-purple-300" />
             <span className="sr-only">Toggle menu</span>
           </Button>
         </SheetTrigger>
