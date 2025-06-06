@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ChildrenFilters } from "@/components/admin/children/ChildrenFilters";
 import { ChildrenTable } from "@/components/admin/children/ChildrenTable";
@@ -9,9 +10,10 @@ import { AddChildForm } from "@/components/profile/AddChildForm";
 import { EditChildDialog } from "@/components/profile/dialogs/EditChildDialog";
 import { DeleteChildDialog } from "@/components/profile/dialogs/DeleteChildDialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Users } from "lucide-react";
 import { exportChildrenToPdf } from "@/components/admin/children/export/childrenPdfExport";
 import { useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
 
 const AdminChildren = () => {
   const { children, isLoading } = useChildrenData();
@@ -94,6 +96,21 @@ const AdminChildren = () => {
             </Button>
           </div>
         </div>
+
+        {/* Compteur d'enfants */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-lg font-medium">
+              <Users className="w-5 h-5 text-purple-600" />
+              <span>
+                {filteredChildren?.length || 0} enfant{(filteredChildren?.length || 0) > 1 ? 's' : ''} 
+                {(searchQuery || selectedClass !== "all" || selectedGroup !== "all") && 
+                  ` sur ${children?.length || 0} au total`
+                }
+              </span>
+            </div>
+          </CardContent>
+        </Card>
 
         <ChildrenFilters
           searchQuery={searchQuery}
