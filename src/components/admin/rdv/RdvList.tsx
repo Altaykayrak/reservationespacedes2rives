@@ -33,7 +33,13 @@ const RdvList: React.FC<RdvListProps> = ({ rdvList, loading, onDeleteRdv }) => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Rendez-vous disponibles</CardTitle>
+        <div className="flex flex-col">
+          <CardTitle>Rendez-vous disponibles</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            {filteredRdvList.length} rendez-vous{filteredRdvList.length > 1 ? "" : ""} 
+            {filteredRdvList.length !== rdvList.length && ` sur ${rdvList.length} au total`}
+          </p>
+        </div>
         <RdvExportButton
           filteredRdvList={filteredRdvList}
           startDate={startDate}
