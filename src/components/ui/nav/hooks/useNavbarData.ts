@@ -73,6 +73,12 @@ export const useNavbarData = () => {
       requiresAuth: false
     },
     {
+      label: "CGU",
+      href: "/terms-of-service",
+      icon: FileText,
+      requiresAuth: false
+    },
+    {
       label: "Tarifs",
       href: "/prices",
       icon: Euro,
