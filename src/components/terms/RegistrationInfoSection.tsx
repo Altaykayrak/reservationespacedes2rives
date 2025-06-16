@@ -1,4 +1,3 @@
-
 import React from "react";
 
 export const RegistrationInfoSection = () => {
@@ -26,7 +25,7 @@ export const RegistrationInfoSection = () => {
       
       <p className="mt-4 text-justify">Nota : Les tarifs sont revus chaque année en janvier. Le gestionnaire utilisera CDAP (Consultation des Données Allocataires par les Partenaires) pour avoir connaissance des ressources et de la situation familiale et ainsi calculera la participation financière de la famille. A défaut de produire dans les délais précisés lors de la demande le numéro d'allocataire Caf ou un justificatif de ressources, la participation financière sera calculée sur la base du prix plafond, jusqu'à réception des documents, sans effet rétroactif.</p>
       
-      <p className="text-justify">Il appartient aux familles de signaler tout changement de situation.</p>
+      <p className="text-justify text-red-600 font-bold">Il appartient aux familles de signaler tout changement de situation.</p>
       
       <p className="font-semibold mt-6">Absences :</p>
       <p>Les éventuelles déductions appliquées sont limitées à :</p>
