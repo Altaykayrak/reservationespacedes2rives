@@ -1,16 +1,16 @@
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, UserX, Calendar, CalendarX } from "lucide-react";
-import type { ProfileData } from "@/types/profile";
+import { FileText, Users, Eye, EyeOff, Calendar } from "lucide-react";
+import { ProfileData } from "@/types/profile";
+import { exportProfilesToPDF } from "./export/profilesPdfExport";
 
 interface AdminProfilesActionsProps {
   profiles: ProfileData[];
   bulkActionLoading: boolean;
-  handleBulkWaitingChange: (value: boolean) => void;
-  handleBulkClosedChange: (value: boolean) => void;
-  handleBulkRdvAccessChange: (value: boolean) => void;
-  handleBulkWednesdayAccessChange: (value: boolean) => void;
+  handleBulkWaitingChange: (isWaiting: boolean) => void;
+  handleBulkClosedChange: (isClosed: boolean) => void;
+  handleBulkRdvAccessChange: (hideAccess: boolean) => void;
+  handleBulkWednesdayAccessChange: (hideAccess: boolean) => void;
 }
 
 export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
@@ -21,121 +21,101 @@ export const AdminProfilesActions: React.FC<AdminProfilesActionsProps> = ({
   handleBulkRdvAccessChange,
   handleBulkWednesdayAccessChange,
 }) => {
+  const handleExportPDF = () => {
+    exportProfilesToPDF(profiles);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Actions en masse ({profiles.length} profils)
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm">État d'attente</h4>
-            <div className="flex flex-col gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkWaitingChange(true)}
-                disabled={bulkActionLoading}
-                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
-              >
-                <UserCheck className="h-4 w-4 mr-2" />
-                Tous en attente
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkWaitingChange(false)}
-                disabled={bulkActionLoading}
-                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
-              >
-                <UserX className="h-4 w-4 mr-2" />
-                Tous actifs
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm">État fermé</h4>
-            <div className="flex flex-col gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkClosedChange(true)}
-                disabled={bulkActionLoading}
-                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
-              >
-                <UserX className="h-4 w-4 mr-2" />
-                Tous fermés
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkClosedChange(false)}
-                disabled={bulkActionLoading}
-                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
-              >
-                <UserCheck className="h-4 w-4 mr-2" />
-                Tous ouverts
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm">Accès RDV</h4>
-            <div className="flex flex-col gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkRdvAccessChange(true)}
-                disabled={bulkActionLoading}
-                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
-              >
-                <CalendarX className="h-4 w-4 mr-2" />
-                Masquer RDV
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkRdvAccessChange(false)}
-                disabled={bulkActionLoading}
-                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Afficher RDV
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm">Accès Mercredis</h4>
-            <div className="flex flex-col gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkWednesdayAccessChange(true)}
-                disabled={bulkActionLoading}
-                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
-              >
-                <CalendarX className="h-4 w-4 mr-2" />
-                Masquer Mercredis
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkWednesdayAccessChange(false)}
-                disabled={bulkActionLoading}
-                className="w-full bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300 text-purple-700"
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Afficher Mercredis
-              </Button>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex flex-wrap gap-2 mb-6">
+      <Button
+        onClick={handleExportPDF}
+        variant="outline"
+        size="sm"
+        disabled={profiles.length === 0}
+      >
+        <FileText className="mr-2 h-4 w-4" />
+        Exporter PDF ({profiles.length})
+      </Button>
+      
+      <Button
+        onClick={() => handleBulkWaitingChange(true)}
+        variant="outline"
+        size="sm"
+        disabled={bulkActionLoading || profiles.length === 0}
+      >
+        <Users className="mr-2 h-4 w-4" />
+        Mettre tous en attente
+      </Button>
+      
+      <Button
+        onClick={() => handleBulkWaitingChange(false)}
+        variant="outline"
+        size="sm"
+        disabled={bulkActionLoading || profiles.length === 0}
+      >
+        <Users className="mr-2 h-4 w-4" />
+        Enlever tous de l'attente
+      </Button>
+      
+      <Button
+        onClick={() => handleBulkClosedChange(true)}
+        variant="outline"
+        size="sm"
+        disabled={bulkActionLoading || profiles.length === 0}
+      >
+        <Users className="mr-2 h-4 w-4" />
+        Fermer tous les comptes
+      </Button>
+      
+      <Button
+        onClick={() => handleBulkClosedChange(false)}
+        variant="outline"
+        size="sm"
+        disabled={bulkActionLoading || profiles.length === 0}
+      >
+        <Users className="mr-2 h-4 w-4" />
+        Ouvrir tous les comptes
+      </Button>
+      
+      <Button
+        onClick={() => handleBulkRdvAccessChange(true)}
+        variant="outline"
+        size="sm"
+        disabled={bulkActionLoading || profiles.length === 0}
+      >
+        <EyeOff className="mr-2 h-4 w-4" />
+        Masquer accès RDV
+      </Button>
+      
+      <Button
+        onClick={() => handleBulkRdvAccessChange(false)}
+        variant="outline"
+        size="sm"
+        disabled={bulkActionLoading || profiles.length === 0}
+      >
+        <Eye className="mr-2 h-4 w-4" />
+        Afficher accès RDV
+      </Button>
+      
+      <Button
+        onClick={() => handleBulkWednesdayAccessChange(true)}
+        variant="outline"
+        size="sm"
+        disabled={bulkActionLoading || profiles.length === 0}
+      >
+        <EyeOff className="mr-2 h-4 w-4" />
+        Masquer accès Mercredis
+      </Button>
+      
+      <Button
+        onClick={() => handleBulkWednesdayAccessChange(false)}
+        variant="outline"
+        size="sm"
+        disabled={bulkActionLoading || profiles.length === 0}
+      >
+        <Eye className="mr-2 h-4 w-4" />
+        Afficher accès Mercredis
+      </Button>
+    </div>
   );
 };
