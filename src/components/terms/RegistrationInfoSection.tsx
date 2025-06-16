@@ -1,13 +1,11 @@
 import React from "react";
-
 export const RegistrationInfoSection = () => {
-  return (
-    <div className="space-y-4 mb-6">
+  return <div className="space-y-4 mb-6">
       <p className="font-semibold mt-6">Comment réserver et payer ?</p>
       <ul className="list-disc pl-5 space-y-1">
         <li>En prenant un rendez-vous au 02 32 68 32 10 (nouveau dossier) ou directement sur l'application de réservation.</li>
         <li>Jours et horaires des rendez-vous : du lundi au vendredi de 9h à 12h et de 13h30 à 17h30.</li>
-        <li>Les paiements se font uniquement en chèque ou carte bancaire et sont à régler uniquement à l'accueil avant 18h00. Possibilité d'opter pour le prélèvement automatique (en cas de rejet, pénalité de 11.50 euros qui correspond aux frais bancaires).</li>
+        <li>Les paiements se font uniquement en chèque ou carte bancaire et sont à régler uniquement à l'accueil avant 18h00. Possibilité d'opter pour le prélèvement automatique (en cas de rejet, pénalité de 10 euros qui correspond aux frais bancaires).</li>
       </ul>
       
       <p className="font-semibold">Documents à fournir lors de l'inscription :</p>
@@ -47,6 +45,5 @@ export const RegistrationInfoSection = () => {
           <p>Mme. Sabine Caillet</p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
