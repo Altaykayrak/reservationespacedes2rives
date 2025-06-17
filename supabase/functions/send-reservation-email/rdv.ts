@@ -56,16 +56,37 @@ export async function processRdvReservation(
     return timeStr.substring(0, 5);
   };
   
-  // Create Date objects for the appointment start and end times
-  const appointmentDate = new Date(rdvData.date);
+  // Create Date objects for the appointment start and end times in French timezone
+  const appointmentDate = new Date(rdvData.date + 'T00:00:00'); // Force local date interpretation
   const startTime = rdvData.heure_debut.split(':');
   const endTime = rdvData.heure_fin.split(':');
   
-  const startDateTime = new Date(appointmentDate);
-  startDateTime.setHours(parseInt(startTime[0], 10), parseInt(startTime[1], 10), 0);
+  // Create dates in local time (French timezone)
+  const startDateTime = new Date(
+    appointmentDate.getFullYear(),
+    appointmentDate.getMonth(),
+    appointmentDate.getDate(),
+    parseInt(startTime[0], 10),
+    parseInt(startTime[1], 10),
+    0
+  );
   
-  const endDateTime = new Date(appointmentDate);
-  endDateTime.setHours(parseInt(endTime[0], 10), parseInt(endTime[1], 10), 0);
+  const endDateTime = new Date(
+    appointmentDate.getFullYear(),
+    appointmentDate.getMonth(),
+    appointmentDate.getDate(),
+    parseInt(endTime[0], 10),
+    parseInt(endTime[1], 10),
+    0
+  );
+  
+  console.log("Appointment times:", {
+    date: rdvData.date,
+    startTime: rdvData.heure_debut,
+    endTime: rdvData.heure_fin,
+    startDateTime: startDateTime.toString(),
+    endDateTime: endDateTime.toString()
+  });
   
   // Generate the iCalendar content for the appointment
   const eventSummary = `Rendez-vous E2Rives`;

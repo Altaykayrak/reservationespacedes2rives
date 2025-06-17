@@ -43,14 +43,21 @@ export function initSupabase() {
 
 // Function to generate iCalendar format string for calendar events
 export function generateICalendarString(eventDetails: EventDetails): string {
-  // Format date to iCalendar format: YYYYMMDDTHHMMSSZ (UTC)
+  // Format date to iCalendar format: YYYYMMDDTHHMMSS (floating time, no timezone)
   const formatDateToICS = (date: Date): string => {
-    return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/g, '');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}${month}${day}T${hours}${minutes}${seconds}`;
   };
   
   const now = new Date();
   
-  // Format dates in UTC to avoid timezone issues
+  // Format dates in floating time (local time without timezone)
   const startDate = formatDateToICS(eventDetails.start);
   const endDate = formatDateToICS(eventDetails.end);
   const createdDate = formatDateToICS(now);
