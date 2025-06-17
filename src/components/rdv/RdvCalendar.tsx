@@ -34,6 +34,26 @@ export const RdvCalendar = ({
     return dateSet;
   }, [rdvList]);
 
+  // Calculate the first month with available slots
+  const defaultMonth = useMemo(() => {
+    if (rdvList.length === 0) {
+      return new Date(2025, 6, 1); // Default to July if no slots
+    }
+
+    // Sort dates and find the first available date
+    const sortedDates = rdvList
+      .map(rdv => new Date(rdv.date))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    if (sortedDates.length > 0) {
+      // Return the first day of the month containing the first available slot
+      const firstDate = sortedDates[0];
+      return new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+    }
+
+    return new Date(2025, 6, 1); // Default to July if no valid dates
+  }, [rdvList]);
+
   // Check if a date has slots
   const isDayWithSlots = (date: Date) => {
     const formattedDate = format(date, 'yyyy-MM-dd');
@@ -42,6 +62,7 @@ export const RdvCalendar = ({
 
   console.log("RdvCalendar - rdvList length:", rdvList.length);
   console.log("RdvCalendar - Summer range:", summerRange);
+  console.log("RdvCalendar - Default month:", defaultMonth);
   
   return (
     <Card className="h-full">
@@ -55,7 +76,7 @@ export const RdvCalendar = ({
           onSelect={setSelectedDate}
           locale={fr}
           className="mx-auto scale-95 transform origin-top-left pointer-events-auto"
-          defaultMonth={new Date(2025, 6, 1)}
+          defaultMonth={defaultMonth}
           disabled={(date) => {
             // Convert to midnight UTC to avoid timezone issues
             const dateToCheck = new Date(date.getFullYear(), date.getMonth(), date.getDate());
