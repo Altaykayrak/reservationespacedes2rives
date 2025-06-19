@@ -34,25 +34,10 @@ export const RdvCalendar = ({
     return dateSet;
   }, [rdvList]);
 
-  // Calculate the first month with available slots
+  // Set default month to June 2025
   const defaultMonth = useMemo(() => {
-    if (rdvList.length === 0) {
-      return new Date(2025, 6, 1); // Default to July if no slots
-    }
-
-    // Sort dates and find the first available date
-    const sortedDates = rdvList
-      .map(rdv => new Date(rdv.date))
-      .sort((a, b) => a.getTime() - b.getTime());
-
-    if (sortedDates.length > 0) {
-      // Return the first day of the month containing the first available slot
-      const firstDate = sortedDates[0];
-      return new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
-    }
-
-    return new Date(2025, 6, 1); // Default to July if no valid dates
-  }, [rdvList]);
+    return new Date(2025, 5, 1); // June 2025 (month 5 in JS)
+  }, []);
 
   // Check if a date has slots
   const isDayWithSlots = (date: Date) => {
