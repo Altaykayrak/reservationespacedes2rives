@@ -1,9 +1,17 @@
+
 import { Info } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const HolidayProgram = () => {
   const [isVisible, setIsVisible] = useState(true);
@@ -25,6 +33,23 @@ const HolidayProgram = () => {
       clearTimeout(timeout);
     };
   }, []);
+
+  const teenImages = [
+    {
+      src: "/lovable-uploads/b6dd29e9-3775-4d44-a30f-37b6be91ad65.png",
+      alt: "Programme Adolescents - Espace des 2 rives"
+    },
+    // Add the other uploaded images here when they are available
+    // You can replace these placeholder URLs with the actual uploaded image paths
+    {
+      src: "/lovable-uploads/b6dd29e9-3775-4d44-a30f-37b6be91ad65.png",
+      alt: "Activités adolescents - Image 2"
+    },
+    {
+      src: "/lovable-uploads/b6dd29e9-3775-4d44-a30f-37b6be91ad65.png", 
+      alt: "Activités adolescents - Image 3"
+    }
+  ];
   
   return (
     <>
@@ -89,13 +114,23 @@ const HolidayProgram = () => {
             </CardHeader>
             <CardContent className="p-6">
               <div className="mb-4">
-                <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg">
-                  <img
-                    src="/lovable-uploads/b6dd29e9-3775-4d44-a30f-37b6be91ad65.png"
-                    alt="Programme Adolescents - Espace des 2 rives"
-                    className="w-full h-full object-cover"
-                  />
-                </AspectRatio>
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {teenImages.map((image, index) => (
+                      <CarouselItem key={index}>
+                        <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg">
+                          <img
+                            src={image.src}
+                            alt={image.alt}
+                            className="w-full h-full object-cover"
+                          />
+                        </AspectRatio>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-2" />
+                  <CarouselNext className="right-2" />
+                </Carousel>
               </div>
               <div className="text-center text-gray-600">
                 <p className="text-sm">Programme d'activités pour les adolescents</p>
