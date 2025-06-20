@@ -1,4 +1,3 @@
-
 import { Info } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
@@ -90,11 +89,12 @@ const HolidayProgram = () => {
             </CardHeader>
             <CardContent className="p-6">
               <div className="mb-4">
-                <AspectRatio ratio={16 / 9} className="bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <div className="text-2xl mb-2">📷</div>
-                    <p className="text-sm">Image à venir</p>
-                  </div>
+                <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg">
+                  <img
+                    src="/lovable-uploads/b6dd29e9-3775-4d44-a30f-37b6be91ad65.png"
+                    alt="Programme Adolescents - Espace des 2 rives"
+                    className="w-full h-full object-cover"
+                  />
                 </AspectRatio>
               </div>
               <div className="text-center text-gray-600">
