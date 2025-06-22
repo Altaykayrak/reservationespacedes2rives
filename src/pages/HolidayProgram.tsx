@@ -1,4 +1,5 @@
 
+
 import { Info } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
@@ -64,6 +65,25 @@ const HolidayProgram = () => {
     }
   ];
 
+  const maternelleImages = [
+    {
+      src: "/lovable-uploads/4dba25e8-238b-4dfe-8889-14f692f41ccb.png",
+      alt: "Thème Cowboy et Indien - 01"
+    },
+    {
+      src: "/lovable-uploads/1980a964-3b22-499d-8467-889484e044ef.png",
+      alt: "Thème Afrique - 02"
+    },
+    {
+      src: "/lovable-uploads/2e25a357-6dda-4586-aa5a-8bc21c87836d.png",
+      alt: "Thème Viking - 03"
+    },
+    {
+      src: "/lovable-uploads/796c4fb4-2fb1-4a6a-b066-96c95484b1d2.png",
+      alt: "Thème Cowboy et Indien - 04"
+    }
+  ];
+
   const handleImageClick = (image: { src: string; alt: string }) => {
     setSelectedImage(image);
   };
@@ -96,15 +116,56 @@ const HolidayProgram = () => {
             </CardHeader>
             <CardContent className="p-6">
               <div className="mb-4">
-                <AspectRatio ratio={16 / 9} className="bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <div className="text-2xl mb-2">📷</div>
-                    <p className="text-sm">Image à venir</p>
-                  </div>
-                </AspectRatio>
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {maternelleImages.map((image, index) => (
+                      <CarouselItem key={index}>
+                        <div className="relative group">
+                          <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg">
+                            <img
+                              src={image.src}
+                              alt={image.alt}
+                              className="w-full h-full object-cover cursor-pointer transition-transform duration-200 group-hover:scale-105"
+                              onClick={() => handleImageClick(image)}
+                            />
+                          </AspectRatio>
+                          
+                          {/* Overlay avec boutons */}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleImageClick(image);
+                              }}
+                              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                            >
+                              <ZoomIn className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload(image.src, image.alt);
+                              }}
+                              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-2" />
+                  <CarouselNext className="right-2" />
+                </Carousel>
               </div>
               <div className="text-center text-gray-600">
-                <p className="text-sm">Programme spécialement conçu pour les plus petits</p>
+                <p className="text-sm">Programme d'activités pour les enfants de maternelle</p>
+                <p className="text-xs text-gray-500 mt-1">Cliquez sur une image pour zoomer ou télécharger</p>
               </div>
             </CardContent>
           </Card>
@@ -258,3 +319,4 @@ const HolidayProgram = () => {
 };
 
 export default HolidayProgram;
+
