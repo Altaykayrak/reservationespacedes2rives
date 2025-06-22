@@ -1,4 +1,3 @@
-
 import { Info } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
@@ -40,16 +39,16 @@ const HolidayProgram = () => {
 
   const teenImages = [
     {
-      src: "/lovable-uploads/adbaec1d-1391-47c1-b0c5-4a573afd78b6.png",
-      alt: "Programme Club ados - Informations générales"
+      src: "/lovable-uploads/6d971c85-81f5-46df-8edf-6a1b046bcbac.png",
+      alt: "Animations 10-14 ans - Espace des 2 rives"
     },
     {
       src: "/lovable-uploads/24d1b2eb-a1a1-4880-9f79-4fa085f2f546.png",
       alt: "Programme 10-14 ans - Planning des activités"
     },
     {
-      src: "/lovable-uploads/6d971c85-81f5-46df-8edf-6a1b046bcbac.png",
-      alt: "Animations 10-14 ans - Espace des 2 rives"
+      src: "/lovable-uploads/adbaec1d-1391-47c1-b0c5-4a573afd78b6.png",
+      alt: "Programme Club ados - Informations générales"
     }
   ];
 
