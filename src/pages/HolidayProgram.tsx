@@ -1,5 +1,3 @@
-
-
 import { Info } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
@@ -56,12 +54,12 @@ const HolidayProgram = () => {
 
   const elementaryImages = [
     {
-      src: "/lovable-uploads/b38ffe6e-5ae5-4549-a248-fddb4e115c5d.png",
-      alt: "Programme élémentaire - Planning des activités GS à CM1"
-    },
-    {
       src: "/lovable-uploads/88af44d6-07a0-44d5-bc09-88a9550e6cb1.png",
       alt: "Animations élémentaire - Informations pratiques 5-9 ans"
+    },
+    {
+      src: "/lovable-uploads/b38ffe6e-5ae5-4549-a248-fddb4e115c5d.png",
+      alt: "Programme élémentaire - Planning des activités GS à CM1"
     }
   ];
 
@@ -319,4 +317,3 @@ const HolidayProgram = () => {
 };
 
 export default HolidayProgram;
-
