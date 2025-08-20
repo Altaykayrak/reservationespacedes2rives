@@ -64,7 +64,7 @@ export const ChildSelector = ({
 
   console.log(`Période actuelle: ${periodInfo?.name}, Est période CM2 Teen: ${isCM2TeenPeriod}`);
 
-  // Filtrer les enfants qui sont dans le groupe adolescent ou CM2 pendant certaines périodes d'été
+  // Filtrer les enfants qui sont dans le groupe adolescent, PS ou CM2 pendant certaines périodes d'été
   const filteredChildren = useMemo(() => {
     if (!children) return [];
 
@@ -73,6 +73,12 @@ export const ChildSelector = ({
         
       // Normalisation de la classe pour une comparaison cohérente
       const normalizedClass = child.school_class.trim().toUpperCase();
+        
+      // Exclure les enfants en Petite Section (PS)
+      if (normalizedClass === "PS" || normalizedClass === "PETITE SECTION") {
+        console.log(`${child.first_name} est en PS - filtré`);
+        return false;
+      }
         
       // Vérification explicite pour les CM2 pendant les périodes spécifiques
       if (isCM2TeenPeriod && normalizedClass === "CM2") {
