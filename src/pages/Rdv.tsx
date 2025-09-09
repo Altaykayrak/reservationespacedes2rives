@@ -40,9 +40,7 @@ export default function RdvPage() {
         <div className="container mx-auto py-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-4">Rendez-vous d'inscription</h1>
-            <p className="text-gray-600">
-              La prise de rendez-vous pour les inscriptions de l'année 2024-2025 n'est pas encore ouverte. Vous serez informé dès que le service sera accessible.
-            </p>
+            <p className="text-gray-600">La prise de rendez-vous pour les inscriptions de l'année 2026-2027 n'est pas encore ouverte. Vous serez informé dès que le service sera accessible.</p>
           </div>
         </div>
       </>;
