@@ -61,7 +61,7 @@ export const useNavbarData = () => {
       requiresAuth: false
     },
     {
-      label: "Inscription 2025-2026",
+      label: "Inscription 2026-2027",
       href: "/rdv",
       icon: CalendarDays,
       requiresAuth: true
