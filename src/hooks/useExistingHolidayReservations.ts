@@ -1,10 +1,14 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HolidayReservationWithChild } from "@/types/reservations";
 import { toast } from "sonner";
+import { useRef } from "react";
 
 export const useExistingHolidayReservations = (selectedChild: string) => {
+  // Utiliser une ref pour conserver les données de la dernière requête réussie
+  const lastSuccessfulDataRef = useRef<HolidayReservationWithChild[]>([]);
+  const lastSelectedChildRef = useRef<string>('');
+
   const {
     data: existingReservations,
     refetch: refetchReservations,
@@ -14,7 +18,8 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
     queryFn: async () => {
       if (!selectedChild) {
         console.log("🔍 useExistingHolidayReservations - Pas d'enfant sélectionné");
-        return [];
+        // Retourner les données de la dernière requête si l'enfant sélectionné devient vide temporairement
+        return lastSuccessfulDataRef.current;
       }
 
       console.log("🔄 Fetching reservations for child:", selectedChild);
@@ -38,6 +43,11 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
 
         if (!data || data.length === 0) {
           console.log("ℹ️ Aucune réservation confirmée trouvée pour cet enfant dans la vue");
+          // Nettoyer les données si c'est un nouvel enfant sans réservations
+          if (selectedChild !== lastSelectedChildRef.current) {
+            lastSuccessfulDataRef.current = [];
+            lastSelectedChildRef.current = selectedChild;
+          }
           return [];
         }
 
@@ -77,17 +87,22 @@ export const useExistingHolidayReservations = (selectedChild: string) => {
 
         console.log("✅ Réservations transformées depuis la vue:", transformedData.length);
         console.log("📋 Dates des réservations existantes:", transformedData.map(r => r.reservation_date));
+        
+        // Mettre à jour les refs avec les nouvelles données
+        lastSuccessfulDataRef.current = transformedData;
+        lastSelectedChildRef.current = selectedChild;
+        
         return transformedData;
 
       } catch (error) {
         console.error("❌ Exception dans useExistingHolidayReservations:", error);
         toast.error("Erreur lors de la récupération des réservations");
-        return [];
+        return lastSuccessfulDataRef.current; // Retourner les dernières données connues en cas d'erreur
       }
     },
-    enabled: !!selectedChild,
-    staleTime: 1000 * 5, // 5 secondes seulement pour forcer le rafraîchissement
-    gcTime: 1000 * 15, // 15 secondes
+    enabled: true, // Toujours activer pour permettre le cache
+    staleTime: 1000 * 30, // 30 secondes pour éviter les rechargements fréquents
+    gcTime: 1000 * 60, // 60 secondes pour garder les données en cache
     retry: 1,
     refetchOnWindowFocus: true
   });

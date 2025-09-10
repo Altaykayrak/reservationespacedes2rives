@@ -124,23 +124,14 @@ export const HolidayDateSelector = ({
   // Using the synchronous version of isTeenClass
   const isTeenClassValue = childInfo ? isTeenClassSync(childInfo.school_class, periodId) : false;
 
-  // Effet pour réinitialiser les dates lors du changement d'enfant
+  // Effet pour réinitialiser les dates lors du changement d'enfant ou de période
   useEffect(() => {
-    if (!selectedChild) return;
+    if (!selectedChild || !periodId) return;
 
-    const shouldUseSummerTeenLogic = (isTeenClassValue || isCM2SummerPeriod) && holidayPeriod;
-    
-    if (shouldUseSummerTeenLogic) {
-      // On n'applique la présélection que sur la page teen
-      if (isTeenPage) {
-        console.log("Sélection des dates pour adolescent/CM2 en période d'été");
-        // Ne pas présélectionner automatiquement les dates
-        setSelectedDates([]);
-      }
-    } else {
-      setSelectedDates([]);
-    }
-  }, [selectedChild, isTeenClassValue, holidayPeriod, setSelectedDates, isCM2SummerPeriod, isTeenPage]);
+    // Réinitialiser uniquement lors d'un vrai changement d'enfant/période
+    console.log("Réinitialisation des dates sélectionnées pour enfant:", selectedChild, "période:", periodId);
+    setSelectedDates([]);
+  }, [selectedChild, periodId, setSelectedDates]);
 
   if (!holidayPeriod || !selectedChild) {
     return (
