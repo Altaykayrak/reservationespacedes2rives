@@ -74,7 +74,7 @@ export const HolidayReservationsList = () => {
       const isTeenClass = isTeenClassSync(schoolClass, reservation.period_id);
       const isCm2 = schoolClass.toUpperCase() === "CM2";
 
-      const keepReservation = isTeenPage ? (isTeenClass || isCm2) : !isTeenClass;
+      const keepReservation = isTeenPage ? isTeenClass : !isTeenClass;
 
       console.log(`Réservation ${reservation.id}, enfant ${reservation.children.first_name}, classe ${schoolClass}, ado: ${isTeenClass}, CM2: ${isCm2}, incluse: ${keepReservation}`);
 
@@ -87,7 +87,7 @@ export const HolidayReservationsList = () => {
     return (
       <div className="p-6 text-center">
         <p className="text-gray-600">
-          Aucune réservation trouvée pour {isTeenPage ? "les adolescents et les CM2" : "les enfants de maternelle et primaire"}.
+          Aucune réservation trouvée pour {isTeenPage ? "les adolescents" : "les enfants de maternelle et primaire"}.
         </p>
       </div>
     );
@@ -112,7 +112,7 @@ export const HolidayReservationsList = () => {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Vos {isTeenPage ? "activités Club Ado (CM2 inclus)" : "vacances"} réservées (sous réserve de règlement)
+          Vos {isTeenPage ? "activités Club Ado" : "vacances"} réservées (sous réserve de règlement)
         </h2>
         <p className="text-sm text-red-600 mb-4">
           Pour toute modification de vos réservations (ajout ou suppression de journées), merci de contacter l'accueil.
