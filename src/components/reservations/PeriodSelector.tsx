@@ -29,10 +29,11 @@ export const PeriodSelector = ({
     queryFn: async () => {
       if (!filterTeenOnly) return null;
       
+      // Récupérer TOUS les mappings (catégorie incluse) pour mieux déterminer
+      // les périodes sans aucun mapping (à inclure par défaut)
       const { data, error } = await supabase
         .from("holiday_period_class_mappings")
-        .select("holiday_period_id")
-        .eq("category", "adolescent");
+        .select("holiday_period_id, category");
       
       if (error) {
         console.error("Erreur lors de la récupération des mappings:", error);
@@ -48,46 +49,48 @@ export const PeriodSelector = ({
   // Filtrer les périodes lorsque les mappings sont chargés
   useEffect(() => {
     if (filterTeenOnly && classMappings && holidayPeriods) {
-      // Extraire les IDs de période qui ont des classes mappées comme adolescents
-      const teenPeriodIds = classMappings.map(mapping => mapping.holiday_period_id);
+      // Extraire les IDs mappés comme adolescents et l'ensemble de tous les IDs mappés
+      const teenPeriodIds = classMappings
+        .filter((m: any) => m.category === "adolescent")
+        .map((m: any) => m.holiday_period_id);
+      const allMappedPeriodIds = new Set(classMappings.map((m: any) => m.holiday_period_id));
       
-      // Période d'été spécifique pour les CM2 (uniquement inclure ETE-01 à ETE-04)
+      // Règles spécifiques été
       const includedSummerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04"];
       const excludedSummerPeriods = ["ETE-05", "ETE-06", "ETE-07", "ETE-08"];
       
-      // Trouver les périodes d'été pour les CM2
+      // Périodes d'été à toujours inclure (début d'été)
       const summerPeriods = holidayPeriods.filter(period => 
         period.name && includedSummerPeriods.includes(period.name)
       );
       
-      // Périodes avec mapping adolescent (en excluant les périodes non désirées)
+      // Périodes avec mapping adolescent explicite (hors été exclu)
       const periodsWithTeenMapping = holidayPeriods.filter(period => 
         teenPeriodIds.includes(period.id) && 
         !(period.name && excludedSummerPeriods.includes(period.name))
       );
       
-      // Combiner et éliminer les doublons
-      const uniquePeriods = [...new Map([...periodsWithTeenMapping, ...summerPeriods].map(item => [item.id, item])).values()];
+      // Périodes sans aucun mapping (incluses par défaut pour éviter d'en masquer par erreur)
+      const periodsWithoutMappings = holidayPeriods.filter(period => 
+        !allMappedPeriodIds.has(period.id) && 
+        !(period.name && excludedSummerPeriods.includes(period.name))
+      );
       
-      // Trier selon l'ordre spécifique pour les périodes d'été
+      // Combiner et dédupliquer
+      const uniquePeriods = [
+        ...new Map(
+          [...periodsWithTeenMapping, ...periodsWithoutMappings, ...summerPeriods]
+            .map(item => [item.id, item])
+        ).values()
+      ];
+      
+      // Tri: été en ordre (ETE-01..), sinon par date
       const sortedPeriods = [...uniquePeriods].sort((a, b) => {
-        // Extraire les préfixes ETE-XX
         const aMatch = a.name?.match(/^(ETE)-(\d+)$/);
         const bMatch = b.name?.match(/^(ETE)-(\d+)$/);
-        
-        // Si les deux périodes sont des périodes d'été
-        if (aMatch && bMatch) {
-          // Comparer les numéros de périodes d'été
-          return parseInt(aMatch[2]) - parseInt(bMatch[2]);
-        }
-        
-        // Si seulement a est une période d'été, la mettre en premier
+        if (aMatch && bMatch) return parseInt(aMatch[2]) - parseInt(bMatch[2]);
         if (aMatch) return -1;
-        
-        // Si seulement b est une période d'été, la mettre en premier
         if (bMatch) return 1;
-        
-        // Pour les autres périodes, conserver l'ordre chronologique
         return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
       });
       
@@ -95,26 +98,13 @@ export const PeriodSelector = ({
     } else if (holidayPeriods) {
       // Trier toutes les périodes selon l'ordre spécifique pour les périodes d'été
       const sortedPeriods = [...holidayPeriods].sort((a, b) => {
-        // Extraire les préfixes ETE-XX
         const aMatch = a.name?.match(/^(ETE)-(\d+)$/);
         const bMatch = b.name?.match(/^(ETE)-(\d+)$/);
-        
-        // Si les deux périodes sont des périodes d'été
-        if (aMatch && bMatch) {
-          // Comparer les numéros de périodes d'été
-          return parseInt(aMatch[2]) - parseInt(bMatch[2]);
-        }
-        
-        // Si seulement a est une période d'été, la mettre en premier
+        if (aMatch && bMatch) return parseInt(aMatch[2]) - parseInt(bMatch[2]);
         if (aMatch) return -1;
-        
-        // Si seulement b est une période d'été, la mettre en premier
         if (bMatch) return 1;
-        
-        // Pour les autres périodes, conserver l'ordre chronologique
         return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
       });
-      
       setFilteredPeriods(sortedPeriods);
     }
   }, [holidayPeriods, classMappings, filterTeenOnly]);
