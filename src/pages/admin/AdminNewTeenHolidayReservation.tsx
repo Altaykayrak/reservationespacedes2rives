@@ -8,16 +8,14 @@ const AdminNewTeenHolidayReservation = () => {
   const { data: isAdmin } = useAdminAuth();
   const { allChildren, isLoading } = useAdminChildrenData();
 
-  // Filtrer les adolescents ET les CM2 en utilisant les enfants avec les informations des parents
+  // Filtrer seulement les adolescents (6ème à Terminale), exclure les CM2
   const teenChildren = allChildren?.filter(child => 
-    // Inclure tous les CM2
-    child.school_class === 'CM2' ||
-    // Ou les enfants des classes d'adolescents (6ème à Terminale)
+    // Enfants des classes d'adolescents (6ème à Terminale) uniquement
     ['6EME', '6ÈME', '5EME', '5ÈME', '4EME', '4ÈME', '3EME', '3ÈME', 
      'SECONDE', 'PREMIERE', 'PREMIÈRE', 'TERMINALE'].includes(child.school_class.toUpperCase())
   );
 
-  console.log("Teen children with CM2 and parent info:", teenChildren);
+  console.log("Teen children (excluding CM2) with parent info:", teenChildren);
 
   if (!isAdmin) {
     return (
@@ -47,7 +45,7 @@ const AdminNewTeenHolidayReservation = () => {
             </h1>
           </div>
           <p className="text-muted-foreground text-base md:text-lg">
-            Créez une nouvelle réservation pour les adolescents et CM2. Minimum 3 jours par semaine.
+            Créez une nouvelle réservation pour les adolescents. Minimum 3 jours par semaine.
           </p>
         </div>
 
