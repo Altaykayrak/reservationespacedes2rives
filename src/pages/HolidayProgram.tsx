@@ -62,7 +62,6 @@ const HolidayProgram = () => {
     src: "/lovable-uploads/796c4fb4-2fb1-4a6a-b066-96c95484b1d2.png",
     alt: "Thème Cowboy et Indien - 04"
   }];
-
   const newProgramImages = [{
     src: "/lovable-uploads/7bb68464-92b1-41e0-a6a6-2091013dcf01.png",
     alt: "Programme Animations 4-10 ans - Horaires et informations générales"
@@ -86,66 +85,7 @@ const HolidayProgram = () => {
   };
   return <>
       <Navbar />
-      <div className="container mx-auto p-4">
-        <div className="flex items-center gap-2 mb-8">
-          <Info className={`h-6 w-6 ${isVisible ? 'opacity-100' : 'opacity-0'}`} />
-          <h1 className="text-3xl font-bold">Programme Vacances</h1>
-        </div>
-
-        {/* Programme Général 4-10 ans */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold text-primary">
-              Programme Général 4-10 ans - Août 2025
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {newProgramImages.map((image, index) => (
-                <div key={index} className="relative group cursor-pointer">
-                  <AspectRatio ratio={4/3}>
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      className="w-full h-full object-contain rounded-lg border shadow-md hover:shadow-lg transition-shadow"
-                      onClick={() => handleImageClick(image)}
-                    />
-                  </AspectRatio>
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleImageClick(image);
-                      }}
-                    >
-                      <ZoomIn className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownload(image.src, image.alt);
-                      }}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="mt-8 text-center text-gray-600">
-          Cliquez sur les images pour les agrandir ou les télécharger
-        </div>
-
-        {/* Image Viewer Modal */}
-        {selectedImage && <ImageViewer src={selectedImage.src} alt={selectedImage.alt} isOpen={!!selectedImage} onClose={() => setSelectedImage(null)} />}
-      </div>
+      
     </>;
 };
 export default HolidayProgram;
