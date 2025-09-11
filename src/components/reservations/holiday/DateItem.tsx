@@ -34,8 +34,8 @@ export const DateItem = ({
 }: DateItemProps) => {
   const { availableSpots, isFull } = useHolidaySpots(periodId, date, childSchoolClass);
   
-  // Disable the date if it's full and not already reserved
-  const shouldDisable = isDisabled || (isFull && !isReserved);
+  // Disable the date if it's reserved, full, or explicitly disabled
+  const shouldDisable = isDisabled || isReserved || (isFull && !isReserved);
 
   return (
     <div className="flex-1">
@@ -52,6 +52,11 @@ export const DateItem = ({
           {shouldDisable && !isReserved && (
             <span className="text-xs text-red-500">
               Journée complète ({availableSpots || 0} places disponibles)
+            </span>
+          )}
+          {isReserved && (
+            <span className="text-xs text-blue-600 font-medium">
+              Déjà réservé
             </span>
           )}
           {!shouldDisable && availableSpots !== null && availableSpots <= 5 && (
