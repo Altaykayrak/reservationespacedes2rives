@@ -29,7 +29,7 @@ export const MinimumDaysDialog = ({
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-gray-700">
-            Veuillez sélectionner au moins 3 jours pour valider votre réservation.
+            Veuillez sélectionner au moins 2 jours pour valider votre réservation.
           </p>
         </div>
         <DialogFooter>

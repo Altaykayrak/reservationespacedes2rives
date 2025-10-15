@@ -96,9 +96,9 @@ export const validateMinimumDays = (
     return true;
   }
   
-  // Exigence de 3 jours minimum pour les utilisateurs normaux
-  if (validDates.length < 3) {
-    console.log("🛑 validateMinimumDays - moins de 3 dates au total pour utilisateur standard");
+  // Exigence de 2 jours minimum pour les utilisateurs normaux
+  if (validDates.length < 2) {
+    console.log("🛑 validateMinimumDays - moins de 2 dates au total pour utilisateur standard");
     return false;
   }
   
