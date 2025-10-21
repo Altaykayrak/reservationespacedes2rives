@@ -30,7 +30,7 @@ const HolidayProgram = () => {
                 <ClickableImage 
                   src="/lovable-uploads/maternels_1ere_semaine.jpeg" 
                   alt="Programme maternels - Vacances de la Toussaint du 20 au 24 octobre"
-                  className="max-w-md rounded-lg shadow-md"
+                  className="w-full md:max-w-md mx-auto rounded-lg shadow-md"
                 />
               </div>
               <div className="space-y-4">
@@ -38,7 +38,7 @@ const HolidayProgram = () => {
                 <ClickableImage 
                   src="/lovable-uploads/maternels_2eme_semaine.jpeg" 
                   alt="Programme maternels - Semaine d'Halloween du 27 au 31 octobre"
-                  className="max-w-md rounded-lg shadow-md"
+                  className="w-full md:max-w-md mx-auto rounded-lg shadow-md"
                 />
               </div>
             </CardContent>
@@ -57,7 +57,7 @@ const HolidayProgram = () => {
               <ClickableImage 
                 src="/lovable-uploads/elementaire_vacances.jpg" 
                 alt="Programme élémentaire - Animations pour les CP à CM2 du 20 au 31 octobre"
-                className="max-w-md rounded-lg shadow-md"
+                className="w-full md:max-w-md mx-auto rounded-lg shadow-md"
               />
             </CardContent>
           </Card>
@@ -76,7 +76,7 @@ const HolidayProgram = () => {
                 <ClickableImage 
                   src="/lovable-uploads/ados_1.jpg" 
                   alt="Club Ados - Animations pour les collégiens du 20 au 31 octobre"
-                  className="max-w-md rounded-lg shadow-md"
+                  className="w-full md:max-w-md mx-auto rounded-lg shadow-md"
                 />
               </div>
               <div className="space-y-4">
@@ -84,7 +84,7 @@ const HolidayProgram = () => {
                 <ClickableImage 
                   src="/lovable-uploads/ados_2.jpg" 
                   alt="Programme détaillé Club Ados"
-                  className="max-w-md rounded-lg shadow-md"
+                  className="w-full md:max-w-md mx-auto rounded-lg shadow-md"
                 />
               </div>
             </CardContent>
