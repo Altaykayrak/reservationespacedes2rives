@@ -51,10 +51,13 @@ const HolidayProgram = () => {
                 Élémentaire
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Programme à venir...
-              </p>
+            <CardContent className="space-y-4">
+              <h3 className="font-semibold text-lg">Vacances du 20 au 31 octobre 2025 - CP à CM2</h3>
+              <img 
+                src="/lovable-uploads/elementaire_vacances.jpg" 
+                alt="Programme élémentaire - Animations pour les CP à CM2 du 20 au 31 octobre"
+                className="w-full rounded-lg shadow-md"
+              />
             </CardContent>
           </Card>
 
