@@ -1,14 +1,68 @@
-import { Calendar, Mail, Facebook } from "lucide-react";
+import { Baby, User, Users } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
-import { EmptyHolidayState } from "@/components/reservations/holiday/EmptyHolidayState";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 const HolidayProgram = () => {
-  return <>
+  return (
+    <>
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <EmptyHolidayState message="Programme des vacances à venir" subtitle="Le programme des vacances n'est pas encore disponible. Vous serez informés par email ou sur notre page Facebook dès sa mise en ligne." icon="calendar" className="max-w-2xl mx-auto">
-          
-        </EmptyHolidayState>
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Programme des Vacances</h1>
+          <p className="text-muted-foreground text-lg">
+            Découvrez les activités prévues pour chaque groupe d'âge
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          {/* Bloc Maternel */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Baby className="h-6 w-6 text-blue-500" />
+                Maternel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Programme à venir...
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Bloc Élémentaire */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-6 w-6 text-green-500" />
+                Élémentaire
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Programme à venir...
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Bloc Ado */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-6 w-6 text-purple-500" />
+                Ado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Programme à venir...
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </>;
+    </>
+  );
 };
+
 export default HolidayProgram;
