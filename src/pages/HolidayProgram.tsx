@@ -69,10 +69,23 @@ const HolidayProgram = () => {
                 Ado
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Programme à venir...
-              </p>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Club Ados - Du 20 au 31 octobre 2025</h3>
+                <img 
+                  src="/lovable-uploads/ados_1.jpg" 
+                  alt="Club Ados - Animations pour les collégiens du 20 au 31 octobre"
+                  className="w-full rounded-lg shadow-md"
+                />
+              </div>
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Programme détaillé</h3>
+                <img 
+                  src="/lovable-uploads/ados_2.jpg" 
+                  alt="Programme détaillé Club Ados"
+                  className="w-full rounded-lg shadow-md"
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
