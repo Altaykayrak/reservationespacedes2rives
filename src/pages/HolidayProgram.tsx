@@ -1,6 +1,7 @@
 import { Baby, User, Users } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClickableImage } from "@/components/holiday/ClickableImage";
 
 const HolidayProgram = () => {
   return (
@@ -26,18 +27,18 @@ const HolidayProgram = () => {
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Vacances de la Toussaint - 1ère semaine</h3>
-                <img 
+                <ClickableImage 
                   src="/lovable-uploads/maternels_1ere_semaine.jpeg" 
                   alt="Programme maternels - Vacances de la Toussaint du 20 au 24 octobre"
-                  className="w-full rounded-lg shadow-md"
+                  className="max-w-md rounded-lg shadow-md"
                 />
               </div>
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Semaine d&apos;Halloween - 2ème semaine</h3>
-                <img 
+                <ClickableImage 
                   src="/lovable-uploads/maternels_2eme_semaine.jpeg" 
                   alt="Programme maternels - Semaine d'Halloween du 27 au 31 octobre"
-                  className="w-full rounded-lg shadow-md"
+                  className="max-w-md rounded-lg shadow-md"
                 />
               </div>
             </CardContent>
@@ -53,10 +54,10 @@ const HolidayProgram = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <h3 className="font-semibold text-lg">Vacances du 20 au 31 octobre 2025 - CP à CM2</h3>
-              <img 
+              <ClickableImage 
                 src="/lovable-uploads/elementaire_vacances.jpg" 
                 alt="Programme élémentaire - Animations pour les CP à CM2 du 20 au 31 octobre"
-                className="w-full rounded-lg shadow-md"
+                className="max-w-md rounded-lg shadow-md"
               />
             </CardContent>
           </Card>
@@ -72,18 +73,18 @@ const HolidayProgram = () => {
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Club Ados - Du 20 au 31 octobre 2025</h3>
-                <img 
+                <ClickableImage 
                   src="/lovable-uploads/ados_1.jpg" 
                   alt="Club Ados - Animations pour les collégiens du 20 au 31 octobre"
-                  className="w-full rounded-lg shadow-md"
+                  className="max-w-md rounded-lg shadow-md"
                 />
               </div>
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Programme détaillé</h3>
-                <img 
+                <ClickableImage 
                   src="/lovable-uploads/ados_2.jpg" 
                   alt="Programme détaillé Club Ados"
-                  className="w-full rounded-lg shadow-md"
+                  className="max-w-md rounded-lg shadow-md"
                 />
               </div>
             </CardContent>
