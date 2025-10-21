@@ -23,10 +23,23 @@ const HolidayProgram = () => {
                 Maternel
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Programme à venir...
-              </p>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Vacances de la Toussaint - 1ère semaine</h3>
+                <img 
+                  src="/lovable-uploads/maternels_1ere_semaine.jpeg" 
+                  alt="Programme maternels - Vacances de la Toussaint du 20 au 24 octobre"
+                  className="w-full rounded-lg shadow-md"
+                />
+              </div>
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Semaine d&apos;Halloween - 2ème semaine</h3>
+                <img 
+                  src="/lovable-uploads/maternels_2eme_semaine.jpeg" 
+                  alt="Programme maternels - Semaine d'Halloween du 27 au 31 octobre"
+                  className="w-full rounded-lg shadow-md"
+                />
+              </div>
             </CardContent>
           </Card>
 
