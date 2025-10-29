@@ -61,6 +61,12 @@ export const useNavbarData = () => {
       requiresAuth: false
     },
     {
+      label: "Programme Festival",
+      href: "/festival-program",
+      icon: FileText,
+      requiresAuth: false
+    },
+    {
       label: "Inscription 2026-2027",
       href: "/rdv",
       icon: CalendarDays,

@@ -19,6 +19,7 @@ import Rdv from "./pages/Rdv";
 import TermsOfService from "./pages/TermsOfService";
 import TermsOfOperation from "./pages/TermsOfOperation";
 import HolidayProgram from "./pages/HolidayProgram";
+import FestivalProgram from "./pages/FestivalProgram";
 import Prices from "./pages/Prices";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/terms-of-operation" element={<TermsOfOperation />} />
             <Route path="/holiday-program" element={<HolidayProgram />} />
+            <Route path="/festival-program" element={<FestivalProgram />} />
             <Route path="/prices" element={<Prices />} />
             
             {/* Protected routes */}
