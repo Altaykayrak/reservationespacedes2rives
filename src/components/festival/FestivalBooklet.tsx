@@ -41,42 +41,6 @@ export const FestivalBooklet = ({ pages }: FestivalBookletProps) => {
         </p>
       </div>
 
-      {/* Book container */}
-      <div className="relative w-full aspect-[3/4] max-h-[80vh] perspective-1000">
-        <div
-          className={`relative w-full h-full transition-transform duration-600 ${
-            isFlipping ? "scale-95" : "scale-100"
-          }`}
-          style={{
-            transformStyle: "preserve-3d",
-          }}
-        >
-          {/* Current page */}
-          <div
-            className={`absolute inset-0 w-full h-full bg-white rounded-lg shadow-2xl overflow-hidden transition-opacity duration-300 ${
-              isFlipping ? "opacity-0" : "opacity-100"
-            }`}
-          >
-            <img
-              src={pages[currentPage]}
-              alt={`Page ${currentPage + 1}`}
-              className="w-full h-full object-contain cursor-pointer"
-              onClick={() => setIsViewerOpen(true)}
-            />
-            
-            {/* Enlarge button overlay */}
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute top-4 right-4 bg-white/90 hover:bg-white shadow-lg"
-              onClick={() => setIsViewerOpen(true)}
-            >
-              <Maximize2 className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Navigation controls */}
       <div className="flex items-center justify-center gap-4 w-full">
         <Button
@@ -124,6 +88,42 @@ export const FestivalBooklet = ({ pages }: FestivalBookletProps) => {
           <span className="hidden sm:inline">Suivant</span>
           <ChevronRight className="h-5 w-5" />
         </Button>
+      </div>
+
+      {/* Book container */}
+      <div className="relative w-full aspect-[3/4] max-h-[80vh] perspective-1000">
+        <div
+          className={`relative w-full h-full transition-transform duration-600 ${
+            isFlipping ? "scale-95" : "scale-100"
+          }`}
+          style={{
+            transformStyle: "preserve-3d",
+          }}
+        >
+          {/* Current page */}
+          <div
+            className={`absolute inset-0 w-full h-full bg-white rounded-lg shadow-2xl overflow-hidden transition-opacity duration-300 ${
+              isFlipping ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <img
+              src={pages[currentPage]}
+              alt={`Page ${currentPage + 1}`}
+              className="w-full h-full object-contain cursor-pointer"
+              onClick={() => setIsViewerOpen(true)}
+            />
+            
+            {/* Enlarge button overlay */}
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white shadow-lg"
+              onClick={() => setIsViewerOpen(true)}
+            >
+              <Maximize2 className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Image viewer for full screen */}
