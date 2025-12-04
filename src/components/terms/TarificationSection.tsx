@@ -17,7 +17,7 @@ export const TarificationSection = () => {
       <p>Le goûter est fourni par l'association sans coût supplémentaire.</p>
       
       <p className="font-semibold mt-6">Concernant les mercredis :</p>
-      <p className="text-justify">Les mercredis sont à réserver huit jours avant (au plus tard le mardi pour le mercredi de la semaine suivante). La réservation se fait à la journée (pas de réservation en demi-journée) avec ou sans repas. Le nombre de mercredis réservé est en fonction des besoins de la famille. L'inscription est validée uniquement après paiement de la facture.</p>
+      <p className="text-justify">Les mercredis sont à réserver huit jours avant (au plus tard le mardi pour le mercredi de la semaine suivante)</p>
       
       <p>Le tarif est calculé en fonction du quotient familial.</p>
       
