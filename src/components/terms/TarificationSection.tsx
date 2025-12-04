@@ -22,9 +22,9 @@ En cas d’absence de votre enfant, merci de prévenir au moins huit jours à l�
       
       <p>Le tarif est calculé en fonction du quotient familial.</p>
       
-      <p>Le goûter est fourni par l'association sans coût supplémentaire.</p>
       
-      <p className="text-justify">Il vous est demandé de prévenir avant le lundi 11h l'accueil de l'Espace des 2 rives si votre enfant est absent afin d'annuler le repas, d'éviter le gaspillage alimentaire et pour organiser l'équipe d'encadrement. Un avoir sera établi uniquement sur présentation d'un certificat médical.</p>
+      
+      
       
       <p className="font-semibold mt-6">Concernant les vacances scolaires :</p>
       <p className="text-justify">La réservation se fait sur trois jours minimum (exception faite d'un jour férié dans la semaine). Le règlement est à effectuer au moment de l'inscription. Il est possible de réserver jusqu'au mercredi pour la semaine suivante en fonction des places disponibles.</p>
