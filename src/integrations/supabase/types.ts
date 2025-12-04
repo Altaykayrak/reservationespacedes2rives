@@ -794,14 +794,8 @@ export type Database = {
           id: string
         }[]
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      set_admin_username: {
-        Args: { username: string }
-        Returns: undefined
-      }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      set_admin_username: { Args: { username: string }; Returns: undefined }
     }
     Enums: {
       school_class_group: "kindergarten" | "primary" | "teen"
