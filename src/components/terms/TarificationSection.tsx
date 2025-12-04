@@ -8,7 +8,7 @@ export const TarificationSection = () => {
       <p className="text-justify">La réservation et le coût du repas sont à régler en mairie. S'ajoute une cotisation obligatoire de 15 euros par enfant à régler uniquement à l'Espace des 2 rives à Pîtres.</p>
       
       <p className="font-semibold">Concernant le périscolaire : lundi, mardi, jeudi, vendredi de 7h30 à 8h30 et de 16h à 18h30</p>
-      <p className="text-justify">L'accueil des enfants en périscolaire est soumis à un tarif calculé en fonction du quotient familial. La famille réserve la tranche horaire pour 4 matins et/ou 4 soirs par semaine. La réservation se fait entre deux périodes de vacances scolaires. Une dérogation peut être accordée sur présentation du planning d'un des deux parents.</p>
+      <p className="text-justify">L'accueil des enfants en périscolaire est soumis à un tarif calculé en fonction du quotient familial. La famille réserve la tranche horaire pour 4 matins et/ou 4 soirs par semaine. Une dérogation peut être accordée sur présentation du planning d'un des deux parents. La réservation se fait sur l'année scolaire.</p>
       
       <HolidayScheduleTable />
       
