@@ -20,7 +20,7 @@ export const TarificationSection = () => {
       <p className="text-justify">Les mercredis doivent être réservés au plus tard deux semaines à l'avance (jusqu'au mardi soir).<br />
 La réservation se fait <strong>à la journée complète</strong>, avec ou sans repas (pas de demi-journée possible).<br />
 Le nombre de mercredis réservés dépend des besoins de chaque famille.<br />
-L'inscription est <strong>validée uniquement après le règlement de la facture</strong>.
+L'inscription est <strong>validée uniquement après le règlement de la facture</strong>.<br />
 En cas d'absence de votre enfant, merci de prévenir <strong>au moins huit jours à l'avance (avant le mardi 18h)</strong> auprès de l'accueil de l'Espace des 2 rives. Cela permet d'annuler le repas, d'éviter le gaspillage alimentaire et d'organiser au mieux l'équipe d'encadrement. Passé ce délai, la journée restera facturée.</p>
       
       
