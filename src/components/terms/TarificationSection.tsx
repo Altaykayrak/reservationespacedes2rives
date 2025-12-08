@@ -20,23 +20,11 @@ export const TarificationSection = () => {
       <p className="text-justify">Les mercredis doivent être réservés au plus tard deux semaines à l'avance (jusqu'au mardi soir). La réservation se fait <strong>à la journée complète</strong>, avec ou sans repas (pas de demi-journée possible). Le nombre de mercredis réservés dépend des besoins de chaque famille. L'inscription est <strong>validée uniquement après le règlement de la facture</strong>.
 En cas d'absence de votre enfant, merci de prévenir <strong>au moins huit jours à l'avance (avant le mardi 18h)</strong> auprès de l'accueil de l'Espace des 2 rives. Cela permet d'annuler le repas, d'éviter le gaspillage alimentaire et d'organiser au mieux l'équipe d'encadrement. Passé ce délai, la journée restera facturée.</p>
       
-      
-      
-      
-      
-      
-      
       <p className="font-semibold mt-6">
-
 Concernant les vacances scolaires :
-La réservation se fait sur trois jours minimum (exception faite d’un jour férié dans la semaine). Le règlement est à effectuer au moment de l’inscription. Il est possible de réserver jusqu’au mercredi pour la semaine suivante en fonction des places disponibles. Le tarif est calculé en fonction du quotient familial. Le goûter est fourni par l’association sans coût supplémentaire. Le remboursement n’est applicable que sur présentation d’un certificat médical pour une maladie supérieure à 3 jours (le délai de carence correspond au premier jour d’absence et aux 2 jours calendaires qui suivent).</p>
+La réservation se fait sur trois jours minimum (exception faite d'un jour férié dans la semaine). Le règlement est à effectuer au moment de l'inscription. Il est possible de réserver jusqu'au mercredi pour la semaine suivante en fonction des places disponibles. Le tarif est calculé en fonction du quotient familial. Le goûter est fourni par l'association sans coût supplémentaire. Le remboursement n'est applicable que sur présentation d'un certificat médical pour une maladie supérieure à 3 jours (le délai de carence correspond au premier jour d'absence et aux 2 jours calendaires qui suivent).</p>
       <p className="text-justify">
 <strong>Concernant les vacances scolaires :</strong><br />
-
-La réservation se fait sur trois jours minimum (exception faite d’un jour férié dans la semaine). Le règlement est à effectuer au moment de l’inscription. Il est possible de réserver jusqu’au mercredi pour la semaine suivante en fonction des places disponibles. Le tarif est calculé en fonction du quotient familial. Le goûter est fourni par l’association sans coût supplémentaire. Le remboursement n’est applicable que sur présentation d’un certificat médical pour une maladie supérieure à 3 jours (le délai de carence correspond au premier jour d’absence et aux 2 jours calendaires qui suivent).</p>
-      
-      
-      
-      
+La réservation se fait sur trois jours minimum (exception faite d'un jour férié dans la semaine). Le règlement est à effectuer <strong>au moment de l'inscription</strong>. Il est possible de réserver jusqu'au mercredi pour la semaine suivante en fonction des places disponibles. Le tarif est calculé en fonction du quotient familial. Le goûter est fourni par l'association sans coût supplémentaire. Le remboursement n'est applicable que sur présentation d'un certificat médical pour une maladie supérieure à 3 jours (le délai de carence correspond au premier jour d'absence et aux 2 jours calendaires qui suivent).</p>
     </div>;
 };
