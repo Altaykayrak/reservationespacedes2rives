@@ -31,7 +31,7 @@ En cas d'absence de votre enfant, merci de prévenir <strong>au moins huit jours
 Concernant les vacances scolaires :
 La réservation se fait sur trois jours minimum (exception faite d’un jour férié dans la semaine). Le règlement est à effectuer au moment de l’inscription. Il est possible de réserver jusqu’au mercredi pour la semaine suivante en fonction des places disponibles. Le tarif est calculé en fonction du quotient familial. Le goûter est fourni par l’association sans coût supplémentaire. Le remboursement n’est applicable que sur présentation d’un certificat médical pour une maladie supérieure à 3 jours (le délai de carence correspond au premier jour d’absence et aux 2 jours calendaires qui suivent).</p>
       <p className="text-justify">
-Concernant les vacances scolaires :
+<strong>Concernant les vacances scolaires :</strong><br />
 
 La réservation se fait sur trois jours minimum (exception faite d’un jour férié dans la semaine). Le règlement est à effectuer au moment de l’inscription. Il est possible de réserver jusqu’au mercredi pour la semaine suivante en fonction des places disponibles. Le tarif est calculé en fonction du quotient familial. Le goûter est fourni par l’association sans coût supplémentaire. Le remboursement n’est applicable que sur présentation d’un certificat médical pour une maladie supérieure à 3 jours (le délai de carence correspond au premier jour d’absence et aux 2 jours calendaires qui suivent).</p>
       
