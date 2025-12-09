@@ -16,17 +16,52 @@ export interface WednesdayWithCounts {
 export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boolean, isAdminMode: boolean = false) => {
   const queryClient = useQueryClient();
 
-  // Calculer la date limite : J+1 pour admin, J+8 pour utilisateurs normaux
+  // Calculer la date limite : J+1 pour admin, J-15 (mardi à 15h) pour utilisateurs normaux
   const getMinDate = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    if (isAdminMode) {
+      // Admin : peut réserver jusqu'à J+1
+      const tomorrow = new Date();
+      tomorrow.setHours(0, 0, 0, 0);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow;
+    }
+
+    // Utilisateurs normaux : règle des 15 jours avant le mercredi, deadline mardi à 15h
+    const now = new Date();
     
-    // Ajouter 1 jour pour admin ou 8 jours pour utilisateurs normaux
-    const minWednesdayDate = new Date(today);
-    const daysToAdd = isAdminMode ? 1 : 8;
-    minWednesdayDate.setDate(today.getDate() + daysToAdd);
+    // Pour chaque mercredi, la deadline est le mardi J-15 à 15h00
+    // On calcule la date minimale de mercredi réservable
+    // Si nous sommes après mardi 15h, le mercredi dans 15 jours n'est plus réservable
     
-    return minWednesdayDate;
+    // Trouver le prochain mardi à 15h (ou le mardi courant si on est avant 15h)
+    const currentDay = now.getDay(); // 0=dimanche, 1=lundi, 2=mardi, ...
+    const currentHour = now.getHours();
+    
+    // Calculer le nombre de jours jusqu'au prochain mardi
+    let daysUntilTuesday = (2 - currentDay + 7) % 7;
+    
+    // Si on est mardi
+    if (currentDay === 2) {
+      // Si on est après 15h, on a passé la deadline de ce mardi
+      if (currentHour >= 15) {
+        daysUntilTuesday = 7; // Prochain mardi
+      } else {
+        daysUntilTuesday = 0; // Mardi courant, deadline pas encore passée
+      }
+    }
+    
+    // Le mercredi réservable minimum est 15 jours après le mardi de deadline
+    // Deadline mardi → mercredi J+15 (le lendemain + 14 jours = 15 jours après)
+    const nextDeadlineTuesday = new Date(now);
+    nextDeadlineTuesday.setHours(0, 0, 0, 0);
+    nextDeadlineTuesday.setDate(now.getDate() + daysUntilTuesday);
+    
+    // Le mercredi minimum réservable est 15 jours après ce mardi
+    // Mardi + 15 jours = mercredi de la semaine suivante + 2 semaines
+    const minWednesday = new Date(nextDeadlineTuesday);
+    minWednesday.setDate(nextDeadlineTuesday.getDate() + 15);
+    
+    return minWednesday;
   };
 
   const fetchWednesdays = async () => {
@@ -78,7 +113,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
       }));
 
       const minDate = getMinDate();
-      const daysLabel = isAdminMode ? '(J+1)' : '(J+8)';
+      const daysLabel = isAdminMode ? '(J+1)' : '(deadline mardi J-15 à 15h)';
       console.log(`Date limite pour les réservations ${daysLabel}:`, minDate);
 
       // Filtrer les mercredis nuls et les dates qui sont antérieures à la date limite
