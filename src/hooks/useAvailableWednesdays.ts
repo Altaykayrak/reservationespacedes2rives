@@ -16,7 +16,7 @@ export interface WednesdayWithCounts {
 export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boolean, isAdminMode: boolean = false) => {
   const queryClient = useQueryClient();
 
-  // Calculer la date limite : J+1 pour admin, J-15 (mardi à 15h) pour utilisateurs normaux
+  // Calculer la date limite : J+1 pour admin, J-15 (mardi à 18h) pour utilisateurs normaux
   const getMinDate = () => {
     if (isAdminMode) {
       // Admin : peut réserver jusqu'à J+1
@@ -42,8 +42,8 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
     
     // Si on est mardi
     if (currentDay === 2) {
-      // Si on est après 15h, on a passé la deadline de ce mardi
-      if (currentHour >= 15) {
+      // Si on est après 18h, on a passé la deadline de ce mardi
+      if (currentHour >= 18) {
         daysUntilTuesday = 7; // Prochain mardi
       } else {
         daysUntilTuesday = 0; // Mardi courant, deadline pas encore passée
@@ -113,7 +113,7 @@ export const useAvailableWednesdays = (isKindergarten: boolean, isPrimary: boole
       }));
 
       const minDate = getMinDate();
-      const daysLabel = isAdminMode ? '(J+1)' : '(deadline mardi J-15 à 15h)';
+      const daysLabel = isAdminMode ? '(J+1)' : '(deadline mardi J-15 à 18h)';
       console.log(`Date limite pour les réservations ${daysLabel}:`, minDate);
 
       // Filtrer les mercredis nuls et les dates qui sont antérieures à la date limite
