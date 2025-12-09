@@ -24,9 +24,9 @@ L'inscription est validée uniquement après le règlement de la facture.
 En cas d'absence de votre enfant, merci de prévenir au moins huit jours à l'avance (avant le mardi 18h) auprès de l'accueil de l'Espace des 2 rives. Cela permet d'annuler le repas, d'éviter le gaspillage alimentaire et d'organiser au mieux l'équipe d'encadrement. Passé ce délai, la journée restera facturée.
 
 
-La directrice se réserve le droit de refuser l'accueil de votre enfant si les absences sont répétées et non signalées dans les délais.
-Le tarif est calculé en fonction du quotient familial. Le goûter est fourni par l'association sans coût supplémentaire.                  
-               <br />
+La directrice se réserve le droit de refuser l'accueil de votre enfant si les absences sont répétées et non signalées dans les délais.<br />
+Le tarif est calculé en fonction du quotient familial. Le goûter est fourni par l'association sans coût supplémentaire.
+               <br />
 La réservation se fait <strong>à la journée complète</strong>, avec ou sans repas (pas de demi-journée possible).<br />
 Le nombre de mercredis réservés dépend des besoins de chaque famille.<br />
 L'inscription est <strong>validée uniquement après le règlement de la facture</strong>.<br />
