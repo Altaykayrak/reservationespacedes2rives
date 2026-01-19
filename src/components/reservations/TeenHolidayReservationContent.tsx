@@ -67,7 +67,7 @@ export const TeenHolidayReservationContent = () => {
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (validDatesCount < 1) {
+    if (validDatesCount < 3) {
       setMinimumDaysDialog({ isOpen: true });
       return;
     }
@@ -108,7 +108,7 @@ export const TeenHolidayReservationContent = () => {
         <Button
           onClick={onSubmitClick}
           className="w-full md:w-auto"
-          disabled={!selectedChild || !selectedPeriod || validDatesCount < 1 || isSubmitting}
+          disabled={!selectedChild || !selectedPeriod || validDatesCount < 3 || isSubmitting}
           type="button"
         >
           {isSubmitting ? (
