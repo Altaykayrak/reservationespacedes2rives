@@ -121,7 +121,7 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     e.preventDefault();
     e.stopPropagation();
     
-    if (!disableMinimumDaysRule && validDatesCount < 1) {
+    if (!disableMinimumDaysRule && validDatesCount < 3) {
       setMinimumDaysDialog({ isOpen: true });
       return;
     }
@@ -131,8 +131,8 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
 
   const isButtonDisabled = !selectedChild || 
                           !selectedPeriod || 
-                          validDatesCount < 1 ||
-                          (!disableMinimumDaysRule && validDatesCount < 1) ||
+                          (!disableMinimumDaysRule && validDatesCount < 3) ||
+                          (disableMinimumDaysRule && validDatesCount < 1) ||
                           isSubmitting;
 
   const renderChildSelector = () => {
