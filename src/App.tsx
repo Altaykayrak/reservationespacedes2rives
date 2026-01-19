@@ -68,7 +68,7 @@ const App = () => (
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/terms-of-operation" element={<TermsOfOperation />} />
             <Route path="/holiday-program" element={<HolidayProgram />} />
-            <Route path="/festival-program" element={<FestivalProgram />} />
+            {/* <Route path="/festival-program" element={<FestivalProgram />} /> */}
             <Route path="/prices" element={<Prices />} />
             
             {/* Protected routes */}
