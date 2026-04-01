@@ -27,7 +27,7 @@ const HolidayProgram = () => {
                   Le programme des vacances est disponible sur notre page Facebook.
                 </p>
                 <a
-                  href="https://www.facebook.com/profile.php?id=100064639684498"
+                  href="https://www.facebook.com/p/Espace-des-2-rives-100057280757151/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold underline"
