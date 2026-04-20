@@ -153,6 +153,7 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
         setSelectedChild={setSelectedChild}
         children={childrenToDisplay}
         setSelectedDates={setSelectedDates}
+        selectedPeriodId={selectedPeriod}
       />
     );
   };

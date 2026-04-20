@@ -16,6 +16,7 @@ interface ChildSelectorProps {
   children: Tables<"children">[] | null | undefined;
   setSelectedDates?: (dates: any[]) => void;
   onCM2SummerPeriodCheck?: (isInSummerPeriod: boolean) => void;
+  selectedPeriodId?: string;
 }
 
 export const ChildSelector = ({ 
@@ -23,16 +24,17 @@ export const ChildSelector = ({
   setSelectedChild, 
   children,
   setSelectedDates,
-  onCM2SummerPeriodCheck
+  onCM2SummerPeriodCheck,
+  selectedPeriodId
 }: ChildSelectorProps) => {
   const location = useLocation();
   const isHolidayReservation = location.pathname === "/holiday-reservations";
   const isTeenHolidayReservation = location.pathname === "/teenholiday-reservations";
   const { getClassCategorySync } = useSchoolClassCategories();
 
-  // Récupérer l'ID de période à partir de l'URL si présent
+  // Récupérer l'ID de période à partir des props ou de l'URL en fallback
   const searchParams = new URLSearchParams(location.search);
-  const periodId = searchParams.get("periodId");
+  const periodId = selectedPeriodId || searchParams.get("periodId");
 
   // Vérifier si c'est une période d'été
   const { data: periodInfo } = useQuery({
