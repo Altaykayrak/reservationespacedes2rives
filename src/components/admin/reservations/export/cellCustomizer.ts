@@ -46,7 +46,9 @@ export const customizeCell = (data: CellHookData) => {
         cellText === 'SR' || 
         cellText === 'AM' ||
         cellText.startsWith('AM ') ||
-        cellText === '-')) {
+        cellText === '-' ||
+        cellText === '0' ||
+        cellText === '1')) {
       cell.styles.halign = 'center';
     }
     
