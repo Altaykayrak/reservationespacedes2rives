@@ -3,8 +3,9 @@ import { MEAL_ABBREVIATIONS } from "./constants";
 import { schoolClassToFrontendCategory } from "@/utils/categoryTranslationUtils";
 import { sortClassesByOrder } from "./classOrderUtils";
 
-export const prepareTableData = (exportData: ExportData) => {
+export const prepareTableData = (exportData: ExportData, selectedGroup?: string) => {
   const { dates, childrenByClass } = exportData;
+  const isTeenMode = selectedGroup === "adolescent";
   
   let allTableData: any[] = [];
   
@@ -48,23 +49,27 @@ export const prepareTableData = (exportData: ExportData) => {
       // Ajouter le statut pour chaque date avec abréviations et AM
       dates.forEach(date => {
         const reservationData = child.reservations.get(date);
-        let displayStatus = "-";
-        
+        let displayStatus: string = isTeenMode ? "0" : "-";
+
         if (reservationData) {
           const { status, early_dropoff, without_meal } = reservationData;
 
-          // Utiliser la valeur réelle de la réservation
-          if (without_meal || status === "Sans repas") {
-            displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
-          } else if (status === "Avec repas") {
-            displayStatus = MEAL_ABBREVIATIONS.WITH_MEAL;
+          if (isTeenMode) {
+            displayStatus = "1";
           } else {
-            displayStatus = status;
-          }
-          
-          // Ajouter l'abréviation AM si arrivée avant 8h30
-          if (early_dropoff) {
-            displayStatus = `AM ${displayStatus}`;
+            // Utiliser la valeur réelle de la réservation
+            if (without_meal || status === "Sans repas") {
+              displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
+            } else if (status === "Avec repas") {
+              displayStatus = MEAL_ABBREVIATIONS.WITH_MEAL;
+            } else {
+              displayStatus = status;
+            }
+
+            // Ajouter l'abréviation AM si arrivée avant 8h30
+            if (early_dropoff) {
+              displayStatus = `AM ${displayStatus}`;
+            }
           }
           
           // Incrémenter les totaux pour cette date

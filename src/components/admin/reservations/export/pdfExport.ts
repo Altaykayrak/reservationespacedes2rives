@@ -12,7 +12,8 @@ import { addLegend } from "./legendRenderer";
 export const exportToPdf = (
   exportData: ExportData,
   startDate: string,
-  endDate: string
+  endDate: string,
+  selectedGroup?: string
 ) => {
   const { dates } = exportData;
   
@@ -41,7 +42,7 @@ export const exportToPdf = (
   ];
 
   // Préparer les données du tableau
-  const allTableData = prepareTableData(exportData);
+  const allTableData = prepareTableData(exportData, selectedGroup);
 
   // Ajuster la taille de police selon le format
   const fontSize = useA3Format ? PDF_CONFIG.FONT_SIZE.A3 : PDF_CONFIG.FONT_SIZE.A4;
