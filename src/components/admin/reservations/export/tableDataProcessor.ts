@@ -52,23 +52,14 @@ export const prepareTableData = (exportData: ExportData) => {
         
         if (reservationData) {
           const { status, early_dropoff, without_meal } = reservationData;
-          
-          // Vérifier si c'est un adolescent ou CM2
-          const isTeenClass = schoolClassToFrontendCategory(child.schoolClass) === 'adolescent';
-          const isCM2Class = child.schoolClass.trim().toUpperCase() === 'CM2';
-          
-          // Pour les adolescents et CM2, c'est systématiquement SR
-          if (isTeenClass || isCM2Class) {
+
+          // Utiliser la valeur réelle de la réservation
+          if (without_meal || status === "Sans repas") {
             displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
+          } else if (status === "Avec repas") {
+            displayStatus = MEAL_ABBREVIATIONS.WITH_MEAL;
           } else {
-            // Pour les autres classes, utiliser la logique normale
-            if (status === "Avec repas") {
-              displayStatus = MEAL_ABBREVIATIONS.WITH_MEAL;
-            } else if (status === "Sans repas") {
-              displayStatus = MEAL_ABBREVIATIONS.WITHOUT_MEAL;
-            } else {
-              displayStatus = status;
-            }
+            displayStatus = status;
           }
           
           // Ajouter l'abréviation AM si arrivée avant 8h30
@@ -84,8 +75,8 @@ export const prepareTableData = (exportData: ExportData) => {
             totalsEarlyAccess.set(date, totalsEarlyAccess.get(date)! + 1);
           }
           
-          // Compter les "Sans repas" si without_meal est true OU si c'est un adolescent OU si c'est CM2
-          if (without_meal || isTeenClass || isCM2Class) {
+          // Compter les "Sans repas" uniquement si la réservation l'indique
+          if (without_meal) {
             totalsWithoutMeal.set(date, totalsWithoutMeal.get(date)! + 1);
           }
         }
@@ -114,10 +105,8 @@ export const prepareTableData = (exportData: ExportData) => {
           if (reservationData.early_dropoff) {
             earlyAccess++;
           }
-          // Compter les "Sans repas" si without_meal est true OU si c'est un adolescent OU si c'est CM2
-          const isTeenClass = schoolClassToFrontendCategory(child.schoolClass) === 'adolescent';
-          const isCM2Class = child.schoolClass.trim().toUpperCase() === 'CM2';
-          if (reservationData.without_meal || isTeenClass || isCM2Class) {
+          // Compter les "Sans repas" uniquement si la réservation l'indique
+          if (reservationData.without_meal) {
             withoutMeal++;
           }
         }
