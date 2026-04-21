@@ -11,12 +11,13 @@ export const ExportButtons = ({
   wednesdayReservations,
   holidayReservations,
   startDate,
-  endDate
+  endDate,
+  selectedGroup
 }: ExportButtonsProps) => {
   const exportData = prepareExportData(wednesdayReservations, holidayReservations);
 
   const handlePdfExport = () => {
-    exportToPdf(exportData, startDate, endDate);
+    exportToPdf(exportData, startDate, endDate, selectedGroup);
   };
 
   const handleExcelExport = () => {
