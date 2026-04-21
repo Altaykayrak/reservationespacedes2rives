@@ -156,12 +156,6 @@ export const ChildSelector = ({
     );
   }
 
-  // CM2 en période d'été sur la page des réservations standard
-  const showCM2Message = selectedChild && 
-                         isSummerPeriod && 
-                         isHolidayReservation && 
-                         children?.find(child => child.id === selectedChild)?.school_class === "CM2";
-
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -184,16 +178,6 @@ export const ChildSelector = ({
           </SelectContent>
         </Select>
       </div>
-
-      {showCM2Message && (
-        <Alert className="bg-amber-50 text-amber-800 border-amber-300">
-          <AlertDescription className="text-sm">
-            <p><strong>Information importante :</strong></p>
-            <p>Durant l'été, les élèves de CM2 doivent s'inscrire aux activités Club Ado.</p>
-            <p>Veuillez vous rendre sur la page <a href="/teenholiday-reservations" className="underline font-medium">Réservations Club Ado</a> pour inscrire cet enfant.</p>
-          </AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 };
