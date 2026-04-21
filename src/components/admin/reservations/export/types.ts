@@ -24,4 +24,5 @@ export interface ExportButtonsProps {
   holidayReservations: HolidayReservationWithChild[] | null;
   startDate: string;
   endDate: string;
+  selectedGroup?: string;
 }

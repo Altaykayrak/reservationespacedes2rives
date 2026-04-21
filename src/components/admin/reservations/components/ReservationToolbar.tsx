@@ -51,6 +51,7 @@ export const ReservationToolbar = ({
         holidayReservations={holidayReservations}
         startDate={startDate}
         endDate={endDate}
+        selectedGroup={selectedGroup}
       />
     </div>
   );
