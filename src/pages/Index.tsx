@@ -22,10 +22,10 @@ const Index = () => {
           <p className="text-xl mb-12 max-w-3xl mx-auto text-red-300">
           </p>
           <div className="mt-[320px] flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Button asChild size="lg" className="bg-purple-300 hover:bg-purple-400 text-purple-900 w-full sm:w-auto">
+            <Button asChild size="lg" className="w-full sm:w-auto">
               <Link to="/login">Connexion</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="bg-white text-purple-400 border-purple-300 hover:bg-purple-50 w-full sm:w-auto">
+            <Button asChild size="lg" variant="glass" className="w-full sm:w-auto">
               <Link to="/register">Inscription</Link>
             </Button>
           </div>
