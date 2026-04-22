@@ -46,7 +46,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {/* Activités variées */}
             <div className="text-center">
-              <Calendar className="w-12 h-12 mx-auto mb-6 text-purple-300" />
+              <Calendar className="w-12 h-12 mx-auto mb-6 text-primary" />
               <h2 className="text-2xl font-bold mb-4">Activités variées</h2>
               <p className="text-gray-600">
                 Un programme riche en activités éducatives, sportives et créatives pour
@@ -56,7 +56,7 @@ const Index = () => {
 
             {/* Équipe qualifiée */}
             <div className="text-center">
-              <Users className="w-12 h-12 mx-auto mb-6 text-purple-300" />
+              <Users className="w-12 h-12 mx-auto mb-6 text-primary" />
               <h2 className="text-2xl font-bold mb-4">Équipe qualifiée</h2>
               <p className="text-gray-600">
                 Une équipe d'animateurs professionnels et passionnés pour
@@ -66,7 +66,7 @@ const Index = () => {
 
             {/* Cadre exceptionnel */}
             <div className="text-center">
-              <Image className="w-12 h-12 mx-auto mb-6 text-purple-300" />
+              <Image className="w-12 h-12 mx-auto mb-6 text-primary" />
               <h2 className="text-2xl font-bold mb-4">Cadre exceptionnel</h2>
               <p className="text-gray-600">
                 Un environnement sécurisé et adapté, avec des espaces intérieurs et
