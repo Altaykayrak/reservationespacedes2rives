@@ -16,34 +16,37 @@ export function DesktopNav({ menuItems, isAuthenticated, onLogout }: DesktopNavP
   const location = useLocation();
 
   return (
-    <div className="hidden md:flex items-center gap-2">
-      {menuItems.map((item) => (
-        <Link
-          key={item.href}
-          to={item.href}
-          className={cn(
-            "px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2",
-            "hover:shadow transform hover:-translate-y-0.5",
-            location.pathname === item.href
-              ? "bg-purple-300 text-purple-900 shadow-md"
-              : "text-gray-700 hover:text-purple-600 hover:bg-white hover:bg-opacity-90"
-          )}
-        >
-          {item.icon && <item.icon className="h-4 w-4" />}
-          {item.label}
-        </Link>
-      ))}
+    <div className="hidden md:flex items-center gap-1">
+      {menuItems.map((item) => {
+        const active = location.pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            to={item.href}
+            className={cn(
+              "px-3.5 py-2 rounded-xl text-sm font-medium transition-smooth flex items-center gap-2",
+              active
+                ? "bg-gradient-primary text-primary-foreground shadow-glow"
+                : "text-foreground/70 hover:text-foreground hover:bg-secondary/60"
+            )}
+          >
+            {item.icon && <item.icon className="h-4 w-4" />}
+            {item.label}
+          </Link>
+        );
+      })}
       {isAuthenticated ? (
-        <Button 
-          variant="ghost" 
-          onClick={onLogout} 
-          className="flex items-center gap-2 ml-2 py-1.5 h-auto text-gray-700 hover:text-red-600 hover:bg-white hover:bg-opacity-80 hover:shadow transform hover:-translate-y-0.5 transition-all"
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onLogout}
+          className="ml-2 text-muted-foreground hover:text-destructive"
         >
           <LogOut className="h-4 w-4" />
           Déconnexion
         </Button>
       ) : (
-        <Button asChild variant="default" className="ml-2 bg-purple-300 hover:bg-purple-400 text-purple-900 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all py-1.5 h-auto">
+        <Button asChild size="sm" className="ml-2">
           <Link to="/login">Connexion</Link>
         </Button>
       )}

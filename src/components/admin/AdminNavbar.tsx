@@ -92,68 +92,70 @@ export const AdminNavbar = () => {
   ];
 
   return (
-    <div className="border-b bg-background sticky top-0 z-50">
-      <div className="flex h-16 items-center px-4">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold">Administration</h1>
+    <div className="sticky top-0 z-50 px-3 pt-3">
+      <div className="glass shadow-soft rounded-2xl flex h-14 items-center px-4">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-gradient-primary shadow-glow flex items-center justify-center text-primary-foreground text-sm font-bold">
+            A
+          </div>
+          <h1 className="text-base font-semibold tracking-tight">Administration</h1>
         </div>
-        
-        <div className="ml-auto flex items-center space-x-4">
+
+        <div className="ml-auto flex items-center space-x-2">
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-4">
+          <nav className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => (
-              <Button
+              <button
                 key={item.href}
-                variant={location.pathname === item.href ? "default" : "ghost"}
-                size="sm"
                 onClick={() => navigate(item.href)}
-                className={location.pathname === item.href 
-                  ? "flex items-center gap-2 bg-purple-200 hover:bg-purple-300 text-purple-800"
-                  : "flex items-center gap-2 hover:bg-purple-100 hover:text-purple-700"
+                className={
+                  location.pathname === item.href
+                    ? "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-primary text-primary-foreground shadow-glow transition-smooth"
+                    : "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground/70 hover:text-foreground hover:bg-secondary/60 transition-smooth"
                 }
               >
-                <item.icon className="h-4 w-4" />
+                <item.icon className="h-3.5 w-3.5" />
                 {item.title}
-              </Button>
+              </button>
             ))}
           </nav>
 
           {/* Mobile Navigation */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="md:hidden hover:bg-purple-100">
-                <Menu className="h-5 w-5" />
+              <Button variant="glass" size="icon" className="lg:hidden rounded-full">
+                <Menu className="h-5 w-5 text-primary" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-80">
+            <SheetContent side="right" className="w-80 glass-strong border-l border-border/60">
               <div className="flex flex-col gap-4 py-4">
-                <h2 className="text-lg font-semibold">Navigation</h2>
+                <h2 className="text-lg font-semibold tracking-tight">Navigation</h2>
                 {navItems.map((item) => (
-                  <Button
+                  <button
                     key={item.href}
-                    variant={location.pathname === item.href ? "default" : "ghost"}
                     onClick={() => navigate(item.href)}
-                    className={location.pathname === item.href 
-                      ? "justify-start gap-2 bg-purple-200 hover:bg-purple-300 text-purple-800"
-                      : "justify-start gap-2 hover:bg-purple-100 hover:text-purple-700"
+                    className={
+                      location.pathname === item.href
+                        ? "flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-primary text-primary-foreground shadow-glow transition-smooth text-left"
+                        : "flex items-center gap-3 px-3 py-2.5 rounded-xl text-foreground/80 hover:bg-secondary transition-smooth text-left"
                     }
                   >
-                    <item.icon className="h-4 w-4" />
-                    <div className="text-left">
-                      <div className="font-medium">{item.title}</div>
-                      <div className="text-xs text-muted-foreground">{item.description}</div>
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <div>
+                      <div className="font-medium text-sm">{item.title}</div>
+                      <div className="text-xs opacity-70">{item.description}</div>
                     </div>
-                  </Button>
+                  </button>
                 ))}
               </div>
             </SheetContent>
           </Sheet>
 
-          <Button 
-            variant="destructive" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleSignOut}
-            className="bg-red-200 hover:bg-red-300 text-red-800 border-red-300"
+            className="hover:text-destructive hover:border-destructive/40"
           >
             Déconnexion
           </Button>
