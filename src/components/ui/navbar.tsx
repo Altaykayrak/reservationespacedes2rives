@@ -15,9 +15,9 @@ const Navbar = () => {
   };
   
   return (
-    <div className="border-b bg-background sticky top-0 z-50">
-      <div className="flex h-16 items-center px-4">
-        <div className="ml-auto flex items-center space-x-4">
+    <div className="sticky top-0 z-50 px-3 pt-3">
+      <div className="glass shadow-soft rounded-2xl flex h-14 items-center px-4">
+        <div className="ml-auto flex items-center space-x-3">
           <DesktopNav {...navProps} />
           <MobileNav {...navProps} />
           {isAuthenticated && (
@@ -25,7 +25,6 @@ const Navbar = () => {
               <ProfileDropdown user={user} menuItems={menuItems} onLogout={handleLogout} />
             </div>
           )}
-          {/* Suppression du bouton "Se connecter" sur desktop */}
         </div>
       </div>
     </div>
