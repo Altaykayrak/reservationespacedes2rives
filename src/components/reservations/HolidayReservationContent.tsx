@@ -17,6 +17,8 @@ import { Tables } from "@/integrations/supabase/types";
 import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
 import { useReservationSubmission } from "@/hooks/useReservationSubmission";
 import { AdminChildSelector } from "@/components/admin/reservations/AdminChildSelector";
+import { useClosedPeriods } from "@/hooks/useClosedPeriods";
+import { validateMinimumDays } from "@/utils/reservationValidationUtils";
 
 export interface HolidayReservationContentProps {
   filteredChildren?: Tables<"children">[] | null;
@@ -57,6 +59,7 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
   const [storedChild, setStoredChild] = useState<string | null>(null);
   const { children: allChildren } = useChildrenData();
   const location = useLocation();
+  const { getClosedDatesInRange } = useClosedPeriods();
 
   // Vérifier si on est en mode admin (enfants avec informations des parents)
   const isAdminMode = filteredChildren && filteredChildren.some(child => 'profile' in child);
@@ -116,12 +119,19 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
     d => d.date instanceof Date && !isNaN(d.date.getTime())
   ).length;
 
+  // Get excluded dates for the selected period to adjust minimum validation
+  const periodForValidation = holidayPeriods?.find(p => p.id === selectedPeriod);
+  const excludedDatesForPeriod = periodForValidation
+    ? getClosedDatesInRange(periodForValidation.start_date, periodForValidation.end_date)
+    : [];
+
   // Wrapper pour handleSubmit qui utilise disableMinimumDaysRule
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!disableMinimumDaysRule && validDatesCount < 3) {
+    // Use full validation with excluded dates awareness
+    if (!disableMinimumDaysRule && !validateMinimumDays(selectedDates, false, false, excludedDatesForPeriod)) {
       setMinimumDaysDialog({ isOpen: true });
       return;
     }
@@ -131,7 +141,7 @@ export const HolidayReservationContent: React.FC<HolidayReservationContentProps>
 
   const isButtonDisabled = !selectedChild || 
                           !selectedPeriod || 
-                          (!disableMinimumDaysRule && validDatesCount < 3) ||
+                          (!disableMinimumDaysRule && validDatesCount < 1) ||
                           (disableMinimumDaysRule && validDatesCount < 1) ||
                           isSubmitting;
 

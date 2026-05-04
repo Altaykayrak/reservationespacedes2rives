@@ -4,9 +4,10 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2, School } from "lucide-react";
+import { Trash2, School, CalendarOff } from "lucide-react";
 import { useState } from "react";
 import EditHolidayClassMappings from "./EditHolidayClassMappings";
+import ExcludedDatesManager from "./ExcludedDatesManager";
 
 type HolidayPeriod = Tables<"available_holiday_periods">;
 
@@ -26,6 +27,7 @@ const HolidayPeriodItem = ({
   onMappingChange
 }: HolidayPeriodItemProps) => {
   const [showClassMappings, setShowClassMappings] = useState(false);
+  const [showExcludedDates, setShowExcludedDates] = useState(false);
   const startDate = new Date(holiday.start_date);
   const endDate = new Date(holiday.end_date);
 
@@ -61,6 +63,14 @@ const HolidayPeriodItem = ({
           <Button
             variant="outline"
             size="icon"
+            onClick={() => setShowExcludedDates(true)}
+            title="Gérer les jours exclus (fériés, fermetures)"
+          >
+            <CalendarOff className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => setShowClassMappings(true)}
             disabled={hasReservations}
             title={hasReservations ? "Impossible de configurer les classes (des réservations existent)" : "Configurer les classes"}
@@ -82,6 +92,13 @@ const HolidayPeriodItem = ({
       <EditHolidayClassMappings
         open={showClassMappings}
         onOpenChange={setShowClassMappings}
+        holiday={holiday}
+        onSuccess={handleMappingSuccess}
+      />
+
+      <ExcludedDatesManager
+        open={showExcludedDates}
+        onOpenChange={setShowExcludedDates}
         holiday={holiday}
         onSuccess={handleMappingSuccess}
       />

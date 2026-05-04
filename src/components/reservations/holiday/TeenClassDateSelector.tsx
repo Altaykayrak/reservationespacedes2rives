@@ -5,6 +5,7 @@ import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format, isWeekend } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { SpotsBadge } from "./SpotsBadge";
+import { useClosedPeriods } from "@/hooks/useClosedPeriods";
 
 interface DateOption {
   date: Date;
@@ -28,6 +29,7 @@ export const TeenClassDateSelector = ({
   periodId
 }: TeenClassDateSelectorProps) => {
   const { holidayPeriod, childInfo } = useHolidayPeriodContext();
+  const { isDateClosed } = useClosedPeriods();
 
   // Générer toutes les dates de la période
   const generateDatesForPeriod = () => {
@@ -63,8 +65,10 @@ export const TeenClassDateSelector = ({
       let currentDate = new Date(startDate);
 
       while (currentDate <= endDate) {
-        // Pour Club Ado, on inclut TOUS les jours, y compris les week-ends
-        dateArray.push(new Date(currentDate));
+        // Pour Club Ado, on inclut tous les jours sauf les jours exclus
+        if (!isDateClosed(currentDate)) {
+          dateArray.push(new Date(currentDate));
+        }
         currentDate.setDate(currentDate.getDate() + 1);
       }
       return dateArray;

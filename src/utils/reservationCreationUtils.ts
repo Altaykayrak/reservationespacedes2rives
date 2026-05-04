@@ -66,6 +66,16 @@ export const createHolidayReservations = async (
     // Store successful reservations
     const successfulReservations = [];
 
+    // Fetch closed periods to reject excluded dates server-side
+    const { data: closedPeriods } = await supabase
+      .from("closed_periods")
+      .select("start_date, end_date");
+
+    const isDateInClosedPeriod = (dateStr: string): boolean => {
+      if (!closedPeriods) return false;
+      return closedPeriods.some(cp => dateStr >= cp.start_date && dateStr <= cp.end_date);
+    };
+
     // Check available spots for each date and create reservations
     for (const dateOption of selectedDates) {
       // S'assurer que la date est une instance valide de Date
@@ -77,6 +87,12 @@ export const createHolidayReservations = async (
       const dateStr = format(dateOption.date, "yyyy-MM-dd");
       console.log(`📅 createHolidayReservations - Traitement de la date ${dateStr} (timestamp: ${submissionTimestamp})`);
       
+      // Reject dates that fall within a closed period
+      if (isDateInClosedPeriod(dateStr)) {
+        console.log(`🚫 createHolidayReservations - Date ${dateStr} est dans une période de fermeture, ignorée`);
+        continue;
+      }
+
       // Find the period for this date
       const period = holidayPeriods?.find(period => {
         const startDate = new Date(period.start_date);

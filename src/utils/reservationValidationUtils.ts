@@ -66,7 +66,8 @@ export const validateNotAlreadyReserved = (
 export const validateMinimumDays = (
   selectedDates: DateOption[],
   isAdminRoute: boolean,
-  disableMinimumDaysRule: boolean = false
+  disableMinimumDaysRule: boolean = false,
+  excludedDates: string[] = []
 ): boolean => {
   console.log("🔍 validateMinimumDays - DÉMARRAGE avec %d dates", selectedDates.length);
   console.log("🔍 validateMinimumDays - disableMinimumDaysRule:", disableMinimumDaysRule);
@@ -103,7 +104,7 @@ export const validateMinimumDays = (
   }
   
   // Pour les utilisateurs normaux, on utilise la fonction existante avec les dates validées
-  const result = validateMinimumDaysPerWeek(validDates, isAdminRoute);
+  const result = validateMinimumDaysPerWeek(validDates, isAdminRoute, excludedDates);
   console.log("✅ validateMinimumDays - résultat final:", result);
   return result;
 };

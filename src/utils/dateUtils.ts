@@ -43,7 +43,7 @@ export const getWeeksFromDates = (dates: Date[]) => {
   return result;
 };
 
-export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = false): boolean => {
+export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = false, excludedDates: string[] = []): boolean => {
   // Vérifications de base
   console.log("validateMinimumDaysPerWeek - dates:", dates ? dates.map(d => d.toISOString()) : "undefined");
   console.log("validateMinimumDaysPerWeek - isAdmin:", isAdmin);
@@ -61,7 +61,8 @@ export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = fal
   }
   
   // Si une seule date est sélectionnée, la validation échoue automatiquement car < 3
-  if (dates.length < 3) {
+  // Sauf si le nombre de jours disponibles dans la semaine est inférieur à 3
+  if (dates.length < 3 && excludedDates.length === 0) {
     console.log("validateMinimumDaysPerWeek - Moins de 3 dates au total, validation impossible");
     return false;
   }
@@ -71,8 +72,16 @@ export const validateMinimumDaysPerWeek = (dates: Date[], isAdmin: boolean = fal
   
   // Vérification spécifique de chaque semaine
   const weekValidations = weeks.map(weekDates => {
-    const isValid = weekDates.length >= 3;
-    console.log(`validateMinimumDaysPerWeek - Semaine avec ${weekDates.length} jour(s): ${isValid ? 'VALIDE' : 'INVALIDE'}`);
+    // Calculate available workdays in this week (excluding closed dates)
+    const weekStart = startOfWeek(weekDates[0], { weekStartsOn: 1 });
+    const workdaysInWeek = getWorkdaysInWeek(weekStart);
+    const availableWorkdays = workdaysInWeek.filter(d => {
+      const ds = format(d, 'yyyy-MM-dd');
+      return !excludedDates.includes(ds);
+    });
+    const requiredMinimum = Math.min(3, availableWorkdays.length);
+    const isValid = weekDates.length >= requiredMinimum;
+    console.log(`validateMinimumDaysPerWeek - Semaine avec ${weekDates.length}/${availableWorkdays.length} jour(s), minimum requis: ${requiredMinimum}: ${isValid ? 'VALIDE' : 'INVALIDE'}`);
     return isValid;
   });
   
