@@ -5,6 +5,7 @@ import { useHolidayPeriodContext } from "./HolidayPeriodContext";
 import { format } from "date-fns";
 import { SpotsBadge } from "./SpotsBadge";
 import { useMemo } from "react";
+import { useClosedPeriods } from "@/hooks/useClosedPeriods";
 
 interface DateOption {
   date: Date;
@@ -28,6 +29,7 @@ export const WorkdayDateSelector = ({
   periodId
 }: WorkdayDateSelectorProps) => {
   const { holidayPeriod, childInfo } = useHolidayPeriodContext();
+  const { isDateClosed } = useClosedPeriods();
 
   const generateDatesForPeriod = () => {
     if (!holidayPeriod) return [];
@@ -62,7 +64,7 @@ export const WorkdayDateSelector = ({
       let currentDate = new Date(startDate);
 
       while (currentDate <= endDate) {
-        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6 && !isDateClosed(currentDate)) {
           dateArray.push(new Date(currentDate));
         }
         currentDate.setDate(currentDate.getDate() + 1);
@@ -74,7 +76,7 @@ export const WorkdayDateSelector = ({
     }
   };
 
-  const periodDates = useMemo(() => generateDatesForPeriod(), [holidayPeriod]);
+  const periodDates = useMemo(() => generateDatesForPeriod(), [holidayPeriod, isDateClosed]);
 
   const selectedDatesMap = new Map(
     selectedDates.map(d => {
