@@ -74,7 +74,7 @@ export const HolidayReservationsList = () => {
       const isTeenClass = isTeenClassSync(schoolClass, reservation.period_id);
       const isCm2 = schoolClass.toUpperCase() === "CM2";
 
-      const keepReservation = isTeenPage ? isTeenClass : !isTeenClass;
+      const keepReservation = isTeenPage ? (isTeenClass || isCm2) : (!isTeenClass && !isCm2);
 
       console.log(`Réservation ${reservation.id}, enfant ${reservation.children.first_name}, classe ${schoolClass}, ado: ${isTeenClass}, CM2: ${isCm2}, incluse: ${keepReservation}`);
 
