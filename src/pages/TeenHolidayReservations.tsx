@@ -167,6 +167,7 @@ const TeenHolidayReservations = () => {
           <p className="text-muted-foreground text-base md:text-lg">
             Réservez les périodes de vacances pour vos adolescents.
           </p>
+          <p className="text-red-600 font-bold text-sm md:text-base">Sélectionner au moins 3 jours par semaine. En cas de journée complète, merci de contacter l'accueil pour une inscription sur liste d'attente.</p>
         </div>
 
         {isClosed ? (
