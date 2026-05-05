@@ -11,6 +11,8 @@ import { MinimumDaysDialog } from "./dialogs/MinimumDaysDialog";
 import { Loader2 } from "lucide-react";
 import { useChildrenData } from "@/hooks/useChildrenData";
 import { useCategoryFiltering } from "@/hooks/useCategoryFiltering";
+import { useClosedPeriods } from "@/hooks/useClosedPeriods";
+import { validateMinimumDays } from "@/utils/reservationValidationUtils";
 
 // Import our hook dedicated to holiday reservations
 import { useExistingHolidayReservations } from "@/hooks/useExistingHolidayReservations";
@@ -50,6 +52,8 @@ export const TeenHolidayReservationContent = () => {
     'adolescent'
   );
 
+  const { getClosedDatesInRange } = useClosedPeriods();
+
   // If the reservations are not loaded yet, display a loader
   if (loadingHolidayRes) {
     return (
@@ -64,10 +68,16 @@ export const TeenHolidayReservationContent = () => {
     d => d.date instanceof Date && !isNaN(d.date.getTime())
   ).length;
 
+  // Get excluded dates for the selected period to adjust minimum validation
+  const periodForValidation = holidayPeriods?.find(p => p.id === selectedPeriod);
+  const excludedDatesForPeriod = periodForValidation
+    ? getClosedDatesInRange(periodForValidation.start_date, periodForValidation.end_date)
+    : [];
+
   const onSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (validDatesCount < 3) {
+    if (!validateMinimumDays(selectedDates, false, false, excludedDatesForPeriod)) {
       setMinimumDaysDialog({ isOpen: true });
       return;
     }
@@ -108,7 +118,7 @@ export const TeenHolidayReservationContent = () => {
         <Button
           onClick={onSubmitClick}
           className="w-full md:w-auto"
-          disabled={!selectedChild || !selectedPeriod || validDatesCount < 3 || isSubmitting}
+          disabled={!selectedChild || !selectedPeriod || validDatesCount < 1 || isSubmitting}
           type="button"
         >
           {isSubmitting ? (
