@@ -8,14 +8,13 @@ const AdminNewTeenHolidayReservation = () => {
   const { data: isAdmin } = useAdminAuth();
   const { allChildren, isLoading } = useAdminChildrenData();
 
-  // Filtrer seulement les adolescents (6ème à Terminale), exclure les CM2
+  // Filtrer les adolescents (6ème à Terminale) + CM2
   const teenChildren = allChildren?.filter(child => 
-    // Enfants des classes d'adolescents (6ème à Terminale) uniquement
     ['6EME', '6ÈME', '5EME', '5ÈME', '4EME', '4ÈME', '3EME', '3ÈME', 
-     'SECONDE', 'PREMIERE', 'PREMIÈRE', 'TERMINALE'].includes(child.school_class.toUpperCase())
+     'SECONDE', 'PREMIERE', 'PREMIÈRE', 'TERMINALE', 'CM2'].includes(child.school_class.toUpperCase())
   );
 
-  console.log("Teen children (excluding CM2) with parent info:", teenChildren);
+  console.log("Teen children (including CM2) with parent info:", teenChildren);
 
   if (!isAdmin) {
     return (
