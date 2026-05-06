@@ -52,6 +52,7 @@ const AdminNewTeenHolidayReservation = () => {
           filteredChildren={teenChildren} 
           filterTeenPeriods={true}
           enforceCM2Summer={true}
+          disableMinimumDaysRule={true}
         />
       </div>
     </div>
