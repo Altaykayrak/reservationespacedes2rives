@@ -78,7 +78,11 @@ export async function processHolidayReservation(
   `;
   
   // Objet de l'email
-  const emailSubject = `Nouvelle réservation - ${
+  const isCM2 = requestData.childClass?.trim().toUpperCase() === 'CM2';
+  
+  const emailSubject = isCM2
+    ? `Nouvelle réservation - Club Ado${requestData.childName ? " - " + requestData.childName : ""}`
+    : `Nouvelle réservation - ${
     requestData.reservationType === "wednesday" ? "Mercredi" : 
     requestData.reservationType === "teen-holiday" ? "Club Ado" : "Vacances"
   }${requestData.childName ? " - " + requestData.childName : ""}`;
