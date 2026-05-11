@@ -513,6 +513,92 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist: {
+        Row: {
+          child_id: string
+          created_at: string
+          date: string
+          deleted_at: string | null
+          id: string
+          notified_at: string | null
+          school_class_category_id: string
+          status: Database["public"]["Enums"]["waitlist_status"]
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          date: string
+          deleted_at?: string | null
+          id?: string
+          notified_at?: string | null
+          school_class_category_id: string
+          status?: Database["public"]["Enums"]["waitlist_status"]
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          date?: string
+          deleted_at?: string | null
+          id?: string
+          notified_at?: string | null
+          school_class_category_id?: string
+          status?: Database["public"]["Enums"]["waitlist_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_school_class_category_id_fkey"
+            columns: ["school_class_category_id"]
+            isOneToOne: false
+            referencedRelation: "school_class_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waitlist_notifications: {
+        Row: {
+          child_id: string | null
+          created_at: string
+          date: string | null
+          id: string
+          processed_at: string | null
+          school_class_category_id: string | null
+          waitlist_id: string | null
+        }
+        Insert: {
+          child_id?: string | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          processed_at?: string | null
+          school_class_category_id?: string | null
+          waitlist_id?: string | null
+        }
+        Update: {
+          child_id?: string | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          processed_at?: string | null
+          school_class_category_id?: string | null
+          waitlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_notifications_waitlist_id_fkey"
+            columns: ["waitlist_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wednesday_allowed_classes: {
         Row: {
           created_at: string
@@ -800,6 +886,7 @@ export type Database = {
     Enums: {
       school_class_group: "kindergarten" | "primary" | "teen"
       user_role: "admin" | "user"
+      waitlist_status: "waiting" | "notified"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -929,6 +1016,7 @@ export const Constants = {
     Enums: {
       school_class_group: ["kindergarten", "primary", "teen"],
       user_role: ["admin", "user"],
+      waitlist_status: ["waiting", "notified"],
     },
   },
 } as const

@@ -42,6 +42,7 @@ import AdminHolidaySpots from "./pages/admin/AdminHolidaySpots";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import AdminWednesdayReservations from "./pages/admin/AdminWednesdayReservations";
 import AdminHolidayReservations from "./pages/admin/AdminHolidayReservations";
+import AdminWaitlist from "./pages/admin/AdminWaitlist";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -147,6 +148,7 @@ const App = () => (
               <Route path="spots" element={<AdminAvailableSpots />} />
               <Route path="spots/wednesday" element={<AdminWednesdaySpots />} />
               <Route path="spots/holiday" element={<AdminHolidaySpots />} />
+              <Route path="listeattente" element={<AdminWaitlist />} />
             </Route>
           </Routes>
         </ErrorBoundary>

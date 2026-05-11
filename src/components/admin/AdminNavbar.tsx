@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, UserCheck, Mail, CalendarDays, Palmtree, MessageCircle, Baby, Calculator, Menu } from "lucide-react";
+import { Users, Calendar, UserCheck, Mail, CalendarDays, Palmtree, MessageCircle, Baby, Calculator, Menu, ListOrdered } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -88,6 +88,12 @@ export const AdminNavbar = () => {
       href: "/admin/spots/holiday",
       icon: Calculator,
       description: "Places disponibles vacances"
+    },
+    {
+      title: "Liste d'attente",
+      href: "/admin/listeattente",
+      icon: ListOrdered,
+      description: "Gérer la liste d'attente"
     }
   ];
 
