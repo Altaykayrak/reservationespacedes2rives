@@ -9,3 +9,6 @@ logout_redirect_path = "/login"
 
 [functions.send-reservation-email]
 verify_jwt = false
+
+[functions.process-waitlist-notifications]
+verify_jwt = false
