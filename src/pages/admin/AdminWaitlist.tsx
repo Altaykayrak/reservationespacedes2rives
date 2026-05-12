@@ -139,6 +139,7 @@ const AdminWaitlist = () => {
     setChildId("");
     setDate("");
     setCategoryId("");
+    setSelectedPeriod("");
     refetch();
   };
 
