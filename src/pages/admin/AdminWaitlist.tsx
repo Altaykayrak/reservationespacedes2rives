@@ -17,6 +17,7 @@ import { PeriodSelector } from "@/components/reservations/PeriodSelector";
 import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
 import { format, eachDayOfInterval } from "date-fns";
 import { fr } from "date-fns/locale";
+import { normalizeSchoolClass } from "@/utils/schoolClassUtils";
 
 type Category = { id: string; name: string; category: string };
 type Child = { id: string; first_name: string; last_name: string };
@@ -36,7 +37,6 @@ const AdminWaitlist = () => {
   const qc = useQueryClient();
   const [childId, setChildId] = useState("");
   const [date, setDate] = useState("");
-  const [categoryId, setCategoryId] = useState("");
   const [filterDate, setFilterDate] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
@@ -66,6 +66,20 @@ const AdminWaitlist = () => {
   });
 
   const { allChildren } = useAdminChildrenData();
+
+  const selectedChild = useMemo(
+    () => allChildren?.find((c) => c.id === childId),
+    [allChildren, childId]
+  );
+
+  const categoryId = useMemo(() => {
+    if (!selectedChild) return "";
+    const normalized = normalizeSchoolClass(selectedChild.school_class);
+    const match = categories.find(
+      (c) => c.name.toUpperCase() === normalized.toUpperCase()
+    );
+    return match?.id ?? "";
+  }, [selectedChild, categories]);
 
   const filteredChildren = useMemo(() => {
     if (!allChildren) return [];
@@ -119,7 +133,7 @@ const AdminWaitlist = () => {
 
   const handleAdd = async () => {
     if (!childId || !date || !categoryId) {
-      toast.error("Tous les champs sont requis");
+      toast.error("Enfant et date requis (catégorie introuvable pour cette classe)");
       return;
     }
     const { error } = await supabase.from("waitlist").insert({
@@ -138,7 +152,6 @@ const AdminWaitlist = () => {
     toast.success("Ajouté à la liste d'attente");
     setChildId("");
     setDate("");
-    setCategoryId("");
     setSelectedPeriod("");
     refetch();
   };
@@ -234,19 +247,21 @@ const AdminWaitlist = () => {
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Catégorie</Label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.category} — {c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          {selectedChild && (
+            <p className="text-sm text-muted-foreground">
+              Catégorie détectée :{" "}
+              {categoryId ? (
+                <strong>
+                  {categories.find((c) => c.id === categoryId)?.category} —{" "}
+                  {categories.find((c) => c.id === categoryId)?.name}
+                </strong>
+              ) : (
+                <span className="text-destructive">
+                  Aucune catégorie trouvée pour la classe « {selectedChild.school_class} »
+                </span>
+              )}
+            </p>
+          )}
         </div>
         <Button className="mt-4" onClick={handleAdd}>Ajouter à la liste d'attente</Button>
       </Card>
