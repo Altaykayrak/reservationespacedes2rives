@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { X, CheckCircle2 } from "lucide-react";
+import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
+import { AdminGroupSelector } from "@/components/admin/reservations/AdminGroupSelector";
+import { AdminChildSelector } from "@/components/admin/reservations/AdminChildSelector";
 
 type Category = { id: string; name: string; category: string };
 type Child = { id: string; first_name: string; last_name: string };
@@ -32,7 +35,7 @@ const AdminWaitlist = () => {
   const [categoryId, setCategoryId] = useState("");
   const [filterDate, setFilterDate] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [childSearch, setChildSearch] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   const { data: categories = [] } = useQuery({
@@ -47,17 +50,23 @@ const AdminWaitlist = () => {
     },
   });
 
-  const { data: children = [] } = useQuery({
-    queryKey: ["waitlist-children"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("children")
-        .select("id, first_name, last_name")
-        .order("last_name");
-      if (error) throw error;
-      return data as Child[];
-    },
-  });
+  const { allChildren } = useAdminChildrenData();
+
+  const filteredChildren = useMemo(() => {
+    if (!allChildren) return [];
+    if (selectedGroup === "all") return allChildren;
+    if (selectedGroup === "maternelle") {
+      return allChildren.filter((c) =>
+        ["PS", "MS", "GS"].some((cls) => c.school_class.toUpperCase().includes(cls))
+      );
+    }
+    if (selectedGroup === "primaire") {
+      return allChildren.filter((c) =>
+        ["CP", "CE1", "CE2", "CM1", "CM2"].some((cls) => c.school_class.toUpperCase().includes(cls))
+      );
+    }
+    return allChildren;
+  }, [allChildren, selectedGroup]);
 
   const { data: rows = [], refetch } = useQuery({
     queryKey: ["waitlist", filterDate, filterCategory],
@@ -93,14 +102,6 @@ const AdminWaitlist = () => {
     };
   }, [qc]);
 
-  const filteredChildren = useMemo(() => {
-    const s = childSearch.toLowerCase().trim();
-    if (!s) return children;
-    return children.filter((c) =>
-      `${c.first_name} ${c.last_name}`.toLowerCase().includes(s)
-    );
-  }, [children, childSearch]);
-
   const handleAdd = async () => {
     if (!childId || !date || !categoryId) {
       toast.error("Tous les champs sont requis");
@@ -123,7 +124,6 @@ const AdminWaitlist = () => {
     setChildId("");
     setDate("");
     setCategoryId("");
-    setChildSearch("");
     refetch();
   };
 
@@ -179,38 +179,33 @@ const AdminWaitlist = () => {
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Ajouter un enfant à la liste d'attente</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2">
-            <Label>Enfant</Label>
-            <Input
-              placeholder="Rechercher..."
-              value={childSearch}
-              onChange={(e) => setChildSearch(e.target.value)}
-              className="mb-2"
-            />
-            <Select value={childId} onValueChange={setChildId}>
-              <SelectTrigger><SelectValue placeholder="Choisir un enfant" /></SelectTrigger>
-              <SelectContent>
-                {filteredChildren.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Date</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
-          <div>
-            <Label>Catégorie</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
-              <SelectContent>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.category} — {c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="space-y-4">
+          <AdminGroupSelector
+            selectedGroup={selectedGroup}
+            onGroupChange={setSelectedGroup}
+            onChildReset={() => setChildId("")}
+          />
+          <AdminChildSelector
+            selectedChild={childId}
+            setSelectedChild={setChildId}
+            children={filteredChildren}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Catégorie</Label>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.category} — {c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <Button className="mt-4" onClick={handleAdd}>Ajouter à la liste d'attente</Button>
