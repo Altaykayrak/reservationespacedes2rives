@@ -56,8 +56,8 @@ export const PeriodSelector = ({
       const allMappedPeriodIds = new Set(classMappings.map((m: any) => m.holiday_period_id));
       
       // Règles spécifiques été
-      const includedSummerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04"];
-      const excludedSummerPeriods = ["ETE-05", "ETE-06", "ETE-07", "ETE-08"];
+      const includedSummerPeriods = ["ETE-01", "ETE-02", "ETE-03", "ETE-04", "ETE-05", "ETE-06", "ETE-07"];
+      const excludedSummerPeriods = ["ETE-08"];
       
       // Périodes d'été à toujours inclure (début d'été)
       const summerPeriods = holidayPeriods.filter(period => 
