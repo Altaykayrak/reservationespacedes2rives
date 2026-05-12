@@ -26,7 +26,7 @@ export const PeriodSelector = ({
     let periods = [...holidayPeriods];
 
     if (filterTeenOnly) {
-      periods = periods.filter(period => ((period as any).max_participants_teen ?? 0) > 0);
+      periods = periods.filter(period => (period.max_participants_teen ?? 0) > 0);
     }
 
     periods.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
