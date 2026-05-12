@@ -13,6 +13,10 @@ import { X, CheckCircle2 } from "lucide-react";
 import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
 import { AdminGroupSelector } from "@/components/admin/reservations/AdminGroupSelector";
 import { AdminChildSelector } from "@/components/admin/reservations/AdminChildSelector";
+import { PeriodSelector } from "@/components/reservations/PeriodSelector";
+import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
+import { format, eachDayOfInterval } from "date-fns";
+import { fr } from "date-fns/locale";
 
 type Category = { id: string; name: string; category: string };
 type Child = { id: string; first_name: string; last_name: string };
@@ -37,6 +41,17 @@ const AdminWaitlist = () => {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  const { holidayPeriods } = useHolidayPeriods();
+
+  const periodDates = useMemo(() => {
+    const period = holidayPeriods?.find((p) => p.id === selectedPeriod);
+    if (!period) return [];
+    return eachDayOfInterval({
+      start: new Date(period.start_date),
+      end: new Date(period.end_date),
+    }).filter((d) => d.getDay() !== 0 && d.getDay() !== 6);
+  }, [holidayPeriods, selectedPeriod]);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["waitlist-categories"],
@@ -192,9 +207,33 @@ const AdminWaitlist = () => {
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Date</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <PeriodSelector
+                selectedPeriod={selectedPeriod}
+                setSelectedPeriod={(id) => {
+                  setSelectedPeriod(id);
+                  setDate("");
+                }}
+                holidayPeriods={holidayPeriods}
+              />
             </div>
+            <div className="space-y-2">
+              <Label>Date</Label>
+              <Select value={date} onValueChange={setDate} disabled={!selectedPeriod}>
+                <SelectTrigger><SelectValue placeholder="Choisir une date" /></SelectTrigger>
+                <SelectContent>
+                  {periodDates.map((d) => {
+                    const v = format(d, "yyyy-MM-dd");
+                    return (
+                      <SelectItem key={v} value={v}>
+                        {format(d, "EEEE d MMMM yyyy", { locale: fr })}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Catégorie</Label>
               <Select value={categoryId} onValueChange={setCategoryId}>
