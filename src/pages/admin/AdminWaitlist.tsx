@@ -31,6 +31,8 @@ type WaitlistRow = {
   status: "waiting" | "notified";
   notified_at: string | null;
   created_at: string;
+  without_meal: boolean;
+  early_dropoff: boolean;
   children: Child | null;
   school_class_categories: Category | null;
 };
@@ -315,6 +317,7 @@ const AdminWaitlist = () => {
                 <TableHead>Enfant</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Catégorie</TableHead>
+                <TableHead>Options</TableHead>
                 <TableHead>Ajouté le</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead></TableHead>
@@ -326,6 +329,15 @@ const AdminWaitlist = () => {
                   <TableCell>{r.children?.first_name} {r.children?.last_name}</TableCell>
                   <TableCell>{new Date(r.date).toLocaleDateString("fr-FR")}</TableCell>
                   <TableCell>{r.school_class_categories?.category} — {r.school_class_categories?.name}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {r.without_meal && <Badge variant="outline">Sans repas</Badge>}
+                      {r.early_dropoff && <Badge variant="outline">Accueil avant 8h30</Badge>}
+                      {!r.without_meal && !r.early_dropoff && (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{new Date(r.created_at).toLocaleDateString("fr-FR")}</TableCell>
                   <TableCell>
                     {r.status === "notified" ? (
