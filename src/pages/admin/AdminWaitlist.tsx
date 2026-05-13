@@ -146,7 +146,7 @@ const AdminWaitlist = () => {
       without_meal: selectedDates[d].withoutMeal,
       early_dropoff: selectedDates[d].earlyDropoff,
     }));
-    const { error } = await supabase.from("waitlist").insert(rows);
+    const { error } = await supabase.from("waitlist").insert(rows as any);
     if (error) {
       if (error.code === "23505") {
         toast.error("Cet enfant est déjà en liste d'attente pour l'une de ces dates");
