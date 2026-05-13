@@ -362,7 +362,12 @@ interface FullDateRowProps {
 }
 
 const FullDateRow = ({ date, periodId, schoolClass, selected, setSelected }: FullDateRowProps) => {
-  const { isFull, isLoading } = useHolidaySpots(periodId, date, schoolClass);
+  // Use a UTC-noon date so the hook's toISOString() yields the correct calendar day
+  const utcDate = useMemo(
+    () => new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12)),
+    [date]
+  );
+  const { isFull, isLoading } = useHolidaySpots(periodId, utcDate, schoolClass);
   const key = format(date, "yyyy-MM-dd");
   if (isLoading || !isFull) return null;
   const isChecked = !!selected[key];
