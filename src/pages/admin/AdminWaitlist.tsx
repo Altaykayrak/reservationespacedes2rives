@@ -11,7 +11,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import { X, CheckCircle2 } from "lucide-react";
 import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
-import { AdminGroupSelector } from "@/components/admin/reservations/AdminGroupSelector";
 import { AdminChildSelector } from "@/components/admin/reservations/AdminChildSelector";
 import { PeriodSelector } from "@/components/reservations/PeriodSelector";
 import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
@@ -42,7 +41,7 @@ const AdminWaitlist = () => {
   const [childId, setChildId] = useState("");
   const [filterDate, setFilterDate] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [selectedGroup, setSelectedGroup] = useState<string>("all");
+  const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [selectedDates, setSelectedDates] = useState<Record<string, { withoutMeal: boolean; earlyDropoff: boolean }>>({});
@@ -71,6 +70,30 @@ const AdminWaitlist = () => {
 
   const { allChildren } = useAdminChildrenData();
 
+  const { data: periodMappings = [] } = useQuery({
+    queryKey: ["period-mappings", selectedPeriod],
+    enabled: !!selectedPeriod,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("holiday_period_class_mappings")
+        .select("category, school_class")
+        .eq("holiday_period_id", selectedPeriod);
+      if (error) throw error;
+      return data as { category: string; school_class: string }[];
+    },
+  });
+
+  const ALL_GROUPS: { value: string; label: string }[] = [
+    { value: "maternelle", label: "Maternelle" },
+    { value: "primaire", label: "Primaire" },
+    { value: "adolescent", label: "Adolescent" },
+  ];
+
+  const availableGroups = useMemo(() => {
+    const set = new Set(periodMappings.map((m) => m.category.toLowerCase()));
+    return ALL_GROUPS.filter((g) => set.has(g.value));
+  }, [periodMappings]);
+
   const selectedChild = useMemo(
     () => allChildren?.find((c) => c.id === childId),
     [allChildren, childId]
@@ -86,20 +109,14 @@ const AdminWaitlist = () => {
   }, [selectedChild, categories]);
 
   const filteredChildren = useMemo(() => {
-    if (!allChildren) return [];
-    if (selectedGroup === "all") return allChildren;
-    if (selectedGroup === "maternelle") {
-      return allChildren.filter((c) =>
-        ["PS", "MS", "GS"].some((cls) => c.school_class.toUpperCase().includes(cls))
-      );
-    }
-    if (selectedGroup === "primaire") {
-      return allChildren.filter((c) =>
-        ["CP", "CE1", "CE2", "CM1", "CM2"].some((cls) => c.school_class.toUpperCase().includes(cls))
-      );
-    }
-    return allChildren;
-  }, [allChildren, selectedGroup]);
+    if (!allChildren || !selectedPeriod || !selectedGroup) return [];
+    const allowed = new Set(
+      periodMappings
+        .filter((m) => m.category.toLowerCase() === selectedGroup)
+        .map((m) => m.school_class.toUpperCase())
+    );
+    return allChildren.filter((c) => allowed.has(c.school_class.toUpperCase()));
+  }, [allChildren, selectedGroup, selectedPeriod, periodMappings]);
 
   const { data: rows = [], refetch } = useQuery({
     queryKey: ["waitlist", filterDate, filterCategory],
@@ -217,28 +234,56 @@ const AdminWaitlist = () => {
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Ajouter un enfant à la liste d'attente</h2>
         <div className="space-y-4">
-          <AdminGroupSelector
-            selectedGroup={selectedGroup}
-            onGroupChange={setSelectedGroup}
-            onChildReset={() => setChildId("")}
-          />
-          <AdminChildSelector
-            selectedChild={childId}
-            setSelectedChild={setChildId}
-            children={filteredChildren}
-          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <PeriodSelector
                 selectedPeriod={selectedPeriod}
                 setSelectedPeriod={(id) => {
                   setSelectedPeriod(id);
+                  setSelectedGroup("");
+                  setChildId("");
                   setSelectedDates({});
                 }}
                 holidayPeriods={holidayPeriods}
               />
             </div>
           </div>
+          {selectedPeriod && (
+            <div className="space-y-2">
+              <Label>Sélectionner un groupe</Label>
+              <Select
+                value={selectedGroup}
+                onValueChange={(v) => {
+                  setSelectedGroup(v);
+                  setChildId("");
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner un groupe" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableGroups.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                      Aucun groupe configuré pour cette période
+                    </div>
+                  ) : (
+                    availableGroups.map((g) => (
+                      <SelectItem key={g.value} value={g.value}>
+                        {g.label}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {selectedPeriod && selectedGroup && (
+            <AdminChildSelector
+              selectedChild={childId}
+              setSelectedChild={setChildId}
+              children={filteredChildren}
+            />
+          )}
           {selectedChild && (
             <p className="text-sm text-muted-foreground">
               Catégorie détectée :{" "}
