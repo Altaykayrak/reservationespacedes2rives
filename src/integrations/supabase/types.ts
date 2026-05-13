@@ -519,30 +519,36 @@ export type Database = {
           created_at: string
           date: string
           deleted_at: string | null
+          early_dropoff: boolean
           id: string
           notified_at: string | null
           school_class_category_id: string
           status: Database["public"]["Enums"]["waitlist_status"]
+          without_meal: boolean
         }
         Insert: {
           child_id: string
           created_at?: string
           date: string
           deleted_at?: string | null
+          early_dropoff?: boolean
           id?: string
           notified_at?: string | null
           school_class_category_id: string
           status?: Database["public"]["Enums"]["waitlist_status"]
+          without_meal?: boolean
         }
         Update: {
           child_id?: string
           created_at?: string
           date?: string
           deleted_at?: string | null
+          early_dropoff?: boolean
           id?: string
           notified_at?: string | null
           school_class_category_id?: string
           status?: Database["public"]["Enums"]["waitlist_status"]
+          without_meal?: boolean
         }
         Relationships: [
           {

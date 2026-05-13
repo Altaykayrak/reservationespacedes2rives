@@ -18,6 +18,8 @@ import { useHolidayPeriods } from "@/hooks/useHolidayPeriods";
 import { format, eachDayOfInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { normalizeSchoolClass } from "@/utils/schoolClassUtils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useHolidaySpots } from "@/hooks/useHolidaySpots";
 
 type Category = { id: string; name: string; category: string };
 type Child = { id: string; first_name: string; last_name: string };
@@ -36,12 +38,12 @@ type WaitlistRow = {
 const AdminWaitlist = () => {
   const qc = useQueryClient();
   const [childId, setChildId] = useState("");
-  const [date, setDate] = useState("");
   const [filterDate, setFilterDate] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  const [selectedDates, setSelectedDates] = useState<Record<string, { withoutMeal: boolean; earlyDropoff: boolean }>>({});
   const { holidayPeriods } = useHolidayPeriods();
 
   const periodDates = useMemo(() => {
@@ -132,26 +134,30 @@ const AdminWaitlist = () => {
   }, [qc]);
 
   const handleAdd = async () => {
-    if (!childId || !date || !categoryId) {
-      toast.error("Enfant et date requis (catégorie introuvable pour cette classe)");
+    const dates = Object.keys(selectedDates);
+    if (!childId || dates.length === 0 || !categoryId) {
+      toast.error("Enfant et au moins une date requis (catégorie introuvable pour cette classe)");
       return;
     }
-    const { error } = await supabase.from("waitlist").insert({
+    const rows = dates.map((d) => ({
       child_id: childId,
-      date,
+      date: d,
       school_class_category_id: categoryId,
-    });
+      without_meal: selectedDates[d].withoutMeal,
+      early_dropoff: selectedDates[d].earlyDropoff,
+    }));
+    const { error } = await supabase.from("waitlist").insert(rows);
     if (error) {
       if (error.code === "23505") {
-        toast.error("Cet enfant est déjà en liste d'attente pour ce jour");
+        toast.error("Cet enfant est déjà en liste d'attente pour l'une de ces dates");
       } else {
         toast.error(error.message);
       }
       return;
     }
-    toast.success("Ajouté à la liste d'attente");
+    toast.success(`${dates.length} date(s) ajoutée(s) à la liste d'attente`);
     setChildId("");
-    setDate("");
+    setSelectedDates({});
     setSelectedPeriod("");
     refetch();
   };
@@ -225,26 +231,10 @@ const AdminWaitlist = () => {
                 selectedPeriod={selectedPeriod}
                 setSelectedPeriod={(id) => {
                   setSelectedPeriod(id);
-                  setDate("");
+                  setSelectedDates({});
                 }}
                 holidayPeriods={holidayPeriods}
               />
-            </div>
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <Select value={date} onValueChange={setDate} disabled={!selectedPeriod}>
-                <SelectTrigger><SelectValue placeholder="Choisir une date" /></SelectTrigger>
-                <SelectContent>
-                  {periodDates.map((d) => {
-                    const v = format(d, "yyyy-MM-dd");
-                    return (
-                      <SelectItem key={v} value={v}>
-                        {format(d, "EEEE d MMMM yyyy", { locale: fr })}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
             </div>
           </div>
           {selectedChild && (
@@ -261,6 +251,32 @@ const AdminWaitlist = () => {
                 </span>
               )}
             </p>
+          )}
+          {selectedChild && selectedPeriod && categoryId && (
+            <div className="space-y-2">
+              <Label>Dates complètes (0 place restante)</Label>
+              <div className="space-y-2 rounded-md border p-3">
+                {periodDates.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Aucune date dans cette période.</p>
+                ) : (
+                  periodDates.map((d) => (
+                    <FullDateRow
+                      key={d.toISOString()}
+                      date={d}
+                      periodId={selectedPeriod}
+                      schoolClass={selectedChild.school_class}
+                      selected={selectedDates}
+                      setSelected={setSelectedDates}
+                    />
+                  ))
+                )}
+                {periodDates.length > 0 && (
+                  <EmptyHint
+                    selectedCount={Object.keys(selectedDates).length}
+                  />
+                )}
+              </div>
+            </div>
           )}
         </div>
         <Button className="mt-4" onClick={handleAdd}>Ajouter à la liste d'attente</Button>
@@ -334,3 +350,73 @@ const AdminWaitlist = () => {
 };
 
 export default AdminWaitlist;
+
+interface FullDateRowProps {
+  date: Date;
+  periodId: string;
+  schoolClass: string;
+  selected: Record<string, { withoutMeal: boolean; earlyDropoff: boolean }>;
+  setSelected: React.Dispatch<
+    React.SetStateAction<Record<string, { withoutMeal: boolean; earlyDropoff: boolean }>>
+  >;
+}
+
+const FullDateRow = ({ date, periodId, schoolClass, selected, setSelected }: FullDateRowProps) => {
+  const { isFull, isLoading } = useHolidaySpots(periodId, date, schoolClass);
+  const key = format(date, "yyyy-MM-dd");
+  if (isLoading || !isFull) return null;
+  const isChecked = !!selected[key];
+  const opts = selected[key] ?? { withoutMeal: false, earlyDropoff: false };
+
+  const toggle = () => {
+    setSelected((prev) => {
+      const next = { ...prev };
+      if (next[key]) delete next[key];
+      else next[key] = { withoutMeal: false, earlyDropoff: false };
+      return next;
+    });
+  };
+
+  const setOpt = (opt: "withoutMeal" | "earlyDropoff", val: boolean) => {
+    setSelected((prev) => ({ ...prev, [key]: { ...prev[key], [opt]: val } }));
+  };
+
+  return (
+    <div className="border-b last:border-0 pb-2 last:pb-0">
+      <div className="flex items-center gap-3">
+        <Checkbox checked={isChecked} onCheckedChange={toggle} id={`d-${key}`} />
+        <Label htmlFor={`d-${key}`} className="cursor-pointer">
+          {format(date, "EEEE d MMMM yyyy", { locale: fr })}
+        </Label>
+        <span className="text-xs text-red-600 ml-auto">Complet</span>
+      </div>
+      {isChecked && (
+        <div className="ml-7 mt-2 flex flex-wrap gap-4">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={opts.withoutMeal}
+              onCheckedChange={(v) => setOpt("withoutMeal", !!v)}
+            />
+            Sans repas
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={opts.earlyDropoff}
+              onCheckedChange={(v) => setOpt("earlyDropoff", !!v)}
+            />
+            Accueil avant 8h30
+          </label>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const EmptyHint = ({ selectedCount }: { selectedCount: number }) => {
+  if (selectedCount > 0) return null;
+  return (
+    <p className="text-xs text-muted-foreground pt-1">
+      Seules les dates complètes (0 place restante) sont affichées.
+    </p>
+  );
+};
