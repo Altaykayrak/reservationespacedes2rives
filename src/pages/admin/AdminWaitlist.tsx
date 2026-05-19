@@ -364,7 +364,6 @@ const AdminWaitlist = () => {
                 <TableHead>Catégorie</TableHead>
                 <TableHead>Options</TableHead>
                 <TableHead>Ajouté le</TableHead>
-                <TableHead>Statut</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -384,13 +383,6 @@ const AdminWaitlist = () => {
                     </div>
                   </TableCell>
                   <TableCell>{new Date(r.created_at).toLocaleDateString("fr-FR")}</TableCell>
-                  <TableCell>
-                    {r.status === "notified" ? (
-                      <Badge className="bg-green-600">Place disponible 🟢</Badge>
-                    ) : (
-                      <Badge variant="secondary">En attente</Badge>
-                    )}
-                  </TableCell>
                   <TableCell>
                     <Button size="sm" variant="outline" onClick={() => handleSoftDelete(r.id)}>
                       Retirer
