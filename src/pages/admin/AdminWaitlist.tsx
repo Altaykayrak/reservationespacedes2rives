@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { X, CheckCircle2 } from "lucide-react";
+import { X, CheckCircle2, FileText } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { useAdminChildrenData } from "@/hooks/useAdminChildrenData";
 import { AdminChildSelector } from "@/components/admin/reservations/AdminChildSelector";
 import { PeriodSelector } from "@/components/reservations/PeriodSelector";
@@ -39,8 +41,9 @@ type WaitlistRow = {
 const AdminWaitlist = () => {
   const qc = useQueryClient();
   const [childId, setChildId] = useState("");
-  const [filterDate, setFilterDate] = useState("");
-  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
+  const [filterGroup, setFilterGroup] = useState<string>("all");
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
@@ -119,7 +122,7 @@ const AdminWaitlist = () => {
   }, [allChildren, selectedGroup, selectedPeriod, periodMappings]);
 
   const { data: rows = [], refetch } = useQuery({
-    queryKey: ["waitlist", filterDate, filterCategory],
+    queryKey: ["waitlist", filterStartDate, filterEndDate, filterGroup],
     queryFn: async () => {
       let q = supabase
         .from("waitlist")
@@ -127,13 +130,48 @@ const AdminWaitlist = () => {
         .is("deleted_at", null)
         .order("date", { ascending: true })
         .order("created_at", { ascending: true });
-      if (filterDate) q = q.eq("date", filterDate);
-      if (filterCategory !== "all") q = q.eq("school_class_category_id", filterCategory);
+      if (filterStartDate) q = q.gte("date", filterStartDate);
+      if (filterEndDate) q = q.lte("date", filterEndDate);
       const { data, error } = await q;
       if (error) throw error;
-      return data as WaitlistRow[];
+      let result = data as WaitlistRow[];
+      if (filterGroup !== "all") {
+        result = result.filter(
+          (r) => r.school_class_categories?.category?.toLowerCase() === filterGroup
+        );
+      }
+      return result;
     },
   });
+
+  const handleExportPdf = () => {
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const title = `Liste d'attente du ${filterStartDate || "début"} au ${filterEndDate || "fin"}${
+      filterGroup !== "all" ? ` — ${filterGroup}` : ""
+    }`;
+    doc.setFontSize(14);
+    doc.text(title, 14, 15);
+    autoTable(doc, {
+      head: [["Enfant", "Date", "Catégorie", "Options", "Ajouté le", "Statut"]],
+      body: rows.map((r) => [
+        `${r.children?.first_name ?? ""} ${r.children?.last_name ?? ""}`.trim(),
+        new Date(r.date).toLocaleDateString("fr-FR"),
+        `${r.school_class_categories?.category ?? ""} — ${r.school_class_categories?.name ?? ""}`,
+        [
+          r.without_meal ? "Sans repas" : null,
+          r.early_dropoff ? "Accueil avant 8h30" : null,
+        ]
+          .filter(Boolean)
+          .join(", ") || "—",
+        new Date(r.created_at).toLocaleDateString("fr-FR"),
+        r.status === "notified" ? "Place disponible" : "En attente",
+      ]),
+      startY: 22,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+    doc.save("liste-attente.pdf");
+  };
 
   // Realtime: listen for waitlist changes (notified status)
   useEffect(() => {
@@ -333,23 +371,51 @@ const AdminWaitlist = () => {
         <div className="flex flex-wrap items-end gap-4 mb-4">
           <h2 className="text-xl font-semibold mr-auto">Liste d'attente actuelle</h2>
           <div>
-            <Label>Filtrer par date</Label>
-            <Input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
+            <Label>Date de début</Label>
+            <Input
+              type="date"
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+            />
           </div>
           <div>
-            <Label>Filtrer par catégorie</Label>
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <Label>Date de fin</Label>
+            <Input
+              type="date"
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Filtrer par groupe</Label>
+            <Select value={filterGroup} onValueChange={setFilterGroup}>
               <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Toutes</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.category} — {c.name}</SelectItem>
-                ))}
+                <SelectItem value="all">Tous</SelectItem>
+                <SelectItem value="maternelle">Maternelle</SelectItem>
+                <SelectItem value="primaire">Primaire</SelectItem>
+                <SelectItem value="adolescent">Adolescent</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" onClick={() => { setFilterDate(""); setFilterCategory("all"); }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setFilterStartDate("");
+              setFilterEndDate("");
+              setFilterGroup("all");
+            }}
+          >
             Réinitialiser
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportPdf}
+            disabled={rows.length === 0}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export PDF
           </Button>
         </div>
 
