@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -14,78 +13,99 @@ export default {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      screens: { "2xl": "1400px" },
     },
     extend: {
+      // ── Design tokens du nouveau design ──────────────────────────────
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        // Palette sage/sable naturelle
+        sage: {
+          DEFAULT: "#4a7c6f",
+          light:   "#6fa99a",
+          pale:    "#e8f2f0",
+          mid:     "#c5ddd8",
+        },
+        sand: {
+          DEFAULT: "#f5f0e8",
+          dark:    "#e8e0d0",
+        },
+        cream:   "#faf8f4",
+        accent: {
+          DEFAULT: "#c8845a",
+          light:   "#f2e4d8",
+        },
+        // shadcn tokens (inchangés)
+        border:      "hsl(var(--border))",
+        input:       "hsl(var(--input))",
+        ring:        "hsl(var(--ring))",
+        background:  "hsl(var(--background))",
+        foreground:  "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
+          DEFAULT:    "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
+          DEFAULT:    "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
+          DEFAULT:    "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
+          DEFAULT:    "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
+        accent_ui: {
+          DEFAULT:    "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
-        success: {
-          DEFAULT: "hsl(var(--success))",
-          foreground: "hsl(var(--success-foreground))",
-        },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
+          DEFAULT:    "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
+          DEFAULT:    "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
       },
-      borderRadius: {
-        lg: "1rem",
-        md: "0.75rem",
-        sm: "0.5rem",
-      },
+
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans:    ["DM Sans", "sans-serif"],
+        display: ["Playfair Display", "serif"],
       },
+
+      borderRadius: {
+        lg:  "var(--radius)",
+        md:  "calc(var(--radius) - 2px)",
+        sm:  "calc(var(--radius) - 4px)",
+        xl:  "16px",
+        "2xl": "20px",
+      },
+
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          to:   { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          to:   { height: "0" },
         },
-        shake: {
-          "0%, 100%": { transform: "translateX(0)" },
-          "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-2px)" },
-          "20%, 40%, 60%, 80%": { transform: "translateX(2px)" },
+        fadeUp: {
+          from: { opacity: "0", transform: "translateY(14px)" },
+          to:   { opacity: "1", transform: "translateY(0)" },
+        },
+        blink: {
+          "0%, 100%": { opacity: "1" },
+          "50%":      { opacity: "0" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "shake": "shake 0.5s ease-in-out",
+        "accordion-up":   "accordion-up 0.2s ease-out",
+        fadeUp:           "fadeUp 0.3s ease both",
+        blink:            "blink 1s step-start infinite",
       },
     },
   },

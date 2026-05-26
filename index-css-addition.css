@@ -1,0 +1,12 @@
+/* ── À coller EN HAUT de src/index.css, avant @tailwind base ── */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Playfair+Display:wght@400;500&display=swap');
+
+/* Optionnel : écraser la couleur primaire shadcn pour qu'elle corresponde au sage */
+@layer base {
+  :root {
+    --primary: 168 26% 40%;          /* sage #4a7c6f en HSL */
+    --primary-foreground: 0 0% 100%;
+    --radius: 0.75rem;
+  }
+}
