@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Playfair+Display:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    --primary: 168 26% 40%;
+    --primary-foreground: 0 0% 100%;
+    --radius: 0.75rem;
+  }
+}
+
 @keyframes shake {
   0% { transform: translateX(0); }
   20% { transform: translateX(-5px); }
