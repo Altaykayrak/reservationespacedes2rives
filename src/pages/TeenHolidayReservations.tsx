@@ -1,8 +1,10 @@
+// src/pages/TeenHolidayReservations.tsx
+// Redesign — logique identique à l'original
 
 import { useAuth } from "@/hooks/useAuth";
 import { TeenHolidayReservationContent } from "@/components/reservations/TeenHolidayReservationContent";
 import { HolidayReservationsList } from "@/components/reservations/HolidayReservationsList";
-import { CalendarDays } from "lucide-react";
+import { PersonStanding } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,177 +17,122 @@ import { useNavigate } from "react-router-dom";
 const TeenHolidayReservations = () => {
   const { user, loading, initialized, session } = useAuth();
   const navigate = useNavigate();
-  const [isWaiting, setIsWaiting] = useState(false);
-  const [isClosed, setIsClosed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isWaiting, setIsWaiting]       = useState(false);
+  const [isClosed, setIsClosed]         = useState(false);
+  const [isLoading, setIsLoading]       = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("[TeenHolidayReservations] État d'authentification:", 
-      loading ? "CHARGEMENT" : (user ? "AUTHENTIFIÉ" : "NON AUTHENTIFIÉ"),
-      "Session:", session ? "Présente" : "Absente",
-      "Initialisation:", initialized ? "Terminée" : "En cours");
-      
     const checkAccess = async () => {
-      if (!user?.id) {
-        console.log("[TeenHolidayReservations] Aucun utilisateur trouvé");
-        setIsLoading(false);
-        return;
-      }
-      
+      if (!user?.id) { setIsLoading(false); return; }
       setIsLoading(true);
-
       try {
-        console.log("[TeenHolidayReservations] Tentative de récupération du profil pour l'utilisateur:", user.id);
-        
-        // Récupérer les états directement de la base de données avec gestion d'erreurs améliorée
         const { data, error } = await supabase
-          .from('profiles')
-          .select('is_waiting, is_closed')
-          .eq('id', user.id)
+          .from("profiles")
+          .select("is_waiting, is_closed")
+          .eq("id", user.id)
           .maybeSingle();
 
         if (error) {
-          console.error('[TeenHolidayReservations] Erreur lors de la récupération du profil:', error);
           setProfileError(`Erreur d'accès au profil: ${error.message}`);
           toast.error("Erreur lors de la vérification du profil utilisateur");
           return;
         }
-
-        if (!data) {
-          console.warn('[TeenHolidayReservations] Profil non trouvé pour cet utilisateur');
-          setProfileError("Profil utilisateur non trouvé");
-          return;
-        }
-
-        console.log('[TeenHolidayReservations] Données du profil récupérées:', data);
+        if (!data) { setProfileError("Profil utilisateur non trouvé"); return; }
         setIsWaiting(data.is_waiting || false);
-        setIsClosed(data.is_closed || false);
+        setIsClosed(data.is_closed   || false);
         setProfileError(null);
       } catch (error: any) {
-        console.error("[TeenHolidayReservations] Erreur inattendue lors de la récupération des données:", error);
         setProfileError(`Erreur inattendue: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Vérifier l'accès seulement si l'utilisateur est authentifié et l'initialisation terminée
-    if (initialized && !loading) {
-      checkAccess();
-    }
+    if (initialized && !loading) checkAccess();
   }, [user, loading, initialized, session]);
 
-  // Si l'utilisateur n'est pas authentifié après l'initialisation, afficher un message
   if (initialized && !loading && !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <Navbar />
-        <div className="container mx-auto p-4 md:p-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
-            <EmptyHolidayState 
-              message="Connexion requise" 
-              subtitle="Vous devez être connecté pour accéder aux réservations du Club Ado."
-              icon="info"
-            >
-              <Button 
-                onClick={() => navigate("/login")}
-                className="mt-4"
-              >
-                Se connecter
-              </Button>
-            </EmptyHolidayState>
-          </div>
-        </div>
-      </div>
+      <Shell>
+        <Card>
+          <EmptyHolidayState message="Connexion requise" subtitle="Vous devez être connecté pour accéder aux réservations du Club Ado." icon="info">
+            <Button onClick={() => navigate("/login")} className="mt-4">Se connecter</Button>
+          </EmptyHolidayState>
+        </Card>
+      </Shell>
     );
   }
 
-  // Affiche un squelette de chargement pendant l'initialisation de l'auth ou le chargement du profil
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <Navbar />
-        <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-8 w-8" />
-              <Skeleton className="h-10 w-64" />
-            </div>
-            <Skeleton className="h-6 w-96" />
-          </div>
-          <Skeleton className="h-[400px] w-full rounded-xl" />
-          <Skeleton className="h-[300px] w-full rounded-xl" />
-        </div>
-      </div>
+      <Shell>
+        <Skeleton className="h-32 w-full rounded-2xl" />
+        <Skeleton className="h-96 w-full rounded-2xl" />
+        <Skeleton className="h-48 w-full rounded-2xl" />
+      </Shell>
     );
   }
 
-  // Afficher une erreur si le profil n'a pas pu être récupéré
   if (profileError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <Navbar />
-        <div className="container mx-auto p-4 md:p-6">
-          <EmptyHolidayState 
-            message="Erreur lors du chargement du profil" 
-            subtitle={profileError}
-            icon="error"
-          />
-        </div>
-      </div>
+      <Shell>
+        <Card>
+          <EmptyHolidayState message="Erreur de chargement" subtitle={profileError} icon="error" />
+        </Card>
+      </Shell>
     );
   }
 
-  // Afficher le message d'attente et empêcher la création de nouvelles réservations
   if (isWaiting) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <Navbar />
-        <div className="container mx-auto p-4 md:p-6">
-          <EmptyHolidayState 
-            message="Réservations bientôt disponibles !" 
-            subtitle="Les inscriptions ne sont pas encore ouvertes. Vous serez informé(e) par e-mail dès leur lancement. Restez à l'affût ! ✉️📅"
+      <Shell>
+        <Card>
+          <EmptyHolidayState
+            message="Réservations bientôt disponibles !"
+            subtitle="Les inscriptions ne sont pas encore ouvertes. Vous serez informé(e) par e-mail dès leur lancement. ✉️📅"
             icon="info"
           />
-        </div>
-      </div>
+        </Card>
+      </Shell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-cream font-sans">
       <Navbar />
-      <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
-        <div className="space-y-2">
+      <div className="container mx-auto px-4 pb-12 max-w-4xl">
+        <div className="mt-6 mb-5 space-y-2">
           <div className="flex items-center gap-3">
-            <CalendarDays className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-            <h1 className="text-2xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
-              Réservations Club Ado
-            </h1>
+            <span className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 shrink-0">
+              <PersonStanding className="h-5 w-5" />
+            </span>
+            <h1 className="font-display text-2xl font-medium text-charcoal">Réservations Club Ado</h1>
           </div>
-          <p className="text-muted-foreground text-base md:text-lg">
+          <p className="text-muted-foreground text-sm pl-1">
             Réservez les périodes de vacances pour vos adolescents.
           </p>
-          <p className="text-red-600 font-bold text-sm md:text-base">Sélectionner au moins 3 jours par semaine. En cas de journée complète, merci de contacter l'accueil pour une inscription sur liste d'attente.</p>
+          <p className="text-sm font-semibold text-destructive pl-1">
+            Sélectionner au moins 3 jours par semaine. En cas de journée complète, merci de contacter l'accueil pour une inscription sur liste d'attente.
+          </p>
         </div>
 
         {isClosed ? (
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
-            <EmptyHolidayState 
-              message="Réservations clôturées !" 
-              subtitle="Les inscriptions sont désormais fermées. Vous serez informé(e) par e-mail dès l'ouverture des inscriptions pour les prochaines vacances. À bientôt ! ✉️📅"
+          <Card>
+            <EmptyHolidayState
+              message="Réservations clôturées !"
+              subtitle="Les inscriptions sont désormais fermées. Vous serez informé(e) par e-mail dès leur lancement. ✉️📅"
               icon="info"
             />
-          </div>
+          </Card>
         ) : (
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+          <Card className="mb-5">
             <TeenHolidayReservationContent />
-          </div>
+          </Card>
         )}
 
-        <div className="bg-white rounded-xl shadow-lg shadow-blue-100/50 border border-blue-100 overflow-hidden">
-          <div className="p-4 md:p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-sand-dark overflow-hidden">
+          <div className="p-5">
             <HolidayReservationsList />
           </div>
         </div>
@@ -193,5 +140,22 @@ const TeenHolidayReservations = () => {
     </div>
   );
 };
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-cream font-sans">
+      <Navbar />
+      <div className="container mx-auto px-4 pb-12 max-w-4xl mt-6 space-y-4">{children}</div>
+    </div>
+  );
+}
+
+function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`bg-white rounded-2xl shadow-sm border border-sand-dark p-5 ${className}`}>
+      {children}
+    </div>
+  );
+}
 
 export default TeenHolidayReservations;
