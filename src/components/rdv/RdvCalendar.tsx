@@ -64,7 +64,7 @@ export const RdvCalendar = ({
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Calendrier - Juin/Juillet/Août 2025</CardTitle>
+        <CardTitle className="text-lg">Calendrier - Juin/Juillet/Août 2026</CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <Calendar
