@@ -66,8 +66,8 @@ export const useRdv = () => {
     setSelectedMotifs
   );
   
-  // Get RDV configuration
-  const { summerRange } = useRdvConfig();
+  // Get RDV configuration (derived from the loaded rdv list)
+  const { summerRange } = useRdvConfig(rdvList);
   
   // Load user RDV when user is available
   useEffect(() => {
