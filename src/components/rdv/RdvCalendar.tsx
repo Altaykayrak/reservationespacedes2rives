@@ -32,10 +32,24 @@ export const RdvCalendar = ({
     return dateSet;
   }, [rdvList]);
 
-  // Set default month to July 2025
+  // Set default month to the month of the first available slot (>= today),
+  // otherwise fall back to the start of the summer range.
   const defaultMonth = useMemo(() => {
-    return new Date(2025, 6, 1); // July 2025 (month 6 in JS)
-  }, []);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const futureDates = rdvList
+      .map(slot => {
+        const [y, m, d] = slot.date.split('-').map(Number);
+        return new Date(y, (m || 1) - 1, d || 1);
+      })
+      .filter(d => !isNaN(d.getTime()) && d >= today)
+      .sort((a, b) => a.getTime() - b.getTime());
+    const first = futureDates[0];
+    if (first) {
+      return new Date(first.getFullYear(), first.getMonth(), 1);
+    }
+    return new Date(summerRange.start.getFullYear(), summerRange.start.getMonth(), 1);
+  }, [rdvList, summerRange]);
 
   // Check if a date has slots
   const isDayWithSlots = (date: Date) => {
