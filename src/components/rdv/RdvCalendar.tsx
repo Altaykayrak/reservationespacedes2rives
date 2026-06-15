@@ -68,6 +68,7 @@ export const RdvCalendar = ({
       </CardHeader>
       <CardContent className="pt-0">
         <Calendar
+          key={defaultMonth.toISOString()}
           mode="single"
           selected={selectedDate}
           onSelect={setSelectedDate}
