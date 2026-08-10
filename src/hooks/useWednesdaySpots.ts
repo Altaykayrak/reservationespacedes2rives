@@ -18,9 +18,14 @@ export const useWednesdaySpots = () => {
       console.log("Récupération des places disponibles pour les mercredis...");
       
       try {
+        // Ne garder que les mercredis à venir (disponibles à la réservation)
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
         const { data: wednesdays, error: wednesdaysError } = await supabase
           .from("available_wednesdays")
           .select("*")
+          .gte("date", todayStr)
           .order("date", { ascending: true });
 
         if (wednesdaysError) {
