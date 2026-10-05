@@ -35,6 +35,10 @@ const TermsOfOperation = () => {
         )}
 
         <TermsContent />
+
+        <p className="mt-12 text-right text-sm font-semibold text-gray-600">
+          Validé Bureau 17-09-2026
+        </p>
       </div>
     </div>
   );
