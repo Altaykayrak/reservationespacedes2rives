@@ -37,8 +37,8 @@ export const RegistrationInfoSection = () => {
       
       <div className="flex justify-between mt-8">
         <div>
-          <p className="font-semibold">Présidente de l'Espace des 2 rives</p>
-          <p>Mme L. Ebro</p>
+          <p className="font-semibold">Président de l'Espace des 2 rives</p>
+          <p>Mr Vercruysse</p>
         </div>
         <div>
           <p className="font-semibold">Directrice Générale</p>
