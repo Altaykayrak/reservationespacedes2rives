@@ -8,12 +8,12 @@ export const TermsHeader = () => {
     <>
       <div className="flex flex-wrap items-center justify-center gap-8 mb-8">
         <img
-          src={logoCaf.url}
+          src={logoCaf}
           alt="Logo CAF - Allocations Familiales"
           className="h-24 w-auto object-contain"
         />
         <img
-          src={logoEspace.url}
+          src={logoEspace}
           alt="Logo Espace des 2 rives"
           className="h-24 w-auto object-contain"
         />
