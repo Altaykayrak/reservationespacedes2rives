@@ -1,7 +1,7 @@
 
 import React from "react";
-import logoCaf from "@/assets/logo-caf.jpg.asset.json";
-import logoEspace from "@/assets/logo-espace-2-rives.jpg.asset.json";
+import logoCaf from "@/assets/logo-caf.jpg";
+import logoEspace from "@/assets/logo-espace-2-rives.jpg";
 
 export const TermsHeader = () => {
   return (
